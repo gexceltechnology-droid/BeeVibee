@@ -29,8 +29,10 @@ export interface DatabaseSchema {
   timeSlots: TimeSlot[];
 }
 
-const DB_DIR = path.join(process.cwd(), 'data');
+const IS_SERVERLESS = process.env.NODE_ENV === 'production' || !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+const DB_DIR = IS_SERVERLESS ? '/tmp' : path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'db.json');
+const BUNDLED_DB_FILE = path.join(process.cwd(), 'data', 'db.json');
 
 const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
@@ -47,10 +49,24 @@ function initDb(): DatabaseSchema {
   }
 
   if (!fs.existsSync(DB_FILE)) {
-    const initialData: DatabaseSchema = {
-      bookings: [],
-      timeSlots: DEFAULT_TIME_SLOTS,
-    };
+    let initialData: DatabaseSchema;
+    if (IS_SERVERLESS && fs.existsSync(BUNDLED_DB_FILE)) {
+      try {
+        const bundledContent = fs.readFileSync(BUNDLED_DB_FILE, 'utf-8');
+        initialData = JSON.parse(bundledContent) as DatabaseSchema;
+      } catch (error) {
+        console.error('Error reading bundled database file, using fallback slots:', error);
+        initialData = {
+          bookings: [],
+          timeSlots: DEFAULT_TIME_SLOTS,
+        };
+      }
+    } else {
+      initialData = {
+        bookings: [],
+        timeSlots: DEFAULT_TIME_SLOTS,
+      };
+    }
     fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
     return initialData;
   }
@@ -60,10 +76,23 @@ function initDb(): DatabaseSchema {
     return JSON.parse(fileData) as DatabaseSchema;
   } catch (error) {
     console.error('Error reading database file, initializing fresh DB:', error);
-    const initialData: DatabaseSchema = {
-      bookings: [],
-      timeSlots: DEFAULT_TIME_SLOTS,
-    };
+    let initialData: DatabaseSchema;
+    if (IS_SERVERLESS && fs.existsSync(BUNDLED_DB_FILE)) {
+      try {
+        const bundledContent = fs.readFileSync(BUNDLED_DB_FILE, 'utf-8');
+        initialData = JSON.parse(bundledContent) as DatabaseSchema;
+      } catch (err) {
+        initialData = {
+          bookings: [],
+          timeSlots: DEFAULT_TIME_SLOTS,
+        };
+      }
+    } else {
+      initialData = {
+        bookings: [],
+        timeSlots: DEFAULT_TIME_SLOTS,
+      };
+    }
     fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
     return initialData;
   }
