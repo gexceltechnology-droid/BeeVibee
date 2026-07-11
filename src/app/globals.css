@@ -1,0 +1,219 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Core Color Palette */
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #121217;
+  --bg-tertiary: #191922;
+  --text-primary: #ffffff;
+  --text-secondary: #a0a0b0;
+  --text-muted: #626272;
+  
+  /* Accent Color - default (Honey Amber) */
+  --accent-base: 242, 169, 0; /* RGB values */
+  --accent: rgb(var(--accent-base));
+  --accent-hover: #ffb71a;
+  --accent-glow: 0 0 20px rgba(var(--accent-base), 0.55);
+  --accent-border: rgba(var(--accent-base), 0.3);
+  
+  /* Card & Glassmorphism Properties */
+  --glass-bg: rgba(20, 20, 27, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-hover-border: rgba(var(--accent-base), 0.25);
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  /* Fonts */
+  --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  
+  /* Animated Lights (Vibes) Preset variables */
+  --light-amber: 242, 169, 0;
+  --light-cyan: 0, 212, 255;
+  --light-pink: 255, 46, 126;
+  --light-purple: 147, 51, 234;
+
+  scroll-behavior: smooth;
+}
+
+/* Vibe Preset Theme Selectors */
+[data-vibe="amber"] {
+  --accent-base: var(--light-amber);
+  --accent: rgb(var(--light-amber));
+  --accent-hover: #ffbd2c;
+  --accent-glow: 0 0 25px rgba(var(--light-amber), 0.6);
+  --accent-border: rgba(var(--light-amber), 0.4);
+}
+
+[data-vibe="cyan"] {
+  --accent-base: var(--light-cyan);
+  --accent: rgb(var(--light-cyan));
+  --accent-hover: #50e4ff;
+  --accent-glow: 0 0 25px rgba(var(--light-cyan), 0.6);
+  --accent-border: rgba(var(--light-cyan), 0.4);
+}
+
+[data-vibe="pink"] {
+  --accent-base: var(--light-pink);
+  --accent: rgb(var(--light-pink));
+  --accent-hover: #ff5ea1;
+  --accent-glow: 0 0 25px rgba(var(--light-pink), 0.6);
+  --accent-border: rgba(var(--light-pink), 0.4);
+}
+
+[data-vibe="purple"] {
+  --accent-base: var(--light-purple);
+  --accent: rgb(var(--light-purple));
+  --accent-hover: #a855f7;
+  --accent-glow: 0 0 25px rgba(var(--light-purple), 0.6);
+  --accent-border: rgba(var(--light-purple), 0.4);
+}
+
+/* Base resets */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Glow Text */
+.text-glow {
+  text-shadow: var(--accent-glow);
+}
+
+/* Gradient Background Overlay */
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(var(--accent-base), 0.08) 0%, transparent 60%),
+              radial-gradient(circle at 10% 80%, rgba(20, 20, 30, 0.8) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glowing theater lights effect on container */
+.ambient-glow-bg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 350px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(var(--accent-base), 0.15) 0%, rgba(var(--accent-base), 0.02) 50%, transparent 100%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.8s ease-in-out;
+}
+
+/* Layout Utilities */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000000;
+  box-shadow: var(--accent-glow);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(var(--accent-base), 0.8);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* Glass Cards */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-card:hover {
+  border-color: var(--glass-hover-border);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(var(--accent-base), 0.05);
+  transform: translateY(-4px);
+}
+
+/* Floating animation */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}

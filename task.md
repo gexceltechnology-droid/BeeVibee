@@ -1,0 +1,30 @@
+# Tasks
+
+- [x] Initialize Next.js Project
+- [x] Install dependencies (three, @types/three, lucide-react etc.)
+- [x] Create Database Helper & Setup JSON DB structure (`src/lib/db.ts`)
+- [x] Define global styles & variables (`src/app/globals.css`)
+- [x] Build API endpoints:
+  - [x] GET /api/slots (Fetch slots availability for a date)
+  - [x] POST /api/bookings (Create a booking)
+  - [x] GET /api/bookings (List bookings for Admin)
+  - [x] PUT /api/bookings (Update booking status for Admin)
+- [x] Develop UI Components:
+  - [x] ThreeTheater (Three.js 3D Theater scene with vibe color controls)
+  - [x] BookingPortal (Wizard flow for slots, package, details, confirmation)
+  - [x] AdminDashboard (Management portal at /admin)
+- [x] Assemble Landing Page (`src/app/page.tsx`)
+- [x] Test & Verify
+  - [x] Build app (`npm run build`)
+  - [x] Run dev server and verify 3D and booking flow
+- [x] Secure Admin Portal:
+  - [x] Create `.env.local` config file
+  - [x] Implement POST `/api/admin/login` API route
+  - [x] Update `/api/bookings` GET/PUT handlers with header validation
+  - [x] Create login visual overlay in `/admin/page.tsx`
+  - [x] Re-verify E2E booking and admin login flows
+- [x] Implement Scroll animations:
+  - [x] Implement scroll-linked 3D camera interpolation inside `ThreeTheater.tsx`
+  - [x] Implement IntersectionObserver for fade-in/slide-up reveals in `page.tsx`
+  - [x] Restructure CSS layout for desktop sticky split screen in `page.module.css` and `globals.css`
+  - [x] Test page scroll behavior and verify smooth rendering

@@ -1,0 +1,473 @@
+.portalContainer {
+  width: 100%;
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 8px;
+}
+
+.wizardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.wizardHeader::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  z-index: 1;
+}
+
+.stepIndicator {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  z-index: 2;
+  background: var(--bg-primary);
+  padding: 0 8px;
+}
+
+.stepActive {
+  color: var(--accent);
+  font-weight: 600;
+  text-shadow: var(--accent-glow);
+}
+
+.stepCompleted {
+  color: #10b981;
+}
+
+/* Step 1: Slots Picker */
+.dateSection {
+  margin-bottom: 24px;
+}
+
+.dateInputLabel {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.datePicker {
+  width: 100%;
+  max-width: 300px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.datePicker:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(var(--accent-base), 0.2);
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.slotCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.slotCard:hover:not(.slotBooked) {
+  border-color: var(--accent);
+  background: rgba(var(--accent-base), 0.05);
+  transform: translateY(-2px);
+}
+
+.slotSelected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-base), 0.1) !important;
+  box-shadow: var(--accent-glow);
+}
+
+.slotBooked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.01);
+  border-color: rgba(255, 255, 255, 0.03);
+}
+
+.slotLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.slotTime {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.slotPrice {
+  font-size: 0.95rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* Step 2: Packages */
+.packagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.packageCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.packageCard:hover {
+  border-color: var(--accent);
+  background: rgba(var(--accent-base), 0.03);
+  transform: translateY(-4px);
+}
+
+.packageSelected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-base), 0.08) !important;
+  box-shadow: 0 0 20px rgba(var(--accent-base), 0.15);
+}
+
+.packageName {
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.packagePrice {
+  font-size: 1.5rem;
+  font-family: var(--font-title);
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.packageDetails {
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  flex-grow: 1;
+}
+
+.packageDetails li {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.packageDetails li::before {
+  content: '✓';
+  color: var(--accent);
+  font-weight: bold;
+}
+
+/* Step 3: Add-ons */
+.addonsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.addonCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.addonCard:hover {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.addonSelected {
+  border-color: var(--accent);
+  background: rgba(var(--accent-base), 0.06) !important;
+}
+
+.addonInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.addonName {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.addonPrice {
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+.addonCheckbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #000000;
+  transition: all 0.2s;
+}
+
+.addonCard.addonSelected .addonCheckbox {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Step 4: Contact Form */
+.bookingForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.fullWidth {
+  grid-column: span 2;
+}
+
+@media (max-width: 600px) {
+  .bookingForm {
+    grid-template-columns: 1fr;
+  }
+  .fullWidth {
+    grid-column: span 1;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.formInput, .formTextarea {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-family: var(--font-body);
+  outline: none;
+  transition: all 0.3s;
+}
+
+.formInput:focus, .formTextarea:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.formTextarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Wizard Buttons */
+.footerButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 24px;
+}
+
+/* Ticket confirmation */
+.ticketWrapper {
+  perspective: 1000px;
+  margin: 32px auto;
+  max-width: 480px;
+  animation: ticketPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes ticketPop {
+  0% { transform: translateY(30px) scale(0.95); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.ticket {
+  background: linear-gradient(135deg, #181822 0%, #0d0d12 100%);
+  border: 1px solid rgba(var(--accent-base), 0.35);
+  border-radius: var(--radius-md);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(var(--accent-base), 0.15);
+  overflow: hidden;
+  position: relative;
+}
+
+.ticket::before, .ticket::after {
+  content: '';
+  position: absolute;
+  top: 70%;
+  width: 24px;
+  height: 24px;
+  background: var(--bg-primary);
+  border-radius: 50%;
+  z-index: 10;
+  border: 1px solid rgba(var(--accent-base), 0.35);
+}
+
+.ticket::before {
+  left: -12px;
+}
+
+.ticket::after {
+  right: -12px;
+}
+
+.ticketHeader {
+  padding: 24px;
+  text-align: center;
+  border-bottom: 1px dashed rgba(var(--accent-base), 0.3);
+  position: relative;
+}
+
+.ticketBrand {
+  font-family: var(--font-title);
+  color: var(--accent);
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+}
+
+.ticketSub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.ticketBody {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticketRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ticketLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.ticketVal {
+  font-weight: 600;
+  text-align: right;
+}
+
+.ticketValAccent {
+  color: var(--accent);
+}
+
+.ticketBarcode {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.barcodeLines {
+  width: 100%;
+  height: 48px;
+  background: repeating-linear-gradient(
+    90deg,
+    #000000,
+    #000000 3px,
+    #ffffff 3px,
+    #ffffff 9px,
+    #000000 9px,
+    #000000 12px,
+    #ffffff 12px,
+    #ffffff 15px
+  );
+}
+
+.barcodeText {
+  color: #000000;
+  font-family: monospace;
+  font-size: 0.8rem;
+  margin-top: 6px;
+  letter-spacing: 3px;
+}
+
+.loadingSpinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  border-top-color: var(--accent);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorMessage {
+  background: rgba(ef, 68, 68, 0.1);
+  border: 1px solid #ef4444;
+  color: #f87171;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}

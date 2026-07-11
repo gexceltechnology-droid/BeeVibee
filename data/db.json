@@ -1,0 +1,147 @@
+{
+  "bookings": [
+    {
+      "customerName": "John Doe",
+      "email": "john@gmail.com",
+      "phone": "9876543210",
+      "date": "2026-07-09",
+      "timeSlot": "05:00 PM - 08:00 PM",
+      "packageName": "Cozy Romance Vibe",
+      "addOns": [
+        "Fresh Rose Bouquet",
+        "1kg Red Velvet Designer Cake"
+      ],
+      "totalPrice": 8196,
+      "guestCount": 24,
+      "specialRequests": "Surprise birthday cake message: Happy Birthday Jane!",
+      "id": "BEE-878309",
+      "status": "cancelled",
+      "createdAt": "2026-07-08T08:55:50.291Z"
+    },
+    {
+      "customerName": "John Doe",
+      "email": "john@gmail.com",
+      "phone": "9876543210",
+      "date": "2026-07-09",
+      "timeSlot": "05:00 PM - 08:00 PM",
+      "packageName": "Cozy Romance Vibe",
+      "addOns": [
+        "Fresh Rose Bouquet",
+        "1kg Red Velvet Designer Cake"
+      ],
+      "totalPrice": 8196,
+      "guestCount": 4,
+      "specialRequests": "Surprise birthday cake message: Happy Birthday Jane!",
+      "id": "BEE-246247",
+      "status": "cancelled",
+      "createdAt": "2026-07-08T09:03:32.953Z"
+    },
+    {
+      "customerName": "Sunny",
+      "email": "malligopaladasu@gmail.com",
+      "phone": "8919178055",
+      "date": "2026-07-09",
+      "timeSlot": "10:00 AM - 01:00 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [
+        "Fresh Rose Bouquet"
+      ],
+      "totalPrice": 4497,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-699082",
+      "status": "cancelled",
+      "createdAt": "2026-07-08T09:25:59.428Z"
+    },
+    {
+      "customerName": "Jane Doe",
+      "email": "jane@gmail.com",
+      "phone": "9876543211",
+      "date": "2026-07-09",
+      "timeSlot": "01:30 PM - 04:30 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 4498,
+      "guestCount": 25,
+      "specialRequests": "Please keep soft drinks cold",
+      "id": "BEE-353824",
+      "status": "cancelled",
+      "createdAt": "2026-07-08T10:02:33.838Z"
+    },
+    {
+      "customerName": "Mallikarjun",
+      "email": "test@example.com",
+      "phone": "8919178055",
+      "date": "2026-07-15",
+      "timeSlot": "05:00 PM - 08:00 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 4998,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-114287",
+      "status": "confirmed",
+      "createdAt": "2026-07-11T07:56:27.054Z"
+    },
+    {
+      "customerName": "Test User",
+      "email": "test@example.com",
+      "phone": "8919178055",
+      "date": "2026-07-12",
+      "timeSlot": "10:00 AM - 01:00 PM",
+      "packageName": "Cozy Romance Vibe",
+      "addOns": [
+        "Special Screen Entry Fog Effect",
+        "30-Mins Photo Shoot & Digital Copy",
+        "Gourmet Nachos & Dip Platter",
+        "Fresh Rose Bouquet",
+        "1kg Red Velvet Designer Cake",
+        "Extra Premium Helium Balloons (x30)"
+      ],
+      "totalPrice": 10442,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-182810",
+      "status": "confirmed",
+      "createdAt": "2026-07-11T07:59:50.416Z"
+    }
+  ],
+  "timeSlots": [
+    {
+      "id": "slot-1",
+      "time": "10:00 AM - 12:00 PM",
+      "label": "Morning Show",
+      "basePrice": 999
+    },
+    {
+      "id": "slot-2",
+      "time": "12:30 PM - 02:30 PM",
+      "label": "Matinee Show",
+      "basePrice": 999
+    },
+    {
+      "id": "slot-3",
+      "time": "03:00 PM - 05:00 PM",
+      "label": "Afternoon Vibe",
+      "basePrice": 999
+    },
+    {
+      "id": "slot-4",
+      "time": "05:30 PM - 07:30 PM",
+      "label": "Sunset Vibe",
+      "basePrice": 999
+    },
+    {
+      "id": "slot-5",
+      "time": "08:00 PM - 10:00 PM",
+      "label": "Night Vibe",
+      "basePrice": 999
+    },
+    {
+      "id": "slot-6",
+      "time": "10:30 PM - 12:30 AM",
+      "label": "Midnight Vibe",
+      "basePrice": 999
+    }
+  ]
+}
