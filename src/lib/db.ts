@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { checkBookingOverlap } from './time';
 
 export interface Booking {
   id: string;
@@ -119,13 +120,11 @@ export function getBookingsByDate(date: string): Booking[] {
 export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>): Booking {
   const db = readDb();
   
-  // Double-booking check
-  const isBooked = db.bookings.some(
-    (b) => b.date === bookingData.date && b.timeSlot === bookingData.timeSlot && b.status !== 'cancelled'
-  );
+  // Double-booking check using overlap logic
+  const isBooked = checkBookingOverlap(bookingData.date, bookingData.timeSlot, db.bookings);
 
   if (isBooked) {
-    throw new Error('This time slot is already booked for the selected date.');
+    throw new Error('This time slot overlaps with an existing booking.');
   }
 
   const newBooking: Booking = {
