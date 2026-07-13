@@ -1208,6 +1208,20 @@ export default function BookingPortal() {
             <p style={{ color: '#ffffff', fontSize: '0.9rem', margin: '0' }}>
               Your unique ticket code is: <strong style={{ color: 'var(--accent)', textShadow: 'var(--accent-glow)' }}>{confirmedBooking.id}</strong>
             </p>
+            <div style={{
+              marginTop: '12px',
+              padding: '10px',
+              background: 'rgba(242, 169, 0, 0.1)',
+              border: '1px dashed rgba(242, 169, 0, 0.4)',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              color: 'var(--accent)',
+              fontWeight: '600',
+              lineHeight: '1.4',
+              textAlign: 'center'
+            }}>
+              👉 Please download the receipt below and show it at the reception of Bee Vibe upon arrival!
+            </div>
           </div>
 
           <div className={styles.ticketWrapper}>
