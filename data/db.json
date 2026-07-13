@@ -80,7 +80,7 @@
       "guestCount": 2,
       "specialRequests": "",
       "id": "BEE-114287",
-      "status": "confirmed",
+      "status": "cancelled",
       "createdAt": "2026-07-11T07:56:27.054Z"
     },
     {
@@ -102,8 +102,85 @@
       "guestCount": 2,
       "specialRequests": "",
       "id": "BEE-182810",
-      "status": "confirmed",
+      "status": "cancelled",
       "createdAt": "2026-07-11T07:59:50.416Z"
+    },
+    {
+      "customerName": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "9876543210",
+      "date": "2026-07-14",
+      "timeSlot": "11:30 AM - 02:30 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 2498,
+      "guestCount": 3,
+      "specialRequests": "",
+      "id": "BEE-862876",
+      "status": "cancelled",
+      "createdAt": "2026-07-13T06:08:19.152Z"
+    },
+    {
+      "customerName": "Test Customer",
+      "email": "test@example.com",
+      "phone": "9999999999",
+      "date": "2026-07-14",
+      "timeSlot": "03:00 PM - 05:00 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 1998,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-783084",
+      "status": "cancelled",
+      "createdAt": "2026-07-13T10:13:20.593Z"
+    },
+    {
+      "customerName": "Test User",
+      "email": "test@gmail.com",
+      "phone": "9876543210",
+      "date": "2026-07-14",
+      "timeSlot": "05:30 PM - 07:30 PM",
+      "packageName": "Birthday Bash Vibe",
+      "addOns": [
+        "Special Screen Entry Fog Effect"
+      ],
+      "totalPrice": 999,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-318939",
+      "status": "cancelled",
+      "createdAt": "2026-07-13T10:27:35.766Z"
+    },
+    {
+      "customerName": "Mallikarjun",
+      "email": "malligopaladasu@gmail.com",
+      "phone": "8919178055",
+      "date": "2026-07-14",
+      "timeSlot": "08:00 PM - 10:00 PM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 999,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-800330",
+      "status": "cancelled",
+      "createdAt": "2026-07-13T10:31:30.610Z"
+    },
+    {
+      "customerName": "Owner Verify",
+      "email": "verify@gmail.com",
+      "phone": "9999999999",
+      "date": "2026-07-14",
+      "timeSlot": "10:30 PM - 12:30 AM",
+      "packageName": "Movie Vibe Pack",
+      "addOns": [],
+      "totalPrice": 999,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BEE-965161",
+      "status": "cancelled",
+      "createdAt": "2026-07-13T10:50:15.282Z"
     }
   ],
   "timeSlots": [

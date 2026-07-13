@@ -80,7 +80,7 @@
 
 .slotsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
   margin-top: 24px;
 }
@@ -463,11 +463,144 @@
 }
 
 .errorMessage {
-  background: rgba(ef, 68, 68, 0.1);
+  background: rgba(239, 68, 68, 0.1);
   border: 1px solid #ef4444;
   color: #f87171;
   padding: 12px;
   border-radius: var(--radius-sm);
   margin-bottom: 20px;
   font-size: 0.9rem;
+}
+
+.bookingModeTabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tabBtnActive {
+  background: rgba(251, 191, 36, 0.1); /* fallback accent colors standard */
+  color: var(--accent);
+  box-shadow: inset 0 0 8px rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.tabBtn:hover:not(.tabBtnActive) {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Custom Slot Editor styles */
+.customSlotContainer {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.customSlotRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.customSlotField {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.customSlotLabel {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: left;
+}
+
+.timeInput {
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.timeInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(var(--accent-base), 0.2);
+}
+
+.customSlotPriceBox {
+  margin-top: 10px;
+  padding: 16px;
+  background: rgba(251, 191, 36, 0.05);
+  border: 1px solid rgba(251, 191, 36, 0.1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.priceLabel {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.priceVal {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: var(--accent-glow);
+}
+
+.slotErrorMsg {
+  color: #ef4444;
+  font-size: 0.85rem;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  text-align: left;
+}
+
+.stepContainer {
+  animation: stepFadeInSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stepFadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

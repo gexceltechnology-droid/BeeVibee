@@ -4,14 +4,49 @@
 }
 
 /* Header & Nav */
+.headerContainer {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: transparent;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 1px solid transparent;
+}
+
+.headerContainerScrolled {
+  background: rgba(10, 10, 12, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.scrollProgressBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  box-shadow: var(--accent-glow);
+  z-index: 1010;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.1s ease-out;
+}
+
 .header {
   padding: 24px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: relative;
   z-index: 100;
+  transition: padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.headerContainerScrolled .header {
+  padding: 14px 0;
 }
 
 .logo {
@@ -36,16 +71,20 @@
   color: var(--accent);
 }
 
+.desktopNav {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .desktopNav {
+    display: none;
+  }
+}
+
 .navLinks {
   display: flex;
   gap: 24px;
   list-style: none;
-}
-
-@media (max-width: 768px) {
-  .navLinks {
-    display: none;
-  }
 }
 
 .navLink {
@@ -59,6 +98,111 @@
 .navLink:hover {
   color: var(--accent);
 }
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 576px) {
+  .headerActions a {
+    display: none; /* Hide primary Book Now on very small screen in header */
+  }
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 120;
+}
+
+.hamburgerLine {
+  width: 24px;
+  height: 2px;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+.hamburgerActive .hamburgerLine:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.hamburgerActive .hamburgerLine:nth-child(2) {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.hamburgerActive .hamburgerLine:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* Mobile Menu Drawer */
+.mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 24px;
+  right: 24px;
+  background: rgba(10, 10, 12, 0.96);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(var(--accent-base), 0.05);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 105;
+}
+
+.mobileMenuActive {
+  opacity: 1;
+  transform: translateY(8px) scale(1);
+  pointer-events: all;
+}
+
+.mobileNavLinks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.mobileNavLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: block;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: color 0.3s;
+}
+
+.mobileNavLink:hover {
+  color: var(--accent);
+}
+
 
 /* Scrolling Grid Split Layout */
 .splitLayout {
@@ -322,12 +466,37 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.showcaseCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(300px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(var(--accent-base), 0.15), transparent 80%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .showcaseCard:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
   border-color: var(--accent-border);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--accent-base), 0.08);
+}
+
+.showcaseCard:hover::before {
+  opacity: 1;
+}
+
+.showcaseCard > * {
+  position: relative;
+  z-index: 2;
 }
 
 .cardBanner {
@@ -395,12 +564,38 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 24px;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.featureCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(250px circle at var(--mouse-x, 0) var(--mouse-y, 0), rgba(var(--accent-base), 0.15), transparent 80%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .featureCard:hover {
   border-color: var(--glass-hover-border);
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(var(--accent-base), 0.05);
+}
+
+.featureCard:hover::before {
+  opacity: 1;
+}
+
+.featureCard > * {
+  position: relative;
+  z-index: 2;
 }
 
 .featureIcon {

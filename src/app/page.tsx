@@ -42,10 +42,14 @@ type VibeType = 'amber' | 'cyan' | 'pink' | 'purple';
 export default function Home() {
   const [vibe, setVibe] = useState<VibeType>('amber');
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // 1. Calculate scroll progress (0 to 1) for the scrollytelling camera path
+  // 1. Calculate scroll progress (0 to 1) for the scrollytelling camera path and check scroll offset
   useEffect(() => {
     const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+
       const docHeight = document.documentElement.scrollHeight;
       const windowHeight = window.innerHeight;
       const totalScrollable = docHeight - windowHeight;
@@ -90,6 +94,23 @@ export default function Home() {
     };
   }, []);
 
+  // 3. Track cursor positions on cards for spotlight hover effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const cards = document.querySelectorAll(`.${styles.showcaseCard}, .${styles.featureCard}`);
+      cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
+        (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   const vibeLabels = {
     amber: 'Honey Amber (Cozy Vibe)',
     cyan: 'Cyber Cyan (Gaming Vibe)',
@@ -99,37 +120,72 @@ export default function Home() {
 
   return (
     <div className={styles.main} data-vibe={vibe}>
+      {/* Scroll Progress Bar */}
+      <div className={styles.scrollProgressBar} style={{ transform: `scaleX(${scrollProgress})`, transformOrigin: 'left' }} />
+
       {/* Dynamic Background Glows */}
       <div className="ambient-glow-bg" />
       <div className="gradient-overlay" />
 
       {/* Navigation Header */}
-      <div className="container">
-        <header className={styles.header}>
-          <div className={styles.logo}>
-            <span className={styles.logoIcon}>🐝</span>
-            <span className={styles.logoText}>
-              Bee<span className={styles.logoSub}>Vibe</span>
-            </span>
-          </div>
-          <nav>
-            <ul className={styles.navLinks}>
-              <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
-              <li><a href="#features" className={styles.navLink}>Amenities</a></li>
-              <li><a href="#book" className={styles.navLink}>Booking Portal</a></li>
+      <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
+        <div className="container" style={{ position: 'relative' }}>
+          <header className={styles.header}>
+            <div className={styles.logo}>
+              <span className={styles.logoIcon}>🐝</span>
+              <span className={styles.logoText}>
+                Bee<span className={styles.logoSub}>Vibe</span>
+              </span>
+            </div>
+            <nav className={styles.desktopNav}>
+              <ul className={styles.navLinks}>
+                <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
+                <li><a href="#features" className={styles.navLink}>Amenities</a></li>
+                <li><a href="#book" className={styles.navLink}>Booking Portal</a></li>
+              </ul>
+            </nav>
+            <div className={styles.headerActions}>
+              <a href="#book" className="btn btn-primary btn-nav" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
+                Book Now
+              </a>
+              <button
+                className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerActive : ''}`}
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                <span className={styles.hamburgerLine} />
+                <span className={styles.hamburgerLine} />
+                <span className={styles.hamburgerLine} />
+              </button>
+            </div>
+          </header>
+
+          {/* Mobile Navigation Drawer */}
+          <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuActive : ''}`}>
+            <ul className={styles.mobileNavLinks}>
               <li>
-                <Link href="/admin" className={styles.navLink} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                  Admin Dashboard
-                </Link>
+                <a href="#vibes" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Our Vibes
+                </a>
+              </li>
+              <li>
+                <a href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Amenities
+                </a>
+              </li>
+              <li>
+                <a href="#book" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Booking Portal
+                </a>
+              </li>
+              <li style={{ width: '100%', marginTop: '12px' }}>
+                <a href="#book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
+                  Book Now
+                </a>
               </li>
             </ul>
-          </nav>
-          <div>
-            <a href="#book" className="btn btn-primary" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
-              Book Now
-            </a>
           </div>
-        </header>
+        </div>
       </div>
 
       {/* Split Scrollytelling Screen Layout */}
@@ -351,8 +407,24 @@ export default function Home() {
                 Premium mini private theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Phone size={16} color="var(--accent)" /> +91 98765 43210</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><MapPin size={16} color="var(--accent)" /> 4th Block, Koramangala, Bengaluru, India</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Phone size={16} color="var(--accent)" />
+                  <a href="tel:8123501013" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
+                    +91 81235 01013
+                  </a>
+                </span>
+                <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <MapPin size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=1340%2C+41st+cross+road%2C+near+jain+university+4th+grade%2C+jayanagar+9th+block%2C+bangalore%2C+India"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'inherit', textDecoration: 'none', lineHeight: '1.4' }}
+                    className="hover-accent"
+                  >
+                    1340, 41st cross road, near jain university 4th grade, jayanagar 9th block, bangalore, India
+                  </a>
+                </span>
               </div>
             </div>
 
@@ -362,7 +434,6 @@ export default function Home() {
                 <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
                 <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
                 <li><a href="#book" className={styles.footerLink}>Book Tickets</a></li>
-                <li><Link href="/admin" className={styles.footerLink}>Admin Login</Link></li>
               </ul>
             </div>
 

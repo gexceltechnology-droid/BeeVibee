@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb, getBookingsByDate } from '@/lib/db';
+import { readDb } from '@/lib/db';
+import { checkBookingOverlap } from '@/lib/time';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,18 +13,29 @@ export async function GET(request: NextRequest) {
     }
 
     const db = readDb();
-    const bookings = getBookingsByDate(date);
     
-    // Map time slots and determine which ones are booked
+    // Map time slots and determine which ones are booked using smart overlap checks
     const slotsWithAvailability = db.timeSlots.map((slot) => {
-      const isBooked = bookings.some((b) => b.timeSlot === slot.time);
+      const isBooked = checkBookingOverlap(date, slot.time, db.bookings);
       return {
         ...slot,
         isBooked,
       };
     });
 
-    return NextResponse.json({ slots: slotsWithAvailability });
+    // Return the list of all active bookings so that client-side overlap checks can be performed
+    const activeBookings = db.bookings
+      .filter((b) => b.status !== 'cancelled')
+      .map((b) => ({
+        id: b.id,
+        date: b.date,
+        timeSlot: b.timeSlot,
+      }));
+
+    return NextResponse.json({ 
+      slots: slotsWithAvailability,
+      activeBookings
+    });
   } catch (error: any) {
     console.error('Error fetching slots:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

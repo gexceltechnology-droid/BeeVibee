@@ -13,6 +13,8 @@
   - [x] ThreeTheater (Three.js 3D Theater scene with vibe color controls)
   - [x] BookingPortal (Wizard flow for slots, package, details, confirmation)
   - [x] AdminDashboard (Management portal at /admin)
+- [x] Implement the UI changes in `src/components/BookingPortal.tsx` to add Custom Time Slot selectors, pricing details, and client-side overlap checks
+- [x] Verify the implementation manually and write a walkthrough.md
 - [x] Assemble Landing Page (`src/app/page.tsx`)
 - [x] Test & Verify
   - [x] Build app (`npm run build`)
