@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, addBooking, updateBookingStatus } from '@/lib/db';
 import { parseTimeRange } from '@/lib/time';
+import { sendBookingConfirmationEmail } from '@/lib/mail';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -146,6 +147,13 @@ export async function POST(request: NextRequest) {
       guestCount: numericGuestCount,
       specialRequests: specialRequests || '',
     });
+
+    // Send confirmation email asynchronously (non-blocking)
+    try {
+      await sendBookingConfirmationEmail(newBooking);
+    } catch (emailError) {
+      console.error('Failed to send booking confirmation email:', emailError);
+    }
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {
