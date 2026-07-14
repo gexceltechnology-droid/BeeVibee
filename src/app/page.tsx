@@ -134,7 +134,7 @@ export default function Home() {
           <header className={styles.header}>
             <div className={styles.logo}>
               <Image
-                src="/bee-vibe-logo.jpg"
+                src="/bee-vibe-logo.png"
                 alt="Bee Vibe Logo"
                 width={160}
                 height={60}
@@ -406,7 +406,7 @@ export default function Home() {
             <div className={styles.footerCol}>
               <div className={styles.logo}>
                 <Image
-                  src="/bee-vibe-logo.jpg"
+                  src="/bee-vibe-logo.png"
                   alt="Bee Vibe Logo"
                   width={160}
                   height={60}
