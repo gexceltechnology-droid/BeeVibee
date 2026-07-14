@@ -55,24 +55,8 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
-.logoIcon {
-  font-size: 1.8rem;
-}
-
-.logoText {
-  font-family: var(--font-title);
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #ffffff;
-}
-
-.logoSub {
-  color: var(--accent);
-}
 
 .desktopNav {
   display: block;

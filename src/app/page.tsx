@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 import dynamic from 'next/dynamic';
 import BookingPortal from '@/components/BookingPortal';
@@ -132,10 +133,14 @@ export default function Home() {
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <div className={styles.logo}>
-              <span className={styles.logoIcon}>🐝</span>
-              <span className={styles.logoText}>
-                Bee<span className={styles.logoSub}>Vibe</span>
-              </span>
+              <Image
+                src="/bee-vibe-logo.jpg"
+                alt="Bee Vibe Logo"
+                width={160}
+                height={60}
+                style={{ objectFit: 'contain' }}
+                priority
+              />
             </div>
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
@@ -400,8 +405,13 @@ export default function Home() {
           <div className={styles.footerGrid}>
             <div className={styles.footerCol}>
               <div className={styles.logo}>
-                <span className={styles.logoIcon}>🐝</span>
-                <span className={styles.logoText}>Bee<span className={styles.logoSub}>Vibe</span></span>
+                <Image
+                  src="/bee-vibe-logo.jpg"
+                  alt="Bee Vibe Logo"
+                  width={160}
+                  height={60}
+                  style={{ objectFit: 'contain' }}
+                />
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 Premium mini private theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.
