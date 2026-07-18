@@ -137,15 +137,12 @@ export default function Home() {
       <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
-            <div className={styles.logo}>
-              <Image
-                src="/bee-vibe-logo.png"
-                alt="Bee Vibe Logo"
-                width={160}
-                height={60}
-                style={{ objectFit: 'contain' }}
-                priority
-              />
+            <div className={styles.logoWrapper}>
+              <div className={styles.logoIcon} aria-hidden="true" />
+              <div className={styles.logoText}>
+                <span className={styles.logoBrand}>BeeVibe</span>
+                <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
+              </div>
             </div>
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
@@ -437,14 +434,12 @@ export default function Home() {
         <div className="container">
           <div className={styles.footerGrid}>
             <div className={styles.footerCol}>
-              <div className={styles.logo}>
-                <Image
-                  src="/bee-vibe-logo.png"
-                  alt="Bee Vibe Logo"
-                  width={160}
-                  height={60}
-                  style={{ objectFit: 'contain' }}
-                />
+              <div className={styles.logoWrapper}>
+                <div className={styles.logoIcon} aria-hidden="true" />
+                <div className={styles.logoText}>
+                  <span className={styles.logoBrand}>BeeVibe</span>
+                  <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
+                </div>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 Premium mini private theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.

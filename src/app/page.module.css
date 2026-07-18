@@ -52,9 +52,44 @@
   padding: 14px 0;
 }
 
-.logo {
+.logoWrapper {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 40px;
+  background-image: url('/bee-vibe-logo.png');
+  background-size: 110px auto;
+  background-position: -3px center;
+  background-repeat: no-repeat;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+.logoBrand {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f2a900;
+  letter-spacing: -0.01em;
+}
+
+.logoSub {
+  font-family: var(--font-title);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.9;
 }
 
 
