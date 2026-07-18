@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import BookingPortal from '@/components/BookingPortal';
 import styles from './book.module.css';
-import { Phone, MapPin, Instagram } from 'lucide-react';
+import { Phone, MapPin } from 'lucide-react';
 
 const PartyPopperIcon = () => (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ff2e7e"
