@@ -2,11 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import styles from './page.module.css';
-import dynamic from 'next/dynamic';
-import BookingPortal from '@/components/BookingPortal';
-
 import InteractiveShowcase from '@/components/InteractiveShowcase';
 import {
   Tv,
@@ -170,7 +166,7 @@ export default function Home() {
               <ul className={styles.navLinks}>
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
-                <li><a href="#book" className={styles.navLink}>Booking Portal</a></li>
+                <li><Link href="/book" className={styles.navLink}>Booking Portal</Link></li>
                 <li style={{ display: 'flex', alignItems: 'center' }}>
                   <a
                     href="https://www.instagram.com/beevibe_partyhall/"
@@ -186,9 +182,9 @@ export default function Home() {
               </ul>
             </nav>
             <div className={styles.headerActions}>
-              <a href="#book" className="btn btn-primary btn-nav" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
+              <Link href="/book" className="btn btn-primary btn-nav" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
                 Book Now
-              </a>
+              </Link>
               <button
                 className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerActive : ''}`}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -232,9 +228,9 @@ export default function Home() {
                 </a>
               </li>
               <li style={{ width: '100%', marginTop: '12px' }}>
-                <a href="#book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
                   Book Now
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -298,9 +294,9 @@ export default function Home() {
                 </div>
 
                 <div className={styles.heroCtas}>
-                  <a href="#book" className="btn btn-primary">
+                  <Link href="/book" className="btn btn-primary">
                     Reserve Your Screen
-                  </a>
+                  </Link>
                   <a href="#vibes" className="btn btn-secondary">
                     Explore Packages
                   </a>
@@ -415,17 +411,6 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Section 4: Booking Center (Trigger camera shift 3) */}
-            <section id="book" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Book Your Celebration</h2>
-              <p className={styles.sectionSub}>
-                Select a date, check available slots, select a package, and reserve your private cinema ticket instantly.
-              </p>
-
-              <div className={styles.bookingBox}>
-                <BookingPortal />
-              </div>
-            </section>
 
           </div>
 
@@ -495,7 +480,7 @@ export default function Home() {
               <ul className={styles.footerLinks}>
                 <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
                 <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
-                <li><a href="#book" className={styles.footerLink}>Book Tickets</a></li>
+                <li><Link href="/book" className={styles.footerLink}>Book Tickets</Link></li>
               </ul>
             </div>
 
