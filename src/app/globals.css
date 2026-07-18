@@ -9,10 +9,10 @@
   --text-secondary: #a0a0b0;
   --text-muted: #626272;
   
-  /* Accent Color - default (Honey Amber) */
-  --accent-base: 242, 169, 0; /* RGB values */
+  /* Accent Color - default (Rose Pink) */
+  --accent-base: 255, 46, 126; /* RGB values */
   --accent: rgb(var(--accent-base));
-  --accent-hover: #ffb71a;
+  --accent-hover: #ff5ea1;
   --accent-glow: 0 0 20px rgba(var(--accent-base), 0.55);
   --accent-border: rgba(var(--accent-base), 0.3);
   
@@ -34,6 +34,7 @@
   --light-cyan: 0, 212, 255;
   --light-pink: 255, 46, 126;
   --light-purple: 147, 51, 234;
+  --light-red: 239, 68, 68;
 
   scroll-behavior: smooth;
 }
@@ -69,6 +70,14 @@
   --accent-hover: #a855f7;
   --accent-glow: 0 0 25px rgba(var(--light-purple), 0.6);
   --accent-border: rgba(var(--light-purple), 0.4);
+}
+
+[data-vibe="red"] {
+  --accent-base: var(--light-red);
+  --accent: rgb(var(--light-red));
+  --accent-hover: #f87171;
+  --accent-glow: 0 0 25px rgba(var(--light-red), 0.6);
+  --accent-border: rgba(var(--light-red), 0.4);
 }
 
 /* Base resets */

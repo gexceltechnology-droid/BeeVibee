@@ -21,37 +21,59 @@
       "id": "slot-1",
       "time": "10:00 AM - 12:00 PM",
       "label": "Morning Show",
-      "basePrice": 999
+      "basePrice": 0
     },
     {
       "id": "slot-2",
       "time": "12:30 PM - 02:30 PM",
       "label": "Matinee Show",
-      "basePrice": 999
+      "basePrice": 0
     },
     {
       "id": "slot-3",
       "time": "03:00 PM - 05:00 PM",
       "label": "Afternoon Vibe",
-      "basePrice": 999
+      "basePrice": 0
     },
     {
       "id": "slot-4",
       "time": "05:30 PM - 07:30 PM",
       "label": "Sunset Vibe",
-      "basePrice": 999
+      "basePrice": 0
     },
     {
       "id": "slot-5",
       "time": "08:00 PM - 10:00 PM",
       "label": "Night Vibe",
-      "basePrice": 999
+      "basePrice": 0
     },
     {
       "id": "slot-6",
       "time": "10:30 PM - 12:30 AM",
       "label": "Midnight Vibe",
-      "basePrice": 999
+      "basePrice": 0
+    }
+  ],
+  "otps": [
+    {
+      "phone": "+919999999999",
+      "hashedOtp": "6befd8827c4190099f06f7824f0d384698ade6a9057732658ccc04074190f420",
+      "expiresAt": "2026-07-18T07:42:39.769Z"
+    },
+    {
+      "phone": "+9199999999998123501013",
+      "hashedOtp": "5f49d1a07c28167e5f37810d0704a52303b824c8b2ce7616168fc9adf87fb0a9",
+      "expiresAt": "2026-07-18T07:44:23.019Z"
+    },
+    {
+      "phone": "+918123501013",
+      "hashedOtp": "c962c09488ff9d1e36191d763683ebc928126cd8b4556d9b6094c2bc030a3254",
+      "expiresAt": "2026-07-18T07:53:55.270Z"
+    },
+    {
+      "phone": "+918919178055",
+      "hashedOtp": "f00c760326c7cf242787188e7bcc4b223dfd3115fa5d09d4f54f62a744bc4c87",
+      "expiresAt": "2026-07-18T08:34:56.604Z"
     }
   ]
 }

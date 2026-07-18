@@ -4,14 +4,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import styles from './InteractiveShowcase.module.css';
 
 interface InteractiveShowcaseProps {
-  vibe: 'amber' | 'cyan' | 'pink' | 'purple';
+  vibe: 'pink' | 'purple' | 'red';
 }
 
 const VIBE_COLORS = {
-  amber: { accent: '#f2a900', rgb: '242, 169, 0', name: 'Cozy Amber' },
-  cyan: { accent: '#00d4ff', rgb: '0, 212, 255', name: 'Cyber Cyan' },
   pink: { accent: '#ff2e7e', rgb: '255, 46, 126', name: 'Rose Pink' },
   purple: { accent: '#9333ea', rgb: '147, 51, 234', name: 'Neon Purple' },
+  red: { accent: '#ef4444', rgb: '239, 68, 68', name: 'Crimson Red' },
 };
 
 interface Balloon {
@@ -19,7 +18,7 @@ interface Balloon {
   y: number;
   radius: number;
   speed: number;
-  vibeType: 'amber' | 'cyan' | 'pink' | 'purple' | 'bomb';
+  vibeType: 'pink' | 'purple' | 'red' | 'bomb';
   color: string;
   swayOffset: number;
   swaySpeed: number;
@@ -36,7 +35,7 @@ interface Particle {
 }
 
 export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) {
-  const current = VIBE_COLORS[vibe] || VIBE_COLORS.amber;
+  const current = VIBE_COLORS[vibe] || VIBE_COLORS.pink;
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Game States
@@ -44,7 +43,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lives, setLives] = useState(3);
-  const [unlockedCode, setUnlockedCode] = useState(false);
 
   // Refs for animation loop variables
   const gameStateRef = useRef(gameState);
@@ -112,26 +110,25 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
     }
 
     const spawnBalloon = () => {
-      const vibes: ('amber' | 'cyan' | 'pink' | 'purple' | 'bomb')[] = ['amber', 'cyan', 'pink', 'purple', 'bomb'];
+      const vibes: ('pink' | 'purple' | 'red' | 'bomb')[] = ['pink', 'purple', 'red', 'bomb'];
       // Weigh active vibe slightly higher, bomb lower
       const rand = Math.random();
-      let type: 'amber' | 'cyan' | 'pink' | 'purple' | 'bomb' = 'bomb';
+      let type: 'pink' | 'purple' | 'red' | 'bomb' = 'bomb';
       
       if (rand < 0.35) {
         type = vibeRef.current; // active vibe
       } else if (rand < 0.75) {
         const others = vibes.filter(v => v !== vibeRef.current && v !== 'bomb');
-        type = others[Math.floor(Math.random() * others.length)];
+        type = others[Math.floor(Math.random() * others.length)] as any;
       } else {
         type = 'bomb';
       }
 
       const colors = {
-        amber: '#f2a900',
-        cyan: '#00d4ff',
         pink: '#ff2e7e',
         purple: '#9333ea',
-        bomb: '#ef4444',
+        red: '#ef4444',
+        bomb: '#ffffff',
       };
 
       balloons.push({
@@ -202,11 +199,10 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.stroke();
       }
 
-      const activeColor = VIBE_COLORS[vibeRef.current] || VIBE_COLORS.amber;
+      const activeColor = VIBE_COLORS[vibeRef.current] || VIBE_COLORS.pink;
 
       // 3. Game Render States
       if (gameStateRef.current === 'START') {
-        // Clear variables
         balloons = [];
         particles = [];
 
@@ -240,14 +236,13 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.fillText('PLAY ARCADE', w / 2, h * 0.65 + 26);
 
       } else if (gameStateRef.current === 'PLAYING') {
-        // Spawn controller
         spawnTimer++;
         if (spawnTimer > 35) {
           spawnBalloon();
           spawnTimer = 0;
         }
 
-        // Draw Player Catcher (glowing party couch/basket at bottom)
+        // Draw Player Catcher (glowing party tray at bottom)
         const catcherWidth = 72;
         const catcherHeight = 12;
         const catcherX = Math.min(Math.max(playerXRef.current - catcherWidth / 2, 10), w - catcherWidth - 10);
@@ -260,19 +255,16 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.roundRect(catcherX, catcherY, catcherWidth, catcherHeight, 6);
         ctx.fill();
         ctx.shadowBlur = 0;
-        
-        // Catcher handles / decor
+
+        // Catcher handles
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(catcherX + 4, catcherY - 3, 4, 3);
         ctx.fillRect(catcherX + catcherWidth - 8, catcherY - 3, 4, 3);
 
         // Update and Draw Balloons
         balloons.forEach((balloon, bIndex) => {
-          // Sway motion
           balloon.x += Math.sin(time * balloon.swaySpeed + balloon.swayOffset) * 0.6;
           balloon.y += balloon.speed;
-
-          // Constraints
           balloon.x = Math.min(Math.max(balloon.x, balloon.radius), w - balloon.radius);
 
           // Draw string
@@ -294,18 +286,18 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           ctx.arc(balloon.x, balloon.y, balloon.radius, 0, Math.PI * 2);
           ctx.fill();
 
-          // Highlight / reflection
+          // Highlight
           ctx.fillStyle = 'rgba(255,255,255,0.3)';
           ctx.beginPath();
           ctx.arc(balloon.x - balloon.radius * 0.3, balloon.y - balloon.radius * 0.3, balloon.radius * 0.25, 0, Math.PI * 2);
           ctx.fill();
 
-          // Draw bomb details if applicable
+          // Draw bomb label (white bubble spike)
           if (balloon.vibeType === 'bomb') {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = '#ef4444';
             ctx.font = 'bold 10px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('X', balloon.x, balloon.y + 4);
+            ctx.fillText('X', balloon.x, balloon.y + 4.5);
           }
 
           // Check Catcher Collision
@@ -315,9 +307,7 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
             balloon.x + balloon.radius >= catcherX &&
             balloon.x - balloon.radius <= catcherX + catcherWidth
           ) {
-            // Collision hit!
             if (balloon.vibeType === 'bomb') {
-              // Hit bomb! Deduct life
               setLives((l) => {
                 const nl = l - 1;
                 if (nl <= 0) {
@@ -326,7 +316,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
                 return nl;
               });
             } else {
-              // Add score: double if matches active vibe
               const points = balloon.vibeType === vibeRef.current ? 10 : 5;
               setScore((s) => s + points);
             }
@@ -344,7 +333,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
               });
             }
 
-            // Remove balloon
             balloons.splice(bIndex, 1);
             return;
           }
@@ -352,7 +340,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           // Check Screen Bottom Out
           if (balloon.y - balloon.radius > h) {
             if (balloon.vibeType !== 'bomb') {
-              // Missed a good balloon: lose a life
               setLives((l) => {
                 const nl = l - 1;
                 if (nl <= 0) {
@@ -369,8 +356,8 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         particles.forEach((part, pIndex) => {
           part.x += part.vx;
           part.y += part.vy;
-          part.vy += 0.08; // gravity
-          part.alpha -= 0.025; // fade
+          part.vy += 0.08;
+          part.alpha -= 0.025;
 
           if (part.alpha <= 0) {
             particles.splice(pIndex, 1);
@@ -398,7 +385,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.fillText(`LIVES: ${'❤️'.repeat(livesRef.current)}`, w - 20, 30);
 
       } else if (gameStateRef.current === 'GAMEOVER') {
-        // Highscore update
         const finalScore = scoreRef.current;
         const currentHigh = parseInt(localStorage.getItem('beevibe_highscore') || '0', 10);
         
@@ -407,7 +393,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           setHighScore(finalScore);
         }
 
-        // Title Game Over
         ctx.fillStyle = '#ef4444';
         ctx.font = 'bold 36px Outfit, sans-serif';
         ctx.textAlign = 'center';
@@ -417,9 +402,7 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.font = 'bold 16px Outfit, sans-serif';
         ctx.fillText(`Final Score: ${finalScore}`, w / 2, h * 0.39);
 
-        // Code Unlock reward
         if (finalScore >= 50) {
-          setUnlockedCode(true);
           ctx.fillStyle = '#10b981';
           ctx.font = 'bold 15px Outfit, sans-serif';
           ctx.fillText('🎉 CODE UNLOCKED: BEEVIBEPLAY', w / 2, h * 0.47);
@@ -432,7 +415,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           ctx.fillText('Score 50+ to unlock a discount promo code!', w / 2, h * 0.48);
         }
 
-        // Retry Button
         ctx.fillStyle = activeColor.accent;
         ctx.shadowColor = activeColor.accent;
         ctx.shadowBlur = 15;
@@ -468,7 +450,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
     const h = canvas.height;
 
     if (gameState === 'START') {
-      // Check start button click bounds
       if (
         clickX >= w / 2 - 80 && 
         clickX <= w / 2 + 80 && 
@@ -480,7 +461,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         setGameState('PLAYING');
       }
     } else if (gameState === 'GAMEOVER') {
-      // Check restart button click bounds
       if (
         clickX >= w / 2 - 80 && 
         clickX <= w / 2 + 80 && 
@@ -494,7 +474,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
     }
   };
 
-  // Cursor move tracks player
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (gameState !== 'PLAYING') return;
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -503,12 +482,10 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
     }
   };
 
-  // Touch move support for mobile viewports
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
     if (gameState !== 'PLAYING') return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect && e.touches[0]) {
-      // Prevent screen scrolling during gameplay drag
       if (e.cancelable) e.preventDefault();
       playerXRef.current = e.touches[0].clientX - rect.left;
     }
@@ -536,7 +513,6 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           </div>
         </canvas>
 
-        {/* Lower Info Bar */}
         <div className={styles.gameInfoPanel}>
           <div className={styles.infoLeft}>
             <span className={styles.infoDot} />

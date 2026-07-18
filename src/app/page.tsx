@@ -64,10 +64,10 @@ const PartyPopperIcon = () => (
   </svg>
 );
 
-type VibeType = 'amber' | 'cyan' | 'pink' | 'purple';
+type VibeType = 'pink' | 'purple' | 'red';
 
 export default function Home() {
-  const [vibe, setVibe] = useState<VibeType>('amber');
+  const [vibe, setVibe] = useState<VibeType>('pink');
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -139,10 +139,9 @@ export default function Home() {
   }, []);
 
   const vibeLabels = {
-    amber: 'Honey Amber (Cozy Vibe)',
-    cyan: 'Cyber Cyan (Gaming Vibe)',
-    pink: 'Rose Pink (Romance Vibe)',
-    purple: 'Neon Purple (Party Vibe)',
+    pink: 'Rose Pink Theme (₹799/2hrs)',
+    purple: 'Neon Purple Theme (₹999/2hrs)',
+    red: 'Crimson Red Theme (₹599/2hrs)',
   };
 
   return (
@@ -268,20 +267,6 @@ export default function Home() {
                   <div className={styles.vibeTitle}>Set Room Mood Lighting:</div>
                   <div className={styles.vibeButtons}>
                     <button
-                      className={`${styles.vibeBtn} ${vibe === 'amber' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('amber')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#f2a900' }} />
-                      Amber
-                    </button>
-                    <button
-                      className={`${styles.vibeBtn} ${vibe === 'cyan' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('cyan')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#00d4ff' }} />
-                      Cyan
-                    </button>
-                    <button
                       className={`${styles.vibeBtn} ${vibe === 'pink' ? styles.vibeBtnActive : ''}`}
                       onClick={() => setVibe('pink')}
                     >
@@ -294,6 +279,13 @@ export default function Home() {
                     >
                       <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
                       Purple
+                    </button>
+                    <button
+                      className={`${styles.vibeBtn} ${vibe === 'red' ? styles.vibeBtnActive : ''}`}
+                      onClick={() => setVibe('red')}
+                    >
+                      <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
+                      Red
                     </button>
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '4px' }}>
@@ -318,64 +310,59 @@ export default function Home() {
 
             {/* Section 2: Packages (Trigger camera shift 1) */}
             <section id="vibes" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Signature Celebration Packages</h2>
+              <h2 className={styles.sectionTitle}>Signature Celebration Themes</h2>
               <p className={styles.sectionSub}>
-                Every package includes a full 2-hour private theater screen reservation, massive Dolby acoustics, and comfortable seating — starting from just ₹999.
+                Book the entire private party hall for your special screening. All themes include HD Projector, AC, and high-speed Wi-Fi.
               </p>
 
               <div className={styles.vibeShowcaseGrid}>
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#f2a900' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🎥 Movie Vibe Pack</h3>
-                    <div className={styles.showcasePrice}>₹999 + slot fee</div>
-                    <ul className={styles.showcaseList}>
-                      <li>Exclusive 2-hour screen booking</li>
-                      <li>4K Projection & Dolby Surround sound</li>
-                      <li>2 Large popcorn tubs + beverages</li>
-                      <li>Warm amber ambient lighting controls</li>
-                    </ul>
-                  </div>
-                </div>
-
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#9333ea' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🎂 Birthday Bash Vibe</h3>
-                    <div className={styles.showcasePrice}>₹1,999 + slot fee</div>
-                    <ul className={styles.showcaseList}>
-                      <li>Full birthday balloon decorations (Gold/Black)</li>
-                      <li>1kg Rich Chocolate Fudge Cake included</li>
-                      <li>Custom screen greeting animation intro</li>
-                      <li>Party poppers and party props</li>
-                    </ul>
-                  </div>
-                </div>
-
+                {/* Pink Theme */}
                 <div className={styles.showcaseCard}>
                   <div className={styles.cardBanner} style={{ backgroundColor: '#ff2e7e' }} />
                   <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>💖 Cozy Romance Vibe</h3>
-                    <div className={styles.showcasePrice}>₹2,499 + slot fee</div>
+                    <h3 className={styles.showcaseTitle}>🌸 Pink Theme</h3>
+                    <div className={styles.showcasePrice}>₹799 / 2 Hrs</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
                     <ul className={styles.showcaseList}>
-                      <li>Red carpet and glowing candle pathway</li>
-                      <li>Rose petals floor decorations</li>
-                      <li>Fresh welcome mocktails & rose bouquet</li>
-                      <li>Custom photo slide projections on screen</li>
+                      <li>2-Hour full private hall booking</li>
+                      <li>Warm Pink ambient lighting decor</li>
+                      <li>Extra guest: ₹100 per head</li>
+                      <li>DSLR Photo: ₹500/hr (optional)</li>
+                      <li>Fog entry: ₹300 flat (optional)</li>
                     </ul>
                   </div>
                 </div>
 
+                {/* Purple Theme */}
                 <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#00d4ff' }} />
+                  <div className={styles.cardBanner} style={{ backgroundColor: '#9333ea' }} />
                   <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🎮 Ultimate Gaming Vibe</h3>
-                    <div className={styles.showcasePrice}>₹1,499 + slot fee</div>
+                    <h3 className={styles.showcaseTitle}>🎂 Purple Theme</h3>
+                    <div className={styles.showcasePrice}>₹999 / 2 Hrs</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
                     <ul className={styles.showcaseList}>
-                      <li>Massive screen multiplayer console connections</li>
-                      <li>4 Premium wireless controllers</li>
-                      <li>Cyberpunk neon ambient light settings</li>
-                      <li>Gamer Snack Platter (Nachos, Energy Drinks)</li>
+                      <li>2-Hour full private hall booking</li>
+                      <li>Vibrant Purple party lighting decor</li>
+                      <li>Extra guest: ₹100 per head</li>
+                      <li>DSLR Photo: ₹500/hr (optional)</li>
+                      <li>Fog entry: ₹300 flat (optional)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Red Theme */}
+                <div className={styles.showcaseCard}>
+                  <div className={styles.cardBanner} style={{ backgroundColor: '#ef4444' }} />
+                  <div className={styles.showcaseContent}>
+                    <h3 className={styles.showcaseTitle}>❤️ Red Theme</h3>
+                    <div className={styles.showcasePrice}>₹599 / 2 Hrs</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
+                    <ul className={styles.showcaseList}>
+                      <li>2-Hour full private hall booking</li>
+                      <li>Romantic Crimson Red lighting setup</li>
+                      <li>Extra guest: ₹100 per head</li>
+                      <li>DSLR Photo: ₹500/hr (optional)</li>
+                      <li>Fog entry: ₹300 flat (optional)</li>
                     </ul>
                   </div>
                 </div>

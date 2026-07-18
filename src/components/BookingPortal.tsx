@@ -9,64 +9,47 @@ import { Download, Printer } from 'lucide-react';
 // Packages Constant
 const PACKAGES = [
   {
-    id: 'pkg-movie',
-    name: 'Movie Vibe Pack',
-    price: 0,
+    id: 'pkg-pink',
+    name: 'Pink Theme',
+    price: 799,
     details: [
-      '2-Hour Private Screen Booking',
-      'Cinema Surround Sound (Dolby)',
-      '2 Large Salted Popcorn Buckets',
-      'Unlimited Soft Drinks for Guests',
-      'Standard Ambient Warm Lighting',
+      '2-Hour Celebration Slot (Base 2 Guests)',
+      'HD Projector & Large Screen',
+      'Air Conditioned Hall (AC)',
+      'High-Speed Wi-Fi Access',
+      'Warm Pink Theme Lighting Setup',
     ]
   },
   {
-    id: 'pkg-birthday',
-    name: 'Birthday Bash Vibe',
-    price: 0,
+    id: 'pkg-purple',
+    name: 'Purple Theme',
+    price: 999,
     details: [
-      '2-Hour Private Screen Booking',
-      'Premium Birthday Theme Decoration (Black & Gold Balloons)',
-      'Custom Screen Birthday Intro Video',
-      '1kg Chocolate Fudge Cake included',
-      'Party Hats, Snow Spray & Party Props',
+      '2-Hour Celebration Slot (Base 2 Guests)',
+      'HD Projector & Large Screen',
+      'Air Conditioned Hall (AC)',
+      'High-Speed Wi-Fi Access',
+      'Vibrant Purple Theme Lighting Setup',
     ]
   },
   {
-    id: 'pkg-romance',
-    name: 'Cozy Romance Vibe',
-    price: 0,
+    id: 'pkg-red',
+    name: 'Red Theme',
+    price: 599,
     details: [
-      '2-Hour Private Screen Booking',
-      'Red Carpet Entrance & LED Candle Pathway',
-      'Beautiful Rose Petals Floor decoration',
-      'Fresh Welcome Mocktails for Couple',
-      'Custom Romantic Screen Slide (Send us your photos)',
-      'Red Rose Bouquet for your partner',
-    ]
-  },
-  {
-    id: 'pkg-gaming',
-    name: 'Ultimate Gaming Vibe',
-    price: 0,
-    details: [
-      '2-Hour Private Screen Booking',
-      'Console setup (PS5 / Xbox Series X) on massive screen',
-      '4 Multiplayer Controllers provided',
-      'Dynamic Neon / Cyberpunk Lighting settings',
-      'Gamer Snack Platter (Nachos, Fries, Energy Drinks)',
+      '2-Hour Celebration Slot (Base 2 Guests)',
+      'HD Projector & Large Screen',
+      'Air Conditioned Hall (AC)',
+      'High-Speed Wi-Fi Access',
+      'Romantic Red Theme Lighting Setup',
     ]
   }
 ];
 
 // Add-ons Constant
 const ADDONS = [
-  { id: 'add-rose', name: 'Fresh Rose Bouquet', price: 0 },
-  { id: 'add-nachos', name: 'Gourmet Nachos & Dip Platter', price: 0 },
-  { id: 'add-cake', name: '1kg Red Velvet Designer Cake', price: 0 },
-  { id: 'add-photo', name: '30-Mins Photo Shoot & Digital Copy', price: 0 },
-  { id: 'add-balloons', name: 'Extra Premium Helium Balloons (x30)', price: 0 },
-  { id: 'add-fog', name: 'Special Screen Entry Fog Effect', price: 0 },
+  { id: 'add-dslr', name: 'DSLR Camera Coverage (₹500/hour)', price: 500 },
+  { id: 'add-fog', name: 'Special Fog Entry Effect (Flat ₹300)', price: 300 },
 ];
 
 interface Slot {
@@ -481,9 +464,8 @@ export default function BookingPortal() {
         return;
       }
 
-      // Base price calculation: ₹999 for every 2 hours (pro-rated)
-      const durationHours = durationMinutes / 60;
-      const basePrice = Math.round((durationHours / 2) * 999);
+      // Base price is driven entirely by the selected package
+      const basePrice = 0;
 
       setSelectedSlot({
         id: 'slot-custom',
@@ -497,15 +479,30 @@ export default function BookingPortal() {
     }
   }, [bookingMode, customStart, customEnd, selectedDate, activeBookings]);
 
+  const getSlotDurationHours = () => {
+    if (!selectedSlot) return 2;
+    try {
+      const { startMinutes, endMinutes } = parseTimeRange(selectedSlot.time);
+      return (endMinutes - startMinutes) / 60;
+    } catch (e) {
+      return 2;
+    }
+  };
+
   // Calculate dynamic pricing
   const calculateTotal = () => {
-    const slotBase = selectedSlot ? selectedSlot.basePrice : 0;
-    const pkgBase = selectedPackage ? selectedPackage.price : 0;
+    const durationHours = getSlotDurationHours();
+    const pkgBase = selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
+    const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
     const addonsTotal = selectedAddons.reduce((sum, addonId) => {
       const addon = ADDONS.find((a) => a.id === addonId);
-      return sum + (addon ? addon.price : 0);
+      if (!addon) return sum;
+      if (addon.id === 'add-dslr') {
+        return sum + Math.round(500 * durationHours);
+      }
+      return sum + addon.price;
     }, 0);
-    return slotBase + pkgBase + addonsTotal;
+    return pkgBase + extraGuests + addonsTotal;
   };
 
   const handleAddonToggle = (addonId: string) => {
