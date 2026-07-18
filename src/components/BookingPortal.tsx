@@ -1213,7 +1213,7 @@ export default function BookingPortal() {
                     </select>
                     <input
                       type="tel"
-                      placeholder="Enter Phone (Ex: 8123501013)"
+                      placeholder="Enter Phone (Ex: 9900106474)"
                       className={styles.loginPhoneInput}
                       value={loginPhone}
                       onChange={(e) => setLoginPhone(e.target.value)}

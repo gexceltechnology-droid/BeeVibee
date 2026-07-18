@@ -180,18 +180,6 @@ export default function Home() {
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
                 <li><Link href="/book" className={styles.navLink}>Booking Portal</Link></li>
-                <li style={{ display: 'flex', alignItems: 'center' }}>
-                  <a
-                    href="https://www.instagram.com/beevibe_partyhall/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.navLink}
-                    aria-label="Instagram"
-                    style={{ display: 'flex', alignItems: 'center' }}
-                  >
-                    <Instagram size={18} style={{ verticalAlign: 'middle' }} />
-                  </a>
-                </li>
               </ul>
             </nav>
             <div className={styles.headerActions}>
@@ -457,8 +445,8 @@ export default function Home() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Phone size={16} color="var(--accent)" />
-                  <a href="tel:8123501013" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
-                    +91 81235 01013
+                  <a href="tel:9900106474" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
+                    +91 99001 06474
                   </a>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
