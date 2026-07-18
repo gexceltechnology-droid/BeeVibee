@@ -7,22 +7,7 @@ import styles from './page.module.css';
 import dynamic from 'next/dynamic';
 import BookingPortal from '@/components/BookingPortal';
 
-const ThreeTheater = dynamic(() => import('@/components/ThreeTheater'), {
-  ssr: false,
-  loading: () => (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      color: 'var(--text-muted)',
-      fontFamily: 'var(--font-title)',
-      fontSize: '0.9rem'
-    }}>
-      Loading interactive room preview...
-    </div>
-  )
-});
+import InteractiveShowcase from '@/components/InteractiveShowcase';
 import {
   Tv,
   Volume2,
@@ -35,9 +20,28 @@ import {
   Cake,
   Phone,
   MapPin,
-  Clock,
-  Instagram
+  Clock
 } from 'lucide-react';
+
+// Custom Instagram icon component for maximum reliability
+const Instagram = ({ size = 24, color = "currentColor", ...props }: React.SVGProps<SVGSVGElement> & { size?: number | string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+);
 
 type VibeType = 'amber' | 'cyan' | 'pink' | 'purple';
 
@@ -277,6 +281,10 @@ export default function Home() {
                   </div>
                 </div>
 
+                <div className={styles.mobileShowcase}>
+                  <InteractiveShowcase vibe={vibe} />
+                </div>
+
                 <div className={styles.heroCtas}>
                   <a href="#book" className="btn btn-primary">
                     Reserve Your Screen
@@ -417,7 +425,7 @@ export default function Home() {
           {/* Right Column: Sticky viewport container holding the 3D canvas */}
           <div className={styles.stickyColumn}>
             <div className={styles.canvasWrapper}>
-              <ThreeTheater vibe={vibe} scrollProgress={scrollProgress} />
+              <InteractiveShowcase vibe={vibe} />
             </div>
           </div>
 

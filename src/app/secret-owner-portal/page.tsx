@@ -29,12 +29,14 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
+  const [archiveStatus, setArchiveStatus] = useState<{ count: number; destination: string } | null>(null);
   
   // Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
-  // Check auth on load
+  // Check auth and archived status on load
   useEffect(() => {
     const savedCode = sessionStorage.getItem('bee_vibe_admin_passcode');
     if (savedCode) {
@@ -42,7 +44,51 @@ export default function AdminDashboard() {
     } else {
       setIsAuthenticated(false);
     }
+
+    const savedCount = sessionStorage.getItem('bee_vibe_archived_count');
+    const savedDest = sessionStorage.getItem('bee_vibe_archived_destination');
+    if (savedCount && savedDest) {
+      setArchiveStatus({
+        count: parseInt(savedCount, 10),
+        destination: savedDest
+      });
+    }
   }, []);
+
+  // Polling for new bookings when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      fetchBookings(undefined, true);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
+  const runArchiving = async (codeValue?: string) => {
+    const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+    try {
+      const res = await fetch('/api/admin/archive', {
+        method: 'POST',
+        headers: {
+          'X-Admin-Passcode': activePasscode,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.count > 0) {
+          sessionStorage.setItem('bee_vibe_archived_count', String(data.count));
+          sessionStorage.setItem('bee_vibe_archived_destination', data.destination);
+          setArchiveStatus({ count: data.count, destination: data.destination });
+          // Fetch updated bookings list since some were archived
+          fetchBookings(activePasscode);
+        }
+      }
+    } catch (err) {
+      console.error('Error running daily archiving task:', err);
+    }
+  };
 
   const verifyPasscode = async (codeToCheck: string) => {
     setLoginLoading(true);
@@ -60,6 +106,7 @@ export default function AdminDashboard() {
         sessionStorage.setItem('bee_vibe_admin_passcode', codeToCheck);
         setIsAuthenticated(true);
         fetchBookings(codeToCheck);
+        runArchiving(codeToCheck);
       } else {
         sessionStorage.removeItem('bee_vibe_admin_passcode');
         setIsAuthenticated(false);
@@ -84,17 +131,22 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('bee_vibe_admin_passcode');
+    sessionStorage.removeItem('bee_vibe_archived_count');
+    sessionStorage.removeItem('bee_vibe_archived_destination');
     setIsAuthenticated(false);
     setPasscodeInput('');
     setBookings([]);
+    setArchiveStatus(null);
   };
 
   // Fetch all bookings with authorization header
-  async function fetchBookings(codeValue?: string) {
+  async function fetchBookings(codeValue?: string, isBackground = false) {
     const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
     
     try {
-      setLoading(true);
+      if (!isBackground) {
+        setLoading(true);
+      }
       setError('');
       const res = await fetch('/api/bookings', {
         headers: {
@@ -110,11 +162,48 @@ export default function AdminDashboard() {
 
       if (!res.ok) throw new Error('Failed to load bookings list.');
       const data = await res.json();
-      setBookings(data.bookings || []);
+      const newBookings = data.bookings || [];
+
+      if (isBackground) {
+        setBookings((prev) => {
+          const prevIds = prev.map((b) => b.id);
+          const added = newBookings.filter((b: Booking) => !prevIds.includes(b.id));
+          if (added.length > 0) {
+            const addedIds = added.map((b: Booking) => b.id);
+            setNewlyAddedIds((curr) => [...curr, ...addedIds]);
+            
+            // Play a soft notification audio chime using Web Audio API
+            try {
+              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const oscillator = audioCtx.createOscillator();
+              const gainNode = audioCtx.createGain();
+              oscillator.connect(gainNode);
+              gainNode.connect(audioCtx.destination);
+              oscillator.type = 'sine';
+              oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+              gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+              oscillator.start();
+              oscillator.stop(audioCtx.currentTime + 0.15);
+            } catch (e) {
+              console.error('Audio playback blocked or unsupported:', e);
+            }
+            
+            // Clear highlight animation class after 8 seconds
+            setTimeout(() => {
+              setNewlyAddedIds((curr) => curr.filter((id) => !addedIds.includes(id)));
+            }, 8000);
+          }
+          return newBookings;
+        });
+      } else {
+        setBookings(newBookings);
+      }
     } catch (err: any) {
       setError(err.message || 'Error loading dashboard data.');
     } finally {
-      setLoading(false);
+      if (!isBackground) {
+        setLoading(false);
+      }
     }
   }
 
@@ -239,6 +328,36 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {archiveStatus && (
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: '6px',
+          color: '#34d399',
+          padding: '12px 16px',
+          marginBottom: '24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '0.9rem',
+          animation: 'fadeIn 0.3s ease-out'
+        }}>
+          <span>
+            🧹 <strong>Daily Refresh Completed:</strong> Archived <strong>{archiveStatus.count}</strong> past booking(s) to <strong>{archiveStatus.destination === 'supabase_db' ? 'Supabase Cloud DB' : archiveStatus.destination === 'cloud_webhook' ? 'Cloud Webhook' : 'Local Archive File'}</strong>.
+          </span>
+          <button 
+            onClick={() => {
+              setArchiveStatus(null);
+              sessionStorage.removeItem('bee_vibe_archived_count');
+              sessionStorage.removeItem('bee_vibe_archived_destination');
+            }}
+            style={{ background: 'transparent', border: 'none', color: '#34d399', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {error && <div className={styles.loginError} style={{ margin: '0 0 24px 0', padding: '14px', fontSize: '0.9rem' }}>{error}</div>}
 
       {/* Analytics Cards */}
@@ -311,8 +430,10 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {filteredBookings.length > 0 ? (
-                filteredBookings.map((b) => (
-                  <tr key={b.id}>
+                filteredBookings.map((b) => {
+                  const isNew = newlyAddedIds.includes(b.id);
+                  return (
+                    <tr key={b.id} className={isNew ? styles.newRowHighlight : ''}>
                     <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
                     <td>
                       <div className={styles.customerName}>{b.customerName}</div>
@@ -354,25 +475,62 @@ export default function AdminDashboard() {
                       </span>
                     </td>
                     <td>
-                      <div className={styles.actionCell}>
-                        <button
-                          className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                          onClick={() => handleUpdateStatus(b.id, 'confirmed')}
-                          disabled={b.status === 'confirmed'}
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
-                          onClick={() => handleUpdateStatus(b.id, 'cancelled')}
-                          disabled={b.status === 'cancelled'}
-                        >
-                          Cancel
-                        </button>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div className={styles.actionCell}>
+                          <button
+                            className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
+                            onClick={() => handleUpdateStatus(b.id, 'confirmed')}
+                            disabled={b.status === 'confirmed'}
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
+                            onClick={() => handleUpdateStatus(b.id, 'cancelled')}
+                            disabled={b.status === 'cancelled'}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            className={styles.manualBtn}
+                            onClick={() => {
+                              const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone;
+                              const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
+                              window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank');
+                            }}
+                            title="Send confirmation via WhatsApp manually"
+                          >
+                            💬 WA
+                          </button>
+                          <button
+                            className={styles.manualBtn}
+                            onClick={() => {
+                              const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
+                              window.open(`sms:${b.phone}${navigator.userAgent.match(/iPhone|iPad|iPod/i) ? '&' : '?'}body=${encodeURIComponent(text)}`, '_blank');
+                            }}
+                            title="Send confirmation via SMS manually"
+                          >
+                            📱 SMS
+                          </button>
+                          <button
+                            className={styles.manualBtn}
+                            onClick={() => {
+                              const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
+                              navigator.clipboard.writeText(text);
+                              alert('Message copied to clipboard!');
+                            }}
+                            title="Copy ticket text to clipboard"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan={7} className={styles.noBookings}>

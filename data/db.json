@@ -1,5 +1,21 @@
 {
-  "bookings": [],
+  "bookings": [
+    {
+      "customerName": "Mallikarjun",
+      "email": "malligopaladasu@gmail.com",
+      "phone": "+918919178055",
+      "date": "2026-07-15",
+      "timeSlot": "05:30 PM - 07:30 PM",
+      "packageName": "Birthday Bash Vibe",
+      "addOns": [],
+      "totalPrice": 999,
+      "guestCount": 2,
+      "specialRequests": "",
+      "id": "BV-260715-0001",
+      "status": "cancelled",
+      "createdAt": "2026-07-15T11:06:00.774Z"
+    }
+  ],
   "timeSlots": [
     {
       "id": "slot-1",

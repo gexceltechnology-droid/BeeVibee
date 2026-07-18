@@ -87,6 +87,21 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
             font-size: 16px;
             font-weight: 800;
           }
+          .qr-section {
+            text-align: center;
+            margin: 24px 0;
+            padding: 20px;
+            background: rgba(242, 169, 0, 0.03);
+            border: 1px solid rgba(242, 169, 0, 0.2);
+            border-radius: 8px;
+          }
+          .qr-image {
+            display: block;
+            margin: 12px auto;
+            border: 6px solid #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          }
           .highlight-box {
             background: rgba(242, 169, 0, 0.08);
             border: 1px dashed rgba(242, 169, 0, 0.35);
@@ -165,6 +180,12 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
               </td>
             </tr>
           </table>
+
+          <div class="qr-section">
+            <div class="label">Check-in QR Code</div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${params.id}" alt="QR Code" class="qr-image" width="150" height="150" />
+            <div style="font-size: 12px; color: #f2a900; margin-top: 8px; font-family: monospace; font-weight: bold; letter-spacing: 2px;">${params.id}</div>
+          </div>
 
           <div class="highlight-box">
             👉 Please download the ticket receipt from the website or present this email at the Bee Vibe reception desk upon arrival!

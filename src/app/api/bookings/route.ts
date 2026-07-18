@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb, addBooking, updateBookingStatus } from '@/lib/db';
 import { parseTimeRange } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
+import { sendSMS } from '@/lib/sms';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -155,6 +156,14 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send booking confirmation email:', emailError);
     }
 
+    // Send confirmation SMS asynchronously (non-blocking)
+    try {
+      const messageBody = `Your Bee Vibe booking is confirmed!\n\nTicket Code: ${newBooking.id}\nDate: ${newBooking.date}\nTime: ${newBooking.timeSlot}\n\nPresent this code at the entrance. Thank you!`;
+      await sendSMS(newBooking.phone, messageBody);
+    } catch (smsError) {
+      console.error('Failed to send booking confirmation SMS:', smsError);
+    }
+
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating booking:', error);
@@ -184,40 +193,11 @@ export async function PUT(request: NextRequest) {
 
     // Send confirmation SMS if slot is confirmed
     if (status === 'confirmed') {
-      const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
-      const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
-
-      if (accountSid && authToken && twilioPhone) {
-        try {
-          const authHeader = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-          const messageBody = `Your Bee Vibe booking is confirmed!\n\nTicket Code: ${updatedBooking.id}\nDate: ${updatedBooking.date}\nTime: ${updatedBooking.timeSlot}\n\nPresent this code at the entrance. Thank you!`;
-          
-          await fetch(
-            `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': authHeader,
-              },
-              body: new URLSearchParams({
-                To: updatedBooking.phone,
-                From: twilioPhone,
-                Body: messageBody,
-              }).toString(),
-            }
-          );
-          console.log(`[SMS] Booking confirmation SMS successfully sent to ${updatedBooking.phone}`);
-        } catch (smsError) {
-          console.error('Failed to send booking confirmation SMS:', smsError);
-        }
-      } else {
-        console.log(`\n==================================================`);
-        console.log(`[MOCK CONFIRMATION SMS] Twilio credentials missing in .env.local`);
-        console.log(`To: ${updatedBooking.phone}`);
-        console.log(`Message: Your Bee Vibe booking is confirmed! Ticket Code: ${updatedBooking.id}`);
-        console.log(`==================================================\n`);
+      try {
+        const messageBody = `Your Bee Vibe booking is confirmed!\n\nTicket Code: ${updatedBooking.id}\nDate: ${updatedBooking.date}\nTime: ${updatedBooking.timeSlot}\n\nPresent this code at the entrance. Thank you!`;
+        await sendSMS(updatedBooking.phone, messageBody);
+      } catch (smsError) {
+        console.error('Failed to send booking confirmation SMS:', smsError);
       }
     }
 
