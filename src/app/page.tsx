@@ -64,6 +64,19 @@ type VibeType = 'pink' | 'purple' | 'red';
 
 export default function Home() {
   const [vibe, setVibe] = useState<VibeType>('pink');
+
+  // Load saved vibe from localStorage on first render
+  useEffect(() => {
+    const saved = localStorage.getItem('beevibe_theme') as VibeType | null;
+    if (saved && ['pink', 'purple', 'red'].includes(saved)) {
+      setVibe(saved);
+    }
+  }, []);
+
+  // Save vibe to localStorage whenever it changes so /book page can read it
+  useEffect(() => {
+    localStorage.setItem('beevibe_theme', vibe);
+  }, [vibe]);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);

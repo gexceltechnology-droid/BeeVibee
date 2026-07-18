@@ -19,7 +19,7 @@
   transform: translateX(-50%);
   width: 700px;
   height: 400px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 46, 126, 0.14) 0%, rgba(255, 46, 126, 0.03) 55%, transparent 100%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(var(--accent-base), 0.14) 0%, rgba(var(--accent-base), 0.03) 55%, transparent 100%);
   filter: blur(80px);
   pointer-events: none;
   z-index: 0;
@@ -89,7 +89,7 @@
   font-family: 'Outfit', sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
-  color: #ff2e7e;
+  color: var(--accent);
 }
 
 .logoSub {
@@ -116,9 +116,9 @@
 }
 
 .backBtn:hover {
-  background: rgba(255, 46, 126, 0.12);
-  border-color: rgba(255, 46, 126, 0.4);
-  color: #ff2e7e;
+  background: rgba(var(--accent-base), 0.12);
+  border-color: rgba(var(--accent-base), 0.4);
+  color: var(--accent);
 }
 
 /* ===== Main Content ===== */
@@ -139,14 +139,14 @@
 .heroBadge {
   display: inline-block;
   padding: 5px 18px;
-  background: rgba(255, 46, 126, 0.12);
-  border: 1px solid rgba(255, 46, 126, 0.3);
+  background: rgba(var(--accent-base), 0.12);
+  border: 1px solid rgba(var(--accent-base), 0.3);
   border-radius: 100px;
   font-family: 'Outfit', sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  color: #ff2e7e;
+  color: var(--accent);
   text-transform: uppercase;
   margin-bottom: 20px;
 }
@@ -161,8 +161,8 @@
 }
 
 .heroAccent {
-  color: #ff2e7e;
-  text-shadow: 0 0 40px rgba(255, 46, 126, 0.5);
+  color: var(--accent);
+  text-shadow: 0 0 40px rgba(var(--accent-base), 0.5);
 }
 
 .heroSub {
@@ -205,7 +205,7 @@
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 46, 126, 0.06);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(var(--accent-base), 0.06);
 }
 
 /* ===== Contact Strip ===== */
@@ -234,11 +234,11 @@
 }
 
 .contactItem a:hover {
-  color: #ff2e7e;
+  color: var(--accent);
 }
 
 .contactIcon {
-  color: #ff2e7e;
+  color: var(--accent);
   flex-shrink: 0;
 }
 

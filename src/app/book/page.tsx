@@ -28,8 +28,19 @@ const InstagramIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+type VibeType = 'pink' | 'purple' | 'red';
+
 export default function BookPage() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [vibe, setVibe] = useState<VibeType>('pink');
+
+  // Read saved vibe from localStorage (set by home page)
+  useEffect(() => {
+    const saved = localStorage.getItem('beevibe_theme') as VibeType | null;
+    if (saved && ['pink', 'purple', 'red'].includes(saved)) {
+      setVibe(saved);
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -38,7 +49,7 @@ export default function BookPage() {
   }, []);
 
   return (
-    <div className={styles.page}>
+    <div className={styles.page} data-vibe={vibe}>
 
       {/* Ambient Background */}
       <div className={styles.ambientGlow} />
