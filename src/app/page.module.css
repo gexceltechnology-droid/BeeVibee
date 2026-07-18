@@ -59,12 +59,11 @@
 }
 
 .logoIcon {
-  width: 26px;
-  height: 32px;
-  background-image: url('/bee-vibe-logo.png');
-  background-size: 120px auto;
-  background-position: -10px center;
-  background-repeat: no-repeat;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logoText {

@@ -43,6 +43,27 @@ const Instagram = ({ size = 24, color = "currentColor", ...props }: React.SVGPro
   </svg>
 );
 
+const PartyPopperIcon = () => (
+  <svg
+    viewBox="0 0 24 24"
+    width="22"
+    height="22"
+    fill="none"
+    stroke="#f2a900"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    style={{ filter: 'drop-shadow(0 0 6px rgba(242, 169, 0, 0.5))' }}
+  >
+    <path d="M5.8 11.3 2 22l10.7-3.8C11 15.6 8.4 13 5.8 11.3Z" />
+    <path d="m4 15 3 3" />
+    <path d="M13 13c1.4-1.4 3.7-1.4 5.1 0 1.4 1.4 1.4 3.7 0 5.1-1.4 1.4-3.7 1.4-5.1 0-1.4-1.4-1.4-3.7 0-5.1Z" />
+    <line x1="13" y1="9" x2="13" y2="7" />
+    <line x1="17" y1="5" x2="18" y2="4" />
+    <line x1="21" y1="9" x2="22" y2="8" />
+  </svg>
+);
+
 type VibeType = 'amber' | 'cyan' | 'pink' | 'purple';
 
 export default function Home() {
@@ -138,7 +159,9 @@ export default function Home() {
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <div className={styles.logoWrapper}>
-              <div className={styles.logoIcon} aria-hidden="true" />
+              <div className={styles.logoIcon}>
+                <PartyPopperIcon />
+              </div>
               <div className={styles.logoText}>
                 <span className={styles.logoBrand}>BeeVibe</span>
                 <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
@@ -435,7 +458,9 @@ export default function Home() {
           <div className={styles.footerGrid}>
             <div className={styles.footerCol}>
               <div className={styles.logoWrapper}>
-                <div className={styles.logoIcon} aria-hidden="true" />
+                <div className={styles.logoIcon}>
+                  <PartyPopperIcon />
+                </div>
                 <div className={styles.logoText}>
                   <span className={styles.logoBrand}>BeeVibe</span>
                   <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
