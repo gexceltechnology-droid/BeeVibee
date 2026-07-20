@@ -74,6 +74,10 @@ export default function AdminDashboard() {
   // Web Audio Context to circumvent browser autoplay restrictions
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  // Stable refs to track IDs we have already seen — avoids false-positive sounds
+  const knownBookingIdsRef = useRef<Set<string> | null>(null);
+  const knownOrderIdsRef = useRef<Set<string> | null>(null);
+
   const initAudioContext = () => {
     if (!audioContextRef.current) {
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -311,24 +315,31 @@ export default function AdminDashboard() {
       const newBookings = data.bookings || [];
 
       if (isBackground) {
-        setBookings((prev) => {
-          const prevIds = prev.map((b) => b.id);
-          const added = newBookings.filter((b: Booking) => !prevIds.includes(b.id));
-          if (added.length > 0) {
-            const addedIds = added.map((b: Booking) => b.id);
-            setNewlyAddedIds((curr) => [...curr, ...addedIds]);
-            
-            // Play a soft notification audio chime
-            playBookingSound();
-            
-            // Clear highlight animation class after 8 seconds
-            setTimeout(() => {
-              setNewlyAddedIds((curr) => curr.filter((id) => !addedIds.includes(id)));
-            }, 8000);
-          }
-          return newBookings;
-        });
+        // Initialise the known-IDs ref on the very first background poll
+        if (knownBookingIdsRef.current === null) {
+          knownBookingIdsRef.current = new Set(newBookings.map((b: Booking) => b.id));
+          setBookings(newBookings);
+          return;
+        }
+
+        const added = newBookings.filter((b: Booking) => !knownBookingIdsRef.current!.has(b.id));
+        if (added.length > 0) {
+          const addedIds = added.map((b: Booking) => b.id);
+          added.forEach((b: Booking) => knownBookingIdsRef.current!.add(b.id));
+          setNewlyAddedIds((curr) => [...curr, ...addedIds]);
+
+          // Play a soft notification audio chime ONLY for genuinely new bookings
+          playBookingSound();
+
+          // Clear highlight animation class after 8 seconds
+          setTimeout(() => {
+            setNewlyAddedIds((curr) => curr.filter((id) => !addedIds.includes(id)));
+          }, 8000);
+        }
+        setBookings(newBookings);
       } else {
+        // Initial load — seed the ref so the first background poll has no false positives
+        knownBookingIdsRef.current = new Set(newBookings.map((b: Booking) => b.id));
         setBookings(newBookings);
       }
     } catch (err: any) {
@@ -365,24 +376,41 @@ export default function AdminDashboard() {
       const newOrders = data.orders || [];
 
       if (isBackground) {
+        // Initialise the known-IDs ref on the very first background poll
+        if (knownOrderIdsRef.current === null) {
+          knownOrderIdsRef.current = new Set(newOrders.map((o: FoodOrder) => o.id));
+          setOrders(newOrders);
+          return;
+        }
+
+        const added = newOrders.filter((o: FoodOrder) => !knownOrderIdsRef.current!.has(o.id));
+        if (added.length > 0) {
+          const addedIds = added.map((o: FoodOrder) => o.id);
+          added.forEach((o: FoodOrder) => knownOrderIdsRef.current!.add(o.id));
+          setNewlyAddedOrderIds((curr) => [...curr, ...addedIds]);
+
+          // Play order sound ONLY for genuinely new food orders
+          playOrderSound();
+
+          // Clear highlight animation class after 8 seconds
+          setTimeout(() => {
+            setNewlyAddedOrderIds((curr) => curr.filter((id) => !addedIds.includes(id)));
+          }, 8000);
+        }
+
+        // Merge server data: preserve local status changes from the UI by only
+        // updating items whose status has actually changed server-side
         setOrders((prev) => {
-          const prevIds = prev.map((o) => o.id);
-          const added = newOrders.filter((o: FoodOrder) => !prevIds.includes(o.id));
-          if (added.length > 0) {
-            const addedIds = added.map((o: FoodOrder) => o.id);
-            setNewlyAddedOrderIds((curr) => [...curr, ...addedIds]);
-            
-            // Play a soft notification audio chime (different pitch/chord for food)
-            playOrderSound();
-            
-            // Clear highlight animation class after 8 seconds
-            setTimeout(() => {
-              setNewlyAddedOrderIds((curr) => curr.filter((id) => !addedIds.includes(id)));
-            }, 8000);
-          }
-          return newOrders;
+          const serverMap = new Map<string, FoodOrder>(newOrders.map((o: FoodOrder) => [o.id, o]));
+          // Keep prev items (with their UI-updated status) and add new ones
+          const merged: FoodOrder[] = prev.map((o) => serverMap.get(o.id) ?? o);
+          const prevIds = new Set(prev.map((o) => o.id));
+          newOrders.forEach((o: FoodOrder) => { if (!prevIds.has(o.id)) merged.push(o); });
+          return merged;
         });
       } else {
+        // Initial load — seed the ref
+        knownOrderIdsRef.current = new Set(newOrders.map((o: FoodOrder) => o.id));
         setOrders(newOrders);
       }
     } catch (err: any) {
