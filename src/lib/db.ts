@@ -32,10 +32,41 @@ export interface OtpRecord {
   expiresAt: string;
 }
 
+export interface FoodOrderItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface FoodOrder {
+  id: string;
+  theme: 'pink' | 'purple' | 'red';
+  themeLabel: string;
+  customerName?: string;
+  phone?: string;
+  items: FoodOrderItem[];
+  totalPrice: number;
+  status: 'pending' | 'preparing' | 'served' | 'cancelled';
+  createdAt: string;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: 'snacks' | 'beverages' | 'desserts';
+  inStock: boolean;
+  icon: string;
+}
+
 export interface DatabaseSchema {
   bookings: Booking[];
   timeSlots: TimeSlot[];
   otps?: OtpRecord[];
+  foodOrders?: FoodOrder[];
+  menuItems?: MenuItem[];
 }
 
 const IS_SERVERLESS = process.env.NODE_ENV === 'production' || !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
@@ -52,13 +83,28 @@ const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-6', time: '10:30 PM - 12:30 AM', label: 'Midnight Vibe', basePrice: 999 },
 ];
 
+export const DEFAULT_MENU_ITEMS: MenuItem[] = [
+  { id: 'menu-1', name: 'Maggie', price: 70, description: 'Hot and delicious instant noodles.', category: 'snacks', inStock: true, icon: '🍜' },
+  { id: 'menu-2', name: 'Cool drinks', price: 40, description: 'Chilled carbonated beverages (per glass).', category: 'beverages', inStock: true, icon: '🥤' },
+  { id: 'menu-3', name: 'Popcorn', price: 100, description: 'Freshly popped warm theater style popcorn.', category: 'snacks', inStock: true, icon: '🍿' },
+  { id: 'menu-4', name: 'French fries', price: 100, description: 'Golden-fried crispy potato strips.', category: 'snacks', inStock: true, icon: '🍟' },
+  { id: 'menu-5', name: 'Veg nuggets', price: 70, description: 'Crispy deep-fried vegetables bites.', category: 'snacks', inStock: true, icon: '🧆' },
+  { id: 'menu-6', name: 'Chicken nuggets', price: 100, description: 'Crispy fried chicken breast bites.', category: 'snacks', inStock: true, icon: '🍗' },
+  { id: 'menu-7', name: 'Nachos', price: 100, description: 'Crunchy tortilla chips with cheese dipping sauce.', category: 'snacks', inStock: true, icon: '🌮' },
+  { id: 'menu-8', name: 'Sweet corn', price: 70, description: 'Steamed butter sweet corn.', category: 'snacks', inStock: true, icon: '🌽' },
+  { id: 'menu-9', name: 'Burger', price: 100, description: 'Delicious patty burger with cheese and fresh sauces.', category: 'snacks', inStock: true, icon: '🍔' },
+  { id: 'menu-10', name: 'Tea & Coffee', price: 20, description: 'Warm and refreshing hot brews.', category: 'beverages', inStock: true, icon: '☕' },
+  { id: 'menu-11', name: 'Onion rings', price: 150, description: 'Crispy fried batter-coated onion rings.', category: 'snacks', inStock: true, icon: '🧅' },
+  { id: 'menu-12', name: 'Ice cream', price: 40, description: 'Scoop of delicious cold ice cream.', category: 'desserts', inStock: true, icon: '🍨' }
+];
+
 function initDb(): DatabaseSchema {
   if (!fs.existsSync(DB_DIR)) {
     fs.mkdirSync(DB_DIR, { recursive: true });
   }
 
+  let initialData: DatabaseSchema;
   if (!fs.existsSync(DB_FILE)) {
-    let initialData: DatabaseSchema;
     if (IS_SERVERLESS && fs.existsSync(BUNDLED_DB_FILE)) {
       try {
         const bundledContent = fs.readFileSync(BUNDLED_DB_FILE, 'utf-8');
@@ -68,12 +114,14 @@ function initDb(): DatabaseSchema {
         initialData = {
           bookings: [],
           timeSlots: DEFAULT_TIME_SLOTS,
+          menuItems: DEFAULT_MENU_ITEMS,
         };
       }
     } else {
       initialData = {
         bookings: [],
         timeSlots: DEFAULT_TIME_SLOTS,
+        menuItems: DEFAULT_MENU_ITEMS,
       };
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
@@ -82,10 +130,18 @@ function initDb(): DatabaseSchema {
 
   try {
     const fileData = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(fileData) as DatabaseSchema;
+    const parsed = JSON.parse(fileData) as DatabaseSchema;
+    let modified = false;
+    if (!parsed.menuItems || parsed.menuItems.length === 0) {
+      parsed.menuItems = DEFAULT_MENU_ITEMS;
+      modified = true;
+    }
+    if (modified) {
+      fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
+    }
+    return parsed;
   } catch (error) {
     console.error('Error reading database file, initializing fresh DB:', error);
-    let initialData: DatabaseSchema;
     if (IS_SERVERLESS && fs.existsSync(BUNDLED_DB_FILE)) {
       try {
         const bundledContent = fs.readFileSync(BUNDLED_DB_FILE, 'utf-8');
@@ -94,12 +150,14 @@ function initDb(): DatabaseSchema {
         initialData = {
           bookings: [],
           timeSlots: DEFAULT_TIME_SLOTS,
+          menuItems: DEFAULT_MENU_ITEMS,
         };
       }
     } else {
       initialData = {
         bookings: [],
         timeSlots: DEFAULT_TIME_SLOTS,
+        menuItems: DEFAULT_MENU_ITEMS,
       };
     }
     fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2), 'utf-8');
@@ -346,3 +404,107 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
   
   return { success: false, count: 0, destination: 'none', error: errorMsg || 'Archiving failed' };
 }
+
+// Helper to add a new food order
+export function addFoodOrder(orderData: Omit<FoodOrder, 'id' | 'createdAt' | 'status'>): FoodOrder {
+  const db = readDb();
+  if (!db.foodOrders) {
+    db.foodOrders = [];
+  }
+
+  // Get current date string in YYYY-MM-DD for ID prefix (Asia/Kolkata timezone or local)
+  const todayIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const yy = String(todayIST.getFullYear()).substring(2);
+  const mm = String(todayIST.getMonth() + 1).padStart(2, '0');
+  const dd = String(todayIST.getDate()).padStart(2, '0');
+  const datePrefix = `FO-${yy}${mm}${dd}`;
+
+  // Count existing orders for this prefix to determine sequence index
+  const count = db.foodOrders.filter((o) => o.id.startsWith(datePrefix)).length;
+  const sequential = String(count + 1).padStart(4, '0');
+  const orderId = `${datePrefix}-${sequential}`;
+
+  const newOrder: FoodOrder = {
+    ...orderData,
+    id: orderId,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+
+  db.foodOrders.push(newOrder);
+  writeDb(db);
+  return newOrder;
+}
+
+// Helper to update a food order's status
+export function updateFoodOrderStatus(id: string, status: FoodOrder['status']): FoodOrder {
+  const db = readDb();
+  if (!db.foodOrders) {
+    throw new Error('No food orders found in database.');
+  }
+
+  const index = db.foodOrders.findIndex((o) => o.id === id);
+  if (index === -1) {
+    throw new Error(`Food order with ID ${id} not found.`);
+  }
+
+  db.foodOrders[index].status = status;
+  writeDb(db);
+  return db.foodOrders[index];
+}
+
+// Helper to add a new menu item
+export function addMenuItem(itemData: Omit<MenuItem, 'id' | 'inStock'>): MenuItem {
+  const db = readDb();
+  if (!db.menuItems) {
+    db.menuItems = [];
+  }
+
+  // Generate unique ID, e.g. menu-1784525895
+  const timestamp = Date.now();
+  const id = `menu-${timestamp}`;
+
+  const newItem: MenuItem = {
+    ...itemData,
+    id,
+    inStock: true
+  };
+
+  db.menuItems.push(newItem);
+  writeDb(db);
+  return newItem;
+}
+
+// Helper to update an existing menu item
+export function updateMenuItem(itemData: MenuItem): MenuItem {
+  const db = readDb();
+  if (!db.menuItems) {
+    db.menuItems = [];
+  }
+
+  const index = db.menuItems.findIndex((item) => item.id === itemData.id);
+  if (index === -1) {
+    throw new Error(`Menu item with ID ${itemData.id} not found.`);
+  }
+
+  db.menuItems[index] = {
+    ...db.menuItems[index],
+    ...itemData
+  };
+
+  writeDb(db);
+  return db.menuItems[index];
+}
+
+// Helper to delete a menu item
+export function deleteMenuItem(id: string): void {
+  const db = readDb();
+  if (!db.menuItems) {
+    return;
+  }
+
+  db.menuItems = db.menuItems.filter((item) => item.id !== id);
+  writeDb(db);
+}
+
+

@@ -1,21 +1,5 @@
 {
-  "bookings": [
-    {
-      "customerName": "Mallikarjun",
-      "email": "malligopaladasu@gmail.com",
-      "phone": "+918919178055",
-      "date": "2026-07-15",
-      "timeSlot": "05:30 PM - 07:30 PM",
-      "packageName": "Birthday Bash Vibe",
-      "addOns": [],
-      "totalPrice": 999,
-      "guestCount": 2,
-      "specialRequests": "",
-      "id": "BV-260715-0001",
-      "status": "cancelled",
-      "createdAt": "2026-07-15T11:06:00.774Z"
-    }
-  ],
+  "bookings": [],
   "timeSlots": [
     {
       "id": "slot-1",
@@ -72,8 +56,219 @@
     },
     {
       "phone": "+918919178055",
-      "hashedOtp": "f00c760326c7cf242787188e7bcc4b223dfd3115fa5d09d4f54f62a744bc4c87",
-      "expiresAt": "2026-07-18T08:34:56.604Z"
+      "hashedOtp": "a2a80f3d4a1795806c36eee6fc429f53b6712eeb2059e1259d6fad6398edca18",
+      "expiresAt": "2026-07-20T05:45:15.263Z"
+    }
+  ],
+  "foodOrders": [
+    {
+      "theme": "pink",
+      "themeLabel": "Rose Pink Room",
+      "customerName": "Test User",
+      "phone": "9999999999",
+      "items": [
+        {
+          "id": "food-combo-1",
+          "name": "Cinephile Popcorn & Soda Combo",
+          "price": 270,
+          "quantity": 1
+        }
+      ],
+      "totalPrice": 270,
+      "id": "FO-260720-0001",
+      "status": "served",
+      "createdAt": "2026-07-20T05:35:55.650Z"
+    },
+    {
+      "theme": "rose",
+      "themeLabel": "Rose Pink Room",
+      "customerName": "Test User",
+      "phone": "9999999999",
+      "items": [
+        {
+          "id": "menu-1784527578794",
+          "name": "Garlic Bread",
+          "price": 120,
+          "quantity": 1
+        }
+      ],
+      "totalPrice": 120,
+      "id": "FO-260720-0002",
+      "status": "pending",
+      "createdAt": "2026-07-20T06:08:01.855Z"
+    },
+    {
+      "theme": "purple",
+      "themeLabel": "Neon Purple Room",
+      "customerName": "Guest",
+      "phone": "",
+      "items": [
+        {
+          "id": "menu-1",
+          "name": "Maggie",
+          "price": 70,
+          "quantity": 1
+        }
+      ],
+      "totalPrice": 70,
+      "id": "FO-260720-0003",
+      "status": "pending",
+      "createdAt": "2026-07-20T06:12:31.861Z"
+    },
+    {
+      "theme": "pink",
+      "themeLabel": "Rose Pink Room",
+      "customerName": "Guest",
+      "phone": "",
+      "items": [
+        {
+          "id": "menu-2",
+          "name": "Cool drinks",
+          "price": 40,
+          "quantity": 1
+        }
+      ],
+      "totalPrice": 40,
+      "id": "FO-260720-0004",
+      "status": "pending",
+      "createdAt": "2026-07-20T06:21:34.841Z"
+    },
+    {
+      "theme": "pink",
+      "themeLabel": "Rose Pink Room",
+      "customerName": "Guest",
+      "phone": "",
+      "items": [
+        {
+          "id": "menu-1",
+          "name": "Maggie",
+          "price": 70,
+          "quantity": 1
+        }
+      ],
+      "totalPrice": 70,
+      "id": "FO-260720-0005",
+      "status": "pending",
+      "createdAt": "2026-07-20T06:22:05.555Z"
+    }
+  ],
+  "menuItems": [
+    {
+      "id": "menu-1",
+      "name": "Maggie",
+      "price": 70,
+      "description": "Hot and delicious instant noodles.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🍜"
+    },
+    {
+      "id": "menu-2",
+      "name": "Cool drinks",
+      "price": 40,
+      "description": "Chilled carbonated beverages (per glass).",
+      "category": "beverages",
+      "inStock": true,
+      "icon": "🥤"
+    },
+    {
+      "id": "menu-3",
+      "name": "Popcorn",
+      "price": 100,
+      "description": "Freshly popped warm theater style popcorn.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🍿"
+    },
+    {
+      "id": "menu-4",
+      "name": "French fries",
+      "price": 100,
+      "description": "Golden-fried crispy potato strips.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🍟"
+    },
+    {
+      "id": "menu-5",
+      "name": "Veg nuggets",
+      "price": 70,
+      "description": "Crispy deep-fried vegetables bites.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🧆"
+    },
+    {
+      "id": "menu-6",
+      "name": "Chicken nuggets",
+      "price": 100,
+      "description": "Crispy fried chicken breast bites.",
+      "category": "snacks",
+      "inStock": false,
+      "icon": "🍗"
+    },
+    {
+      "id": "menu-7",
+      "name": "Nachos",
+      "price": 100,
+      "description": "Crunchy tortilla chips with cheese dipping sauce.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🌮"
+    },
+    {
+      "id": "menu-8",
+      "name": "Sweet corn",
+      "price": 70,
+      "description": "Steamed butter sweet corn.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🌽"
+    },
+    {
+      "id": "menu-9",
+      "name": "Burger",
+      "price": 100,
+      "description": "Delicious patty burger with cheese and fresh sauces.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🍔"
+    },
+    {
+      "id": "menu-10",
+      "name": "Tea & Coffee",
+      "price": 20,
+      "description": "Warm and refreshing hot brews.",
+      "category": "beverages",
+      "inStock": true,
+      "icon": "☕"
+    },
+    {
+      "id": "menu-11",
+      "name": "Onion rings",
+      "price": 150,
+      "description": "Crispy fried batter-coated onion rings.",
+      "category": "snacks",
+      "inStock": true,
+      "icon": "🧅"
+    },
+    {
+      "id": "menu-12",
+      "name": "Ice cream",
+      "price": 40,
+      "description": "Scoop of delicious cold ice cream.",
+      "category": "desserts",
+      "inStock": true,
+      "icon": "🍨"
+    },
+    {
+      "name": "Garlic Bread",
+      "price": 120,
+      "description": "Delicious buttery garlic bread toasted to perfection.",
+      "category": "snacks",
+      "icon": "🍿",
+      "id": "menu-1784527578794",
+      "inStock": true
     }
   ]
 }
