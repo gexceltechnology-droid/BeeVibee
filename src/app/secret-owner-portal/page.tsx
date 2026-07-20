@@ -1081,132 +1081,127 @@ export default function AdminDashboard() {
             <div className={styles.loadingSpinner} />
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Booking ID</th>
-                  <th>Customer Details</th>
-                  <th>Show Date & Time</th>
-                  <th>Package & Add-ons</th>
-                  <th>Total Bill</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.length > 0 ? (
-                  filteredBookings.map((b) => {
-                    const isNew = newlyAddedIds.includes(b.id);
-                    return (
-                      <tr key={b.id} className={isNew ? styles.newRowHighlight : ''}>
-                      <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
-                      <td>
-                        <div className={styles.customerName}>{b.customerName}</div>
-                        <div className={styles.customerContact}>
-                          📱 {b.phone} <br />
-                          📧 {b.email} <br />
-                          👥 {b.guestCount} Guests
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{b.date}</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
-                      </td>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{b.packageName}</div>
-                        {b.addOns.length > 0 && (
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                            Add-ons: {b.addOns.join(', ')}
-                          </div>
-                        )}
-                        {b.specialRequests && (
-                          <div style={{ fontSize: '0.75rem', color: '#ffb71a', fontStyle: 'italic', marginTop: '4px' }}>
-                            💬 Note: {b.specialRequests}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{b.totalPrice}</td>
-                      <td>
-                        <span
-                          className={`${styles.badge} ${
-                            b.status === 'confirmed'
-                              ? styles.badgeConfirmed
-                              : b.status === 'cancelled'
-                              ? styles.badgeCancelled
-                              : styles.badgePending
-                          }`}
-                        >
-                          {b.status}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div className={styles.actionCell}>
-                            <button
-                              className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                              onClick={() => handleUpdateStatus(b.id, 'confirmed')}
-                              disabled={b.status === 'confirmed'}
-                            >
-                              Confirm
-                            </button>
-                            <button
-                              className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
-                              onClick={() => handleUpdateStatus(b.id, 'cancelled')}
-                              disabled={b.status === 'cancelled'}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                          <div style={{ display: 'flex', gap: '4px' }}>
-                            <button
-                              className={styles.manualBtn}
-                              onClick={() => {
-                                const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone;
-                                const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
-                                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank');
-                              }}
-                              title="Send confirmation via WhatsApp manually"
-                            >
-                              💬 WA
-                            </button>
-                            <button
-                              className={styles.manualBtn}
-                              onClick={() => {
-                                const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
-                                window.open(`sms:${b.phone}${navigator.userAgent.match(/iPhone|iPad|iPod/i) ? '&' : '?'}body=${encodeURIComponent(text)}`, '_blank');
-                              }}
-                              title="Send confirmation via SMS manually"
-                            >
-                              📱 SMS
-                            </button>
-                            <button
-                              className={styles.manualBtn}
-                              onClick={() => {
-                                const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`;
-                                navigator.clipboard.writeText(text);
-                                alert('Message copied to clipboard!');
-                              }}
-                              title="Copy ticket text to clipboard"
-                            >
-                              📋 Copy
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                    );
-                  })
-                ) : (
+          <>
+            {/* Desktop Table */}
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan={7} className={styles.noBookings}>
-                      No bookings found matching your search.
-                    </td>
+                    <th>Booking ID</th>
+                    <th>Customer Details</th>
+                    <th>Show Date & Time</th>
+                    <th>Package & Add-ons</th>
+                    <th>Total Bill</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredBookings.length > 0 ? (
+                    filteredBookings.map((b) => {
+                      const isNew = newlyAddedIds.includes(b.id);
+                      return (
+                        <tr key={b.id} className={isNew ? styles.newRowHighlight : ''}>
+                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
+                        <td>
+                          <div className={styles.customerName}>{b.customerName}</div>
+                          <div className={styles.customerContact}>
+                            📱 {b.phone} <br />
+                            📧 {b.email} <br />
+                            👥 {b.guestCount} Guests
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{b.date}</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 500 }}>{b.packageName}</div>
+                          {b.addOns.length > 0 && (
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                              Add-ons: {b.addOns.join(', ')}
+                            </div>
+                          )}
+                          {b.specialRequests && (
+                            <div style={{ fontSize: '0.75rem', color: '#ffb71a', fontStyle: 'italic', marginTop: '4px' }}>
+                              💬 Note: {b.specialRequests}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{b.totalPrice}</td>
+                        <td>
+                          <span className={`${styles.badge} ${
+                            b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending
+                          }`}>{b.status}</span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.actionCell}>
+                              <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>Confirm</button>
+                              <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateStatus(b.id, 'cancelled')} disabled={b.status === 'cancelled'}>Cancel</button>
+                            </div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button className={styles.manualBtn} onClick={() => { const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone; const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank'); }} title="Send confirmation via WhatsApp manually">💬 WA</button>
+                              <button className={styles.manualBtn} onClick={() => { const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`sms:${b.phone}${navigator.userAgent.match(/iPhone|iPad|iPod/i) ? '&' : '?'}body=${encodeURIComponent(text)}`, '_blank'); }} title="Send confirmation via SMS manually">📱 SMS</button>
+                              <button className={styles.manualBtn} onClick={() => { const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; navigator.clipboard.writeText(text); alert('Message copied to clipboard!'); }} title="Copy ticket text to clipboard">📋 Copy</button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                      );
+                    })
+                  ) : (
+                    <tr><td colSpan={7} className={styles.noBookings}>No bookings found matching your search.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className={styles.mobileCard}>
+              {filteredBookings.length > 0 ? filteredBookings.map((b) => {
+                const isNew = newlyAddedIds.includes(b.id);
+                return (
+                  <div key={b.id} className={`${styles.mobileCardItem} ${isNew ? styles.newRowHighlight : ''}`}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Booking ID</span>
+                      <span className={styles.mobileCardValue} style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{b.id}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Customer</span>
+                      <span className={styles.mobileCardValue}>
+                        <strong>{b.customerName}</strong><br />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📱 {b.phone} · 👥 {b.guestCount}</span>
+                      </span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Date & Time</span>
+                      <span className={styles.mobileCardValue}>{b.date}<br /><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</span></span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Package</span>
+                      <span className={styles.mobileCardValue}>{b.packageName}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Total</span>
+                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{b.totalPrice}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Status</span>
+                      <span className={`${styles.badge} ${b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{b.status}</span>
+                    </div>
+                    <div className={styles.mobileCardActions}>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>✓ Confirm</button>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateStatus(b.id, 'cancelled')} disabled={b.status === 'cancelled'}>✗ Cancel</button>
+                      <button className={styles.manualBtn} style={{ flex: 1 }} onClick={() => { const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone; const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank'); }}>💬 WhatsApp</button>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className={styles.noBookings}>No bookings found matching your search.</div>
+              )}
+            </div>
+          </>
         )
       )}
 
@@ -1217,110 +1212,124 @@ export default function AdminDashboard() {
             <div className={styles.loadingSpinner} />
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Room (Theme)</th>
-                  <th>Customer Info</th>
-                  <th>Items Ordered</th>
-                  <th>Total Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => {
-                    const isNew = newlyAddedOrderIds.includes(order.id);
-                    return (
-                      <tr key={order.id} className={isNew ? styles.newRowHighlight : ''}>
-                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{order.id}</td>
-                        <td>
-                          <span className={`${styles.roomThemeBadge} ${
-                            order.theme === 'pink' ? styles.roomThemePink : order.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed
-                          }`}>
-                            {order.themeLabel}
-                          </span>
-                        </td>
-                        <td>
-                          <div className={styles.customerName}>{order.customerName || 'Guest'}</div>
-                          {order.phone && (
-                            <div className={styles.customerContact}>📱 {order.phone}</div>
-                          )}
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            🕒 {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </td>
-                        <td>
-                          <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.85rem' }}>
-                            {order.items.map((it, idx) => (
-                              <li key={idx} style={{ color: '#fff', marginBottom: '2px' }}>
-                                <strong>{it.name}</strong> <span style={{ color: 'var(--accent)' }}>x{it.quantity}</span> (₹{it.price * it.quantity})
-                              </li>
-                            ))}
-                          </ul>
-                        </td>
-                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{order.totalPrice}</td>
-                        <td>
-                          <span className={`${styles.badge} ${
-                            order.status === 'served'
-                              ? styles.badgeConfirmed
-                              : order.status === 'preparing'
-                              ? styles.badgePreparing
-                              : order.status === 'cancelled'
-                              ? styles.badgeCancelled
-                              : styles.badgePending
-                          }`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className={styles.actionCell}>
-                            {order.status === 'pending' && (
-                              <button
-                                className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                                onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
-                              >
-                                Accept & Cook
-                              </button>
-                            )}
-                            {order.status === 'preparing' && (
-                              <button
-                                className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                                style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: '#10b981' }}
-                                onClick={() => handleUpdateOrderStatus(order.id, 'served')}
-                              >
-                                Deliver Order
-                              </button>
-                            )}
-                            {(order.status === 'pending' || order.status === 'preparing') && (
-                              <button
-                                className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
-                                onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}
-                              >
-                                Cancel
-                              </button>
-                            )}
-                            {(order.status === 'served' || order.status === 'cancelled') && (
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No Actions</span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
+          <>
+            {/* Desktop Table */}
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan={7} className={styles.noBookings}>
-                      No food orders found matching your search.
-                    </td>
+                    <th>Order ID</th>
+                    <th>Room (Theme)</th>
+                    <th>Customer Info</th>
+                    <th>Items Ordered</th>
+                    <th>Total Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => {
+                      const isNew = newlyAddedOrderIds.includes(order.id);
+                      return (
+                        <tr key={order.id} className={isNew ? styles.newRowHighlight : ''}>
+                          <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{order.id}</td>
+                          <td>
+                            <span className={`${styles.roomThemeBadge} ${
+                              order.theme === 'pink' ? styles.roomThemePink : order.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed
+                            }`}>
+                              {order.themeLabel}
+                            </span>
+                          </td>
+                          <td>
+                            <div className={styles.customerName}>{order.customerName || 'Guest'}</div>
+                            {order.phone && (
+                              <div className={styles.customerContact}>📱 {order.phone}</div>
+                            )}
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              🕒 {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </td>
+                          <td>
+                            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.85rem' }}>
+                              {order.items.map((it, idx) => (
+                                <li key={idx} style={{ color: '#fff', marginBottom: '2px' }}>
+                                  <strong>{it.name}</strong> <span style={{ color: 'var(--accent)' }}>x{it.quantity}</span> (₹{it.price * it.quantity})
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                          <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{order.totalPrice}</td>
+                          <td>
+                            <span className={`${styles.badge} ${
+                              order.status === 'served' ? styles.badgeConfirmed : order.status === 'preparing' ? styles.badgePreparing : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending
+                            }`}>{order.status}</span>
+                          </td>
+                          <td>
+                            <div className={styles.actionCell}>
+                              {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>Accept & Cook</button>)}
+                              {order.status === 'preparing' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>Deliver Order</button>)}
+                              {(order.status === 'pending' || order.status === 'preparing') && (<button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>Cancel</button>)}
+                              {(order.status === 'served' || order.status === 'cancelled') && (<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No Actions</span>)}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr><td colSpan={7} className={styles.noBookings}>No food orders found matching your search.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className={styles.mobileCard}>
+              {filteredOrders.length > 0 ? filteredOrders.map((order) => {
+                const isNew = newlyAddedOrderIds.includes(order.id);
+                return (
+                  <div key={order.id} className={`${styles.mobileCardItem} ${isNew ? styles.newRowHighlight : ''}`}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Order ID</span>
+                      <span className={styles.mobileCardValue} style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{order.id}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Room</span>
+                      <span className={`${styles.roomThemeBadge} ${order.theme === 'pink' ? styles.roomThemePink : order.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed}`}>{order.themeLabel}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Customer</span>
+                      <span className={styles.mobileCardValue}>
+                        {order.customerName || 'Guest'}{order.phone && <><br /><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📱 {order.phone}</span></>}
+                      </span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Items</span>
+                      <span className={styles.mobileCardValue} style={{ textAlign: 'right' }}>
+                        {order.items.map((it, idx) => (<span key={idx} style={{ display: 'block', fontSize: '0.83rem' }}>{it.name} <span style={{ color: 'var(--accent)' }}>×{it.quantity}</span></span>))}
+                      </span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Total</span>
+                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{order.totalPrice}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Status</span>
+                      <span className={`${styles.badge} ${order.status === 'served' ? styles.badgeConfirmed : order.status === 'preparing' ? styles.badgePreparing : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{order.status}</span>
+                    </div>
+                    <div className={styles.mobileCardActions}>
+                      {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>🍳 Accept & Cook</button>)}
+                      {order.status === 'preparing' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>🚀 Deliver</button>)}
+                      {(order.status === 'pending' || order.status === 'preparing') && (<button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>✗ Cancel</button>)}
+                      {(order.status === 'served' || order.status === 'cancelled') && (<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Completed</span>)}
+                    </div>
+                  </div>
+                );
+              }) : (
+                <div className={styles.noBookings}>No food orders found matching your search.</div>
+              )}
+            </div>
+          </>
         )
       )}
 
@@ -1331,91 +1340,93 @@ export default function AdminDashboard() {
             <div className={styles.loadingSpinner} />
           </div>
         ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>Icon</th>
-                  <th>Food Item Name</th>
-                  <th>Category</th>
-                  <th>Price</th>
-                  <th>Stock Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                  menuItems
-                    .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                    .map((item) => (
-                      <tr key={item.id}>
-                        <td style={{ fontSize: '1.5rem' }}>{item.icon}</td>
-                        <td>
-                          <div className={styles.customerName}>{item.name}</div>
-                          {item.description && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                              {item.description}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <span style={{ textTransform: 'capitalize', fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '2px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px' }}>
-                            {item.category}
-                          </span>
-                        </td>
-                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{item.price}</td>
-                        <td>
-                          <button
-                            onClick={() => handleToggleStock(item)}
-                            className={`${styles.actionBtn}`}
-                            style={{
-                              background: item.inStock ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                              color: item.inStock ? '#10b981' : '#f87171',
-                              borderColor: item.inStock ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                              borderWidth: '1px',
-                              borderStyle: 'solid',
-                              width: '130px'
-                            }}
-                          >
-                            {item.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
-                          </button>
-                        </td>
-                        <td>
-                          <div className={styles.actionCell}>
-                            <button
-                              className={`${styles.actionBtn} ${styles.actionBtnConfirm}`}
-                              onClick={() => {
-                                setEditingMenuItem(item);
-                                setItemName(item.name);
-                                setItemPrice(String(item.price));
-                                setItemCategory(item.category);
-                                setItemDescription(item.description);
-                                setItemIcon(item.icon);
-                                setIsMenuModalOpen(true);
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className={`${styles.actionBtn} ${styles.actionBtnCancel}`}
-                              onClick={() => handleDeleteMenuItem(item.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                ) : (
+          <>
+            {/* Desktop Table */}
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
                   <tr>
-                    <td colSpan={6} className={styles.noBookings}>
-                      No food items found matching your search.
-                    </td>
+                    <th>Icon</th>
+                    <th>Food Item Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock Status</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                    menuItems
+                      .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                      .map((item) => (
+                        <tr key={item.id}>
+                          <td style={{ fontSize: '1.5rem' }}>{item.icon}</td>
+                          <td>
+                            <div className={styles.customerName}>{item.name}</div>
+                            {item.description && (<div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{item.description}</div>)}
+                          </td>
+                          <td><span style={{ textTransform: 'capitalize', fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '2px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px' }}>{item.category}</span></td>
+                          <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{item.price}</td>
+                          <td>
+                            <button onClick={() => handleToggleStock(item)} className={`${styles.actionBtn}`} style={{ background: item.inStock ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.inStock ? '#10b981' : '#f87171', borderColor: item.inStock ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)', borderWidth: '1px', borderStyle: 'solid', width: '130px' }}>
+                              {item.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
+                            </button>
+                          </td>
+                          <td>
+                            <div className={styles.actionCell}>
+                              <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => { setEditingMenuItem(item); setItemName(item.name); setItemPrice(String(item.price)); setItemCategory(item.category); setItemDescription(item.description); setItemIcon(item.icon); setIsMenuModalOpen(true); }}>Edit</button>
+                              <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleDeleteMenuItem(item.id)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr><td colSpan={6} className={styles.noBookings}>No food items found matching your search.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className={styles.mobileCard}>
+              {menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => (
+                  <div key={item.id} className={styles.mobileCardItem}>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Item</span>
+                      <span className={styles.mobileCardValue}>
+                        <span style={{ fontSize: '1.4rem', marginRight: '6px' }}>{item.icon}</span>
+                        <strong>{item.name}</strong>
+                      </span>
+                    </div>
+                    {item.description && (
+                      <div className={styles.mobileCardRow}>
+                        <span className={styles.mobileCardLabel}>Desc</span>
+                        <span className={styles.mobileCardValue} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.description}</span>
+                      </div>
+                    )}
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Category</span>
+                      <span className={styles.mobileCardValue} style={{ textTransform: 'capitalize', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{item.category}</span>
+                    </div>
+                    <div className={styles.mobileCardRow}>
+                      <span className={styles.mobileCardLabel}>Price</span>
+                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{item.price}</span>
+                    </div>
+                    <div className={styles.mobileCardActions}>
+                      <button onClick={() => handleToggleStock(item)} className={styles.actionBtn} style={{ flex: 1, background: item.inStock ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.inStock ? '#10b981' : '#f87171', borderColor: item.inStock ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)', borderWidth: '1px', borderStyle: 'solid' }}>
+                        {item.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
+                      </button>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => { setEditingMenuItem(item); setItemName(item.name); setItemPrice(String(item.price)); setItemCategory(item.category); setItemDescription(item.description); setItemIcon(item.icon); setIsMenuModalOpen(true); }}>✏️ Edit</button>
+                      <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleDeleteMenuItem(item.id)}>🗑️ Del</button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.noBookings}>No food items found matching your search.</div>
+              )}
+            </div>
+          </>
         )
       )}
 
