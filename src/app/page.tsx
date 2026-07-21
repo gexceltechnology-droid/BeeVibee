@@ -16,7 +16,9 @@ import {
   Cake,
   Phone,
   MapPin,
-  Clock
+  Clock,
+  ChevronDown,
+  HelpCircle
 } from 'lucide-react';
 
 // Custom Instagram icon component for maximum reliability
@@ -89,6 +91,30 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const faqs = [
+    {
+      q: 'How many guests can fit in the private theater?',
+      a: 'The theater holds up to 10 guests. The base package covers 2 members, and additional guests can join for ₹100 per head.'
+    },
+    {
+      q: 'How can I play my own content or movies?',
+      a: 'We provide casting support, Chromecast, and high-speed Wi-Fi to screen from your preferred platforms (Netflix, Prime Video, Hotstar, YouTube, etc.) or connect custom files via HDMI.'
+    },
+    {
+      q: 'Is outside food and drinks allowed?',
+      a: 'We have an on-site gourmet snack bar serving fresh popcorn, mocktails, and hot appetizers. Outside beverages and main courses are restricted, but celebration cakes and baby food are fully allowed.'
+    },
+    {
+      q: 'What is the refund and rescheduling policy?',
+      a: 'You can reschedule your slot free of charge up to 24 hours prior to your booking. Cancellations made 24 hours in advance receive a full refund minus a 5% processing fee.'
+    },
+    {
+      q: 'Do you provide decorations for special occasions?',
+      a: 'Yes! Custom celebration lighting is included. For premium setups (balloon arches, flower paths, proposal signs, and fog entry), you can add decorations in Step 3 of the booking process.'
+    }
+  ];
 
   // 1. Calculate scroll progress (0 to 1) for the scrollytelling camera path and check scroll offset
   useEffect(() => {
@@ -188,6 +214,7 @@ export default function Home() {
               <ul className={styles.navLinks}>
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
+                <li><a href="#faq" className={styles.navLink}>FAQ</a></li>
                 <li><Link href="/book" className={styles.navLink}>Booking Portal</Link></li>
               </ul>
             </nav>
@@ -221,9 +248,14 @@ export default function Home() {
                 </a>
               </li>
               <li>
-                <a href="#book" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
-                  Booking Portal
+                <a href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  FAQ
                 </a>
+              </li>
+              <li>
+                <Link href="/book" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Booking Portal
+                </Link>
               </li>
               <li>
                 <a
@@ -421,6 +453,42 @@ export default function Home() {
               </div>
             </section>
 
+            {/* Section 4: FAQ */}
+            <section id="faq" className={`${styles.section} ${styles.reveal}`}>
+              <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
+              <p className={styles.sectionSub}>
+                Everything you need to know about booking, amenities, media streaming, and celebration planning.
+              </p>
+
+              <div className={styles.faqAccordion}>
+                {faqs.map((faq, idx) => {
+                  const isOpen = openFaq === idx;
+                  return (
+                    <div
+                      key={idx}
+                      className={`${styles.faqItem} ${isOpen ? styles.faqItemOpen : ''}`}
+                    >
+                      <button
+                        className={styles.faqQuestion}
+                        onClick={() => setOpenFaq(isOpen ? null : idx)}
+                        aria-expanded={isOpen}
+                      >
+                        <span className={styles.faqQuestText}>
+                          <HelpCircle size={18} className={styles.faqQuestIcon} style={{ flexShrink: 0 }} />
+                          {faq.q}
+                        </span>
+                        <ChevronDown size={18} className={styles.faqArrow} />
+                      </button>
+                      <div className={styles.faqAnswer}>
+                        <div className={styles.faqAnswerInner}>
+                          <p>{faq.a}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
 
           </div>
 
@@ -490,6 +558,7 @@ export default function Home() {
               <ul className={styles.footerLinks}>
                 <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
                 <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
+                <li><a href="#faq" className={styles.footerLink}>FAQ</a></li>
                 <li><Link href="/book" className={styles.footerLink}>Book Tickets</Link></li>
               </ul>
             </div>
