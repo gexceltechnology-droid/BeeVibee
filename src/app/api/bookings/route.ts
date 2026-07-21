@@ -86,54 +86,49 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Double check database to verify slot status
-    const db = readDb();
-    let slotBase = 0;
-
-    const existingSlot = db.timeSlots.find((s) => s.time === timeSlot);
-    if (existingSlot) {
-      slotBase = existingSlot.basePrice;
-    } else {
-      // Check if it is a valid custom time range
-      try {
-        const { startMinutes, endMinutes } = parseTimeRange(timeSlot);
-        let durationMinutes = endMinutes - startMinutes;
-        if (durationMinutes <= 0) {
-          durationMinutes += 24 * 60;
-        }
-        if (durationMinutes < 30) {
-          return NextResponse.json({ error: 'Custom time slot must be at least 30 minutes.' }, { status: 400 });
-        }
-        const durationHours = durationMinutes / 60;
-        slotBase = Math.round((durationHours / 2) * 999);
-      } catch (err) {
-        return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
+    // Parse slot duration to perform accurate pro-rata package calculations
+    let durationHours = 2;
+    try {
+      const { startMinutes, endMinutes } = parseTimeRange(timeSlot);
+      let durationMinutes = endMinutes - startMinutes;
+      if (durationMinutes <= 0) {
+        durationMinutes += 24 * 60;
       }
+      durationHours = durationMinutes / 60;
+    } catch (err) {
+      return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
     }
     
+    // Dynamic theme package pricing
     const PACKAGES_PRICE_MAP: Record<string, number> = {
-      'Movie Vibe Pack': 0,
-      'Birthday Bash Vibe': 0,
-      'Cozy Romance Vibe': 0,
-      'Ultimate Gaming Vibe': 0
+      'Pink Theme': 799,
+      'Purple Theme': 999,
+      'Red Theme': 599
     };
-    const pkgBase = PACKAGES_PRICE_MAP[packageName] || 0;
+    const packagePrice = PACKAGES_PRICE_MAP[packageName] || 0;
+    const pkgBase = Math.round((packagePrice / 2) * durationHours);
 
-    const ADDONS_PRICE_MAP: Record<string, number> = {
-      'Fresh Rose Bouquet': 0,
-      'Gourmet Nachos & Dip Platter': 0,
-      '1kg Red Velvet Designer Cake': 0,
-      '30-Mins Photo Shoot & Digital Copy': 0,
-      'Extra Premium Helium Balloons (x30)': 0,
-      'Special Screen Entry Fog Effect': 0
-    };
-    const addonsTotal = (addOns || []).reduce((sum: number, addonName: string) => {
-      return sum + (ADDONS_PRICE_MAP[addonName] || 0);
-    }, 0);
+    // Extra guest pricing (base includes 2 guests, extra guests are ₹100/head)
+    const extraGuests = numericGuestCount > 2 ? (numericGuestCount - 2) * 100 : 0;
 
-    const calculatedTotal = slotBase + pkgBase + addonsTotal;
+    // Addons pricing
+    let addonsTotal = 0;
+    for (const addon of (addOns || [])) {
+      const nameStr = String(addon);
+      if (nameStr.startsWith('DSLR Camera Coverage')) {
+        const match = nameStr.match(/\((\d+)\s*Hour/);
+        const hours = match ? parseInt(match[1], 10) : 1;
+        addonsTotal += 500 * hours;
+      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog')) {
+        addonsTotal += 300;
+      }
+    }
+
+    const calculatedTotal = pkgBase + extraGuests + addonsTotal;
     if (Number(totalPrice) !== calculatedTotal) {
-      return NextResponse.json({ error: 'Booking price mismatch. Please refresh and try again.' }, { status: 400 });
+      return NextResponse.json({ 
+        error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.` 
+      }, { status: 400 });
     }
 
     const newBooking = addBooking({

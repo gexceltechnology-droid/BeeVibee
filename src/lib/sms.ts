@@ -1,21 +1,29 @@
 export function isSMSConfigured(): boolean {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  const templateId = process.env.MSG91_TEMPLATE_ID;
-  return !!(authKey && templateId);
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER;
+  return !!(accountSid && authToken && fromNumber);
 }
 
 export async function sendSMS(
   to: string,
   body: string
 ): Promise<{ success: boolean; error?: string }> {
-  const authKey = process.env.MSG91_AUTH_KEY;
-  const templateId = process.env.MSG91_TEMPLATE_ID;
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_FROM_NUMBER;
 
   // Clean phone number: keep only digits
-  let cleanPhone = to.replace(/\D/g, '');
-  // If it's a 10-digit number without country code, prefix with '91' (India)
-  if (cleanPhone.length === 10) {
-    cleanPhone = '91' + cleanPhone;
+  let cleanPhone = to.trim();
+  
+  // Format phone number to E.164 (Twilio requires E.164 format, e.g. +91XXXXXXXXXX)
+  if (!cleanPhone.startsWith('+')) {
+    const digits = cleanPhone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      cleanPhone = '+91' + digits; // Default to India country code
+    } else {
+      cleanPhone = '+' + digits;
+    }
   }
 
   // Extract OTP/code from message body (usually a 6-digit number)
@@ -24,50 +32,46 @@ export async function sendSMS(
 
   if (isSMSConfigured()) {
     try {
-      const res = await fetch('https://control.msg91.com/api/v5/flow', {
-        method: 'POST',
-        headers: {
-          'authkey': authKey || '',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          template_id: templateId,
-          recipients: [
-            {
-              mobiles: cleanPhone,
-              otp: otpCode,
-              code: otpCode,
-              var1: otpCode,
-              var: otpCode
-            }
-          ]
-        }),
-      });
+      const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+      const res = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${basicAuth}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            To: cleanPhone,
+            From: fromNumber!,
+            Body: body,
+          }).toString(),
+        }
+      );
 
       const data = await res.json();
 
-      // MSG91 returns type: "success" or "error" in response
-      if (!res.ok || data.type === 'error') {
-        console.error('MSG91 SMS API Error:', data);
+      if (!res.ok) {
+        console.error('Twilio SMS API Error:', data);
         return {
           success: false,
-          error: data.message || 'Failed to send SMS via MSG91.',
+          error: data.message || 'Failed to send SMS via Twilio.',
         };
       }
 
-      console.log(`[SMS] Real SMS sent via MSG91 to ${cleanPhone}.`);
+      console.log(`[SMS] Real SMS sent via Twilio to ${cleanPhone}. SID: ${data.sid}`);
       return { success: true };
     } catch (error: any) {
-      console.error('Error sending SMS via MSG91:', error);
+      console.error('Error sending SMS via Twilio:', error);
       return {
         success: false,
-        error: error.message || 'Internal MSG91 SMS error.',
+        error: error.message || 'Internal Twilio SMS error.',
       };
     }
   } else {
     // Fallback console log for local development/testing when keys are not configured
     console.log(`\n==================================================`);
-    console.log(`[SMS BACKEND ONLY] MSG91 credentials missing in environment.`);
+    console.log(`[SMS BACKEND ONLY] Twilio credentials missing in environment.`);
     console.log(`To: ${cleanPhone}`);
     console.log(`Message: ${body} (OTP: ${otpCode})`);
     console.log(`==================================================\n`);

@@ -6,16 +6,33 @@ import BookingPortal from '@/components/BookingPortal';
 import styles from './book.module.css';
 import { Phone, MapPin } from 'lucide-react';
 
-const PartyPopperIcon = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#ff2e7e"
-    strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
-    style={{ filter: 'drop-shadow(0 0 6px rgba(255, 46, 126, 0.5))' }}>
-    <path d="M5.8 11.3 2 22l10.7-3.8C11 15.6 8.4 13 5.8 11.3Z" />
-    <path d="m4 15 3 3" />
-    <path d="M13 13c1.4-1.4 3.7-1.4 5.1 0 1.4 1.4 1.4 3.7 0 5.1-1.4 1.4-3.7 1.4-5.1 0-1.4-1.4-1.4-3.7 0-5.1Z" />
-    <line x1="13" y1="9" x2="13" y2="7" />
-    <line x1="17" y1="5" x2="18" y2="4" />
-    <line x1="21" y1="9" x2="22" y2="8" />
+const BeeVibeLogoIcon = () => (
+  <svg
+    viewBox="0 0 32 32"
+    width="42"
+    height="42"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ filter: 'drop-shadow(0 0 6px var(--accent))' }}
+  >
+    {/* Film reel outer ring */}
+    <circle cx="16" cy="16" r="10" stroke="currentColor" strokeWidth="1.8" />
+    {/* Film reel inner circle */}
+    <circle cx="16" cy="16" r="4" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="1.5" />
+    {/* Play triangle center */}
+    <path d="M14 13.5l6 2.5-6 2.5v-5z" fill="currentColor" />
+    {/* Film strip holes - top */}
+    <circle cx="16" cy="7" r="1.2" fill="currentColor" />
+    <circle cx="21.2" cy="9.4" r="1.2" fill="currentColor" />
+    <circle cx="10.8" cy="9.4" r="1.2" fill="currentColor" />
+    {/* Film strip holes - bottom */}
+    <circle cx="16" cy="25" r="1.2" fill="currentColor" />
+    <circle cx="21.2" cy="22.6" r="1.2" fill="currentColor" />
+    <circle cx="10.8" cy="22.6" r="1.2" fill="currentColor" />
+    {/* Sparkle top-right */}
+    <path d="M26 5l.6 1.4L28 7l-1.4.6L26 9l-.6-1.4L24 7l1.4-.6z" fill="currentColor" />
+    {/* Sparkle small */}
+    <path d="M28 12l.3.7.7.3-.7.3-.3.7-.3-.7-.7-.3.7-.3z" fill="currentColor" />
   </svg>
 );
 
@@ -59,7 +76,7 @@ export default function BookPage() {
       <div className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
-            <div className={styles.logoIcon}><PartyPopperIcon /></div>
+            <div className={styles.logoIcon}><BeeVibeLogoIcon /></div>
             <div className={styles.logoText}>
               <span className={styles.logoBrand}>BeeVibe</span>
               <span className={styles.logoSub}>MINI PRIVATE THEATER</span>

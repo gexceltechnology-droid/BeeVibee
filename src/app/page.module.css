@@ -58,9 +58,21 @@
   gap: 10px;
 }
 
+.logoImg {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+.logoImg:hover {
+  opacity: 0.88;
+}
+
 .logoIcon {
-  width: 30px;
-  height: 30px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;

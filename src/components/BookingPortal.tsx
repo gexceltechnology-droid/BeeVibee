@@ -104,6 +104,7 @@ export default function BookingPortal() {
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [dslrHours, setDslrHours] = useState<1 | 2>(1);
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     email: '',
@@ -134,6 +135,16 @@ export default function BookingPortal() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
   const [selectedTicketToView, setSelectedTicketToView] = useState<ConfirmedBooking | null>(null);
+
+  const setErrorAndScroll = (msg: string) => {
+    setError(msg);
+    setTimeout(() => {
+      const portal = document.getElementById('booking-portal-container');
+      if (portal) {
+        portal.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  };
 
   // Fetch slots on date change
   useEffect(() => {
@@ -465,7 +476,8 @@ export default function BookingPortal() {
       }
 
       // Base price is driven entirely by the selected package
-      const basePrice = 0;
+      const durationHours = (endMinutes - startMinutes) / 60;
+      const basePrice = Math.round((selectedPackage.price / 2) * durationHours);
 
       setSelectedSlot({
         id: 'slot-custom',
@@ -498,7 +510,7 @@ export default function BookingPortal() {
       const addon = ADDONS.find((a) => a.id === addonId);
       if (!addon) return sum;
       if (addon.id === 'add-dslr') {
-        return sum + Math.round(500 * durationHours);
+        return sum + 500 * dslrHours;
       }
       return sum + addon.price;
     }, 0);
@@ -530,25 +542,25 @@ export default function BookingPortal() {
     setError('');
     if (step === 1) {
       if (bookingMode === 'custom' && customSlotError) {
-        setError(customSlotError);
+        setErrorAndScroll(customSlotError);
         return;
       }
       if (!selectedSlot) {
-        setError('Please select a time slot to proceed.');
+        setErrorAndScroll('Please select a time slot to proceed.');
         return;
       }
     }
     if (step === 4) {
       if (!isCustomerLoggedIn) {
-        setError('Please log in and verify your phone number to proceed.');
+        setErrorAndScroll('Please log in and verify your phone number to proceed.');
         return;
       }
       if (!customerDetails.name || !customerDetails.email) {
-        setError('Please fill in all required fields (Name and Email).');
+        setErrorAndScroll('Please fill in all required fields (Name and Email).');
         return;
       }
       if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) {
-        setError('Guest count must be between 1 and 10.');
+        setErrorAndScroll('Guest count must be between 1 and 10.');
         return;
       }
     }
@@ -564,14 +576,15 @@ export default function BookingPortal() {
     setError('');
 
     if (!isCustomerLoggedIn) {
-      setError('Please log in and verify your phone number.');
+      setShowLoginModal(true);
+      setErrorAndScroll('Please verify your phone number first to complete the booking.');
       return;
     }
-    if (!customerDetails.name.trim()) { setError('Please enter your full name.'); return; }
-    if (!customerDetails.email.trim()) { setError('Please enter your email address.'); return; }
+    if (!customerDetails.name.trim()) { setErrorAndScroll('Please enter your full name.'); return; }
+    if (!customerDetails.email.trim()) { setErrorAndScroll('Please enter your email address.'); return; }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerDetails.email.trim())) { setError('Please enter a valid email address.'); return; }
-    if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setError('Guest count must be between 1 and 10.'); return; }
+    if (!emailRegex.test(customerDetails.email.trim())) { setErrorAndScroll('Please enter a valid email address.'); return; }
+    if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setErrorAndScroll('Guest count must be between 1 and 10.'); return; }
 
     setIsPaying(true);
     setPaymentStep(0);
@@ -583,7 +596,14 @@ export default function BookingPortal() {
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,
-      addOns: selectedAddons.map((id) => ADDONS.find((a) => a.id === id)?.name || id),
+      addOns: selectedAddons.map((id) => {
+        const addon = ADDONS.find((a) => a.id === id);
+        if (!addon) return id;
+        if (id === 'add-dslr') {
+          return `DSLR Camera Coverage (${dslrHours} Hour${dslrHours > 1 ? 's' : ''})`;
+        }
+        return addon.name;
+      }),
       totalPrice: calculateTotal(),
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests,
@@ -619,7 +639,7 @@ export default function BookingPortal() {
       setStep(5);
     } catch (err: any) {
       setIsPaying(false);
-      setError(err.message || 'Payment transaction failed. Please try again.');
+      setErrorAndScroll(err.message || 'Payment transaction failed. Please try again.');
     }
   };
 
@@ -1065,7 +1085,7 @@ export default function BookingPortal() {
   };
 
   return (
-    <div className={styles.portalContainer}>
+    <div id="booking-portal-container" className={styles.portalContainer}>
       {isPaying && (
         <div className={styles.paymentOverlay}>
           <div className={styles.paymentModal}>
@@ -1680,7 +1700,7 @@ export default function BookingPortal() {
                 <>
                   <h3 style={{ margin: '16px 0 8px 0', fontFamily: 'var(--font-title)' }}>Available Time Slots</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                    All 2-hour private slots priced at ₹999.
+                    Select a 2-hour celebration slot. Price depends on your selected theme package in the next step.
                   </p>
 
                   {loading ? (
@@ -1700,7 +1720,7 @@ export default function BookingPortal() {
                           <div className={styles.slotLabel}>{slot.label}</div>
                           <div className={styles.slotTime}>{slot.time}</div>
                           <div className={styles.slotPrice}>
-                            {slot.isBooked ? 'Unavailable' : `₹${slot.basePrice}`}
+                            {slot.isBooked ? 'Unavailable' : 'Available'}
                           </div>
                         </div>
                       ))}
@@ -1711,7 +1731,7 @@ export default function BookingPortal() {
                 <div>
                   <h3 style={{ margin: '16px 0 8px 0', fontFamily: 'var(--font-title)' }}>Customize Your Show Time</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                    Book any custom duration. Pricing is ₹999 for every 2 hours (calculated pro-rata).
+                    Book a custom duration. Pricing is calculated pro-rata based on your selected theme package in the next step.
                   </p>
 
                   <div className={styles.customSlotContainer}>
@@ -1745,8 +1765,8 @@ export default function BookingPortal() {
                         <div className={styles.priceLabel}>
                           Selected Range: <strong style={{ color: '#ffffff' }}>{selectedSlot.time}</strong>
                         </div>
-                        <div className={styles.priceVal}>
-                          ₹{selectedSlot.basePrice}
+                        <div className={styles.priceVal} style={{ fontSize: '0.9rem', fontWeight: 'normal', textShadow: 'none', color: 'var(--text-secondary)' }}>
+                          Theme Selected in Step 2
                         </div>
                       </div>
                     ) : null}
@@ -1805,8 +1825,29 @@ export default function BookingPortal() {
                     >
                       <div className={styles.addonInfo}>
                         <span className={styles.addonName}>{addon.name}</span>
+                        {addon.id === 'add-dslr' && isSelected && (
+                          <div className={styles.dslrHoursSelector} onClick={(e) => e.stopPropagation()}>
+                            <span className={styles.dslrHoursLabel}>Duration:</span>
+                            <button
+                              type="button"
+                              className={`${styles.dslrHourBtn} ${dslrHours === 1 ? styles.dslrHourBtnActive : ''}`}
+                              onClick={() => setDslrHours(1)}
+                            >
+                              1 Hour
+                            </button>
+                            <button
+                              type="button"
+                              className={`${styles.dslrHourBtn} ${dslrHours === 2 ? styles.dslrHourBtnActive : ''}`}
+                              onClick={() => setDslrHours(2)}
+                            >
+                              2 Hours
+                            </button>
+                          </div>
+                        )}
                         <span className={styles.addonPrice}>
-                          {addon.price === 0 ? 'Included' : `+₹${addon.price}`}
+                          {addon.id === 'add-dslr'
+                            ? `+₹${500 * dslrHours}`
+                            : addon.price === 0 ? 'Included' : `+₹${addon.price}`}
                         </span>
                       </div>
                       <div className={styles.addonCheckbox}>
@@ -1836,7 +1877,12 @@ export default function BookingPortal() {
                   <div>
                     <strong>Add-ons selected:</strong>{' '}
                     {selectedAddons.length > 0
-                      ? selectedAddons.map((id) => ADDONS.find((a) => a.id === id)?.name).join(', ')
+                      ? selectedAddons.map((id) => {
+                          if (id === 'add-dslr') {
+                            return `DSLR Camera Coverage (${dslrHours} Hour${dslrHours > 1 ? 's' : ''})`;
+                          }
+                          return ADDONS.find((a) => a.id === id)?.name;
+                        }).join(', ')
                       : 'None'}
                   </div>
                   <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 'bold' }}>

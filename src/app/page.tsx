@@ -39,24 +39,33 @@ const Instagram = ({ size = 24, color = "currentColor", ...props }: React.SVGPro
   </svg>
 );
 
-const PartyPopperIcon = () => (
+const BeeVibeLogoIcon = () => (
   <svg
-    viewBox="0 0 24 24"
-    width="22"
-    height="22"
+    viewBox="0 0 32 32"
+    width="42"
+    height="42"
     fill="none"
-    stroke="#f2a900"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{ filter: 'drop-shadow(0 0 6px rgba(242, 169, 0, 0.5))' }}
+    xmlns="http://www.w3.org/2000/svg"
+    style={{ filter: 'drop-shadow(0 0 6px rgba(242, 169, 0, 0.7))' }}
   >
-    <path d="M5.8 11.3 2 22l10.7-3.8C11 15.6 8.4 13 5.8 11.3Z" />
-    <path d="m4 15 3 3" />
-    <path d="M13 13c1.4-1.4 3.7-1.4 5.1 0 1.4 1.4 1.4 3.7 0 5.1-1.4 1.4-3.7 1.4-5.1 0-1.4-1.4-1.4-3.7 0-5.1Z" />
-    <line x1="13" y1="9" x2="13" y2="7" />
-    <line x1="17" y1="5" x2="18" y2="4" />
-    <line x1="21" y1="9" x2="22" y2="8" />
+    {/* Film reel outer ring */}
+    <circle cx="16" cy="16" r="10" stroke="#f2a900" strokeWidth="1.8" />
+    {/* Film reel inner circle */}
+    <circle cx="16" cy="16" r="4" fill="#f2a900" fillOpacity="0.15" stroke="#f2a900" strokeWidth="1.5" />
+    {/* Play triangle center */}
+    <path d="M14 13.5l6 2.5-6 2.5v-5z" fill="#f2a900" />
+    {/* Film strip holes - top */}
+    <circle cx="16" cy="7" r="1.2" fill="#f2a900" />
+    <circle cx="21.2" cy="9.4" r="1.2" fill="#f2a900" />
+    <circle cx="10.8" cy="9.4" r="1.2" fill="#f2a900" />
+    {/* Film strip holes - bottom */}
+    <circle cx="16" cy="25" r="1.2" fill="#f2a900" />
+    <circle cx="21.2" cy="22.6" r="1.2" fill="#f2a900" />
+    <circle cx="10.8" cy="22.6" r="1.2" fill="#f2a900" />
+    {/* Sparkle top-right */}
+    <path d="M26 5l.6 1.4L28 7l-1.4.6L26 9l-.6-1.4L24 7l1.4-.6z" fill="#f2a900" />
+    {/* Sparkle small */}
+    <path d="M28 12l.3.7.7.3-.7.3-.3.7-.3-.7-.7-.3.7-.3z" fill="#f2a900" />
   </svg>
 );
 
@@ -168,7 +177,7 @@ export default function Home() {
           <header className={styles.header}>
             <div className={styles.logoWrapper}>
               <div className={styles.logoIcon}>
-                <PartyPopperIcon />
+                <BeeVibeLogoIcon />
               </div>
               <div className={styles.logoText}>
                 <span className={styles.logoBrand}>BeeVibe</span>
@@ -432,7 +441,7 @@ export default function Home() {
             <div className={styles.footerCol}>
               <div className={styles.logoWrapper}>
                 <div className={styles.logoIcon}>
-                  <PartyPopperIcon />
+                  <BeeVibeLogoIcon />
                 </div>
                 <div className={styles.logoText}>
                   <span className={styles.logoBrand}>BeeVibe</span>
