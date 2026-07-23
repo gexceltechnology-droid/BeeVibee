@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
-  const [archiveStatus, setArchiveStatus] = useState<{ count: number; destination: string } | null>(null);
+  const [archiveStatus, setArchiveStatus] = useState<{ count: number; ordersCount?: number; destination: string } | null>(null);
   
   // Food Orders and Menu States
   const [activeTab, setActiveTab] = useState<'bookings' | 'orders' | 'qrs' | 'menu'>('bookings');
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
       }
     }
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+      audioContextRef.current.resume().catch(() => {});
     }
   };
 
@@ -103,12 +103,12 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Play a beautiful arpeggio chord chime for new food orders (distinct, volume 0.3)
+  // Play a beautiful arpeggio chord chime for new food orders (distinct, volume 0.25)
   const playOrderSound = () => {
     try {
-      initAudioContext();
       const ctx = audioContextRef.current;
-      if (!ctx) return;
+      // Only play sound if context exists and is actively running to prevent audio glitches
+      if (!ctx || ctx.state !== 'running') return;
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
@@ -119,13 +119,13 @@ export default function AdminDashboard() {
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, startTime);
         
-        // Volume envelope: instant attack, smooth exponential decay
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        // Volume envelope: smooth attack, exponential decay (prevents audio click pops)
+        gainNode.gain.setValueAtTime(0.0001, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
         
         osc.start(startTime);
-        osc.stop(startTime + duration);
+        osc.stop(startTime + duration + 0.05);
       };
 
       const now = ctx.currentTime;
@@ -140,9 +140,9 @@ export default function AdminDashboard() {
   // Play a distinct chime for new bookings
   const playBookingSound = () => {
     try {
-      initAudioContext();
       const ctx = audioContextRef.current;
-      if (!ctx) return;
+      // Only play sound if context exists and is actively running to prevent audio glitches
+      if (!ctx || ctx.state !== 'running') return;
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
@@ -153,12 +153,12 @@ export default function AdminDashboard() {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, startTime);
         
-        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.setValueAtTime(0.0001, startTime);
         gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
         
         osc.start(startTime);
-        osc.stop(startTime + duration);
+        osc.stop(startTime + duration + 0.05);
       };
 
       const now = ctx.currentTime;
@@ -173,6 +173,7 @@ export default function AdminDashboard() {
   // Filter States
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [orderDateFilter, setOrderDateFilter] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
 
   // Check auth and archived status on load
@@ -189,10 +190,12 @@ export default function AdminDashboard() {
     }
 
     const savedCount = sessionStorage.getItem('bee_vibe_archived_count');
+    const savedOrdersCount = sessionStorage.getItem('bee_vibe_archived_orders_count');
     const savedDest = sessionStorage.getItem('bee_vibe_archived_destination');
-    if (savedCount && savedDest) {
+    if ((savedCount || savedOrdersCount) && savedDest) {
       setArchiveStatus({
-        count: parseInt(savedCount, 10),
+        count: parseInt(savedCount || '0', 10),
+        ordersCount: parseInt(savedOrdersCount || '0', 10),
         destination: savedDest
       });
     }
@@ -222,12 +225,14 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.count > 0) {
-          sessionStorage.setItem('bee_vibe_archived_count', String(data.count));
+        if ((data.count && data.count > 0) || (data.ordersCount && data.ordersCount > 0)) {
+          sessionStorage.setItem('bee_vibe_archived_count', String(data.count || 0));
+          sessionStorage.setItem('bee_vibe_archived_orders_count', String(data.ordersCount || 0));
           sessionStorage.setItem('bee_vibe_archived_destination', data.destination);
-          setArchiveStatus({ count: data.count, destination: data.destination });
-          // Fetch updated bookings list since some were archived
+          setArchiveStatus({ count: data.count || 0, ordersCount: data.ordersCount || 0, destination: data.destination });
+          // Fetch updated bookings and food orders lists since past ones were archived
           fetchBookings(activePasscode);
+          fetchOrders(activePasscode);
         }
       }
     } catch (err) {
@@ -279,6 +284,7 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     sessionStorage.removeItem('bee_vibe_admin_passcode');
     sessionStorage.removeItem('bee_vibe_archived_count');
+    sessionStorage.removeItem('bee_vibe_archived_orders_count');
     sessionStorage.removeItem('bee_vibe_archived_destination');
     setIsAuthenticated(false);
     setPasscodeInput('');
@@ -682,8 +688,11 @@ export default function AdminDashboard() {
       (o.phone && o.phone.includes(searchTerm));
       
     const matchesStatus = orderStatusFilter === 'all' ? true : o.status === orderStatusFilter;
+
+    const orderDate = o.createdAt ? o.createdAt.slice(0, 10) : '';
+    const matchesDate = orderDateFilter ? orderDate === orderDateFilter : true;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesDate;
   });
 
   // Metric calculations
@@ -872,12 +881,13 @@ export default function AdminDashboard() {
           animation: 'fadeIn 0.3s ease-out'
         }}>
           <span>
-            🧹 <strong>Daily Refresh Completed:</strong> Archived <strong>{archiveStatus.count}</strong> past booking(s) to <strong>{archiveStatus.destination === 'supabase_db' ? 'Supabase Cloud DB' : archiveStatus.destination === 'cloud_webhook' ? 'Cloud Webhook' : 'Local Archive File'}</strong>.
+            🧹 <strong>Daily Refresh Completed:</strong> Archived <strong>{archiveStatus.count}</strong> past booking(s) {archiveStatus.ordersCount ? <>and <strong>{archiveStatus.ordersCount}</strong> past food order(s)</> : ''} to <strong>{archiveStatus.destination === 'supabase_db' ? 'Supabase Cloud DB' : archiveStatus.destination === 'cloud_webhook' ? 'Cloud Webhook' : 'Local Archive File'}</strong>.
           </span>
           <button 
             onClick={() => {
               setArchiveStatus(null);
               sessionStorage.removeItem('bee_vibe_archived_count');
+              sessionStorage.removeItem('bee_vibe_archived_orders_count');
               sessionStorage.removeItem('bee_vibe_archived_destination');
             }}
             style={{ background: 'transparent', border: 'none', color: '#34d399', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
@@ -907,6 +917,7 @@ export default function AdminDashboard() {
             setActiveTab('orders');
             setSearchTerm('');
             setOrderStatusFilter('all');
+            setOrderDateFilter('');
           }}
         >
           🍿 Food Orders ({activeOrdersCount})
@@ -1032,27 +1043,37 @@ export default function AdminDashboard() {
               onChange={(e) => setDateFilter(e.target.value)}
             />
           ) : (
-            <select
-              className={styles.dateFilter}
-              value={orderStatusFilter}
-              onChange={(e) => setOrderStatusFilter(e.target.value)}
-              style={{ paddingRight: '20px' }}
-            >
-              <option value="all">🍛 All Statuses</option>
-              <option value="pending">🕒 Pending Orders</option>
-              <option value="preparing">🍳 Preparing Orders</option>
-              <option value="served">✅ Served Orders</option>
-              <option value="cancelled">❌ Cancelled Orders</option>
-            </select>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                className={styles.dateFilter}
+                value={orderDateFilter}
+                onChange={(e) => setOrderDateFilter(e.target.value)}
+                title="Filter food orders by date"
+              />
+              <select
+                className={styles.dateFilter}
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+                style={{ paddingRight: '20px' }}
+              >
+                <option value="all">🍛 All Statuses</option>
+                <option value="pending">🕒 Pending Orders</option>
+                <option value="preparing">🍳 Preparing Orders</option>
+                <option value="served">✅ Served Orders</option>
+                <option value="cancelled">❌ Cancelled Orders</option>
+              </select>
+            </div>
           )}
           
-          {(searchTerm || dateFilter || (activeTab === 'orders' && orderStatusFilter !== 'all')) && (
+          {(searchTerm || dateFilter || orderDateFilter || (activeTab === 'orders' && orderStatusFilter !== 'all')) && (
             <button
               className="btn btn-secondary"
               style={{ padding: '8px 16px', fontSize: '0.85rem' }}
               onClick={() => {
                 setSearchTerm('');
                 setDateFilter('');
+                setOrderDateFilter('');
                 setOrderStatusFilter('all');
               }}
             >

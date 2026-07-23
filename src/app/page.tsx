@@ -41,33 +41,73 @@ const Instagram = ({ size = 24, color = "currentColor", ...props }: React.SVGPro
   </svg>
 );
 
-const BeeVibeLogoIcon = () => (
+const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
   <svg
-    viewBox="0 0 32 32"
-    width="42"
-    height="42"
+    width={size}
+    height={size}
+    viewBox="0 0 100 100"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    style={{ filter: 'drop-shadow(0 0 6px rgba(242, 169, 0, 0.7))' }}
+    style={{ filter: 'drop-shadow(0 4px 14px rgba(242, 169, 0, 0.5))' }}
   >
-    {/* Film reel outer ring */}
-    <circle cx="16" cy="16" r="10" stroke="#f2a900" strokeWidth="1.8" />
-    {/* Film reel inner circle */}
-    <circle cx="16" cy="16" r="4" fill="#f2a900" fillOpacity="0.15" stroke="#f2a900" strokeWidth="1.5" />
-    {/* Play triangle center */}
-    <path d="M14 13.5l6 2.5-6 2.5v-5z" fill="#f2a900" />
-    {/* Film strip holes - top */}
-    <circle cx="16" cy="7" r="1.2" fill="#f2a900" />
-    <circle cx="21.2" cy="9.4" r="1.2" fill="#f2a900" />
-    <circle cx="10.8" cy="9.4" r="1.2" fill="#f2a900" />
-    {/* Film strip holes - bottom */}
-    <circle cx="16" cy="25" r="1.2" fill="#f2a900" />
-    <circle cx="21.2" cy="22.6" r="1.2" fill="#f2a900" />
-    <circle cx="10.8" cy="22.6" r="1.2" fill="#f2a900" />
-    {/* Sparkle top-right */}
-    <path d="M26 5l.6 1.4L28 7l-1.4.6L26 9l-.6-1.4L24 7l1.4-.6z" fill="#f2a900" />
-    {/* Sparkle small */}
-    <path d="M28 12l.3.7.7.3-.7.3-.3.7-.3-.7-.7-.3.7-.3z" fill="#f2a900" />
+    <defs>
+      <linearGradient id="goldBodyPage" x1="10" y1="35" x2="68" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fff7b8" />
+        <stop offset="25%" stopColor="#f7cd48" />
+        <stop offset="50%" stopColor="#d4af37" />
+        <stop offset="75%" stopColor="#a3760d" />
+        <stop offset="100%" stopColor="#5c3f00" />
+      </linearGradient>
+
+      <linearGradient id="goldReelPage" x1="15" y1="10" x2="45" y2="45" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ffffcc" />
+        <stop offset="50%" stopColor="#d4af37" />
+        <stop offset="100%" stopColor="#7a5500" />
+      </linearGradient>
+
+      <linearGradient id="goldReelBigPage" x1="40" y1="5" x2="75" y2="45" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#ffffcc" />
+        <stop offset="50%" stopColor="#f7cd48" />
+        <stop offset="100%" stopColor="#8a6000" />
+      </linearGradient>
+
+      <linearGradient id="goldLensPage" x1="68" y1="40" x2="95" y2="75" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#fff3a8" />
+        <stop offset="40%" stopColor="#d4af37" />
+        <stop offset="100%" stopColor="#5c3f00" />
+      </linearGradient>
+
+      <linearGradient id="goldHighlightPage" x1="0" y1="0" x2="0" y2="100%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.75" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      </linearGradient>
+    </defs>
+
+    {/* Small Reel Top Left */}
+    <circle cx="28" cy="27" r="16" fill="url(#goldReelPage)" stroke="#4a3400" strokeWidth="1.2" />
+    <circle cx="28" cy="27" r="14.5" fill="none" stroke="url(#goldHighlightPage)" strokeWidth="0.9" />
+    <circle cx="28" cy="27" r="3.8" fill="#141006" />
+    <circle cx="28" cy="17.5" r="2.6" fill="#141006" />
+    <circle cx="28" cy="36.5" r="2.6" fill="#141006" />
+    <circle cx="18.5" cy="27" r="2.6" fill="#141006" />
+    <circle cx="37.5" cy="27" r="2.6" fill="#141006" />
+
+    {/* Large Reel Top Right */}
+    <circle cx="58" cy="22" r="20" fill="url(#goldReelBigPage)" stroke="#4a3400" strokeWidth="1.2" />
+    <circle cx="58" cy="22" r="18.5" fill="none" stroke="url(#goldHighlightPage)" strokeWidth="0.9" />
+    <circle cx="58" cy="22" r="4.8" fill="#141006" />
+    <circle cx="58" cy="10" r="3.4" fill="#141006" />
+    <circle cx="58" cy="34" r="3.4" fill="#141006" />
+    <circle cx="46" cy="22" r="3.4" fill="#141006" />
+    <circle cx="70" cy="22" r="3.4" fill="#141006" />
+
+    {/* Main Camera Body (Rounded Box) */}
+    <rect x="12" y="42" width="56" height="38" rx="8.5" fill="url(#goldBodyPage)" stroke="#4a3400" strokeWidth="1.4" />
+    <rect x="13.5" y="43.5" width="53" height="35" rx="7" fill="none" stroke="url(#goldHighlightPage)" strokeWidth="1.1" />
+
+    {/* Camera Lens Cone (Trapezoid) */}
+    <path d="M 68 49 L 92 38 L 92 80 L 68 69 Z" fill="url(#goldLensPage)" stroke="#4a3400" strokeWidth="1.4" />
+    <path d="M 69.5 51 L 90.5 41.5 L 90.5 76.5 L 69.5 67 Z" fill="none" stroke="url(#goldHighlightPage)" strokeWidth="0.9" />
   </svg>
 );
 

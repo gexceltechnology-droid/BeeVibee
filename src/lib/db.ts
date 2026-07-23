@@ -284,8 +284,8 @@ export function verifyOtp(phone: string, otp: string): boolean {
   return false;
 }
 
-// Helper to archive past bookings to cloud or local backup and clean active DB
-export async function archivePastBookings(): Promise<{ success: boolean; count: number; destination: string; error?: string }> {
+// Helper to archive past bookings and food orders to cloud or local backup and clean active DB
+export async function archivePastBookings(): Promise<{ success: boolean; count: number; ordersCount: number; destination: string; error?: string }> {
   const db = readDb();
   
   // Calculate local date (YYYY-MM-DD)
@@ -295,8 +295,15 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
   // Find bookings with date older than today
   const pastBookings = db.bookings.filter((b) => b.date < today);
   
-  if (pastBookings.length === 0) {
-    return { success: true, count: 0, destination: 'none' };
+  // Find food orders created on dates older than today
+  const foodOrders = db.foodOrders || [];
+  const pastFoodOrders = foodOrders.filter((o) => {
+    const orderDate = o.createdAt ? o.createdAt.slice(0, 10) : '';
+    return orderDate !== '' && orderDate < today;
+  });
+
+  if (pastBookings.length === 0 && pastFoodOrders.length === 0) {
+    return { success: true, count: 0, ordersCount: 0, destination: 'none' };
   }
   
   let backedUp = false;
@@ -310,25 +317,32 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
   if (supabaseUrl && supabaseServiceKey) {
     try {
       const cleanUrl = supabaseUrl.replace(/\/$/, '');
-      const res = await fetch(`${cleanUrl}/rest/v1/bookings_archive`, {
-        method: 'POST',
-        headers: {
-          'apikey': supabaseServiceKey,
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates',
-        },
-        body: JSON.stringify(pastBookings),
-      });
-      
-      if (res.ok) {
-        backedUp = true;
-        destination = 'supabase_db';
-      } else {
-        const errText = await res.text();
-        console.error('Supabase backup failed:', errText);
-        errorMsg = `Supabase upload error: ${errText}`;
+      if (pastBookings.length > 0) {
+        await fetch(`${cleanUrl}/rest/v1/bookings_archive`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify(pastBookings),
+        });
       }
+      if (pastFoodOrders.length > 0) {
+        await fetch(`${cleanUrl}/rest/v1/food_orders_archive`, {
+          method: 'POST',
+          headers: {
+            'apikey': supabaseServiceKey,
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify(pastFoodOrders),
+        });
+      }
+      backedUp = true;
+      destination = 'supabase_db';
     } catch (e: any) {
       console.error('Error uploading to Supabase:', e);
       errorMsg = e.message || 'Supabase connection error';
@@ -346,6 +360,7 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
         },
         body: JSON.stringify({
           bookings: pastBookings,
+          foodOrders: pastFoodOrders,
           archivedAt: new Date().toISOString(),
         }),
       });
@@ -367,22 +382,34 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
   // 3. Local File Backup Fallback (Always run as fallback or primary if no keys)
   try {
     const archiveFile = path.join(DB_DIR, 'archive_db.json');
-    let archivedList: any[] = [];
+    let archiveData: { bookings?: any[]; foodOrders?: any[] } = {};
     if (fs.existsSync(archiveFile)) {
       try {
         const fileContent = fs.readFileSync(archiveFile, 'utf-8');
-        archivedList = JSON.parse(fileContent);
+        const parsed = JSON.parse(fileContent);
+        if (Array.isArray(parsed)) {
+          archiveData = { bookings: parsed, foodOrders: [] };
+        } else {
+          archiveData = parsed;
+        }
       } catch (e) {
         console.error('Error reading archive file:', e);
       }
     }
     
-    // Merge new past bookings avoiding duplicates by id
-    const existingIds = new Set(archivedList.map((b) => b.id));
-    const uniqueNewPast = pastBookings.filter((b) => !existingIds.has(b.id));
-    archivedList.push(...uniqueNewPast);
+    if (!archiveData.bookings) archiveData.bookings = [];
+    if (!archiveData.foodOrders) archiveData.foodOrders = [];
     
-    fs.writeFileSync(archiveFile, JSON.stringify(archivedList, null, 2), 'utf-8');
+    // Merge new past bookings and food orders avoiding duplicates by id
+    const existingBookingIds = new Set(archiveData.bookings.map((b) => b.id));
+    const uniqueNewPastBookings = pastBookings.filter((b) => !existingBookingIds.has(b.id));
+    archiveData.bookings.push(...uniqueNewPastBookings);
+
+    const existingOrderIds = new Set(archiveData.foodOrders.map((o) => o.id));
+    const uniqueNewPastOrders = pastFoodOrders.filter((o) => !existingOrderIds.has(o.id));
+    archiveData.foodOrders.push(...uniqueNewPastOrders);
+    
+    fs.writeFileSync(archiveFile, JSON.stringify(archiveData, null, 2), 'utf-8');
     
     if (!backedUp) {
       backedUp = true;
@@ -391,18 +418,24 @@ export async function archivePastBookings(): Promise<{ success: boolean; count: 
   } catch (e: any) {
     console.error('Local backup fallback error:', e);
     if (!backedUp) {
-      return { success: false, count: 0, destination: 'none', error: e.message || 'Local backup failed' };
+      return { success: false, count: 0, ordersCount: 0, destination: 'none', error: e.message || 'Local backup failed' };
     }
   }
   
   if (backedUp) {
-    // Remove past bookings from active DB
+    // Remove past bookings and past food orders from active DB
     db.bookings = db.bookings.filter((b) => b.date >= today);
+    if (db.foodOrders) {
+      db.foodOrders = db.foodOrders.filter((o) => {
+        const orderDate = o.createdAt ? o.createdAt.slice(0, 10) : '';
+        return orderDate === '' || orderDate >= today;
+      });
+    }
     writeDb(db);
-    return { success: true, count: pastBookings.length, destination, error: errorMsg };
+    return { success: true, count: pastBookings.length, ordersCount: pastFoodOrders.length, destination, error: errorMsg };
   }
   
-  return { success: false, count: 0, destination: 'none', error: errorMsg || 'Archiving failed' };
+  return { success: false, count: 0, ordersCount: 0, destination: 'none', error: errorMsg || 'Archiving failed' };
 }
 
 // Helper to add a new food order
