@@ -51,6 +51,8 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
   const livesRef = useRef(lives);
   
   const playerXRef = useRef(150);
+  const lastPlayerXRef = useRef(150);
+  const walkCycleRef = useRef(0);
   const scrollYRef = useRef(0);
 
   // Sync state to refs for closure-safe animation access
@@ -242,12 +244,158 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
           spawnTimer = 0;
         }
 
-        // Draw Player Catcher (glowing party tray at bottom)
-        const catcherWidth = 72;
+        // Draw Animated Walking Robot Player (Holding glowing party tray)
+        const catcherWidth = 76;
         const catcherHeight = 12;
         const catcherX = Math.min(Math.max(playerXRef.current - catcherWidth / 2, 10), w - catcherWidth - 10);
-        const catcherY = h - 45;
+        const catcherY = h - 62;
 
+        // Calculate movement velocity for walking leg animation
+        const vx = playerXRef.current - (lastPlayerXRef.current || playerXRef.current);
+        lastPlayerXRef.current = playerXRef.current;
+        const isMoving = Math.abs(vx) > 0.3;
+
+        // Update walk cycle phase
+        walkCycleRef.current += isMoving ? Math.min(Math.abs(vx) * 0.12 + 0.15, 0.35) : 0.04;
+        const walkPhase = walkCycleRef.current;
+
+        const robotX = catcherX + catcherWidth / 2;
+
+        // 1. Animated Robot Legs & Feet (Walking Step Cycle)
+        const hipY = catcherY + 42;
+        const legLength = 14;
+        const footY = h - 8;
+
+        const leftSwing = Math.sin(walkPhase) * (isMoving ? 14 : 3);
+        const rightSwing = Math.sin(walkPhase + Math.PI) * (isMoving ? 14 : 3);
+
+        // Left Leg
+        const leftHipX = robotX - 10;
+        const leftFootX = leftHipX + leftSwing;
+        const leftKneeX = (leftHipX + leftFootX) / 2 - 3;
+        const leftKneeY = hipY + legLength / 2 - Math.abs(Math.sin(walkPhase)) * 2;
+
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(leftHipX, hipY);
+        ctx.lineTo(leftKneeX, leftKneeY);
+        ctx.lineTo(leftFootX, footY);
+        ctx.stroke();
+
+        // Left Foot
+        ctx.fillStyle = activeColor.accent;
+        ctx.beginPath();
+        ctx.roundRect(leftFootX - 6, footY - 2, 12, 6, 3);
+        ctx.fill();
+
+        // Right Leg
+        const rightHipX = robotX + 10;
+        const rightFootX = rightHipX + rightSwing;
+        const rightKneeX = (rightHipX + rightFootX) / 2 + 3;
+        const rightKneeY = hipY + legLength / 2 - Math.abs(Math.sin(walkPhase + Math.PI)) * 2;
+
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(rightHipX, hipY);
+        ctx.lineTo(rightKneeX, rightKneeY);
+        ctx.lineTo(rightFootX, footY);
+        ctx.stroke();
+
+        // Right Foot
+        ctx.fillStyle = activeColor.accent;
+        ctx.beginPath();
+        ctx.roundRect(rightFootX - 6, footY - 2, 12, 6, 3);
+        ctx.fill();
+
+        // 2. Robot Torso / Body
+        const bodyY = catcherY + 22;
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#475569';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(robotX - 16, bodyY, 32, 22, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Power Core Reactor in Chest
+        ctx.fillStyle = activeColor.accent;
+        ctx.shadowColor = activeColor.accent;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(robotX, bodyY + 11, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 3. Robot Arms & Hands (Holding up the Catcher Tray)
+        // Left Arm & Hand
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(robotX - 16, bodyY + 6);
+        ctx.lineTo(catcherX + 8, catcherY + 8);
+        ctx.stroke();
+
+        ctx.fillStyle = activeColor.accent;
+        ctx.beginPath();
+        ctx.arc(catcherX + 8, catcherY + 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Right Arm & Hand
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(robotX + 16, bodyY + 6);
+        ctx.lineTo(catcherX + catcherWidth - 8, catcherY + 8);
+        ctx.stroke();
+
+        ctx.fillStyle = activeColor.accent;
+        ctx.beginPath();
+        ctx.arc(catcherX + catcherWidth - 8, catcherY + 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4. Robot Head & Antenna
+        const headY = catcherY + 6;
+        // Antenna Stem
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(robotX, headY);
+        ctx.lineTo(robotX, headY - 7);
+        ctx.stroke();
+
+        // Glowing Antenna Light Bulb
+        const antennaGlow = 0.5 + Math.sin(time * 0.008) * 0.5;
+        ctx.fillStyle = activeColor.accent;
+        ctx.shadowColor = activeColor.accent;
+        ctx.shadowBlur = 10 * antennaGlow;
+        ctx.beginPath();
+        ctx.arc(robotX, headY - 9, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Head Box
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(robotX - 12, headY, 24, 15, 5);
+        ctx.fill();
+        ctx.stroke();
+
+        // Glowing Cyber Visor / Eyes
+        ctx.fillStyle = activeColor.accent;
+        ctx.shadowColor = activeColor.accent;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.roundRect(robotX - 8, headY + 3, 16, 5, 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 5. Catcher Glowing Party Tray (Held above robot head)
         ctx.fillStyle = activeColor.accent;
         ctx.shadowColor = activeColor.accent;
         ctx.shadowBlur = 20;
@@ -256,7 +404,7 @@ export default function InteractiveShowcase({ vibe }: InteractiveShowcaseProps) 
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Catcher handles
+        // Catcher Handles / Neon Accents
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(catcherX + 4, catcherY - 3, 4, 3);
         ctx.fillRect(catcherX + catcherWidth - 8, catcherY - 3, 4, 3);
