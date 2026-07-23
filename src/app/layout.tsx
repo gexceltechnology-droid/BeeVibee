@@ -48,6 +48,11 @@ export const metadata: Metadata = {
   verification: {
     google: "googleedf3ca6499a78e5c",
   },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "Bee Vibe | Luxury Mini Private Theater & Celebration Space Bangalore",
     description: "Book luxury mini private theaters in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
