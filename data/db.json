@@ -1,24 +1,5 @@
 {
-  "bookings": [
-    {
-      "customerName": "Mallikarjun John Doe",
-      "email": "john@example.com",
-      "phone": "+918919178055",
-      "date": "2026-07-22",
-      "timeSlot": "10:00 AM - 12:00 PM",
-      "packageName": "Pink Theme",
-      "addOns": [
-        "DSLR Camera Coverage (1 Hour)",
-        "Special Fog Entry Effect (Flat ₹300)"
-      ],
-      "totalPrice": 1599,
-      "guestCount": 2,
-      "specialRequests": "",
-      "id": "BV-260722-0001",
-      "status": "confirmed",
-      "createdAt": "2026-07-21T07:25:48.407Z"
-    }
-  ],
+  "bookings": [],
   "timeSlots": [
     {
       "id": "slot-1",
@@ -64,98 +45,7 @@
       "expiresAt": "2026-07-21T07:31:59.672Z"
     }
   ],
-  "foodOrders": [
-    {
-      "theme": "pink",
-      "themeLabel": "Rose Pink Room",
-      "customerName": "Test User",
-      "phone": "9999999999",
-      "items": [
-        {
-          "id": "food-combo-1",
-          "name": "Cinephile Popcorn & Soda Combo",
-          "price": 270,
-          "quantity": 1
-        }
-      ],
-      "totalPrice": 270,
-      "id": "FO-260720-0001",
-      "status": "served",
-      "createdAt": "2026-07-20T05:35:55.650Z"
-    },
-    {
-      "theme": "rose",
-      "themeLabel": "Rose Pink Room",
-      "customerName": "Test User",
-      "phone": "9999999999",
-      "items": [
-        {
-          "id": "menu-1784527578794",
-          "name": "Garlic Bread",
-          "price": 120,
-          "quantity": 1
-        }
-      ],
-      "totalPrice": 120,
-      "id": "FO-260720-0002",
-      "status": "pending",
-      "createdAt": "2026-07-20T06:08:01.855Z"
-    },
-    {
-      "theme": "purple",
-      "themeLabel": "Neon Purple Room",
-      "customerName": "Guest",
-      "phone": "",
-      "items": [
-        {
-          "id": "menu-1",
-          "name": "Maggie",
-          "price": 70,
-          "quantity": 1
-        }
-      ],
-      "totalPrice": 70,
-      "id": "FO-260720-0003",
-      "status": "pending",
-      "createdAt": "2026-07-20T06:12:31.861Z"
-    },
-    {
-      "theme": "pink",
-      "themeLabel": "Rose Pink Room",
-      "customerName": "Guest",
-      "phone": "",
-      "items": [
-        {
-          "id": "menu-2",
-          "name": "Cool drinks",
-          "price": 40,
-          "quantity": 1
-        }
-      ],
-      "totalPrice": 40,
-      "id": "FO-260720-0004",
-      "status": "pending",
-      "createdAt": "2026-07-20T06:21:34.841Z"
-    },
-    {
-      "theme": "pink",
-      "themeLabel": "Rose Pink Room",
-      "customerName": "Guest",
-      "phone": "",
-      "items": [
-        {
-          "id": "menu-1",
-          "name": "Maggie",
-          "price": 70,
-          "quantity": 1
-        }
-      ],
-      "totalPrice": 70,
-      "id": "FO-260720-0005",
-      "status": "pending",
-      "createdAt": "2026-07-20T06:22:05.555Z"
-    }
-  ],
+  "foodOrders": [],
   "menuItems": [
     {
       "id": "menu-1",
