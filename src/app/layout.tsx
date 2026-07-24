@@ -140,6 +140,7 @@ const localBusinessSchema = {
       "closes": "23:30"
     }
   ],
+  "hasMap": "https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8",
   "sameAs": [
     "https://www.instagram.com/beevibe_partyhall/"
   ],

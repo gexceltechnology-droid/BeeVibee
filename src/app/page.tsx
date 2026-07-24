@@ -590,7 +590,7 @@ export default function Home() {
               zIndex: 10
             }}>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041"
+                href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -650,7 +650,7 @@ export default function Home() {
                 <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <MapPin size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
                   <a
-                    href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041"
+                    href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'inherit', textDecoration: 'none', lineHeight: '1.4' }}
