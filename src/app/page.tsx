@@ -254,6 +254,7 @@ export default function Home() {
               <ul className={styles.navLinks}>
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
+                <li><a href="#location" className={styles.navLink}>Location</a></li>
                 <li><a href="#faq" className={styles.navLink}>FAQ</a></li>
                 <li><Link href="/book" className={styles.navLink}>Booking Portal</Link></li>
               </ul>
@@ -285,6 +286,11 @@ export default function Home() {
               <li>
                 <a href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
                   Amenities
+                </a>
+              </li>
+              <li>
+                <a href="#location" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Location & Map
                 </a>
               </li>
               <li>
@@ -542,6 +548,69 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Interactive Google Map Location Section */}
+      <section id="location" style={{ padding: '60px 0', borderTop: '1px solid var(--glass-border)', background: 'rgba(10, 10, 12, 0.4)' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div className={styles.heroBadge} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <MapPin size={14} color="var(--accent)" /> OUR LOCATION
+            </div>
+            <h2 className={styles.sectionTitle} style={{ marginTop: '8px' }}>
+              Visit Bee Vibe Theater
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto', fontSize: '0.95rem' }}>
+              1340, 2nd Floor, 41st Cross Road, opposite Jain University 4th Gate, Jayanagar 9th Block, Bangalore - 560041
+            </p>
+          </div>
+
+          <div style={{
+            position: 'relative',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            border: '1px solid var(--glass-border)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(242, 169, 0, 0.08)',
+            background: 'var(--glass-bg)',
+            height: '420px',
+            width: '100%'
+          }}>
+            <iframe
+              title="Bee Vibe Private Celebration Theater Location Map"
+              src="https://maps.google.com/maps?q=1340%2C+2nd+floor%2C+41st+Cross+road%2C+opposite+to+Jain+University+4th+gate%2C+Jayanagar+9th+block%2C+Bangalore%2C+Karnataka%2C+560041&t=&z=16&ie=UTF8&iwloc=&output=embed"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={false}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div style={{
+              position: 'absolute',
+              bottom: '16px',
+              right: '16px',
+              zIndex: 10
+            }}>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+opposite+to+Jain+University+4th+gate%2C+Jayanagar+9th+block%2C+Bangalore"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 18px',
+                  fontSize: '0.85rem',
+                  borderRadius: '30px',
+                  boxShadow: '0 8px 24px rgba(242, 169, 0, 0.4)'
+                }}
+              >
+                <MapPin size={16} /> Open in Google Maps
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Full Width Footer */}
       <footer className={styles.footer}>
         <div className="container">
@@ -598,6 +667,7 @@ export default function Home() {
               <ul className={styles.footerLinks}>
                 <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
                 <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
+                <li><a href="#location" className={styles.footerLink}>Location Map</a></li>
                 <li><a href="#faq" className={styles.footerLink}>FAQ</a></li>
                 <li><Link href="/book" className={styles.footerLink}>Book Tickets</Link></li>
               </ul>
