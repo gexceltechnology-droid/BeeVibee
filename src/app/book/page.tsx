@@ -173,9 +173,9 @@ export default function BookPage() {
           </div>
           <div className={styles.contactItem}>
             <MapPin size={16} className={styles.contactIcon} />
-            <a href="https://www.google.com/maps/search/?api=1&query=1340%2C+41st+cross+road%2C+jayanagar+9th+block%2C+bangalore"
+            <a href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041"
               target="_blank" rel="noopener noreferrer">
-              Jayanagar 9th Block, Bangalore
+              1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
             </a>
           </div>
         </div>

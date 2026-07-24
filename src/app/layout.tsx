@@ -104,7 +104,7 @@ const localBusinessSchema = {
   ],
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "1340, 41st cross road, near Jain University 4th grade, Jayanagar 9th block",
+    "streetAddress": "1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block",
     "addressLocality": "Bangalore",
     "addressRegion": "Karnataka",
     "postalCode": "560041",

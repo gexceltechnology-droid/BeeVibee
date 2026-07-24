@@ -559,7 +559,7 @@ export default function Home() {
               Visit Bee Vibe Theater
             </h2>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto', fontSize: '0.95rem' }}>
-              1340, 2nd Floor, 41st Cross Road, opposite Jain University 4th Gate, Jayanagar 9th Block, Bangalore - 560041
+              1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
             </p>
           </div>
 
@@ -575,7 +575,7 @@ export default function Home() {
           }}>
             <iframe
               title="Bee Vibe Private Celebration Theater Location Map"
-              src="https://maps.google.com/maps?q=1340%2C+2nd+floor%2C+41st+Cross+road%2C+opposite+to+Jain+University+4th+gate%2C+Jayanagar+9th+block%2C+Bangalore%2C+Karnataka%2C+560041&t=&z=16&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041&t=&z=16&ie=UTF8&iwloc=&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0 }}
@@ -590,7 +590,7 @@ export default function Home() {
               zIndex: 10
             }}>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+opposite+to+Jain+University+4th+gate%2C+Jayanagar+9th+block%2C+Bangalore"
+                href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -650,13 +650,13 @@ export default function Home() {
                 <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <MapPin size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
                   <a
-                    href="https://www.google.com/maps/search/?api=1&query=1340%2C+41st+cross+road%2C+near+jain+university+4th+grade%2C+jayanagar+9th+block%2C+bangalore%2C+India"
+                    href="https://www.google.com/maps/search/?api=1&query=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041"
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ color: 'inherit', textDecoration: 'none', lineHeight: '1.4' }}
                     className="hover-accent"
                   >
-                    1340, 41st cross road, near jain university 4th grade, jayanagar 9th block, bangalore, India
+                    1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
                   </a>
                 </span>
               </div>
