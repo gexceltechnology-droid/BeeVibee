@@ -234,16 +234,19 @@
 
 .contactItem {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.45);
+  max-width: 420px;
 }
 
 .contactItem a {
   color: rgba(255, 255, 255, 0.45);
   text-decoration: none;
   transition: color 0.2s;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .contactItem a:hover {
@@ -253,6 +256,7 @@
 .contactIcon {
   color: var(--accent);
   flex-shrink: 0;
+  margin-top: 3px;
 }
 
 /* ===== Mobile ===== */
