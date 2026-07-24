@@ -2,9 +2,9 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Bee Vibe Mini Private Theater",
+    name: "Bee Vibe Private Celebration Theater",
     short_name: "Bee Vibe",
-    description: "Luxury mini private theater and celebration space in Jayanagar, Bangalore.",
+    description: "Luxury private celebration theater and space in Jayanagar, Bangalore.",
     start_url: "/",
     display: "standalone",
     background_color: "#0c0a09",

@@ -247,7 +247,7 @@ export default function Home() {
               </div>
               <div className={styles.logoText}>
                 <span className={styles.logoBrand}>BeeVibe</span>
-                <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
+                <span className={styles.logoSub}>PRIVATE CELEBRATION THEATER</span>
               </div>
             </div>
             <nav className={styles.desktopNav}>
@@ -329,7 +329,7 @@ export default function Home() {
             {/* Section 1: Hero */}
             <section id="hero" className={styles.heroSection}>
               <div className={styles.heroContent}>
-                <div className={styles.tagline}>Mini Private Theater</div>
+                <div className={styles.tagline}>Private Celebration Theater</div>
                 <h1 className={styles.heroTitle}>
                   Your Private Cinema.<br />
                   <span className="text-glow" style={{ color: 'var(--accent)', transition: 'color 0.5s' }}>
@@ -553,11 +553,11 @@ export default function Home() {
                 </div>
                 <div className={styles.logoText}>
                   <span className={styles.logoBrand}>BeeVibe</span>
-                  <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
+                  <span className={styles.logoSub}>PRIVATE CELEBRATION THEATER</span>
                 </div>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                Premium mini private theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.
+                Premium private celebration theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -613,7 +613,7 @@ export default function Home() {
           </div>
 
           <div className={styles.copyright}>
-            <p>&copy; {new Date().getFullYear()} Bee Vibe Mini Private Theater. All Rights Reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Bee Vibe Private Celebration Theater. All Rights Reserved.</p>
           </div>
         </div>
       </footer>

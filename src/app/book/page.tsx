@@ -119,7 +119,7 @@ export default function BookPage() {
             <div className={styles.logoIcon}><BeeVibeLogoIcon /></div>
             <div className={styles.logoText}>
               <span className={styles.logoBrand}>BeeVibe</span>
-              <span className={styles.logoSub}>MINI PRIVATE THEATER</span>
+              <span className={styles.logoSub}>PRIVATE CELEBRATION THEATER</span>
             </div>
           </Link>
           <Link href="/" className={styles.backBtn}>

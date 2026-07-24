@@ -712,7 +712,7 @@ export default function BookingPortal() {
 
   <!-- Logo and Header -->
   <text x="225" y="60" class="font-title" font-size="28" font-weight="800" fill="#f2a900" text-anchor="middle">BEE VIBE</text>
-  <text x="225" y="85" class="font-body" font-size="11" font-weight="600" fill="#626272" letter-spacing="3" text-anchor="middle">MINI PRIVATE THEATER TICKET</text>
+  <text x="225" y="85" class="font-body" font-size="11" font-weight="600" fill="#626272" letter-spacing="3" text-anchor="middle">PRIVATE CELEBRATION THEATER TICKET</text>
   
   <!-- Dashed Line 1 -->
   <line x1="25" y1="110" x2="425" y2="110" stroke="#f2a900" stroke-dasharray="6 4" stroke-width="1" stroke-opacity="0.3"/>
@@ -1001,7 +1001,7 @@ export default function BookingPortal() {
           <div class="ticket-card">
             <div class="header">
               <h1 class="brand">Bee Vibe</h1>
-              <p class="subtitle">Mini Private Theater Ticket</p>
+              <p class="subtitle">Private Celebration Theater Ticket</p>
             </div>
             
             <div class="row">
@@ -1302,7 +1302,7 @@ export default function BookingPortal() {
             <div className={styles.ticket} style={{ width: '100%' }}>
               <div className={styles.ticketHeader}>
                 <div className={styles.ticketBrand}>Bee Vibe</div>
-                <div className={styles.ticketSub}>Mini Private Theater Ticket</div>
+                <div className={styles.ticketSub}>Private Celebration Theater Ticket</div>
               </div>
               <div className={styles.ticketBody}>
                 <div className={styles.ticketRow}>
@@ -1437,7 +1437,7 @@ export default function BookingPortal() {
                     <path d="M -12 ${dashedLine2Y - 12} L 0 ${dashedLine2Y - 12} L 0 ${dashedLine2Y + 12} L -12 ${dashedLine2Y + 12} Z" fill="#0a0a0c" />
                     <path d="M 450 ${dashedLine2Y - 12} L 462 ${dashedLine2Y - 12} L 462 ${dashedLine2Y + 12} L 450 ${dashedLine2Y + 12} Z" fill="#0a0a0c" />
                     <text x="225" y="60" class="font-title" font-size="28" font-weight="800" fill="#f2a900" text-anchor="middle">BEE VIBE</text>
-                    <text x="225" y="85" class="font-body" font-size="11" font-weight="600" fill="#626272" letter-spacing="3" text-anchor="middle">MINI PRIVATE THEATER TICKET</text>
+                    <text x="225" y="85" class="font-body" font-size="11" font-weight="600" fill="#626272" letter-spacing="3" text-anchor="middle">PRIVATE CELEBRATION THEATER TICKET</text>
                     <line x1="25" y1="110" x2="425" y2="110" stroke="#f2a900" stroke-dasharray="6 4" stroke-width="1" stroke-opacity="0.3"/>
                     <text x="40" y="150" class="font-body" font-size="11" fill="#a0a0b0">TICKET ID</text>
                     <text x="40" y="175" class="font-body" font-size="15" font-weight="700" fill="#ffffff">${id}</text>
@@ -1566,7 +1566,7 @@ export default function BookingPortal() {
                         <div class="ticket-card">
                           <div class="header">
                             <h1 class="brand">Bee Vibe</h1>
-                            <p class="subtitle">Mini Private Theater Ticket</p>
+                            <p class="subtitle">Private Celebration Theater Ticket</p>
                           </div>
                           <div class="row">
                             <div class="col">
@@ -2028,7 +2028,7 @@ export default function BookingPortal() {
                 <div className={styles.ticket}>
                   <div className={styles.ticketHeader}>
                     <div className={styles.ticketBrand}>Bee Vibe</div>
-                    <div className={styles.ticketSub}>Mini Private Theater Ticket</div>
+                    <div className={styles.ticketSub}>Private Celebration Theater Ticket</div>
                   </div>
                   <div className={styles.ticketBody}>
                     <div className={styles.ticketRow}>

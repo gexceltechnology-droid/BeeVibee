@@ -3,27 +3,39 @@ import type { Metadata } from "next";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.beevibe.org";
 
 export const metadata: Metadata = {
-  title: "Book Private Theater & Celebration Room",
-  description: "Select your date, preferred room vibe theme, custom cake, and decoration packages to book your private mini theater slot at Bee Vibe Bangalore.",
+  title: "Book Private Celebration Theater | Slots & Packages | Bee Vibe Bangalore",
+  description: "Reserve your luxury private celebration theater in Jayanagar, Bangalore. Select custom time slots, celebration themes, balloon decoration packages, and cakes for birthdays, anniversaries, & dates.",
   keywords: [
     "book private theater bangalore",
     "private cinema slot booking",
-    "birthday celebration room booking",
-    "bee vibe booking"
+    "birthday celebration space booking",
+    "date night theater booking jayanagar",
+    "private celebration theater reservation bangalore"
   ],
   alternates: {
-    canonical: "/book",
+    canonical: `${siteUrl}/book`,
   },
   openGraph: {
-    title: "Book Private Theater & Celebration Room | Bee Vibe",
-    description: "Select your date, preferred room vibe theme, custom cake, and decoration packages to book your private mini theater slot at Bee Vibe Bangalore.",
+    title: "Book Private Celebration Theater | Bee Vibe Bangalore",
+    description: "Reserve your luxury private celebration theater in Jayanagar, Bangalore. Choose your time slot, theme, and custom celebration decorations.",
     url: `${siteUrl}/book`,
+    siteName: "Bee Vibe Private Celebration Theater",
+    images: [
+      {
+        url: "/vibe-pink.png",
+        width: 1200,
+        height: 630,
+        alt: "Bee Vibe Private Theater Booking",
+      },
+    ],
+    locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Book Private Theater & Celebration Room | Bee Vibe",
-    description: "Select your date, preferred room vibe theme, custom cake, and decoration packages to book your private mini theater slot.",
+    title: "Book Private Celebration Theater | Bee Vibe Bangalore",
+    description: "Reserve your luxury private celebration theater in Jayanagar, Bangalore. Choose your time slot and custom celebration decorations.",
+    images: ["/vibe-pink.png"],
   },
 };
 
@@ -40,7 +52,7 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Book Tickets",
+      "name": "Book Theater",
       "item": `${siteUrl}/book`
     }
   ]

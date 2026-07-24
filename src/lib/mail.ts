@@ -192,7 +192,7 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
           </div>
 
           <div class="footer">
-            Thank you for choosing Bee Vibe Mini Private Theater!<br>
+            Thank you for choosing Bee Vibe Private Celebration Theater!<br>
             <strong>Call</strong>: +91 81235 01013<br>
             <strong>Location</strong>: 1340, 41st cross road, near jain university 4th grade, jayanagar 9th block, bangalore, India
           </div>

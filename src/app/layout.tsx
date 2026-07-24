@@ -13,13 +13,13 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Bee Vibe | Luxury Mini Private Theater & Celebration Space Bangalore",
+    default: "Bee Vibe | Luxury Private Celebration Theater & Space Bangalore",
     template: "%s | Bee Vibe",
   },
-  description: "Book luxury mini private theaters in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming. Enjoy 180-inch 4K screens, Dolby Atmos sound, custom decorations, and gourmet snacks.",
+  description: "Book luxury private celebration theaters in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming. Enjoy 180-inch 4K screens, Dolby Atmos sound, custom decorations, and gourmet snacks.",
   keywords: [
-    "private theater bangalore",
-    "mini private theater jayanagar",
+    "private celebration theater bangalore",
+    "private theater jayanagar",
     "birthday celebration space bangalore",
     "private cinema booking",
     "date night private theater",
@@ -54,10 +54,10 @@ export const metadata: Metadata = {
     apple: "/gold-camera-logo.png",
   },
   openGraph: {
-    title: "Bee Vibe | Luxury Mini Private Theater & Celebration Space Bangalore",
-    description: "Book luxury mini private theaters in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
+    title: "Bee Vibe | Luxury Private Celebration Theater & Space Bangalore",
+    description: "Book luxury private celebration theaters in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
     url: siteUrl,
-    siteName: "Bee Vibe Mini Private Theater",
+    siteName: "Bee Vibe Private Celebration Theater",
     images: [
       {
         url: "/gold-camera-logo.png",
@@ -77,8 +77,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bee Vibe | Luxury Mini Private Theater Bangalore",
-    description: "Book a luxury mini private theater in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
+    title: "Bee Vibe | Luxury Private Celebration Theater Bangalore",
+    description: "Book a luxury private celebration theater in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
     images: ["/gold-camera-logo.png"],
   },
   category: "entertainment",
@@ -88,12 +88,14 @@ const localBusinessSchema = {
   "@context": "https://schema.org",
   "@type": "MovieTheater",
   "@id": `${siteUrl}/#theater`,
-  "name": "Bee Vibe Mini Private Theater & Celebration Space",
-  "alternateName": ["Bee Vibe", "BeeVibe Mini Theater"],
-  "description": "Luxury mini private theater and celebration space in Jayanagar, Bangalore. Perfect for birthdays, anniversaries, romantic date nights, and gaming. Features 180-inch 4K screens, Dolby Atmos surround sound, custom decorations, and gourmet snacks.",
+  "name": "Bee Vibe Private Celebration Theater & Space",
+  "alternateName": ["Bee Vibe", "BeeVibe Celebration Theater", "Bee Vibe Bangalore"],
+  "description": "Luxury private celebration theater and space in Jayanagar, Bangalore. Perfect for birthdays, anniversaries, romantic date nights, and gaming. Features 180-inch 4K screens, Dolby Atmos surround sound, custom decorations, and gourmet snacks.",
   "url": siteUrl,
   "telephone": "+919900106474",
-  "priceRange": "₹₹",
+  "priceRange": "₹1499 - ₹2999",
+  "currenciesAccepted": "INR",
+  "paymentAccepted": "UPI, Credit Card, Debit Card, Net Banking, Cash",
   "logo": `${siteUrl}/gold-camera-logo.png`,
   "image": [
     `${siteUrl}/gold-camera-logo.png`,
@@ -112,6 +114,21 @@ const localBusinessSchema = {
     "@type": "GeoCoordinates",
     "latitude": 12.9177,
     "longitude": 77.5912
+  },
+  "areaServed": [
+    { "@type": "AdministrativeArea", "name": "Jayanagar" },
+    { "@type": "AdministrativeArea", "name": "JP Nagar" },
+    { "@type": "AdministrativeArea", "name": "BTM Layout" },
+    { "@type": "AdministrativeArea", "name": "Koramangala" },
+    { "@type": "AdministrativeArea", "name": "Banashankari" },
+    { "@type": "AdministrativeArea", "name": "Bangalore" }
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "128",
+    "bestRating": "5",
+    "worstRating": "1"
   },
   "openingHoursSpecification": [
     {
@@ -161,7 +178,7 @@ const faqSchema = {
       "name": "How many guests can fit in a private room?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Our mini private theater rooms comfortably accommodate up to 6 to 10 guests depending on the room theme selected, making them ideal for intimate celebrations or couple date nights."
+        "text": "Our private celebration theater rooms comfortably accommodate up to 6 to 10 guests depending on the room theme selected, making them ideal for intimate celebrations or couple date nights."
       }
     },
     {

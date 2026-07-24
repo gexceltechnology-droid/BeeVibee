@@ -3,27 +3,39 @@ import type { Metadata } from "next";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.beevibe.org";
 
 export const metadata: Metadata = {
-  title: "Gourmet Food & Snacks Menu",
-  description: "Browse the gourmet menu at Bee Vibe Private Theater. Order popcorn, nachos, mocktails, milkshakes, pizza, and desserts directly to your private theater room.",
+  title: "In-Theater Gourmet Menu & Snacks | Bee Vibe Cafe Jayanagar",
+  description: "Browse fresh popcorn, nachos, mocktails, milkshakes, and hot appetizers available for private room service during your theater session at Bee Vibe Bangalore.",
   keywords: [
-    "bee vibe menu",
-    "private theater food bangalore",
-    "in theater gourmet snacks",
-    "movie theater popcorn and drinks"
+    "private theater food menu",
+    "bee vibe cafe",
+    "in-theater snacks bangalore",
+    "theater room service jayanagar",
+    "private theater drinks menu"
   ],
   alternates: {
-    canonical: "/menu",
+    canonical: `${siteUrl}/menu`,
   },
   openGraph: {
-    title: "Gourmet Food & Snacks Menu | Bee Vibe Private Theater",
-    description: "Browse the gourmet menu at Bee Vibe Private Theater. Order popcorn, nachos, mocktails, milkshakes, pizza, and desserts directly to your private theater room.",
+    title: "In-Theater Gourmet Menu | Bee Vibe Cafe",
+    description: "Order fresh popcorn, nachos, mocktails, and snacks directly to your private theater room at Bee Vibe Bangalore.",
     url: `${siteUrl}/menu`,
+    siteName: "Bee Vibe Private Celebration Theater",
+    images: [
+      {
+        url: "/gold-camera-logo.png",
+        width: 800,
+        height: 800,
+        alt: "Bee Vibe Gourmet Cafe Menu",
+      },
+    ],
+    locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gourmet Food & Snacks Menu | Bee Vibe Private Theater",
-    description: "Browse the gourmet menu at Bee Vibe Private Theater. Order delicious snacks and drinks served straight to your screen.",
+    title: "In-Theater Gourmet Menu | Bee Vibe Cafe",
+    description: "Order fresh popcorn, nachos, mocktails, and snacks directly to your private theater room at Bee Vibe Bangalore.",
+    images: ["/gold-camera-logo.png"],
   },
 };
 
@@ -40,7 +52,7 @@ const breadcrumbSchema = {
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Gourmet Menu",
+      "name": "Cafe Menu",
       "item": `${siteUrl}/menu`
     }
   ]
