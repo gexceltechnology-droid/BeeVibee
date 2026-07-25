@@ -20,32 +20,33 @@ export function formatPhoneNumberE164(phone: string): string {
 }
 
 /**
- * Initialize Invisible reCAPTCHA on a target element ID or button.
- * Prevents "reCAPTCHA has already been rendered in this element" error.
+ * Initialize Invisible reCAPTCHA on a unique dynamic container.
+ * Completely eliminates "reCAPTCHA has already been rendered in this element" error.
  */
 export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier | null {
   if (typeof window === 'undefined' || !isFirebaseConfigured()) {
     return null;
   }
 
-  // If recaptchaVerifier is already attached to window, reuse it
+  // Clear previous verifier instance if any
   if ((window as any).recaptchaVerifier) {
-    return (window as any).recaptchaVerifier;
+    try {
+      (window as any).recaptchaVerifier.clear();
+    } catch (e) {
+      // ignore
+    }
+    (window as any).recaptchaVerifier = null;
   }
 
-  try {
-    // Ensure element exists in DOM
-    let containerEl = document.getElementById(containerOrButtonId);
-    if (!containerEl) {
-      containerEl = document.createElement('div');
-      containerEl.id = containerOrButtonId;
-      containerEl.style.display = 'none';
-      document.body.appendChild(containerEl);
-    } else {
-      containerEl.innerHTML = '';
-    }
+  // Always create a brand-new unique container ID to guarantee zero element collision
+  const uniqueId = `fb-recaptcha-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const containerEl = document.createElement('div');
+  containerEl.id = uniqueId;
+  containerEl.style.display = 'none';
+  document.body.appendChild(containerEl);
 
-    const recaptchaVerifier = new RecaptchaVerifier(auth, containerOrButtonId, {
+  try {
+    const recaptchaVerifier = new RecaptchaVerifier(auth, uniqueId, {
       size: 'invisible',
       callback: () => {
         // reCAPTCHA solved
@@ -62,29 +63,8 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
     (window as any).recaptchaVerifier = recaptchaVerifier;
     return recaptchaVerifier;
   } catch (err: any) {
-    console.warn('RecaptchaVerifier init notice:', err?.message || err);
-    if ((window as any).recaptchaVerifier) {
-      return (window as any).recaptchaVerifier;
-    }
-    
-    // Fallback: create a fresh container with unique ID to bypass duplicate element error
-    try {
-      const freshId = `${containerOrButtonId}-${Date.now()}`;
-      const freshEl = document.createElement('div');
-      freshEl.id = freshId;
-      freshEl.style.display = 'none';
-      document.body.appendChild(freshEl);
-
-      const freshVerifier = new RecaptchaVerifier(auth, freshId, {
-        size: 'invisible',
-        callback: () => {},
-      });
-      (window as any).recaptchaVerifier = freshVerifier;
-      return freshVerifier;
-    } catch (fallbackErr) {
-      console.error('Error in fallback RecaptchaVerifier:', fallbackErr);
-      return null;
-    }
+    console.error('Error creating RecaptchaVerifier:', err);
+    return null;
   }
 }
 
@@ -116,8 +96,12 @@ export async function sendFirebaseOtp(
       userMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
     } else if (error.code === 'auth/too-many-requests') {
       userMsg = 'Too many OTP requests. Please wait a few minutes before trying again.';
+    } else if (error.code === 'auth/billing-not-enabled') {
+      userMsg = 'Firebase Billing Required: Please upgrade Firebase project to the Blaze (Pay-as-you-go) plan to send SMS to real mobile numbers (10,000 free SMS/month).';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      userMsg = 'SMS Region Policy: Please enable India (+91) under Firebase Console > Authentication > Settings > SMS Region Policy.';
     } else if (error.code === 'auth/quota-exceeded') {
-      userMsg = 'SMS Quota Exceeded for today (10 SMS/day limit reached). Upgrade Firebase project or try again tomorrow.';
+      userMsg = 'SMS Quota Exceeded for today. Please upgrade Firebase project or try again tomorrow.';
     }
     return { success: false, error: userMsg };
   }
