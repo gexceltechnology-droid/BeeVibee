@@ -2,9 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import BookingPortal from '@/components/BookingPortal';
+import dynamic from 'next/dynamic';
 import styles from './book.module.css';
 import { Phone, MapPin } from 'lucide-react';
+
+const BookingPortal = dynamic(() => import('@/components/BookingPortal'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: '500px', width: '100%', borderRadius: '20px', background: 'rgba(20, 20, 27, 0.4)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Loading Booking Engine...</div>
+    </div>
+  ),
+});
 
 const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
   <svg

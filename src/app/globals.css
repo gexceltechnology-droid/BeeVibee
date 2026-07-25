@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
-
 :root {
   /* Core Color Palette */
   --bg-primary: #0a0a0c;
@@ -26,8 +24,8 @@
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
 
   /* Fonts */
-  --font-title: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-body: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-title: var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: var(--font-plus-jakarta), 'Plus Jakarta Sans', -apple-system, sans-serif;
   
   /* Animated Lights (Vibes) Preset variables */
   --light-amber: 242, 169, 0;

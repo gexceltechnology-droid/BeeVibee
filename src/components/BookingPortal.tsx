@@ -805,8 +805,6 @@ export default function BookingPortal() {
         <head>
           <title>Bee Vibe Ticket - ${id}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-            
             :root {
               --accent: #f2a900;
               --bg-primary: #0a0a0c;
@@ -1506,7 +1504,6 @@ export default function BookingPortal() {
                       <head>
                         <title>Bee Vibe Ticket - ${id}</title>
                         <style>
-                          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
                           :root {
                             --accent: #f2a900;
                             --bg-primary: #0a0a0c;

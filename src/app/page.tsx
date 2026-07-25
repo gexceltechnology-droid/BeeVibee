@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import styles from './page.module.css';
-import InteractiveShowcase from '@/components/InteractiveShowcase';
+
+const InteractiveShowcase = dynamic(() => import('@/components/InteractiveShowcase'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: '350px', width: '100%', borderRadius: '20px', background: 'rgba(20, 20, 27, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }} />
+  ),
+});
 import {
   Tv,
   Volume2,
