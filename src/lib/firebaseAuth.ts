@@ -21,11 +21,16 @@ export function formatPhoneNumberE164(phone: string): string {
 
 /**
  * Initialize Invisible reCAPTCHA on a target element ID or button.
- * Dynamically creates container div in DOM if missing.
+ * Prevents "reCAPTCHA has already been rendered in this element" error.
  */
 export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier | null {
   if (typeof window === 'undefined' || !isFirebaseConfigured()) {
     return null;
+  }
+
+  // If recaptchaVerifier is already attached to window, reuse it
+  if ((window as any).recaptchaVerifier) {
+    return (window as any).recaptchaVerifier;
   }
 
   try {
@@ -36,15 +41,8 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
       containerEl.id = containerOrButtonId;
       containerEl.style.display = 'none';
       document.body.appendChild(containerEl);
-    }
-
-    // Clear any existing instance window widget if present
-    if ((window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {
-        // ignore reset error
-      }
+    } else {
+      containerEl.innerHTML = '';
     }
 
     const recaptchaVerifier = new RecaptchaVerifier(auth, containerOrButtonId, {
@@ -53,15 +51,40 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
         // reCAPTCHA solved
       },
       'expired-callback': () => {
-        console.warn('reCAPTCHA expired, please try again.');
+        console.warn('reCAPTCHA expired, clearing instance...');
+        if ((window as any).recaptchaVerifier) {
+          try { (window as any).recaptchaVerifier.clear(); } catch (e) {}
+          (window as any).recaptchaVerifier = null;
+        }
       },
     });
 
     (window as any).recaptchaVerifier = recaptchaVerifier;
     return recaptchaVerifier;
-  } catch (err) {
-    console.error('Error initializing Firebase RecaptchaVerifier:', err);
-    return null;
+  } catch (err: any) {
+    console.warn('RecaptchaVerifier init notice:', err?.message || err);
+    if ((window as any).recaptchaVerifier) {
+      return (window as any).recaptchaVerifier;
+    }
+    
+    // Fallback: create a fresh container with unique ID to bypass duplicate element error
+    try {
+      const freshId = `${containerOrButtonId}-${Date.now()}`;
+      const freshEl = document.createElement('div');
+      freshEl.id = freshId;
+      freshEl.style.display = 'none';
+      document.body.appendChild(freshEl);
+
+      const freshVerifier = new RecaptchaVerifier(auth, freshId, {
+        size: 'invisible',
+        callback: () => {},
+      });
+      (window as any).recaptchaVerifier = freshVerifier;
+      return freshVerifier;
+    } catch (fallbackErr) {
+      console.error('Error in fallback RecaptchaVerifier:', fallbackErr);
+      return null;
+    }
   }
 }
 
@@ -78,6 +101,13 @@ export async function sendFirebaseOtp(
     return { success: true, confirmationResult };
   } catch (error: any) {
     console.error('Firebase send SMS error:', error);
+    
+    // Reset instance on error so next attempt gets a fresh verifier
+    if ((window as any).recaptchaVerifier) {
+      try { (window as any).recaptchaVerifier.clear(); } catch (e) {}
+      (window as any).recaptchaVerifier = null;
+    }
+
     let userMsg = error.message || 'Failed to send OTP via Firebase.';
     
     if (error.code === 'auth/unauthorized-domain') {
@@ -87,7 +117,7 @@ export async function sendFirebaseOtp(
     } else if (error.code === 'auth/too-many-requests') {
       userMsg = 'Too many OTP requests. Please wait a few minutes before trying again.';
     } else if (error.code === 'auth/quota-exceeded') {
-      userMsg = 'SMS Quota Exceeded for today. Please contact support or try again tomorrow.';
+      userMsg = 'SMS Quota Exceeded for today (10 SMS/day limit reached). Upgrade Firebase project or try again tomorrow.';
     }
     return { success: false, error: userMsg };
   }
