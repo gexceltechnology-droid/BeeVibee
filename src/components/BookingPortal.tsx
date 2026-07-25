@@ -5,6 +5,8 @@ import styles from './BookingPortal.module.css';
 
 import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/lib/time';
 import { Download, Printer } from 'lucide-react';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 
 // Packages Constant
 const PACKAGES = [
@@ -131,6 +133,7 @@ export default function BookingPortal() {
   const [otpSent, setOtpSent] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<any>(null);
   const [customerBookings, setCustomerBookings] = useState<ConfirmedBooking[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
@@ -264,15 +267,28 @@ export default function BookingPortal() {
     }
 
     try {
-      const res = await fetch('/api/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: finalPhone }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to send OTP.');
+      if (isFirebaseConfigured()) {
+        const recaptchaVerifier = setupRecaptcha('firebase-recaptcha-btn');
+        if (!recaptchaVerifier) {
+          throw new Error('Failed to initialize Firebase reCAPTCHA.');
+        }
+        const fbRes = await sendFirebaseOtp(finalPhone, recaptchaVerifier);
+        if (!fbRes.success || !fbRes.confirmationResult) {
+          throw new Error(fbRes.error || 'Failed to send OTP via Firebase.');
+        }
+        setFirebaseConfirmation(fbRes.confirmationResult);
+        setOtpSent(true);
+      } else {
+        const res = await fetch('/api/otp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to send OTP.');
 
-      setOtpSent(true);
+        setOtpSent(true);
+      }
     } catch (err: any) {
       setLoginError(err.message || 'Failed to send OTP. Please check the number.');
     } finally {
@@ -299,13 +315,20 @@ export default function BookingPortal() {
     }
 
     try {
-      const res = await fetch('/api/otp/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: finalPhone, code: trimmedCode }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
+      if (isFirebaseConfigured() && firebaseConfirmation) {
+        const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, trimmedCode);
+        if (!fbVerify.success) {
+          throw new Error(fbVerify.error || 'Invalid OTP code.');
+        }
+      } else {
+        const res = await fetch('/api/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone, code: trimmedCode }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
+      }
 
       // Login successful
       sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
@@ -319,6 +342,7 @@ export default function BookingPortal() {
       setOtpCode('');
       setLoginPhone('');
       setLoginError('');
+      setFirebaseConfirmation(null);
     } catch (err: any) {
       setLoginError(err.message || 'OTP verification failed. Please try again.');
     } finally {
