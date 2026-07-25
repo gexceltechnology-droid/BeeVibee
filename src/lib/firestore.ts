@@ -123,7 +123,8 @@ function getAdminApp(): App {
 
 export function getDb(): Firestore {
   if (db) return db;
-  db = getFirestore(getAdminApp());
+  const databaseId = process.env.FIREBASE_ADMIN_DATABASE_ID || 'default';
+  db = getFirestore(getAdminApp(), databaseId);
   return db;
 }
 
