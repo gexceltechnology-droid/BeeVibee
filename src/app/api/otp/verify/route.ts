@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyOtp } from '@/lib/db';
+import { verifyOtpFromFirestore } from '@/lib/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const trimmedPhone = String(phone).trim();
     const inputCode = String(code).trim();
 
-    const isValid = verifyOtp(trimmedPhone, inputCode);
+    const isValid = await verifyOtpFromFirestore(trimmedPhone, inputCode);
 
     if (isValid) {
       console.log(`[SMS] Database verification successful for phone: ${trimmedPhone}`);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { getAllBookings, getTimeSlots } from '@/lib/firestore';
 import { checkBookingOverlap } from '@/lib/time';
 
 export async function GET(request: NextRequest) {
@@ -12,30 +12,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'A valid date parameter (YYYY-MM-DD) is required.' }, { status: 400 });
     }
 
-    const db = readDb();
-    
+    const [timeSlots, allBookings] = await Promise.all([getTimeSlots(), getAllBookings()]);
+
     // Map time slots and determine which ones are booked using smart overlap checks
-    const slotsWithAvailability = db.timeSlots.map((slot) => {
-      const isBooked = checkBookingOverlap(date, slot.time, db.bookings);
-      return {
-        ...slot,
-        isBooked,
-      };
+    const slotsWithAvailability = timeSlots.map((slot) => {
+      const isBooked = checkBookingOverlap(date, slot.time, allBookings);
+      return { ...slot, isBooked };
     });
 
-    // Return the list of all active bookings so that client-side overlap checks can be performed
-    const activeBookings = db.bookings
+    // Return active bookings for client-side overlap checks
+    const activeBookings = allBookings
       .filter((b) => b.status !== 'cancelled')
-      .map((b) => ({
-        id: b.id,
-        date: b.date,
-        timeSlot: b.timeSlot,
-      }));
+      .map((b) => ({ id: b.id, date: b.date, timeSlot: b.timeSlot }));
 
-    return NextResponse.json({ 
-      slots: slotsWithAvailability,
-      activeBookings
-    });
+    return NextResponse.json({ slots: slotsWithAvailability, activeBookings });
   } catch (error: any) {
     console.error('Error fetching slots:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

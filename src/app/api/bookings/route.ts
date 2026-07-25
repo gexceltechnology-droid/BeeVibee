@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb, addBooking, updateBookingStatus } from '@/lib/db';
-import { parseTimeRange } from '@/lib/time';
+import { checkBookingOverlap } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 import { sendSMS } from '@/lib/sms';
+import {
+  getAllBookings,
+  addBookingToFirestore,
+  updateBookingStatusInFirestore,
+  getTimeSlots,
+  getAllMenuItems,
+  DEFAULT_MENU_ITEMS,
+} from '@/lib/firestore';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -17,12 +24,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
     }
 
-    const db = readDb();
-    // Sort by booking date (newest first)
-    const sortedBookings = [...db.bookings].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    return NextResponse.json({ bookings: sortedBookings });
+    const bookings = await getAllBookings();
+    return NextResponse.json({ bookings });
   } catch (error: any) {
     console.error('Error fetching bookings:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
@@ -76,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     if (date === todayStr) {
       try {
+        const { parseTimeRange } = await import('@/lib/time');
         const { startMinutes } = parseTimeRange(timeSlot);
         const currentMinutes = todayIST.getHours() * 60 + todayIST.getMinutes();
         if (startMinutes <= currentMinutes) {
@@ -86,19 +90,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Parse slot duration to perform accurate pro-rata package calculations
+    // Parse slot duration
     let durationHours = 2;
     try {
+      const { parseTimeRange } = await import('@/lib/time');
       const { startMinutes, endMinutes } = parseTimeRange(timeSlot);
       let durationMinutes = endMinutes - startMinutes;
-      if (durationMinutes <= 0) {
-        durationMinutes += 24 * 60;
-      }
+      if (durationMinutes <= 0) durationMinutes += 24 * 60;
       durationHours = durationMinutes / 60;
     } catch (err) {
       return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
     }
-    
+
     // Dynamic theme package pricing
     const PACKAGES_PRICE_MAP: Record<string, number> = {
       'Pink Theme': 799,
@@ -126,12 +129,19 @@ export async function POST(request: NextRequest) {
 
     const calculatedTotal = pkgBase + extraGuests + addonsTotal;
     if (Number(totalPrice) !== calculatedTotal) {
-      return NextResponse.json({ 
-        error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.` 
+      return NextResponse.json({
+        error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.`
       }, { status: 400 });
     }
 
-    const newBooking = addBooking({
+    // Double-booking check using overlap logic
+    const allBookings = await getAllBookings();
+    const isBooked = checkBookingOverlap(date, timeSlot, allBookings);
+    if (isBooked) {
+      return NextResponse.json({ error: 'This time slot overlaps with an existing booking.' }, { status: 400 });
+    }
+
+    const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
       email: trimmedEmail,
       phone: trimmedPhone,
@@ -184,7 +194,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status value.' }, { status: 400 });
     }
 
-    const updatedBooking = updateBookingStatus(id, status);
+    const updatedBooking = await updateBookingStatusInFirestore(id, status);
 
     // Send confirmation SMS if slot is confirmed
     if (status === 'confirmed') {
@@ -202,4 +212,3 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
   }
 }
-

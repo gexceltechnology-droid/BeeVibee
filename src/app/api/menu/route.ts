@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb, addMenuItem, updateMenuItem, deleteMenuItem } from '@/lib/db';
+import {
+  getAllMenuItems,
+  addMenuItemToFirestore,
+  updateMenuItemInFirestore,
+  deleteMenuItemFromFirestore,
+} from '@/lib/firestore';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -10,8 +15,7 @@ function isAuthorized(request: NextRequest): boolean {
 // GET all menu items
 export async function GET(request: NextRequest) {
   try {
-    const db = readDb();
-    const menuItems = db.menuItems || [];
+    const menuItems = await getAllMenuItems();
     return NextResponse.json({ menuItems });
   } catch (error: any) {
     console.error('Error fetching menu items:', error);
@@ -33,12 +37,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required menu fields (name, price, category, icon).' }, { status: 400 });
     }
 
-    const newItem = addMenuItem({
+    const newItem = await addMenuItemToFirestore({
       name: String(name).trim(),
       price: Number(price),
       description: description ? String(description).trim() : '',
       category,
-      icon: String(icon).trim()
+      icon: String(icon).trim(),
     });
 
     return NextResponse.json({ success: true, menuItem: newItem }, { status: 201 });
@@ -62,16 +66,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Menu item ID is required.' }, { status: 400 });
     }
 
-    const updatedItem = updateMenuItem({
-      id,
-      name,
-      price,
-      description,
-      category,
-      inStock,
-      icon
-    });
-
+    const updatedItem = await updateMenuItemInFirestore({ id, name, price, description, category, inStock, icon });
     return NextResponse.json({ success: true, menuItem: updatedItem });
   } catch (error: any) {
     console.error('Error updating menu item:', error);
@@ -93,8 +88,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Menu item ID is required.' }, { status: 400 });
     }
 
-    deleteMenuItem(id);
-
+    await deleteMenuItemFromFirestore(id);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting menu item:', error);

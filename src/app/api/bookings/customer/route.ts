@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { getBookingsByPhone } from '@/lib/firestore';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,19 +11,9 @@ export async function GET(request: NextRequest) {
     }
 
     const trimmedPhone = String(phone).trim();
-    const db = readDb();
+    const customerBookings = await getBookingsByPhone(trimmedPhone);
 
-    // Filter bookings where phone matches
-    const customerBookings = db.bookings.filter(
-      (b) => String(b.phone).trim() === trimmedPhone
-    );
-
-    // Sort by date (newest first)
-    const sortedBookings = [...customerBookings].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-
-    return NextResponse.json({ bookings: sortedBookings });
+    return NextResponse.json({ bookings: customerBookings });
   } catch (error: any) {
     console.error('Error fetching customer bookings:', error);
     return NextResponse.json(

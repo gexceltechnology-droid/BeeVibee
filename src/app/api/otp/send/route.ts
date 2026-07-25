@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSMS } from '@/lib/sms';
-import { saveOtp } from '@/lib/db';
+import { saveOtpToFirestore } from '@/lib/firestore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
     // Generate a 6-digit OTP code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Save the OTP (hashed with an expiry time of 5 minutes) in the database
-    saveOtp(trimmedPhone, code, 5);
+    // Save the OTP (hashed with an expiry time of 5 minutes) in Firestore
+    await saveOtpToFirestore(trimmedPhone, code, 5);
 
     const smsResult = await sendSMS(
       trimmedPhone,
