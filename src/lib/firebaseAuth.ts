@@ -20,7 +20,8 @@ export function formatPhoneNumberE164(phone: string): string {
 }
 
 /**
- * Initialize Invisible reCAPTCHA on a target element ID or button
+ * Initialize Invisible reCAPTCHA on a target element ID or button.
+ * Dynamically creates container div in DOM if missing.
  */
 export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier | null {
   if (typeof window === 'undefined' || !isFirebaseConfigured()) {
@@ -28,6 +29,15 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
   }
 
   try {
+    // Ensure element exists in DOM
+    let containerEl = document.getElementById(containerOrButtonId);
+    if (!containerEl) {
+      containerEl = document.createElement('div');
+      containerEl.id = containerOrButtonId;
+      containerEl.style.display = 'none';
+      document.body.appendChild(containerEl);
+    }
+
     // Clear any existing instance window widget if present
     if ((window as any).recaptchaVerifier) {
       try {
@@ -40,7 +50,7 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
     const recaptchaVerifier = new RecaptchaVerifier(auth, containerOrButtonId, {
       size: 'invisible',
       callback: () => {
-        // reCAPTCHA solved - allow signInWithPhoneNumber
+        // reCAPTCHA solved
       },
       'expired-callback': () => {
         console.warn('reCAPTCHA expired, please try again.');
@@ -69,10 +79,15 @@ export async function sendFirebaseOtp(
   } catch (error: any) {
     console.error('Firebase send SMS error:', error);
     let userMsg = error.message || 'Failed to send OTP via Firebase.';
-    if (error.code === 'auth/invalid-phone-number') {
-      userMsg = 'Invalid phone number format. Please enter a valid 10-digit number.';
+    
+    if (error.code === 'auth/unauthorized-domain') {
+      userMsg = 'Domain Authorization Required: Please add "beevibe.org" and "www.beevibe.org" in Firebase Console under Authentication > Settings > Authorized Domains.';
+    } else if (error.code === 'auth/invalid-phone-number') {
+      userMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
     } else if (error.code === 'auth/too-many-requests') {
       userMsg = 'Too many OTP requests. Please wait a few minutes before trying again.';
+    } else if (error.code === 'auth/quota-exceeded') {
+      userMsg = 'SMS Quota Exceeded for today. Please contact support or try again tomorrow.';
     }
     return { success: false, error: userMsg };
   }
