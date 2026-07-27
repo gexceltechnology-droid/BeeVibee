@@ -104,55 +104,14 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
 }
 
 /**
- * Server-side Twilio WhatsApp API sender
+ * Twilio WhatsApp Sender (Disabled)
  */
 export async function sendWhatsAppViaTwilio(
   toPhone: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886'; // Twilio sandbox or sender number
-
-  if (!accountSid || !authToken) {
-    console.log(`[WhatsApp Server] Twilio credentials not configured.`);
-    return { success: false, error: 'Twilio credentials missing.' };
-  }
-
-  try {
-    const cleanTo = cleanPhoneNumber(toPhone);
-    const toFormatted = `whatsapp:+${cleanTo}`;
-    const fromFormatted = whatsappFrom.startsWith('whatsapp:') ? whatsappFrom : `whatsapp:${whatsappFrom}`;
-
-    const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
-    const res = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          To: toFormatted,
-          From: fromFormatted,
-          Body: message,
-        }).toString(),
-      }
-    );
-
-    const data = await res.json();
-    if (!res.ok) {
-      console.error('Twilio WhatsApp API Error:', data);
-      return { success: false, error: data.message || 'Twilio WhatsApp API error.' };
-    }
-
-    console.log(`[WhatsApp Server] Notification sent via Twilio to +${cleanTo}. SID: ${data.sid}`);
-    return { success: true };
-  } catch (error: any) {
-    console.error('Error sending WhatsApp via Twilio:', error);
-    return { success: false, error: error.message };
-  }
+  console.log(`[Twilio Disabled] Skipping Twilio WhatsApp for +${toPhone}`);
+  return { success: false, error: 'Twilio disabled per configuration.' };
 }
 
 /**
@@ -234,25 +193,19 @@ export async function notifyAdminOnWhatsAppAndSMS(
       : `🎉 NEW BOOKING ALERT #${data.id} - Bee Vibe`;
 
   console.log(`\n==================================================`);
-  console.log(`[AUTOMATED ADMIN MULTI-CHANNEL ALERT -> +${adminPhone}]`);
+  console.log(`[AUTOMATED ADMIN ALERT -> +${adminPhone}]`);
   console.log(message);
   console.log(`==================================================\n`);
 
-  // Run all dispatch channels concurrently
+  // Run active non-Twilio dispatch channels concurrently
   await Promise.allSettled([
-    // 1. Twilio SMS
-    sendSMS(`+${adminPhone}`, message),
-
-    // 2. Twilio WhatsApp
-    sendWhatsAppViaTwilio(adminPhone, message),
-
-    // 3. CallMeBot WhatsApp (if key provided)
+    // 1. CallMeBot WhatsApp (if key provided)
     sendWhatsAppViaCallMeBot(adminPhone, message),
 
-    // 4. Custom WhatsApp Webhook (if URL provided)
+    // 2. Custom WhatsApp Webhook (if URL provided)
     sendWhatsAppViaWebhook(adminPhone, message),
 
-    // 5. Instant Admin Email Alert
+    // 3. Instant Admin Email Alert
     sendAdminNotificationEmail(subject, `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`),
   ]);
 }
