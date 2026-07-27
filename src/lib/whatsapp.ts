@@ -1,4 +1,5 @@
 import { sendSMS } from './sms';
+import { sendAdminNotificationEmail } from './mail';
 
 /**
  * WhatsApp Helper Module for BeeVibe Food Orders & Room Bookings
@@ -103,21 +104,6 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
 }
 
 /**
- * Format message for customer order acceptance
- */
-export function formatCustomerAcceptanceWhatsAppMessage(order: FoodOrderData): string {
-  const itemsSummary = order.items.map((i) => `${i.name} (x${i.quantity})`).join(', ');
-
-  return (
-    `✅ *BeeVibe Order Accepted!*\n\n` +
-    `Hi ${order.customerName || 'Guest'}, your food order *#${order.id}* for *${order.themeLabel}* has been accepted and is being prepared! 🍿🥤\n\n` +
-    `📋 *Items*: ${itemsSummary}\n` +
-    `💰 *Total Amount*: ₹${order.totalPrice}\n\n` +
-    `Our staff will serve it directly to your room shortly. Enjoy your vibe! 🎉`
-  );
-}
-
-/**
  * Server-side Twilio WhatsApp API sender
  */
 export async function sendWhatsAppViaTwilio(
@@ -126,10 +112,10 @@ export async function sendWhatsAppViaTwilio(
 ): Promise<{ success: boolean; error?: string }> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_FROM_NUMBER; // e.g. "whatsapp:+16088090974"
+  const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886'; // Twilio sandbox or sender number
 
-  if (!accountSid || !authToken || !whatsappFrom) {
-    console.log(`[WhatsApp Server] Twilio WhatsApp credentials not configured.`);
+  if (!accountSid || !authToken) {
+    console.log(`[WhatsApp Server] Twilio credentials not configured.`);
     return { success: false, error: 'Twilio credentials missing.' };
   }
 
@@ -170,7 +156,67 @@ export async function sendWhatsAppViaTwilio(
 }
 
 /**
- * Automatically notifies Admin Phone & WhatsApp (+919900106474) on new Food Orders & Bookings
+ * Server-side CallMeBot WhatsApp Sender (Free instant WhatsApp gateway)
+ */
+export async function sendWhatsAppViaCallMeBot(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const apiKey = process.env.CALLMEBOT_API_KEY;
+  if (!apiKey) return { success: false, error: 'CALLMEBOT_API_KEY not configured' };
+
+  try {
+    const cleanPhone = cleanPhoneNumber(phone);
+    const url = `https://api.callmebot.com/whatsapp.php?phone=+${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      console.log(`[CallMeBot] Direct WhatsApp message sent to +${cleanPhone}`);
+      return { success: true };
+    } else {
+      const text = await res.text();
+      console.error('CallMeBot Error:', text);
+      return { success: false, error: text };
+    }
+  } catch (err: any) {
+    console.error('CallMeBot Exception:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Server-side Generic Webhook WhatsApp Gateway
+ */
+export async function sendWhatsAppViaWebhook(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const webhookUrl = process.env.WHATSAPP_WEBHOOK_URL;
+  if (!webhookUrl) return { success: false, error: 'WHATSAPP_WEBHOOK_URL not configured' };
+
+  try {
+    const cleanTo = cleanPhoneNumber(phone);
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: cleanTo,
+        message,
+        timestamp: new Date().toISOString(),
+      }),
+    });
+    if (res.ok) {
+      console.log(`[WhatsApp Webhook] Direct message dispatched for +${cleanTo}`);
+      return { success: true };
+    }
+    return { success: false, error: 'Webhook response not ok' };
+  } catch (err: any) {
+    console.error('WhatsApp Webhook Error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Automatically notifies Admin Phone, WhatsApp & Email (+919900106474) on new Food Orders & Bookings
  */
 export async function notifyAdminOnWhatsAppAndSMS(
   type: 'food_order' | 'booking',
@@ -182,22 +228,31 @@ export async function notifyAdminOnWhatsAppAndSMS(
       ? formatFoodOrderWhatsAppMessage(data as FoodOrderData)
       : formatBookingWhatsAppMessage(data as BookingData);
 
+  const subject =
+    type === 'food_order'
+      ? `🍿 NEW FOOD ORDER ALERT #${data.id} - Bee Vibe`
+      : `🎉 NEW BOOKING ALERT #${data.id} - Bee Vibe`;
+
   console.log(`\n==================================================`);
-  console.log(`[AUTOMATED ADMIN NOTIFICATION -> +${adminPhone}]`);
+  console.log(`[AUTOMATED ADMIN MULTI-CHANNEL ALERT -> +${adminPhone}]`);
   console.log(message);
   console.log(`==================================================\n`);
 
-  // 1. Dispatch SMS via Twilio directly to Admin +919900106474
-  try {
-    await sendSMS(`+${adminPhone}`, message);
-  } catch (err) {
-    console.error('Failed sending Admin SMS alert:', err);
-  }
+  // Run all dispatch channels concurrently
+  await Promise.allSettled([
+    // 1. Twilio SMS
+    sendSMS(`+${adminPhone}`, message),
 
-  // 2. Dispatch WhatsApp via Twilio directly to Admin +919900106474
-  try {
-    await sendWhatsAppViaTwilio(adminPhone, message);
-  } catch (err) {
-    console.error('Failed sending Admin WhatsApp alert:', err);
-  }
+    // 2. Twilio WhatsApp
+    sendWhatsAppViaTwilio(adminPhone, message),
+
+    // 3. CallMeBot WhatsApp (if key provided)
+    sendWhatsAppViaCallMeBot(adminPhone, message),
+
+    // 4. Custom WhatsApp Webhook (if URL provided)
+    sendWhatsAppViaWebhook(adminPhone, message),
+
+    // 5. Instant Admin Email Alert
+    sendAdminNotificationEmail(subject, `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`),
+  ]);
 }

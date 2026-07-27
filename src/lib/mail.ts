@@ -233,3 +233,37 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
 
   console.log(`[EMAIL] Booking confirmation email successfully sent to ${params.email}`);
 }
+
+export async function sendAdminNotificationEmail(subject: string, htmlBody: string) {
+  const host = process.env.SMTP_HOST;
+  const port = Number(process.env.SMTP_PORT) || 587;
+  const secure = process.env.SMTP_SECURE === 'true';
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || '"Bee Vibe System" <bookings@beevibe.org>';
+  const adminEmail = process.env.ADMIN_EMAIL || 'gexceltechnology@gmail.com';
+
+  if (!host || !user || !pass) {
+    console.log(`[ADMIN EMAIL ALERT] ${subject}\n${htmlBody.replace(/<[^>]+>/g, '')}`);
+    return;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+    });
+
+    await transporter.sendMail({
+      from,
+      to: adminEmail,
+      subject,
+      html: htmlBody,
+    });
+    console.log(`[ADMIN EMAIL ALERT] Successfully sent alert to ${adminEmail}`);
+  } catch (err) {
+    console.error('Failed to send admin notification email:', err);
+  }
+}
