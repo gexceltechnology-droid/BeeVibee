@@ -59,11 +59,11 @@
 }
 
 .logoImg {
-  height: 52px;
+  height: 72px;
   width: auto;
   object-fit: contain;
   display: block;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease, height 0.3s ease;
 }
 
 .logoImg:hover {

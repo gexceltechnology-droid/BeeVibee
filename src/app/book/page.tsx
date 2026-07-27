@@ -64,10 +64,10 @@ export default function BookPage() {
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
             <img
-              src="/bee-vibe-logo.png?v=2"
+              src="/bee-vibe-logo.png?v=3"
               alt="BeeVibe Mini Private Theater"
               className={styles.logoImg}
-              style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '68px', width: 'auto', objectFit: 'contain' }}
             />
           </Link>
           <Link href="/" className={styles.backBtn}>
