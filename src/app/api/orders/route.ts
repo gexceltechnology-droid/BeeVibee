@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllOrders, addOrderToFirestore, updateOrderStatusInFirestore } from '@/lib/firestore';
+import {
+  formatFoodOrderWhatsAppMessage,
+  generateWhatsAppUrl,
+  getAdminWhatsAppNumber,
+  sendWhatsAppViaTwilio,
+} from '@/lib/whatsapp';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -40,7 +46,26 @@ export async function POST(request: NextRequest) {
       totalPrice: Number(totalPrice),
     });
 
-    return NextResponse.json({ success: true, order: newOrder }, { status: 201 });
+    // Format WhatsApp order notification text
+    const adminWhatsAppNumber = getAdminWhatsAppNumber();
+    const waMessageText = formatFoodOrderWhatsAppMessage(newOrder);
+    const whatsappUrl = generateWhatsAppUrl(adminWhatsAppNumber, waMessageText);
+
+    // Attempt background Twilio WhatsApp notification if configured
+    sendWhatsAppViaTwilio(adminWhatsAppNumber, waMessageText).catch((err) => {
+      console.error('Twilio WhatsApp async notify error:', err);
+    });
+
+    return NextResponse.json(
+      {
+        success: true,
+        order: newOrder,
+        whatsappUrl,
+        adminWhatsAppNumber,
+        waMessageText,
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     console.error('Error creating food order:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });

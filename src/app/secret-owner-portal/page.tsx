@@ -492,8 +492,24 @@ export default function AdminDashboard() {
         prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
       );
     } catch (err: any) {
-      alert(err.message || 'Error updating food order.');
+      alert(err.message || 'Error updating order status.');
     }
+  };
+
+  const handleAcceptOrderAndNotifyWhatsApp = async (order: FoodOrder) => {
+    await handleUpdateOrderStatus(order.id, 'preparing');
+    const itemsStr = order.items.map((i) => `${i.name} (x${i.quantity})`).join(', ');
+    const text = `✅ *BeeVibe Order Accepted!*\n\nHi ${order.customerName || 'Guest'}, your food order *#${order.id}* for *${order.themeLabel}* has been accepted and is being prepared! 🍿🥤\n\n📋 *Items*: ${itemsStr}\n💰 *Total*: ₹${order.totalPrice}\n\nOur staff will serve it directly to your room shortly. Enjoy your vibe! 🎉`;
+    const targetPhone = order.phone || '919900106474';
+    const cleanPhone = targetPhone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleForwardOrderToKitchenWhatsApp = (order: FoodOrder) => {
+    const itemsStr = order.items.map((i) => `• ${i.name} × ${i.quantity} (₹${i.price * i.quantity})`).join('\n');
+    const text = `🍿 *NEW FOOD ORDER* 🍿\n----------------------------------------\n🆔 *Order ID*: #${order.id}\n🎭 *Room*: ${order.themeLabel}\n👤 *Customer*: ${order.customerName || 'Guest'}${order.phone ? ` (${order.phone})` : ''}\n----------------------------------------\n📋 *ITEMS*:\n${itemsStr}\n----------------------------------------\n💰 *TOTAL*: ₹${order.totalPrice}`;
+    window.open(`https://wa.me/919900106474?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   // Fetch all menu items
@@ -1316,11 +1332,30 @@ export default function AdminDashboard() {
                             }`}>{order.status}</span>
                           </td>
                           <td>
-                            <div className={styles.actionCell}>
-                              {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>Accept & Cook</button>)}
-                              {order.status === 'preparing' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>Deliver Order</button>)}
-                              {(order.status === 'pending' || order.status === 'preparing') && (<button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>Cancel</button>)}
-                              {(order.status === 'served' || order.status === 'cancelled') && (<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No Actions</span>)}
+                            <div className={styles.actionCell} style={{ flexWrap: 'wrap', gap: '6px' }}>
+                              {order.status === 'pending' && (
+                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleAcceptOrderAndNotifyWhatsApp(order)} style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}>
+                                  💬 Accept & WA Notify
+                                </button>
+                              )}
+                              {order.status === 'pending' && (
+                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>
+                                  🍳 Accept & Cook
+                                </button>
+                              )}
+                              {order.status === 'preparing' && (
+                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>
+                                  🚀 Deliver Order
+                                </button>
+                              )}
+                              <button className={styles.actionBtn} style={{ background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.4)' }} onClick={() => handleForwardOrderToKitchenWhatsApp(order)}>
+                                📲 WA Ticket
+                              </button>
+                              {(order.status === 'pending' || order.status === 'preparing') && (
+                                <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>
+                                  Cancel
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1367,11 +1402,18 @@ export default function AdminDashboard() {
                       <span className={styles.mobileCardLabel}>Status</span>
                       <span className={`${styles.badge} ${order.status === 'served' ? styles.badgeConfirmed : order.status === 'preparing' ? styles.badgePreparing : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{order.status}</span>
                     </div>
-                    <div className={styles.mobileCardActions}>
-                      {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>🍳 Accept & Cook</button>)}
+                    <div className={styles.mobileCardActions} style={{ flexWrap: 'wrap', gap: '6px' }}>
+                      {order.status === 'pending' && (
+                        <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleAcceptOrderAndNotifyWhatsApp(order)} style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}>
+                          💬 Accept & WA
+                        </button>
+                      )}
+                      {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>🍳 Cook</button>)}
                       {order.status === 'preparing' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>🚀 Deliver</button>)}
+                      <button className={styles.actionBtn} style={{ background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.4)' }} onClick={() => handleForwardOrderToKitchenWhatsApp(order)}>
+                        📲 WA Ticket
+                      </button>
                       {(order.status === 'pending' || order.status === 'preparing') && (<button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>✗ Cancel</button>)}
-                      {(order.status === 'served' || order.status === 'cancelled') && (<span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Completed</span>)}
                     </div>
                   </div>
                 );

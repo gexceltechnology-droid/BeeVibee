@@ -54,6 +54,7 @@ function MenuContent() {
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
+  const [orderWhatsAppUrl, setOrderWhatsAppUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -136,6 +137,14 @@ function MenuContent() {
 
       const data = await res.json();
       setOrderSuccess(data.order);
+      if (data.whatsappUrl) {
+        setOrderWhatsAppUrl(data.whatsappUrl);
+        try {
+          window.open(data.whatsappUrl, '_blank');
+        } catch (e) {
+          console.log('Popup blocked.');
+        }
+      }
       setCart([]);
       setIsCheckoutOpen(false);
     } catch (err: any) {
@@ -455,12 +464,40 @@ function MenuContent() {
               Your order <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{orderSuccess.id}</strong> has been sent to our kitchen. 
               We will serve it directly to the <strong>{activeThemeLabel}</strong> shortly.
             </p>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '24px', fontSize: '0.85rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '20px', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Items: </span>
               <strong>{orderSuccess.items.map((i: any) => `${i.name} (x${i.quantity})`).join(', ')}</strong>
             </div>
+
+            {orderWhatsAppUrl && (
+              <a
+                href={orderWhatsAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  width: '100%',
+                  marginBottom: '12px',
+                  background: '#25D366',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 18px rgba(37, 211, 102, 0.4)',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <span>💬 Send Order to Staff WhatsApp (+91 99001 06474)</span>
+              </a>
+            )}
+
             <button 
-              className="btn btn-primary" 
+              className="btn btn-secondary" 
               onClick={() => setOrderSuccess(null)}
               style={{ width: '100%' }}
             >
