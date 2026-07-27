@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllOrders, addOrderToFirestore, updateOrderStatusInFirestore } from '@/lib/firestore';
-import {
-  formatFoodOrderWhatsAppMessage,
-  generateWhatsAppUrl,
-  getAdminWhatsAppNumber,
-  sendWhatsAppViaTwilio,
-} from '@/lib/whatsapp';
+import { notifyAdminOnWhatsAppAndSMS } from '@/lib/whatsapp';
 
 function isAuthorized(request: NextRequest): boolean {
   const passcode = request.headers.get('X-Admin-Passcode');
@@ -46,23 +41,15 @@ export async function POST(request: NextRequest) {
       totalPrice: Number(totalPrice),
     });
 
-    // Format WhatsApp order notification text
-    const adminWhatsAppNumber = getAdminWhatsAppNumber();
-    const waMessageText = formatFoodOrderWhatsAppMessage(newOrder);
-    const whatsappUrl = generateWhatsAppUrl(adminWhatsAppNumber, waMessageText);
-
-    // Attempt background Twilio WhatsApp notification if configured
-    sendWhatsAppViaTwilio(adminWhatsAppNumber, waMessageText).catch((err) => {
-      console.error('Twilio WhatsApp async notify error:', err);
+    // Trigger automated background server notification to admin phone & WhatsApp (+919900106474)
+    notifyAdminOnWhatsAppAndSMS('food_order', newOrder).catch((err) => {
+      console.error('Admin food order notification error:', err);
     });
 
     return NextResponse.json(
       {
         success: true,
         order: newOrder,
-        whatsappUrl,
-        adminWhatsAppNumber,
-        waMessageText,
       },
       { status: 201 }
     );

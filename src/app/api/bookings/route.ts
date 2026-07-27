@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkBookingOverlap } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 import { sendSMS } from '@/lib/sms';
+import { notifyAdminOnWhatsAppAndSMS } from '@/lib/whatsapp';
 import {
   getAllBookings,
   addBookingToFirestore,
@@ -168,6 +169,11 @@ export async function POST(request: NextRequest) {
     } catch (smsError) {
       console.error('Failed to send booking confirmation SMS:', smsError);
     }
+
+    // Trigger automated background server notification to admin phone & WhatsApp (+919900106474)
+    notifyAdminOnWhatsAppAndSMS('booking', newBooking).catch((err) => {
+      console.error('Failed sending Admin booking notification:', err);
+    });
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {

@@ -1,5 +1,7 @@
+import { sendSMS } from './sms';
+
 /**
- * WhatsApp Helper Module for BeeVibe Food Orders & Notifications
+ * WhatsApp Helper Module for BeeVibe Food Orders & Room Bookings
  */
 
 export interface FoodOrderItem {
@@ -20,6 +22,20 @@ export interface FoodOrderData {
   createdAt?: any;
 }
 
+export interface BookingData {
+  id: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  date: string;
+  timeSlot: string;
+  packageName: string;
+  addOns?: string[];
+  totalPrice: number;
+  guestCount: number;
+  specialRequests?: string;
+}
+
 export function getAdminWhatsAppNumber(): string {
   const envPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || '919900106474';
   const clean = envPhone.replace(/\D/g, '');
@@ -36,7 +52,7 @@ export function cleanPhoneNumber(phone: string): string {
 }
 
 /**
- * Format structured WhatsApp message for staff/kitchen when a new food order is placed
+ * Format structured notification for admin when a new food order is placed
  */
 export function formatFoodOrderWhatsAppMessage(order: FoodOrderData): string {
   const itemsText = order.items
@@ -44,45 +60,61 @@ export function formatFoodOrderWhatsAppMessage(order: FoodOrderData): string {
     .join('\n');
 
   const guestInfo = order.customerName ? `${order.customerName}` : 'In-Room Guest';
-  const phoneText = order.phone ? `\n📞 *Guest Phone*: +${cleanPhoneNumber(order.phone)}` : '';
+  const phoneText = order.phone ? `\n📞 Guest Phone: +${cleanPhoneNumber(order.phone)}` : '';
 
   return (
-    `🍿 *NEW IN-THEATER FOOD ORDER* 🍿\n` +
+    `🍿 NEW IN-THEATER FOOD ORDER 🍿\n` +
     `----------------------------------------\n` +
-    `🆔 *Order ID*: #${order.id}\n` +
-    `🎭 *Party Hall*: ${order.themeLabel}\n` +
-    `👤 *Customer*: ${guestInfo}${phoneText}\n` +
+    `🆔 Order ID: #${order.id}\n` +
+    `🎭 Room: ${order.themeLabel}\n` +
+    `👤 Customer: ${guestInfo}${phoneText}\n` +
     `----------------------------------------\n` +
-    `📋 *ITEMS ORDERED*:\n` +
+    `📋 ITEMS ORDERED:\n` +
     `${itemsText}\n` +
     `----------------------------------------\n` +
-    `💰 *TOTAL PRICE*: ₹${order.totalPrice}\n` +
+    `💰 TOTAL PRICE: ₹${order.totalPrice}\n` +
     `----------------------------------------\n` +
-    ` Please confirm and prepare this order!`
+    `Please prepare and deliver to room!`
   );
 }
 
 /**
- * Format structured WhatsApp message to notify customer that their order has been accepted
+ * Format structured notification for admin when a new room booking is placed
+ */
+export function formatBookingWhatsAppMessage(booking: BookingData): string {
+  const addOnsText = booking.addOns && booking.addOns.length > 0 ? `\n🎁 Add-ons: ${booking.addOns.join(', ')}` : '';
+
+  return (
+    `🎉 NEW ROOM BOOKING - BEE VIBE 🎉\n` +
+    `----------------------------------------\n` +
+    `🆔 Booking ID: #${booking.id}\n` +
+    `👤 Guest: ${booking.customerName}\n` +
+    `📞 Phone: +${cleanPhoneNumber(booking.phone)}\n` +
+    `📧 Email: ${booking.email}\n` +
+    `🎭 Theme: ${booking.packageName}\n` +
+    `📅 Date: ${booking.date}\n` +
+    `⏰ Time Slot: ${booking.timeSlot}\n` +
+    `👥 Guests: ${booking.guestCount} Head(s)${addOnsText}\n` +
+    `----------------------------------------\n` +
+    `💰 Total Price: ₹${booking.totalPrice}\n` +
+    `----------------------------------------\n` +
+    `Reservation logged & confirmed in system!`
+  );
+}
+
+/**
+ * Format message for customer order acceptance
  */
 export function formatCustomerAcceptanceWhatsAppMessage(order: FoodOrderData): string {
   const itemsSummary = order.items.map((i) => `${i.name} (x${i.quantity})`).join(', ');
 
   return (
     `✅ *BeeVibe Order Accepted!*\n\n` +
-    `Hi ${order.customerName || 'Guest'}, your food order *#${order.id}* for the *${order.themeLabel}* has been accepted and is currently being prepared! 🍿🥤\n\n` +
+    `Hi ${order.customerName || 'Guest'}, your food order *#${order.id}* for *${order.themeLabel}* has been accepted and is being prepared! 🍿🥤\n\n` +
     `📋 *Items*: ${itemsSummary}\n` +
     `💰 *Total Amount*: ₹${order.totalPrice}\n\n` +
-    `Our staff will serve it directly to your private party room shortly. Enjoy your vibe! 🎉`
+    `Our staff will serve it directly to your room shortly. Enjoy your vibe! 🎉`
   );
-}
-
-/**
- * Generates direct WhatsApp deep link (wa.me) for web or mobile
- */
-export function generateWhatsAppUrl(phone: string, text: string): string {
-  const cleanPhone = cleanPhoneNumber(phone);
-  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
 /**
@@ -94,11 +126,11 @@ export async function sendWhatsAppViaTwilio(
 ): Promise<{ success: boolean; error?: string }> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER; // e.g. "whatsapp:+14155238886"
+  const whatsappFrom = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_FROM_NUMBER; // e.g. "whatsapp:+16088090974"
 
   if (!accountSid || !authToken || !whatsappFrom) {
-    console.log(`[WhatsApp Server] Twilio WhatsApp credentials not configured. Direct WA links are available on client.`);
-    return { success: false, error: 'Twilio WhatsApp credentials missing in server environment.' };
+    console.log(`[WhatsApp Server] Twilio WhatsApp credentials not configured.`);
+    return { success: false, error: 'Twilio credentials missing.' };
   }
 
   try {
@@ -129,10 +161,43 @@ export async function sendWhatsAppViaTwilio(
       return { success: false, error: data.message || 'Twilio WhatsApp API error.' };
     }
 
-    console.log(`[WhatsApp Server] Message sent via Twilio to ${toFormatted}. SID: ${data.sid}`);
+    console.log(`[WhatsApp Server] Notification sent via Twilio to +${cleanTo}. SID: ${data.sid}`);
     return { success: true };
   } catch (error: any) {
-    console.error('Error sending WhatsApp message via Twilio:', error);
+    console.error('Error sending WhatsApp via Twilio:', error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Automatically notifies Admin Phone & WhatsApp (+919900106474) on new Food Orders & Bookings
+ */
+export async function notifyAdminOnWhatsAppAndSMS(
+  type: 'food_order' | 'booking',
+  data: FoodOrderData | BookingData
+): Promise<void> {
+  const adminPhone = getAdminWhatsAppNumber(); // 919900106474
+  const message =
+    type === 'food_order'
+      ? formatFoodOrderWhatsAppMessage(data as FoodOrderData)
+      : formatBookingWhatsAppMessage(data as BookingData);
+
+  console.log(`\n==================================================`);
+  console.log(`[AUTOMATED ADMIN NOTIFICATION -> +${adminPhone}]`);
+  console.log(message);
+  console.log(`==================================================\n`);
+
+  // 1. Dispatch SMS via Twilio directly to Admin +919900106474
+  try {
+    await sendSMS(`+${adminPhone}`, message);
+  } catch (err) {
+    console.error('Failed sending Admin SMS alert:', err);
+  }
+
+  // 2. Dispatch WhatsApp via Twilio directly to Admin +919900106474
+  try {
+    await sendWhatsAppViaTwilio(adminPhone, message);
+  } catch (err) {
+    console.error('Failed sending Admin WhatsApp alert:', err);
   }
 }
