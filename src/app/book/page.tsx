@@ -16,73 +16,11 @@ const BookingPortal = dynamic(() => import('@/components/BookingPortal'), {
 });
 
 const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 100 100"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    style={{ filter: 'drop-shadow(0 4px 14px rgba(242, 169, 0, 0.5))' }}
-  >
-    <defs>
-      <linearGradient id="goldBodyBook" x1="10" y1="35" x2="68" y2="85" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#fff7b8" />
-        <stop offset="25%" stopColor="#f7cd48" />
-        <stop offset="50%" stopColor="#d4af37" />
-        <stop offset="75%" stopColor="#a3760d" />
-        <stop offset="100%" stopColor="#5c3f00" />
-      </linearGradient>
-
-      <linearGradient id="goldReelBook" x1="15" y1="10" x2="45" y2="45" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#ffffcc" />
-        <stop offset="50%" stopColor="#d4af37" />
-        <stop offset="100%" stopColor="#7a5500" />
-      </linearGradient>
-
-      <linearGradient id="goldReelBigBook" x1="40" y1="5" x2="75" y2="45" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#ffffcc" />
-        <stop offset="50%" stopColor="#f7cd48" />
-        <stop offset="100%" stopColor="#8a6000" />
-      </linearGradient>
-
-      <linearGradient id="goldLensBook" x1="68" y1="40" x2="95" y2="75" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#fff3a8" />
-        <stop offset="40%" stopColor="#d4af37" />
-        <stop offset="100%" stopColor="#5c3f00" />
-      </linearGradient>
-
-      <linearGradient id="goldHighlightBook" x1="0" y1="0" x2="0" y2="100%">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.75" />
-        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-
-    {/* Small Reel Top Left */}
-    <circle cx="28" cy="27" r="16" fill="url(#goldReelBook)" stroke="#4a3400" strokeWidth="1.2" />
-    <circle cx="28" cy="27" r="14.5" fill="none" stroke="url(#goldHighlightBook)" strokeWidth="0.9" />
-    <circle cx="28" cy="27" r="3.8" fill="#141006" />
-    <circle cx="28" cy="17.5" r="2.6" fill="#141006" />
-    <circle cx="28" cy="36.5" r="2.6" fill="#141006" />
-    <circle cx="18.5" cy="27" r="2.6" fill="#141006" />
-    <circle cx="37.5" cy="27" r="2.6" fill="#141006" />
-
-    {/* Large Reel Top Right */}
-    <circle cx="58" cy="22" r="20" fill="url(#goldReelBigBook)" stroke="#4a3400" strokeWidth="1.2" />
-    <circle cx="58" cy="22" r="18.5" fill="none" stroke="url(#goldHighlightBook)" strokeWidth="0.9" />
-    <circle cx="58" cy="22" r="4.8" fill="#141006" />
-    <circle cx="58" cy="10" r="3.4" fill="#141006" />
-    <circle cx="58" cy="34" r="3.4" fill="#141006" />
-    <circle cx="46" cy="22" r="3.4" fill="#141006" />
-    <circle cx="70" cy="22" r="3.4" fill="#141006" />
-
-    {/* Main Camera Body (Rounded Box) */}
-    <rect x="12" y="42" width="56" height="38" rx="8.5" fill="url(#goldBodyBook)" stroke="#4a3400" strokeWidth="1.4" />
-    <rect x="13.5" y="43.5" width="53" height="35" rx="7" fill="none" stroke="url(#goldHighlightBook)" strokeWidth="1.1" />
-
-    {/* Camera Lens Cone (Trapezoid) */}
-    <path d="M 68 49 L 92 38 L 92 80 L 68 69 Z" fill="url(#goldLensBook)" stroke="#4a3400" strokeWidth="1.4" />
-    <path d="M 69.5 51 L 90.5 41.5 L 90.5 76.5 L 69.5 67 Z" fill="none" stroke="url(#goldHighlightBook)" strokeWidth="0.9" />
-  </svg>
+  <img
+    src="/bee-vibe-logo.png?v=2"
+    alt="BeeVibe Mini Private Theater"
+    style={{ height: size, width: 'auto', objectFit: 'contain' }}
+  />
 );
 
 const InstagramIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
@@ -125,11 +63,12 @@ export default function BookPage() {
       <div className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
-            <div className={styles.logoIcon}><BeeVibeLogoIcon /></div>
-            <div className={styles.logoText}>
-              <span className={styles.logoBrand}>BeeVibe</span>
-              <span className={styles.logoSub}>PRIVATE CELEBRATION THEATER</span>
-            </div>
+            <img
+              src="/bee-vibe-logo.png?v=2"
+              alt="BeeVibe Mini Private Theater"
+              className={styles.logoImg}
+              style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
+            />
           </Link>
           <Link href="/" className={styles.backBtn}>
             ← Back to Home

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "Bee Vibe Private Celebration Theater",
     images: [
       {
-        url: "/gold-camera-logo.png",
+        url: "/bee-vibe-logo.png",
         width: 800,
         height: 800,
         alt: "Bee Vibe Gourmet Cafe Menu",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "In-Theater Gourmet Menu | Bee Vibe Cafe",
     description: "Order fresh popcorn, nachos, mocktails, and snacks directly to your private theater room at Bee Vibe Bangalore.",
-    images: ["/gold-camera-logo.png"],
+    images: ["/bee-vibe-logo.png"],
   },
 };
 

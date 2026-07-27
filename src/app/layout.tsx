@@ -64,9 +64,9 @@ export const metadata: Metadata = {
     google: "googleedf3ca6499a78e5c",
   },
   icons: {
-    icon: "/gold-camera-logo.png",
-    shortcut: "/gold-camera-logo.png",
-    apple: "/gold-camera-logo.png",
+    icon: "/bee-vibe-logo.png",
+    shortcut: "/bee-vibe-logo.png",
+    apple: "/bee-vibe-logo.png",
   },
   openGraph: {
     title: "Bee Vibe | Luxury Private Celebration Theater & Space Bangalore",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     siteName: "Bee Vibe Private Celebration Theater",
     images: [
       {
-        url: "/gold-camera-logo.png",
+        url: "/bee-vibe-logo.png",
         width: 800,
         height: 800,
         alt: "Bee Vibe Private Theater Logo",
@@ -94,7 +94,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Bee Vibe | Luxury Private Celebration Theater Bangalore",
     description: "Book a luxury private celebration theater in Jayanagar, Bangalore for birthdays, anniversaries, romantic date nights, or multiplayer gaming.",
-    images: ["/gold-camera-logo.png"],
+    images: ["/bee-vibe-logo.png"],
   },
   category: "entertainment",
 };
@@ -111,9 +111,9 @@ const localBusinessSchema = {
   "priceRange": "₹1499 - ₹2999",
   "currenciesAccepted": "INR",
   "paymentAccepted": "UPI, Credit Card, Debit Card, Net Banking, Cash",
-  "logo": `${siteUrl}/gold-camera-logo.png`,
+  "logo": `${siteUrl}/bee-vibe-logo.png`,
   "image": [
-    `${siteUrl}/gold-camera-logo.png`,
+    `${siteUrl}/bee-vibe-logo.png`,
     `${siteUrl}/vibe-pink.png`,
     `${siteUrl}/vibe-purple.png`
   ],

@@ -11,12 +11,12 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#f7cd48",
     icons: [
       {
-        src: "/gold-camera-logo.png",
+        src: "/bee-vibe-logo.png",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/gold-camera-logo.png",
+        src: "/bee-vibe-logo.png",
         sizes: "512x512",
         type: "image/png",
       },
