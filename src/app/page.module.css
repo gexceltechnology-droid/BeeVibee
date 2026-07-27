@@ -59,11 +59,15 @@
 }
 
 .logoImg {
-  height: 72px;
+  height: 105px;
   width: auto;
   object-fit: contain;
   display: block;
   transition: opacity 0.2s ease, height 0.3s ease;
+}
+
+.headerContainerScrolled .logoImg {
+  height: 80px;
 }
 
 .logoImg:hover {

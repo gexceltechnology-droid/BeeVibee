@@ -163,9 +163,9 @@ function MenuContent() {
           </Link>
           <div className={styles.logoWrapper}>
             <img
-              src="/bee-vibe-logo.png?v=3"
+              src="/bee-vibe-logo.png?v=4"
               alt="BeeVibe Mini Private Theater"
-              style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '85px', width: 'auto', objectFit: 'contain' }}
             />
             <div>
               <h1 className={styles.logoText}>Bee Vibe Cafe</h1>

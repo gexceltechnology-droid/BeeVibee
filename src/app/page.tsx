@@ -188,10 +188,10 @@ export default function Home() {
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
               <img
-                src="/bee-vibe-logo.png?v=3"
+                src="/bee-vibe-logo.png?v=4"
                 alt="BeeVibe Mini Private Theater"
                 className={styles.logoImg}
-                style={{ height: '72px', width: 'auto', objectFit: 'contain' }}
+                style={{ height: '105px', width: 'auto', objectFit: 'contain' }}
               />
             </Link>
             <nav className={styles.desktopNav}>
@@ -562,10 +562,10 @@ export default function Home() {
             <div className={styles.footerCol}>
               <Link href="/" className={styles.logoWrapper}>
                 <img
-                  src="/bee-vibe-logo.png?v=3"
+                  src="/bee-vibe-logo.png?v=4"
                   alt="BeeVibe Mini Private Theater"
                   className={styles.logoImg}
-                  style={{ height: '70px', width: 'auto', objectFit: 'contain' }}
+                  style={{ height: '95px', width: 'auto', objectFit: 'contain' }}
                 />
               </Link>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
