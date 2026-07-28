@@ -22,19 +22,20 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Accept SDK Licenses and Install Platform
+      run: |
+        mkdir -p "$ANDROID_HOME/licenses"
+        echo -e "\n89339e54983089e826784378607035300ee45350\n40525722b5538f614f86d57209b91d6e29e18d2d\ne675675478380ba900131d10995dc85617464084\n84831b9409646a479e6f70ed406322ab1947d930\n7895242ecb0177d052b5873c36e38472e6072c21\n33b62247467050dd68f3db0f88483d0b26b24d6f" > "$ANDROID_HOME/licenses/android-sdk-license"
+
     - name: Setup Gradle Build Tools
       uses: gradle/actions/setup-gradle@v3
       with:
         gradle-version: '8.5'
 
-    - name: Configure Android SDK Location
-      run: |
-        echo "sdk.dir=$ANDROID_HOME" > android-admin-app/local.properties
-
     - name: Build Debug APK
       run: |
         cd android-admin-app
-        gradle assembleDebug --no-daemon
+        gradle assembleDebug --stacktrace --no-daemon
 
     - name: Upload Admin APK Artifact
       uses: actions/upload-artifact@v4
