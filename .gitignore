@@ -42,3 +42,11 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# android
+.gradle/
+android-admin-app/build/
+android-admin-app/app/build/
+android-admin-app/local.properties
+*.apk
+*.keystore

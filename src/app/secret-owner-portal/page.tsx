@@ -259,6 +259,10 @@ export default function AdminDashboard() {
         fetchOrders(codeToCheck);
         fetchMenu(codeToCheck);
         runArchiving(codeToCheck);
+
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
       } else {
         sessionStorage.removeItem('bee_vibe_admin_passcode');
         setIsAuthenticated(false);
@@ -337,6 +341,36 @@ export default function AdminDashboard() {
           // Play a soft notification audio chime ONLY for genuinely new bookings
           playBookingSound();
 
+          // Trigger Mobile Browser Web Push Notification
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            try {
+              added.forEach((b: Booking) => {
+                new Notification('🎉 NEW BOOKING ALERT - Bee Vibe', {
+                  body: `Ticket #${b.id} | ${b.customerName} | ${b.packageName} | ${b.date} @ ${b.timeSlot}`,
+                  icon: '/icon.png',
+                  tag: `booking-${b.id}`,
+                });
+              });
+            } catch (err) {
+              console.warn('Browser notification error:', err);
+            }
+          }
+
+          // Trigger Native Android APK Notification if running inside Android Admin App
+          if (typeof window !== 'undefined' && (window as any).AndroidAdminBridge) {
+            try {
+              added.forEach((b: Booking) => {
+                (window as any).AndroidAdminBridge.showNativeNotification(
+                  '🎉 NEW ROOM BOOKING ALERT!',
+                  `Ticket #${b.id} | ${b.customerName} | ${b.packageName} | ${b.date} @ ${b.timeSlot}`,
+                  'booking'
+                );
+              });
+            } catch (e) {
+              console.warn('Android native notification error:', e);
+            }
+          }
+
           // Clear highlight animation class after 8 seconds
           setTimeout(() => {
             setNewlyAddedIds((curr) => curr.filter((id) => !addedIds.includes(id)));
@@ -397,6 +431,36 @@ export default function AdminDashboard() {
 
           // Play order sound ONLY for genuinely new food orders
           playOrderSound();
+
+          // Trigger Mobile Browser Web Push Notification
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            try {
+              added.forEach((o: FoodOrder) => {
+                new Notification('🍿 NEW IN-THEATER FOOD ORDER - Bee Vibe', {
+                  body: `Order #${o.id} in ${o.themeLabel} | Total: ₹${o.totalPrice}`,
+                  icon: '/icon.png',
+                  tag: `order-${o.id}`,
+                });
+              });
+            } catch (err) {
+              console.warn('Browser notification error:', err);
+            }
+          }
+
+          // Trigger Native Android APK Notification if running inside Android Admin App
+          if (typeof window !== 'undefined' && (window as any).AndroidAdminBridge) {
+            try {
+              added.forEach((o: FoodOrder) => {
+                (window as any).AndroidAdminBridge.showNativeNotification(
+                  '🍿 NEW IN-THEATER FOOD ORDER!',
+                  `Order #${o.id} in ${o.themeLabel} | Total: ₹${o.totalPrice}`,
+                  'food_order'
+                );
+              });
+            } catch (e) {
+              console.warn('Android native notification error:', e);
+            }
+          }
 
           // Clear highlight animation class after 8 seconds
           setTimeout(() => {

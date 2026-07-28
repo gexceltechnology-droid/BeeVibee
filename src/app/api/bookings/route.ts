@@ -123,8 +123,8 @@ export async function POST(request: NextRequest) {
         const match = nameStr.match(/\((\d+)\s*Hour/);
         const hours = match ? parseInt(match[1], 10) : 1;
         addonsTotal += 500 * hours;
-      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog')) {
-        addonsTotal += 300;
+      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Special Entry')) {
+        addonsTotal += 500;
       }
     }
 

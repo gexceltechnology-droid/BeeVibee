@@ -197,15 +197,18 @@ export async function notifyAdminOnWhatsAppAndSMS(
   console.log(message);
   console.log(`==================================================\n`);
 
-  // Run active non-Twilio dispatch channels concurrently
+  // Run active dispatch channels concurrently to ensure admin mobile receives instant notification
   await Promise.allSettled([
-    // 1. CallMeBot WhatsApp (if key provided)
+    // 1. Mobile SMS Alert to Admin (+919900106474)
+    sendSMS(adminPhone, message),
+
+    // 2. CallMeBot WhatsApp (if key provided)
     sendWhatsAppViaCallMeBot(adminPhone, message),
 
-    // 2. Custom WhatsApp Webhook (if URL provided)
+    // 3. Custom WhatsApp Webhook (if URL provided)
     sendWhatsAppViaWebhook(adminPhone, message),
 
-    // 3. Instant Admin Email Alert
+    // 4. Instant Admin Email Alert
     sendAdminNotificationEmail(subject, `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`),
   ]);
 }

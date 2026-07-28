@@ -59,7 +59,7 @@ const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
 type VibeType = 'pink' | 'purple' | 'red';
 
 export default function Home() {
-  const [vibe, setVibe] = useState<VibeType>('pink');
+  const [vibe, setVibe] = useState<VibeType>('purple');
 
   // Load saved vibe from localStorage on first render
   useEffect(() => {
@@ -295,18 +295,18 @@ export default function Home() {
                   <div className={styles.vibeTitle}>Set Room Mood Lighting:</div>
                   <div className={styles.vibeButtons}>
                     <button
-                      className={`${styles.vibeBtn} ${vibe === 'pink' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('pink')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#ff2e7e' }} />
-                      Pink
-                    </button>
-                    <button
                       className={`${styles.vibeBtn} ${vibe === 'purple' ? styles.vibeBtnActive : ''}`}
                       onClick={() => setVibe('purple')}
                     >
                       <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
                       Purple
+                    </button>
+                    <button
+                      className={`${styles.vibeBtn} ${vibe === 'pink' ? styles.vibeBtnActive : ''}`}
+                      onClick={() => setVibe('pink')}
+                    >
+                      <span className={styles.colorIndicator} style={{ backgroundColor: '#ff2e7e' }} />
+                      Pink
                     </button>
                     <button
                       className={`${styles.vibeBtn} ${vibe === 'red' ? styles.vibeBtnActive : ''}`}
@@ -344,23 +344,6 @@ export default function Home() {
               </p>
 
               <div className={styles.vibeShowcaseGrid}>
-                {/* Pink Theme */}
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#ff2e7e' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🌸 Pink Theme</h3>
-                    <div className={styles.showcasePrice}>₹799 / 2 Hrs</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
-                    <ul className={styles.showcaseList}>
-                      <li>2-Hour full private hall booking</li>
-                      <li>Warm Pink ambient lighting decor</li>
-                      <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹300 flat (optional)</li>
-                    </ul>
-                  </div>
-                </div>
-
                 {/* Purple Theme */}
                 <div className={styles.showcaseCard}>
                   <div className={styles.cardBanner} style={{ backgroundColor: '#9333ea' }} />
@@ -373,7 +356,24 @@ export default function Home() {
                       <li>Vibrant Purple party lighting decor</li>
                       <li>Extra guest: ₹100 per head</li>
                       <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹300 flat (optional)</li>
+                      <li>Fog entry: ₹500 flat (optional)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Pink Theme */}
+                <div className={styles.showcaseCard}>
+                  <div className={styles.cardBanner} style={{ backgroundColor: '#ff2e7e' }} />
+                  <div className={styles.showcaseContent}>
+                    <h3 className={styles.showcaseTitle}>🌸 Pink Theme</h3>
+                    <div className={styles.showcasePrice}>₹799 / 2 Hrs</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
+                    <ul className={styles.showcaseList}>
+                      <li>2-Hour full private hall booking</li>
+                      <li>Warm Pink ambient lighting decor</li>
+                      <li>Extra guest: ₹100 per head</li>
+                      <li>DSLR Photo: ₹500/hr (optional)</li>
+                      <li>Fog entry: ₹500 flat (optional)</li>
                     </ul>
                   </div>
                 </div>
@@ -390,7 +390,7 @@ export default function Home() {
                       <li>Romantic Crimson Red lighting setup</li>
                       <li>Extra guest: ₹100 per head</li>
                       <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹300 flat (optional)</li>
+                      <li>Fog entry: ₹500 flat (optional)</li>
                     </ul>
                   </div>
                 </div>

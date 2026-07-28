@@ -11,18 +11,6 @@ import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/fi
 // Packages Constant
 const PACKAGES = [
   {
-    id: 'pkg-pink',
-    name: 'Pink Theme',
-    price: 799,
-    details: [
-      '2-Hour Celebration Slot (Base 2 Guests)',
-      'HD Projector & Large Screen',
-      'Air Conditioned Hall (AC)',
-      'High-Speed Wi-Fi Access',
-      'Warm Pink Theme Lighting Setup',
-    ]
-  },
-  {
     id: 'pkg-purple',
     name: 'Purple Theme',
     price: 999,
@@ -32,6 +20,18 @@ const PACKAGES = [
       'Air Conditioned Hall (AC)',
       'High-Speed Wi-Fi Access',
       'Vibrant Purple Theme Lighting Setup',
+    ]
+  },
+  {
+    id: 'pkg-pink',
+    name: 'Pink Theme',
+    price: 799,
+    details: [
+      '2-Hour Celebration Slot (Base 2 Guests)',
+      'HD Projector & Large Screen',
+      'Air Conditioned Hall (AC)',
+      'High-Speed Wi-Fi Access',
+      'Warm Pink Theme Lighting Setup',
     ]
   },
   {
@@ -51,7 +51,7 @@ const PACKAGES = [
 // Add-ons Constant
 const ADDONS = [
   { id: 'add-dslr', name: 'DSLR Camera Coverage (₹500/hour)', price: 500 },
-  { id: 'add-fog', name: 'Special Fog Entry Effect (Flat ₹300)', price: 300 },
+  { id: 'add-fog', name: 'Special Fog Entry Effect (Flat ₹500)', price: 500 },
 ];
 
 interface Slot {
@@ -1112,22 +1112,22 @@ export default function BookingPortal() {
         <div className={styles.paymentOverlay}>
           <div className={styles.paymentModal}>
             <div className={styles.paymentHeader}>
-              <span className={styles.lockIcon}>🔒</span> Secure checkout
+              <span className={styles.lockIcon}>🔒</span> Reservation Checkout
             </div>
             
             <div className={styles.paymentContent}>
               {paymentStep === 0 && (
                 <>
                   <div className={styles.paymentSpinner} />
-                  <h3 className={styles.paymentStatus}>Connecting securely...</h3>
-                  <p className={styles.paymentDetail}>Establishing connection with payment processor.</p>
+                  <h3 className={styles.paymentStatus}>Connecting to Booking Engine...</h3>
+                  <p className={styles.paymentDetail}>Establishing connection with reservation system.</p>
                 </>
               )}
               {paymentStep === 1 && (
                 <>
                   <div className={styles.paymentSpinner} />
-                  <h3 className={styles.paymentStatus}>Authorizing Transaction...</h3>
-                  <p className={styles.paymentDetail}>Verifying credentials and card limits for ₹{calculateTotal()}.</p>
+                  <h3 className={styles.paymentStatus}>Authorizing Reservation...</h3>
+                  <p className={styles.paymentDetail}>Verifying slot availability and details for ₹{calculateTotal()}.</p>
                 </>
               )}
               {paymentStep === 2 && (
@@ -1140,8 +1140,8 @@ export default function BookingPortal() {
               {paymentStep === 3 && (
                 <>
                   <div className={styles.paymentCheck}>✓</div>
-                  <h3 className={styles.paymentStatus} style={{ color: '#10b981' }}>Payment Successful!</h3>
-                  <p className={styles.paymentDetail}>Thank you! Generating your digital entrance ticket now...</p>
+                  <h3 className={styles.paymentStatus} style={{ color: '#10b981' }}>Booking Confirmed!</h3>
+                  <p className={styles.paymentDetail}>Thank you! Your reservation is confirmed. Generating your digital entrance ticket now...</p>
                 </>
               )}
             </div>

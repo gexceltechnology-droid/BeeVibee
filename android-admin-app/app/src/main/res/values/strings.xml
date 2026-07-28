@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Bee Vibe Admin</string>
+    <string name="notification_channel_name">Host Booking &amp; Order Alerts</string>
+    <string name="notification_channel_desc">Real-time alerts for room theme bookings and food orders</string>
+</resources>

@@ -36,7 +36,7 @@ type VibeType = 'pink' | 'purple' | 'red';
 
 export default function BookPage() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [vibe, setVibe] = useState<VibeType>('pink');
+  const [vibe, setVibe] = useState<VibeType>('purple');
 
   // Read saved vibe from localStorage (set by home page)
   useEffect(() => {
@@ -93,12 +93,12 @@ export default function BookPage() {
 
           {/* Quick Info Pills */}
           <div className={styles.infoPills}>
-            <span className={styles.pill}>🌸 Pink Theme — ₹799/2hrs</span>
             <span className={styles.pill}>🎂 Purple Theme — ₹999/2hrs</span>
+            <span className={styles.pill}>🌸 Pink Theme — ₹799/2hrs</span>
             <span className={styles.pill}>❤️ Red Theme — ₹599/2hrs</span>
           </div>
           <p className={styles.extraInfo}>
-            Base price for 2 guests · Extra guests: ₹100/head · DSLR Camera: ₹500/hr · Fog Entry: ₹300 flat
+            Base price for 2 guests · Extra guests: ₹100/head · DSLR Camera: ₹500/hr · Fog Entry: ₹500 flat
           </p>
         </div>
 
