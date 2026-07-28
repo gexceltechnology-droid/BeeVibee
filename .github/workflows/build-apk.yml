@@ -22,11 +22,15 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
+    - name: Setup Gradle Build Tools
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.5'
+
     - name: Build Debug APK
       run: |
         cd android-admin-app
-        chmod +x gradlew || true
-        gradle assembleDebug
+        gradle assembleDebug --no-daemon
 
     - name: Upload Admin APK Artifact
       uses: actions/upload-artifact@v4
