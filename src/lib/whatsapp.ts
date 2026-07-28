@@ -213,18 +213,32 @@ export async function notifyAdminOnWhatsAppAndSMS(
   console.log(message);
   console.log(`==================================================\n`);
 
-  // Run active dispatch channels concurrently to ensure admin mobile receives instant notification
-  await Promise.allSettled([
-    // 1. Mobile SMS Alert to Admin (+919900106474)
-    sendSMS(adminPhone, message),
+  // 1. First attempt Mobile SMS Alert to Admin (+919900106474)
+  try {
+    const smsResult = await sendSMS(adminPhone, message);
+    console.log(`[Admin SMS Dispatch -> +${adminPhone}]:`, smsResult);
+  } catch (smsErr) {
+    console.error(`[Admin SMS Error]:`, smsErr);
+  }
 
-    // 2. CallMeBot WhatsApp (if key provided)
-    sendWhatsAppViaCallMeBot(adminPhone, message),
+  // 2. Then attempt WhatsApp Dispatch to Admin (+919900106474)
+  try {
+    const waResults = await Promise.allSettled([
+      sendWhatsAppViaCallMeBot(adminPhone, message),
+      sendWhatsAppViaWebhook(adminPhone, message),
+    ]);
+    console.log(`[Admin WhatsApp Dispatch -> +${adminPhone}]:`, waResults);
+  } catch (waErr) {
+    console.error(`[Admin WhatsApp Error]:`, waErr);
+  }
 
-    // 3. Custom WhatsApp Webhook (if URL provided)
-    sendWhatsAppViaWebhook(adminPhone, message),
-
-    // 4. Instant Admin Email Alert
-    sendAdminNotificationEmail(subject, `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`),
-  ]);
+  // 3. Send Email Alert to Admin
+  try {
+    await sendAdminNotificationEmail(
+      subject,
+      `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`
+    );
+  } catch (emailErr) {
+    console.error(`[Admin Email Error]:`, emailErr);
+  }
 }

@@ -2142,31 +2142,6 @@ export default function BookingPortal() {
                   <Printer size={18} />
                   Print / Save PDF
                 </button>
-                <a
-                  href={`https://wa.me/919900106474?text=${encodeURIComponent(`🎉 NEW ROOM BOOKING - BEE VIBE 🎉\n\n🆔 Booking ID: #${confirmedBooking.id}\n👤 Guest: ${confirmedBooking.customerName}\n📞 Phone: +${confirmedBooking.phone}\n🎭 Theme: ${confirmedBooking.packageName}\n📅 Date: ${confirmedBooking.date}\n⏰ Time Slot: ${confirmedBooking.timeSlot}\n💰 Total Price: ₹${confirmedBooking.totalPrice}\n\nHi Host! I have confirmed my booking on Bee Vibe.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    backgroundColor: '#25D366',
-                    borderColor: '#25D366',
-                    color: '#ffffff',
-                    textDecoration: 'none',
-                    fontWeight: 'bold',
-                    padding: '12px 20px',
-                    borderRadius: '12px',
-                    boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)'
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.717-1.456L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.965C16.588 1.977 14.13 1.952 12.01 1.952c-5.437 0-9.862 4.371-9.866 9.8.001 2.03.536 4.017 1.55 5.807l-.975 3.557 3.655-.956-.127-.008zm11.367-7.64c-.31-.155-1.838-.907-2.11-.998-.273-.092-.472-.137-.67.155-.198.29-.765.998-.937 1.19-.172.19-.343.21-.652.054-.31-.154-1.307-.48-2.49-1.53-.919-.82-1.539-1.83-1.72-2.138-.18-.309-.019-.476.136-.63.14-.14.31-.36.465-.54.156-.18.208-.31.31-.517.104-.21.053-.39-.026-.546-.078-.155-.67-1.61-.918-2.205-.24-.58-.487-.501-.67-.512-.17-.01-.365-.01-.56-.01-.194 0-.51.073-.777.363-.266.29-1.02 1.002-1.02 2.44 0 1.439 1.047 2.829 1.193 3.023.146.195 2.06 3.14 4.99 4.41.697.303 1.24.484 1.66.619.7.22 1.338.19 1.84.115.56-.08 1.838-.75 2.097-1.44.26-.69.26-1.28.18-1.4-.08-.12-.27-.2-.58-.355z"/>
-                  </svg>
-                  Notify Admin on WhatsApp (+91 9900106474)
-                </a>
               </div>
 
               <button
