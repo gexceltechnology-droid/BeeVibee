@@ -104,6 +104,22 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
 }
 
 /**
+ * Utility to generate a 1-click WhatsApp wa.me deep-link to Admin (+919900106474)
+ */
+export function getAdminWhatsAppDeepLink(
+  type: 'food_order' | 'booking',
+  data: FoodOrderData | BookingData
+): string {
+  const adminPhone = getAdminWhatsAppNumber();
+  const message =
+    type === 'food_order'
+      ? formatFoodOrderWhatsAppMessage(data as FoodOrderData)
+      : formatBookingWhatsAppMessage(data as BookingData);
+
+  return `https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`;
+}
+
+/**
  * Twilio WhatsApp Sender (Disabled)
  */
 export async function sendWhatsAppViaTwilio(
