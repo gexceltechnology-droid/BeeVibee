@@ -120,14 +120,53 @@ export function getAdminWhatsAppDeepLink(
 }
 
 /**
- * Twilio WhatsApp Sender (Disabled)
+ * Twilio WhatsApp Sender
  */
 export async function sendWhatsAppViaTwilio(
   toPhone: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  console.log(`[Twilio Disabled] Skipping Twilio WhatsApp for +${toPhone}`);
-  return { success: false, error: 'Twilio disabled per configuration.' };
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_FROM_NUMBER;
+
+  if (!accountSid || !authToken || !fromNumber) {
+    console.log(`[Twilio WhatsApp] Credentials not configured yet.`);
+    return { success: false, error: 'Twilio WhatsApp credentials not configured.' };
+  }
+
+  try {
+    const cleanTo = cleanPhoneNumber(toPhone);
+    const cleanFrom = cleanPhoneNumber(fromNumber);
+    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+    const credentials = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
+
+    const params = new URLSearchParams();
+    params.append('To', `whatsapp:+${cleanTo}`);
+    params.append('From', `whatsapp:+${cleanFrom}`);
+    params.append('Body', message);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    if (res.ok) {
+      console.log(`[Twilio WhatsApp Success] WhatsApp message delivered to +${cleanTo}`);
+      return { success: true };
+    } else {
+      const errText = await res.text();
+      console.error('[Twilio WhatsApp Error]:', errText);
+      return { success: false, error: errText };
+    }
+  } catch (err: any) {
+    console.error('[Twilio WhatsApp Exception]:', err);
+    return { success: false, error: err.message };
+  }
 }
 
 /**
@@ -221,9 +260,10 @@ export async function notifyAdminOnWhatsAppAndSMS(
     console.error(`[Admin SMS Error]:`, smsErr);
   }
 
-  // 2. Then attempt WhatsApp Dispatch to Admin (+919900106474)
+  // 2. Then attempt WhatsApp Dispatch to Admin (+919900106474) via Twilio, CallMeBot & Webhook
   try {
     const waResults = await Promise.allSettled([
+      sendWhatsAppViaTwilio(adminPhone, message),
       sendWhatsAppViaCallMeBot(adminPhone, message),
       sendWhatsAppViaWebhook(adminPhone, message),
     ]);
