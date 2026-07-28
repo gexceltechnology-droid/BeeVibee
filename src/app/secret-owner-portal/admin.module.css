@@ -879,3 +879,108 @@
     font-size: 0.72rem;
   }
 }
+
+/* ================================================
+   MOBILE BOTTOM APP NAVIGATION BAR
+   ================================================ */
+.mobileBottomNav {
+  display: none;
+}
+
+.mobileHeaderBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .adminContainer {
+    padding: 16px 12px 90px 12px;
+  }
+
+  .dashboardHeader {
+    margin-bottom: 16px;
+  }
+
+  .tabContainerCustom {
+    display: none; /* Replaced by bottom app navigation on mobile */
+  }
+
+  .mobileHeaderBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(242, 169, 0, 0.2);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+
+  .mobileBottomNav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(18, 18, 24, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(242, 169, 0, 0.25);
+    z-index: 999;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobileNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    height: 100%;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    font-size: 0.7rem;
+    font-weight: 600;
+    gap: 3px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .mobileNavItemActive {
+    color: var(--accent);
+    text-shadow: var(--accent-glow);
+  }
+
+  .mobileNavIcon {
+    font-size: 1.3rem;
+  }
+
+  .mobileNavBadge {
+    position: absolute;
+    top: 6px;
+    right: 50%;
+    margin-right: -18px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: 10px;
+    border: 1.5px solid #121218;
+  }
+
+  .mobileLiveDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 1.5s infinite;
+  }
+}

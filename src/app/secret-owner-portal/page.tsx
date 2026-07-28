@@ -931,6 +931,22 @@ export default function AdminDashboard() {
   // 3. Authenticated state: Show dashboard
   return (
     <div className={styles.adminContainer}>
+      {/* Mobile App Bar */}
+      <div className={styles.mobileHeaderBar}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.2rem' }}>🐝</span>
+          <div>
+            <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#ffffff' }}>Bee Vibe Admin App</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className={styles.mobileLiveDot} /> Live Sync Active
+            </div>
+          </div>
+        </div>
+        <button onClick={handleLogout} className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.75rem', borderColor: '#ef4444', color: '#f87171' }}>
+          Sign Out
+        </button>
+      </div>
+
       <div className={styles.dashboardHeader}>
         <div>
           <h1 className={styles.title}>Bee Vibe Admin Panel</h1>
@@ -1744,6 +1760,57 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+      {/* Fixed Mobile App Bottom Navigation Bar */}
+      <div className={styles.mobileBottomNav}>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'bookings' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => {
+            setActiveTab('bookings');
+            setSearchTerm('');
+            setDateFilter('');
+          }}
+        >
+          <span className={styles.mobileNavIcon}>📅</span>
+          <span>Bookings</span>
+          {pendingBookings > 0 && <span className={styles.mobileNavBadge}>{pendingBookings}</span>}
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'orders' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => {
+            setActiveTab('orders');
+            setSearchTerm('');
+            setOrderStatusFilter('all');
+            setOrderDateFilter('');
+          }}
+        >
+          <span className={styles.mobileNavIcon}>🍿</span>
+          <span>Orders</span>
+          {activeOrdersCount > 0 && <span className={styles.mobileNavBadge}>{activeOrdersCount}</span>}
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'menu' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => {
+            setActiveTab('menu');
+            setSearchTerm('');
+          }}
+        >
+          <span className={styles.mobileNavIcon}>🍔</span>
+          <span>Menu</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'qrs' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => {
+            setActiveTab('qrs');
+          }}
+        >
+          <span className={styles.mobileNavIcon}>🖨️</span>
+          <span>QR Standees</span>
+        </button>
+      </div>
     </div>
   );
 }
