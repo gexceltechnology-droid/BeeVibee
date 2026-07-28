@@ -22,15 +22,13 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Setup Gradle Build Tools
+    - name: Setup Gradle Cache
       uses: gradle/actions/setup-gradle@v3
-      with:
-        gradle-version: '8.5'
-        build-root-directory: android-admin-app
 
     - name: Build Debug APK
       run: |
-        gradle -p android-admin-app assembleDebug --stacktrace --no-daemon
+        cd android-admin-app
+        gradle assembleDebug --stacktrace --no-daemon
 
     - name: Upload Admin APK Artifact
       uses: actions/upload-artifact@v4
