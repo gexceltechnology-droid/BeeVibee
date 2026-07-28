@@ -27,6 +27,10 @@ jobs:
       with:
         gradle-version: '8.5'
 
+    - name: Configure Android SDK Location
+      run: |
+        echo "sdk.dir=$ANDROID_HOME" > android-admin-app/local.properties
+
     - name: Build Debug APK
       run: |
         cd android-admin-app
