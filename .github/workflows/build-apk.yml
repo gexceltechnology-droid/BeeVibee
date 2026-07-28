@@ -22,12 +22,10 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Setup Gradle Cache
-      uses: gradle/actions/setup-gradle@v3
-
     - name: Build Debug APK
       run: |
         cd android-admin-app
+        chmod +x gradlew || true
         gradle assembleDebug --stacktrace --no-daemon
 
     - name: Upload Admin APK Artifact
