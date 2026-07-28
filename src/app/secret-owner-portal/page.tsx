@@ -937,9 +937,11 @@ export default function AdminDashboard() {
           <p className={styles.subtitle}>Manage customer celebrations, view analytics, and track room service</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Link href="/" className="btn btn-secondary">
-            View Homepage
-          </Link>
+          {typeof window !== 'undefined' && !(window as any).isNativeAndroidAdminApp && (
+            <Link href="/" className="btn btn-secondary">
+              View Homepage
+            </Link>
+          )}
           <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171' }}>
             Sign Out
           </button>

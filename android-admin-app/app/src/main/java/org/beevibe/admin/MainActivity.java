@@ -78,11 +78,22 @@ public class MainActivity extends AppCompatActivity {
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
+            public boolean shouldOverrideUrlLoading(WebView view, android.webkit.WebResourceRequest request) {
+                String url = request.getUrl().toString();
+                // Strictly restrict app to Admin Portal and prevent navigating to public customer pages
+                if (!url.contains("secret-owner-portal") && !url.contains("/api/")) {
+                    view.loadUrl(ADMIN_PORTAL_URL);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 swipeRefreshLayout.setRefreshing(false);
                 
-                // Inject auto-login helper and native bridge flag
+                // Inject native app flag
                 webView.evaluateJavascript(
                     "window.isNativeAndroidAdminApp = true; console.log('Bee Vibe Admin App Native Bridge active.');",
                     null
