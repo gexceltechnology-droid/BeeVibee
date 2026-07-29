@@ -120,11 +120,21 @@ export async function POST(request: NextRequest) {
     for (const addon of (addOns || [])) {
       const nameStr = String(addon);
       if (nameStr.startsWith('DSLR Camera Coverage')) {
-        const match = nameStr.match(/\((\d+)\s*Hour/);
-        const hours = match ? parseInt(match[1], 10) : 1;
-        addonsTotal += 500 * hours;
+        if (nameStr.includes('30 Min') || nameStr.includes('30min')) {
+          addonsTotal += 300;
+        } else if (nameStr.includes('2 Hour') || nameStr.includes('2hr') || nameStr.includes('2 Hours')) {
+          addonsTotal += 800;
+        } else {
+          addonsTotal += 500;
+        }
       } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Special Entry')) {
-        addonsTotal += 500;
+        if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
+          addonsTotal += 300;
+        } else if (nameStr.includes('2 Pot') || nameStr.includes('2pot') || nameStr.includes('2 Pots')) {
+          addonsTotal += 500;
+        } else {
+          addonsTotal += 500;
+        }
       }
     }
 

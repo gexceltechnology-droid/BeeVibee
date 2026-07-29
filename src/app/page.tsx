@@ -355,8 +355,8 @@ export default function Home() {
                       <li>2-Hour full private hall booking</li>
                       <li>Vibrant Purple party lighting decor</li>
                       <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹500 flat (optional)</li>
+                      <li>DSLR Photo: from ₹300 (optional)</li>
+                      <li>Fog entry: from ₹300 (optional)</li>
                     </ul>
                   </div>
                 </div>
@@ -372,8 +372,8 @@ export default function Home() {
                       <li>2-Hour full private hall booking</li>
                       <li>Warm Pink ambient lighting decor</li>
                       <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹500 flat (optional)</li>
+                      <li>DSLR Photo: from ₹300 (optional)</li>
+                      <li>Fog entry: from ₹300 (optional)</li>
                     </ul>
                   </div>
                 </div>
@@ -389,8 +389,8 @@ export default function Home() {
                       <li>2-Hour full private hall booking</li>
                       <li>Romantic Crimson Red lighting setup</li>
                       <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: ₹500/hr (optional)</li>
-                      <li>Fog entry: ₹500 flat (optional)</li>
+                      <li>DSLR Photo: from ₹300 (optional)</li>
+                      <li>Fog entry: from ₹300 (optional)</li>
                     </ul>
                   </div>
                 </div>

@@ -106,7 +106,8 @@ export default function BookingPortal() {
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-  const [dslrHours, setDslrHours] = useState<1 | 2>(1);
+  const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr' | '2hr'>('none');
+  const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     email: '',
@@ -530,15 +531,17 @@ export default function BookingPortal() {
     const durationHours = getSlotDurationHours();
     const pkgBase = selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
     const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
-    const addonsTotal = selectedAddons.reduce((sum, addonId) => {
-      const addon = ADDONS.find((a) => a.id === addonId);
-      if (!addon) return sum;
-      if (addon.id === 'add-dslr') {
-        return sum + 500 * dslrHours;
-      }
-      return sum + addon.price;
-    }, 0);
-    return pkgBase + extraGuests + addonsTotal;
+
+    let dslrPrice = 0;
+    if (dslrOption === '30min') dslrPrice = 300;
+    else if (dslrOption === '1hr') dslrPrice = 500;
+    else if (dslrOption === '2hr') dslrPrice = 800;
+
+    let fogPrice = 0;
+    if (fogOption === '1pot') fogPrice = 300;
+    else if (fogOption === '2pots') fogPrice = 500;
+
+    return pkgBase + extraGuests + dslrPrice + fogPrice;
   };
 
   const handleAddonToggle = (addonId: string) => {
@@ -620,14 +623,16 @@ export default function BookingPortal() {
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,
-      addOns: selectedAddons.map((id) => {
-        const addon = ADDONS.find((a) => a.id === id);
-        if (!addon) return id;
-        if (id === 'add-dslr') {
-          return `DSLR Camera Coverage (${dslrHours} Hour${dslrHours > 1 ? 's' : ''})`;
-        }
-        return addon.name;
-      }),
+      addOns: (() => {
+        const list: string[] = [];
+        if (dslrOption === '30min') list.push('DSLR Camera Coverage (30 Mins — ₹300)');
+        else if (dslrOption === '1hr') list.push('DSLR Camera Coverage (1 Hour — ₹500)');
+        else if (dslrOption === '2hr') list.push('DSLR Camera Coverage (2 Hours — ₹800)');
+
+        if (fogOption === '1pot') list.push('Special Fog Entry Effect (1 Pot — ₹300)');
+        else if (fogOption === '2pots') list.push('Special Fog Entry Effect (2 Pots — ₹500)');
+        return list;
+      })(),
       totalPrice: calculateTotal(),
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests,
@@ -1835,48 +1840,45 @@ export default function BookingPortal() {
                 Choose add-on options to customize your celebration.
               </p>
 
-              <div className={styles.addonsGrid}>
-                {ADDONS.map((addon) => {
-                  const isSelected = selectedAddons.includes(addon.id);
-                  return (
-                    <div
-                      key={addon.id}
-                      className={`${styles.addonCard} ${isSelected ? styles.addonSelected : ''}`}
-                      onClick={() => handleAddonToggle(addon.id)}
-                    >
-                      <div className={styles.addonInfo}>
-                        <span className={styles.addonName}>{addon.name}</span>
-                        {addon.id === 'add-dslr' && isSelected && (
-                          <div className={styles.dslrHoursSelector} onClick={(e) => e.stopPropagation()}>
-                            <span className={styles.dslrHoursLabel}>Duration:</span>
-                            <button
-                              type="button"
-                              className={`${styles.dslrHourBtn} ${dslrHours === 1 ? styles.dslrHourBtnActive : ''}`}
-                              onClick={() => setDslrHours(1)}
-                            >
-                              1 Hour
-                            </button>
-                            <button
-                              type="button"
-                              className={`${styles.dslrHourBtn} ${dslrHours === 2 ? styles.dslrHourBtnActive : ''}`}
-                              onClick={() => setDslrHours(2)}
-                            >
-                              2 Hours
-                            </button>
-                          </div>
-                        )}
-                        <span className={styles.addonPrice}>
-                          {addon.id === 'add-dslr'
-                            ? `+₹${500 * dslrHours}`
-                            : addon.price === 0 ? 'Included' : `+₹${addon.price}`}
-                        </span>
-                      </div>
-                      <div className={styles.addonCheckbox}>
-                        {isSelected && '✓'}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className={styles.addonsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                {/* DSLR Camera Dropdown Card */}
+                <div className={`${styles.addonCard} ${dslrOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className={styles.addonName}>📸 DSLR Camera Coverage</span>
+                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: dslrOption !== 'none' ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                      {dslrOption === 'none' ? 'Optional' : dslrOption === '30min' ? '+₹300' : dslrOption === '1hr' ? '+₹500' : '+₹800'}
+                    </span>
+                  </div>
+                  <select
+                    className={`${styles.addonSelectDropdown} ${dslrOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
+                    value={dslrOption}
+                    onChange={(e) => setDslrOption(e.target.value as any)}
+                  >
+                    <option value="none">No DSLR Camera (₹0)</option>
+                    <option value="30min">30 Mins DSLR Photography (+₹300)</option>
+                    <option value="1hr">1 Hour DSLR Photography (+₹500)</option>
+                    <option value="2hr">2 Hours DSLR Photography (+₹800)</option>
+                  </select>
+                </div>
+
+                {/* Special Fog Entry Effect Dropdown Card */}
+                <div className={`${styles.addonCard} ${fogOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className={styles.addonName}>🌫️ Special Fog Entry Effect</span>
+                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: fogOption !== 'none' ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                      {fogOption === 'none' ? 'Optional' : fogOption === '1pot' ? '+₹300' : '+₹500'}
+                    </span>
+                  </div>
+                  <select
+                    className={`${styles.addonSelectDropdown} ${fogOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
+                    value={fogOption}
+                    onChange={(e) => setFogOption(e.target.value as any)}
+                  >
+                    <option value="none">No Fog Entry Effect (₹0)</option>
+                    <option value="1pot">1 Pot Special Fog Entry (+₹300)</option>
+                    <option value="2pots">2 Pots Special Fog Entry (+₹500)</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}
@@ -1897,13 +1899,11 @@ export default function BookingPortal() {
                   <div><strong>Vibe Package:</strong> {selectedPackage.name}</div>
                   <div>
                     <strong>Add-ons selected:</strong>{' '}
-                    {selectedAddons.length > 0
-                      ? selectedAddons.map((id) => {
-                          if (id === 'add-dslr') {
-                            return `DSLR Camera Coverage (${dslrHours} Hour${dslrHours > 1 ? 's' : ''})`;
-                          }
-                          return ADDONS.find((a) => a.id === id)?.name;
-                        }).join(', ')
+                    {dslrOption !== 'none' || fogOption !== 'none'
+                      ? [
+                          dslrOption === '30min' ? 'DSLR Camera (30 Mins — ₹300)' : dslrOption === '1hr' ? 'DSLR Camera (1 Hour — ₹500)' : dslrOption === '2hr' ? 'DSLR Camera (2 Hours — ₹800)' : null,
+                          fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : fogOption === '2pots' ? 'Special Fog Entry (2 Pots — ₹500)' : null
+                        ].filter(Boolean).join(', ')
                       : 'None'}
                   </div>
                   <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 'bold' }}>
