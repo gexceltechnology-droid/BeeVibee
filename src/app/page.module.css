@@ -59,7 +59,7 @@
 }
 
 .logoImg {
-  height: 105px;
+  height: 115px;
   width: auto;
   object-fit: contain;
   display: block;
@@ -67,7 +67,7 @@
 }
 
 .headerContainerScrolled .logoImg {
-  height: 80px;
+  height: 85px;
 }
 
 .logoImg:hover {

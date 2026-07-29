@@ -162,17 +162,13 @@ function MenuContent() {
           <Link href="/" className={styles.backBtn}>
             <ArrowLeft size={16} /> Home
           </Link>
-          <div className={styles.logoWrapper}>
+          <Link href="/" className={styles.logoWrapper}>
             <img
               src="/bee-vibe-logo.png?v=4"
               alt="BeeVibe Mini Private Theater"
-              style={{ height: '85px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '105px', width: 'auto', objectFit: 'contain' }}
             />
-            <div>
-              <h1 className={styles.logoText}>Bee Vibe Cafe</h1>
-              <p className={styles.logoSub}>Luxury Room Service Menu</p>
-            </div>
-          </div>
+          </Link>
         </div>
         <div className={styles.roomIndicator}>
           <span className={styles.glowDot} />

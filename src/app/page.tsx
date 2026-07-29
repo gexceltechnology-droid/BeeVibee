@@ -191,7 +191,7 @@ export default function Home() {
                 src="/bee-vibe-logo.png?v=4"
                 alt="BeeVibe Mini Private Theater"
                 className={styles.logoImg}
-                style={{ height: '105px', width: 'auto', objectFit: 'contain' }}
+                style={{ height: '115px', width: 'auto', objectFit: 'contain' }}
               />
             </Link>
             <nav className={styles.desktopNav}>
