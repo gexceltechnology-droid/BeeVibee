@@ -170,10 +170,15 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send booking confirmation SMS:', smsError);
     }
 
-    // Trigger automated background server notification to admin phone & WhatsApp (+919900106474)
-    notifyAdminOnWhatsAppAndSMS('booking', newBooking).catch((err) => {
+    // Trigger automated server notification to admin phone & WhatsApp (+919900106474)
+    try {
+      await Promise.race([
+        notifyAdminOnWhatsAppAndSMS('booking', newBooking),
+        new Promise((resolve) => setTimeout(resolve, 4000)),
+      ]);
+    } catch (err) {
       console.error('Failed sending Admin booking notification:', err);
-    });
+    }
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {

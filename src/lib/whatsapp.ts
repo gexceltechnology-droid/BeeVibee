@@ -128,9 +128,10 @@ export async function sendWhatsAppViaTwilio(
 ): Promise<{ success: boolean; error?: string }> {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_FROM_NUMBER;
+  // Use explicit TWILIO_WHATSAPP_NUMBER, or TWILIO_FROM_NUMBER, or default to Twilio Sandbox (+14155238886)
+  const fromNumber = process.env.TWILIO_WHATSAPP_NUMBER || process.env.TWILIO_FROM_NUMBER || '14155238886';
 
-  if (!accountSid || !authToken || !fromNumber) {
+  if (!accountSid || !authToken) {
     console.log(`[Twilio WhatsApp] Credentials not configured yet.`);
     return { success: false, error: 'Twilio WhatsApp credentials not configured.' };
   }
@@ -198,6 +199,88 @@ export async function sendWhatsAppViaCallMeBot(
 }
 
 /**
+ * UltraMsg Direct WhatsApp Sender
+ */
+export async function sendWhatsAppViaUltraMsg(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const instanceId = process.env.ULTRAMSG_INSTANCE_ID;
+  const token = process.env.ULTRAMSG_TOKEN;
+  if (!instanceId || !token) return { success: false, error: 'UltraMsg credentials not configured' };
+
+  try {
+    const cleanTo = cleanPhoneNumber(phone);
+    const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
+    const params = new URLSearchParams();
+    params.append('token', token);
+    params.append('to', `+${cleanTo}`);
+    params.append('body', message);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+
+    if (res.ok) {
+      console.log(`[UltraMsg WhatsApp Success] Sent to +${cleanTo}`);
+      return { success: true };
+    } else {
+      const errText = await res.text();
+      console.error('[UltraMsg Error]:', errText);
+      return { success: false, error: errText };
+    }
+  } catch (err: any) {
+    console.error('[UltraMsg Exception]:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Meta Official WhatsApp Cloud API Sender
+ */
+export async function sendWhatsAppViaMetaCloudApi(
+  phone: string,
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const phoneId = process.env.META_WHATSAPP_PHONE_ID;
+  const token = process.env.META_WHATSAPP_TOKEN;
+  if (!phoneId || !token) return { success: false, error: 'Meta WhatsApp Cloud API not configured' };
+
+  try {
+    const cleanTo = cleanPhoneNumber(phone);
+    const url = `https://graph.facebook.com/v18.0/${phoneId}/messages`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanTo,
+        type: 'text',
+        text: { preview_url: false, body: message },
+      }),
+    });
+
+    if (res.ok) {
+      console.log(`[Meta WhatsApp Cloud API Success] Sent to +${cleanTo}`);
+      return { success: true };
+    } else {
+      const errText = await res.text();
+      console.error('[Meta WhatsApp Cloud API Error]:', errText);
+      return { success: false, error: errText };
+    }
+  } catch (err: any) {
+    console.error('[Meta WhatsApp Cloud API Exception]:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Server-side Generic Webhook WhatsApp Gateway
  */
 export async function sendWhatsAppViaWebhook(
@@ -252,7 +335,7 @@ export async function notifyAdminOnWhatsAppAndSMS(
   console.log(message);
   console.log(`==================================================\n`);
 
-  // 1. First attempt Mobile SMS Alert to Admin (+919900106474)
+  // 1. Mobile SMS Alert to Admin (+919900106474)
   try {
     const smsResult = await sendSMS(adminPhone, message);
     console.log(`[Admin SMS Dispatch -> +${adminPhone}]:`, smsResult);
@@ -260,11 +343,13 @@ export async function notifyAdminOnWhatsAppAndSMS(
     console.error(`[Admin SMS Error]:`, smsErr);
   }
 
-  // 2. Then attempt WhatsApp Dispatch to Admin (+919900106474) via Twilio, CallMeBot & Webhook
+  // 2. WhatsApp Dispatch to Admin (+919900106474) via all configured gateways (Twilio, CallMeBot, UltraMsg, Meta Cloud API, Webhook)
   try {
     const waResults = await Promise.allSettled([
       sendWhatsAppViaTwilio(adminPhone, message),
       sendWhatsAppViaCallMeBot(adminPhone, message),
+      sendWhatsAppViaUltraMsg(adminPhone, message),
+      sendWhatsAppViaMetaCloudApi(adminPhone, message),
       sendWhatsAppViaWebhook(adminPhone, message),
     ]);
     console.log(`[Admin WhatsApp Dispatch -> +${adminPhone}]:`, waResults);
@@ -272,7 +357,7 @@ export async function notifyAdminOnWhatsAppAndSMS(
     console.error(`[Admin WhatsApp Error]:`, waErr);
   }
 
-  // 3. Send Email Alert to Admin
+  // 3. Email Alert to Admin
   try {
     await sendAdminNotificationEmail(
       subject,
