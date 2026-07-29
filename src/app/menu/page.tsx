@@ -166,7 +166,7 @@ function MenuContent() {
             <img
               src="/bee-vibe-logo.png?v=4"
               alt="BeeVibe Mini Private Theater"
-              style={{ height: '150px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '105px', width: 'auto', objectFit: 'contain' }}
             />
           </Link>
         </div>
