@@ -93,8 +93,8 @@ export default function BookPage() {
 
           {/* Quick Info Pills */}
           <div className={styles.infoPills}>
-            <span className={styles.pill}>🎂 Purple Theme — ₹999/2hrs</span>
-            <span className={styles.pill}>🌸 Pink Theme — ₹799/2hrs</span>
+            <span className={styles.pill}>💜 Purple Theme — ₹999/2hrs</span>
+            <span className={styles.pill}>🩷 Pink Theme — ₹799/2hrs</span>
             <span className={styles.pill}>❤️ Red Theme — ₹599/2hrs</span>
           </div>
           <p className={styles.extraInfo}>
