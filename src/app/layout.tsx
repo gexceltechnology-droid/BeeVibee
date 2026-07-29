@@ -64,9 +64,9 @@ export const metadata: Metadata = {
     google: "googleedf3ca6499a78e5c",
   },
   icons: {
-    icon: "/bee-vibe-logo.png",
-    shortcut: "/bee-vibe-logo.png",
-    apple: "/bee-vibe-logo.png",
+    icon: "/bee-vibe-icon.png?v=3",
+    shortcut: "/bee-vibe-icon.png?v=3",
+    apple: "/bee-vibe-icon.png?v=3",
   },
   openGraph: {
     title: "Bee Vibe | Luxury Private Celebration Theater & Space Bangalore",
