@@ -348,7 +348,7 @@ export default function Home() {
                 <div className={styles.showcaseCard}>
                   <div className={styles.cardBanner} style={{ backgroundColor: '#9333ea' }} />
                   <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🎂 Purple Theme</h3>
+                    <h3 className={styles.showcaseTitle}>💜 Purple Theme</h3>
                     <div className={styles.showcasePrice}>₹999 / 2 Hrs</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
                     <ul className={styles.showcaseList}>
@@ -365,7 +365,7 @@ export default function Home() {
                 <div className={styles.showcaseCard}>
                   <div className={styles.cardBanner} style={{ backgroundColor: '#ff2e7e' }} />
                   <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🌸 Pink Theme</h3>
+                    <h3 className={styles.showcaseTitle}>🩷 Pink Theme</h3>
                     <div className={styles.showcasePrice}>₹799 / 2 Hrs</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
                     <ul className={styles.showcaseList}>
