@@ -107,6 +107,36 @@ export default function GamingWorldPage() {
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [activeCategory, setActiveCategory] = useState<'all' | 'sports' | 'fighting' | 'action' | 'coop'>('all');
   
+  // 4 Interactive Live Themes State
+  const [activeTheme, setActiveTheme] = useState<'cyberpunk' | 'pixel' | 'warzone' | 'galaxy'>('cyberpunk');
+
+  // Load saved theme from sessionStorage
+  useEffect(() => {
+    const saved = sessionStorage.getItem('bee_vibe_gaming_theme') as any;
+    if (saved && ['cyberpunk', 'pixel', 'warzone', 'galaxy'].includes(saved)) {
+      setActiveTheme(saved);
+    }
+  }, []);
+
+  const handleThemeChange = (theme: 'cyberpunk' | 'pixel' | 'warzone' | 'galaxy') => {
+    setActiveTheme(theme);
+    sessionStorage.setItem('bee_vibe_gaming_theme', theme);
+  };
+
+  const THEMES = [
+    { id: 'cyberpunk', name: '⚡ Cyberpunk Neon', color: '#00f0ff', activeClass: styles.themeCyberpunkActive },
+    { id: 'pixel', name: '👾 Pixel Arcade', color: '#ffe600', activeClass: styles.themePixelActive },
+    { id: 'warzone', name: '🔴 Crimson Warzone', color: '#ff0033', activeClass: styles.themeWarzoneActive },
+    { id: 'galaxy', name: '🌌 Cosmic Galaxy', color: '#c084fc', activeClass: styles.themeGalaxyActive },
+  ];
+
+  const THEME_HERO_TITLES: Record<string, { span: string }> = {
+    cyberpunk: { span: 'PS5 CYBER REALM' },
+    pixel: { span: '8-BIT PIXEL REALM' },
+    warzone: { span: 'CRIMSON WARZONE ARENA' },
+    galaxy: { span: 'COSMIC GALAXY LOUNGE' },
+  };
+
   // Space Warp Animation States
   const [warpActive, setWarpActive] = useState(true);
   const [warpFading, setWarpFading] = useState(false);
@@ -373,13 +403,54 @@ export default function GamingWorldPage() {
         </div>
       </header>
 
+      {/* Live Interactive Theme Switcher Bar */}
+      <div className={styles.themeSwitcherBar}>
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            className={`${styles.themePill} ${activeTheme === t.id ? t.activeClass : ''}`}
+            onClick={() => handleThemeChange(t.id as any)}
+          >
+            {t.name}
+          </button>
+        ))}
+      </div>
+
       {/* Main Hero Realm */}
       <section className={styles.hero}>
         <div className={styles.pixelBadge}>
           <Zap size={18} /> LEVEL UP YOUR GAME NIGHT IN BANGALORE
         </div>
         <h1 className={styles.heroTitle}>
-          ENTER THE <span className={styles.cyanGlow}>PS5 PIXEL REALM</span>
+          ENTER THE{' '}
+          <span
+            className={
+              activeTheme === 'cyberpunk'
+                ? styles.cyanGlow
+                : ''
+            }
+            style={{
+              color:
+                activeTheme === 'pixel'
+                  ? '#ffe600'
+                  : activeTheme === 'warzone'
+                  ? '#ff0033'
+                  : activeTheme === 'galaxy'
+                  ? '#c084fc'
+                  : undefined,
+              textShadow:
+                activeTheme === 'pixel'
+                  ? '3px 3px 0 #ff0055'
+                  : activeTheme === 'warzone'
+                  ? '0 0 20px rgba(255, 0, 51, 0.8)'
+                  : activeTheme === 'galaxy'
+                  ? '0 0 20px rgba(192, 132, 252, 0.8)'
+                  : undefined,
+            }}
+          >
+            {THEME_HERO_TITLES[activeTheme].span}
+          </span>
         </h1>
         <p className={styles.heroSubtitle}>
           We’ve loaded Bee Vibe with <strong>1 Sony PlayStation 5 Console</strong>, <strong>2 DualSense Wireless Controllers</strong>, and a curated library of top AAA multiplayer games. Play head-to-head or co-op on our massive 180" 4K Projector Screen with 7.1 Dolby Surround Sound in a 100% private, soundproof lounge.

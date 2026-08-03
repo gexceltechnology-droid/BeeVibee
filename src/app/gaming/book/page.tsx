@@ -52,6 +52,16 @@ export default function GamingBookingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [crtEnabled, setCrtEnabled] = useState(true);
+  const [selectedThemeName, setSelectedThemeName] = useState('🖤 Dark Gaming Theme');
+
+  // Load saved theme choice
+  useEffect(() => {
+    const saved = sessionStorage.getItem('bee_vibe_gaming_theme');
+    if (saved === 'cyberpunk') setSelectedThemeName('⚡ Cyberpunk Neon Gaming Theme');
+    else if (saved === 'pixel') setSelectedThemeName('👾 8-Bit Pixel Arcade Theme');
+    else if (saved === 'warzone') setSelectedThemeName('🔴 Crimson Warzone Gaming Theme');
+    else if (saved === 'galaxy') setSelectedThemeName('🌌 Cosmic Galaxy Gaming Theme');
+  }, []);
 
   // Form State
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -280,7 +290,7 @@ export default function GamingBookingPage() {
       phone: customerPhone,
       date: selectedDate,
       timeSlot: selectedSlot?.time,
-      packageName: selectedPackage.name,
+      packageName: selectedThemeName || selectedPackage.name,
       bookingType: 'gaming',
       addOns: (() => {
         const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];
