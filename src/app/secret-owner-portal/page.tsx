@@ -13,6 +13,7 @@ interface Booking {
   date: string;
   timeSlot: string;
   packageName: string;
+  bookingType?: 'gaming' | 'theater';
   addOns: string[];
   totalPrice: number;
   status: 'pending' | 'confirmed' | 'cancelled';
@@ -54,6 +55,11 @@ export default function AdminDashboard() {
   
   // Food Orders and Menu States
   const [activeTab, setActiveTab] = useState<'bookings' | 'orders' | 'qrs' | 'menu'>('bookings');
+  const [bookingCategoryFilter, setBookingCategoryFilter] = useState<'all' | 'theater' | 'gaming'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+  const [orderDateFilter, setOrderDateFilter] = useState('');
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [newlyAddedOrderIds, setNewlyAddedOrderIds] = useState<string[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -169,12 +175,7 @@ export default function AdminDashboard() {
       console.warn('Could not play booking notification audio:', e);
     }
   };
-  
-  // Filter States
-  const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
-  const [orderDateFilter, setOrderDateFilter] = useState('');
-  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+
 
   // Check auth and archived status on load
   useEffect(() => {
@@ -748,8 +749,16 @@ export default function AdminDashboard() {
 
 
 
-  // Filter logic
+  // Filter logic for bookings & orders
   const filteredBookings = bookings.filter((b) => {
+    const isGaming = b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark');
+    const matchesCategory =
+      bookingCategoryFilter === 'all'
+        ? true
+        : bookingCategoryFilter === 'gaming'
+        ? isGaming
+        : !isGaming;
+
     const matchesSearch =
       b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -758,7 +767,7 @@ export default function AdminDashboard() {
       
     const matchesDate = dateFilter ? b.date === dateFilter : true;
     
-    return matchesSearch && matchesDate;
+    return matchesCategory && matchesSearch && matchesDate;
   });
 
   const filteredOrders = orders.filter((o) => {
@@ -778,7 +787,23 @@ export default function AdminDashboard() {
   // Metric calculations
   const totalBookings = bookings.length;
   const activeBookings = bookings.filter((b) => b.status !== 'cancelled').length;
-  
+
+  const theaterBookingsCount = bookings.filter(
+    (b) => b.status !== 'cancelled' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark')
+  ).length;
+
+  const gamingBookingsCount = bookings.filter(
+    (b) => b.status !== 'cancelled' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark'))
+  ).length;
+
+  const theaterRevenue = bookings
+    .filter((b) => b.status === 'confirmed' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark'))
+    .reduce((sum, b) => sum + b.totalPrice, 0);
+
+  const gamingRevenue = bookings
+    .filter((b) => b.status === 'confirmed' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark')))
+    .reduce((sum, b) => sum + b.totalPrice, 0);
+
   const totalRevenue = bookings
     .filter((b) => b.status === 'confirmed')
     .reduce((sum, b) => sum + b.totalPrice, 0);
@@ -1044,11 +1069,13 @@ export default function AdminDashboard() {
         <div className={styles.metricsGrid}>
           <div className={styles.metricCard}>
             <div className={styles.metricTitle}>Active Reservations</div>
-            <div className={styles.metricValue}>{activeBookings} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/ {totalBookings} total</span></div>
+            <div className={styles.metricValue}>{activeBookings} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>({theaterBookingsCount} Theater · {gamingBookingsCount} Gaming)</span></div>
           </div>
           <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Confirmed Revenue</div>
-            <div className={styles.metricValue}>₹{totalRevenue}</div>
+            <div className={styles.metricTitle}>Theater vs Gaming Revenue</div>
+            <div className={styles.metricValue} style={{ fontSize: '1.25rem', color: '#34d399' }}>
+              🎬 ₹{theaterRevenue} <span style={{ color: '#00f0ff', fontSize: '1.1rem', marginLeft: '6px' }}>🎮 ₹{gamingRevenue}</span>
+            </div>
           </div>
           <div className={styles.metricCard}>
             <div className={styles.metricTitle}>Pending Approvals</div>
@@ -1134,12 +1161,24 @@ export default function AdminDashboard() {
           />
           
           {activeTab === 'bookings' ? (
-            <input
-              type="date"
-              className={styles.dateFilter}
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-            />
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select
+                className={styles.dateFilter}
+                value={bookingCategoryFilter}
+                onChange={(e) => setBookingCategoryFilter(e.target.value as any)}
+                style={{ paddingRight: '20px', fontWeight: 'bold', borderColor: bookingCategoryFilter === 'gaming' ? '#00f0ff' : 'var(--border)' }}
+              >
+                <option value="all">📋 All Categories ({activeBookings})</option>
+                <option value="theater">🎬 Celebration Theater ({theaterBookingsCount})</option>
+                <option value="gaming">🎮 PS5 Gaming Lounge ({gamingBookingsCount})</option>
+              </select>
+              <input
+                type="date"
+                className={styles.dateFilter}
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              />
+            </div>
           ) : (
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <input
@@ -1164,13 +1203,14 @@ export default function AdminDashboard() {
             </div>
           )}
           
-          {(searchTerm || dateFilter || orderDateFilter || (activeTab === 'orders' && orderStatusFilter !== 'all')) && (
+          {(searchTerm || dateFilter || orderDateFilter || bookingCategoryFilter !== 'all' || (activeTab === 'orders' && orderStatusFilter !== 'all')) && (
             <button
               className="btn btn-secondary"
               style={{ padding: '8px 16px', fontSize: '0.85rem' }}
               onClick={() => {
                 setSearchTerm('');
                 setDateFilter('');
+                setBookingCategoryFilter('all');
                 setOrderDateFilter('');
                 setOrderStatusFilter('all');
               }}
@@ -1264,6 +1304,19 @@ export default function AdminDashboard() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
                         </td>
                         <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <span style={{
+                              fontSize: '0.7rem',
+                              fontWeight: 'bold',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)',
+                              color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055',
+                              border: `1px solid ${b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055'}`
+                            }}>
+                              {b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '🎮 PS5 GAMING' : '🎬 THEATER'}
+                            </span>
+                          </div>
                           <div style={{ fontWeight: 500 }}>{b.packageName}</div>
                           {b.addOns.length > 0 && (
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
@@ -1327,8 +1380,22 @@ export default function AdminDashboard() {
                       <span className={styles.mobileCardValue}>{b.date}<br /><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</span></span>
                     </div>
                     <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Package</span>
-                      <span className={styles.mobileCardValue}>{b.packageName}</span>
+                      <span className={styles.mobileCardLabel}>Category & Package</span>
+                      <span className={styles.mobileCardValue}>
+                        <span style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 'bold',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          marginRight: '6px',
+                          background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)',
+                          color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055',
+                          border: `1px solid ${b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055'}`
+                        }}>
+                          {b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '🎮 PS5 GAMING' : '🎬 THEATER'}
+                        </span>
+                        {b.packageName}
+                      </span>
                     </div>
                     <div className={styles.mobileCardRow}>
                       <span className={styles.mobileCardLabel}>Total</span>

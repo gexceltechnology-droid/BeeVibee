@@ -8,45 +8,19 @@ import { Gamepad2, ArrowLeft, Download, Printer, CheckCircle2, ShieldCheck } fro
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 
-// Gaming Themes Constant
+// Gaming Theme Constant (Single Dedicated Dark Gaming Lounge)
 const PACKAGES = [
   {
-    id: 'pkg-purple',
-    name: '💜 Neon Purple Gaming Lounge',
+    id: 'pkg-dark-gaming',
+    name: '🖤 Dark Gaming Theme',
     price: 999,
     details: [
-      '2-Hour Full Private Gaming Booking',
+      '2-Hour Private PS5 Gaming Session',
       '1x PS5 Console + 2 DualSense Controllers Included',
       '180" 4K Projector Screen',
       '7.1 Dolby Surround Sound System',
-      'Vibrant Neon Purple RGB Room Lighting',
-      'Air Conditioned Lounge (AC)',
-    ]
-  },
-  {
-    id: 'pkg-pink',
-    name: '🩷 Rose Pink Arcade',
-    price: 799,
-    details: [
-      '2-Hour Full Private Gaming Booking',
-      '1x PS5 Console + 2 DualSense Controllers Included',
-      '180" 4K Projector Screen',
-      '7.1 Dolby Surround Sound System',
-      'Warm Pink RGB Ambient Room Lighting',
-      'Air Conditioned Lounge (AC)',
-    ]
-  },
-  {
-    id: 'pkg-red',
-    name: '❤️ Crimson Red Warzone',
-    price: 599,
-    details: [
-      '2-Hour Full Private Gaming Booking',
-      '1x PS5 Console + 2 DualSense Controllers Included',
-      '180" 4K Projector Screen',
-      '7.1 Dolby Surround Sound System',
-      'Intense Crimson Red RGB Lighting Setup',
-      'Air Conditioned Lounge (AC)',
+      'Atmospheric Dark Gaming RGB Ambient Lighting',
+      'Air Conditioned Private Lounge (AC)',
     ]
   }
 ];
@@ -307,6 +281,7 @@ export default function GamingBookingPage() {
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,
+      bookingType: 'gaming',
       addOns: (() => {
         const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];
         if (dslrOption === '30min') list.push('DSLR Photography (30 Mins — ₹300)');

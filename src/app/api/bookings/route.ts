@@ -107,9 +107,11 @@ export async function POST(request: NextRequest) {
     const PACKAGES_PRICE_MAP: Record<string, number> = {
       'Pink Theme': 799,
       'Purple Theme': 999,
-      'Red Theme': 599
+      'Red Theme': 599,
+      'Dark Gaming Theme': 999,
+      '🖤 Dark Gaming Theme': 999,
     };
-    const packagePrice = PACKAGES_PRICE_MAP[packageName] || 0;
+    const packagePrice = PACKAGES_PRICE_MAP[packageName] || 999;
     const pkgBase = Math.round((packagePrice / 2) * durationHours);
 
     // Extra guest pricing (base includes 2 guests, extra guests are ₹100/head)
@@ -152,6 +154,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'This time slot overlaps with an existing booking.' }, { status: 400 });
     }
 
+    const detectedBookingType: 'gaming' | 'theater' = body.bookingType || (packageName.includes('Gaming') || packageName.includes('Dark') ? 'gaming' : 'theater');
+
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
       email: trimmedEmail,
@@ -159,6 +163,7 @@ export async function POST(request: NextRequest) {
       date,
       timeSlot,
       packageName,
+      bookingType: detectedBookingType,
       addOns: addOns || [],
       totalPrice: calculatedTotal,
       guestCount: numericGuestCount,

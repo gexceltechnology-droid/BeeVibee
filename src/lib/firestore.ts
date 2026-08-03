@@ -15,6 +15,7 @@ export interface Booking {
   date: string; // YYYY-MM-DD
   timeSlot: string;
   packageName: string;
+  bookingType?: 'gaming' | 'theater';
   addOns: string[];
   totalPrice: number;
   status: 'pending' | 'confirmed' | 'cancelled';
