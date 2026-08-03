@@ -14,7 +14,8 @@ import {
   ArrowLeft,
   Sparkles,
   Play,
-  MonitorCheck
+  MonitorCheck,
+  Rocket
 } from 'lucide-react';
 
 interface GameItem {
@@ -105,7 +106,121 @@ const GAMES: GameItem[] = [
 export default function GamingWorldPage() {
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [activeCategory, setActiveCategory] = useState<'all' | 'sports' | 'fighting' | 'action' | 'coop'>('all');
+  
+  // Space Warp Animation States
+  const [warpActive, setWarpActive] = useState(true);
+  const [warpFading, setWarpFading] = useState(false);
+  const [warpProgress, setWarpProgress] = useState(0);
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const warpCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Trigger Space Warp Launch
+  const triggerSpaceWarp = () => {
+    setWarpFading(false);
+    setWarpProgress(0);
+    setWarpActive(true);
+  };
+
+  // Hyperspace 3D Starfield Canvas Animation
+  useEffect(() => {
+    if (!warpActive) return;
+
+    const canvas = warpCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    };
+    window.addEventListener('resize', handleResize);
+
+    const numStars = 400;
+    const fov = 300;
+    let speed = 2;
+    const colors = ['#00f0ff', '#ff0055', '#ffe600', '#ffffff', '#7000ff'];
+
+    const stars = Array.from({ length: numStars }).map(() => ({
+      x: (Math.random() - 0.5) * width * 2,
+      y: (Math.random() - 0.5) * height * 2,
+      z: Math.random() * width,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 2 + 1,
+    }));
+
+    let startTime = Date.now();
+    const duration = 2800; // 2.8 seconds space flight
+
+    function renderWarp() {
+      if (!ctx) return;
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      setWarpProgress(Math.floor(progress * 100));
+
+      // Accelerate warp speed over time
+      speed = 4 + Math.pow(progress * 4.5, 2.5);
+
+      ctx.fillStyle = 'rgba(2, 2, 8, 0.35)';
+      ctx.fillRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+
+      stars.forEach((s) => {
+        const prevZ = s.z;
+        s.z -= speed;
+
+        if (s.z <= 1) {
+          s.z = width;
+          s.x = (Math.random() - 0.5) * width * 2;
+          s.y = (Math.random() - 0.5) * height * 2;
+        }
+
+        // Project 3D to 2D
+        const k = fov / s.z;
+        const px = s.x * k + cx;
+        const py = s.y * k + cy;
+
+        const prevK = fov / prevZ;
+        const prevPx = s.x * prevK + cx;
+        const prevPy = s.y * prevK + cy;
+
+        if (px >= 0 && px <= width && py >= 0 && py <= height) {
+          // Draw streak line
+          ctx.beginPath();
+          ctx.moveTo(prevPx, prevPy);
+          ctx.lineTo(px, py);
+          ctx.strokeStyle = s.color;
+          ctx.lineWidth = Math.min(s.size * (1 + (1 - s.z / width) * 2), 4);
+          ctx.stroke();
+        }
+      });
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(renderWarp);
+      } else {
+        // Fade out transition
+        setWarpFading(true);
+        setTimeout(() => {
+          setWarpActive(false);
+          setWarpFading(false);
+        }, 800);
+      }
+    }
+
+    renderWarp();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animId);
+    };
+  }, [warpActive]);
 
   // Background 8-bit Pixel Particles Effect
   useEffect(() => {
@@ -167,7 +282,6 @@ export default function GamingWorldPage() {
 
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.alpha;
-        // Snap to pixel square look
         ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
       });
 
@@ -189,6 +303,33 @@ export default function GamingWorldPage() {
 
   return (
     <div className={styles.container}>
+      {/* Space Warp Entry Animation Overlay */}
+      {warpActive && (
+        <div className={`${styles.spaceWarpOverlay} ${warpFading ? styles.spaceWarpOverlayFading : ''}`}>
+          <canvas ref={warpCanvasRef} className={styles.warpCanvas} />
+          <div className={styles.warpTextContainer}>
+            <div className={styles.warpStatus}>🚀 WARP DRIVE INITIALIZING... {warpProgress}%</div>
+            <h2 className={styles.warpTitle}>ENTERING PIXEL GAMING REALM</h2>
+            <div className={styles.warpMeterBar}>
+              <div className={styles.warpMeterFill} style={{ width: `${warpProgress}%` }} />
+            </div>
+            <div style={{ fontFamily: 'var(--font-vt323), monospace', fontSize: '1.2rem', color: '#00f0ff' }}>
+              DESTINATION: BEE VIBE PS5 GAMING LOUNGE
+            </div>
+          </div>
+          <button
+            type="button"
+            className={styles.skipWarpBtn}
+            onClick={() => {
+              setWarpFading(true);
+              setTimeout(() => setWarpActive(false), 300);
+            }}
+          >
+            Skip Launch [ESC] ⚡
+          </button>
+        </div>
+      )}
+
       {/* Optional CRT Scanline Overlay */}
       {crtEnabled && <div className={styles.crtOverlay} />}
 
@@ -206,6 +347,14 @@ export default function GamingWorldPage() {
           </div>
         </div>
         <div className={styles.headerActions}>
+          <button
+            type="button"
+            className={styles.toggleCrtBtn}
+            onClick={triggerSpaceWarp}
+            title="Re-launch Hyperspace Warp Flight"
+          >
+            <Rocket size={15} style={{ display: 'inline', marginRight: '6px' }} /> Space Launch
+          </button>
           <button
             type="button"
             className={styles.toggleCrtBtn}
@@ -250,7 +399,7 @@ export default function GamingWorldPage() {
 
         <div className={styles.specsGrid}>
           {/* Spec 1: PS5 Console */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <Gamepad2 size={28} />
             </div>
@@ -262,7 +411,7 @@ export default function GamingWorldPage() {
           </div>
 
           {/* Spec 2: 2 Controllers */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <Users size={28} />
             </div>
@@ -274,7 +423,7 @@ export default function GamingWorldPage() {
           </div>
 
           {/* Spec 3: 180" Screen */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <Tv size={28} />
             </div>
@@ -286,7 +435,7 @@ export default function GamingWorldPage() {
           </div>
 
           {/* Spec 4: 7.1 Dolby Audio */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <Volume2 size={28} />
             </div>
@@ -298,7 +447,7 @@ export default function GamingWorldPage() {
           </div>
 
           {/* Spec 5: 100% Private Lounge */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <ShieldCheck size={28} />
             </div>
@@ -310,13 +459,13 @@ export default function GamingWorldPage() {
           </div>
 
           {/* Spec 6: Custom RGB Vibe */}
-          <div className={specCardStyle(styles)}>
+          <div className={styles.specCard}>
             <div className={styles.specIconWrapper}>
               <Sparkles size={28} />
             </div>
             <h3 className={styles.specTitle}>Custom RGB Gaming Lighting</h3>
             <p className={styles.specDesc}>
-              Switch ambient room colors (Neon Purple, Rose Pink, or Cyber Red) to sync your room's mood with your favorite game theme.
+              Switch ambient room colors (Neon Purple, Rose Pink, or Crimson Red) to sync your room's mood with your favorite game theme.
             </p>
             <span className={styles.highlightBadge}>Interactive RGB Lighting</span>
           </div>
@@ -383,8 +532,4 @@ export default function GamingWorldPage() {
       </section>
     </div>
   );
-}
-
-function specCardStyle(styles: any) {
-  return styles.specCard;
 }
