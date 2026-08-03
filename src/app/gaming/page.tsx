@@ -324,8 +324,13 @@ export default function GamingWorldPage() {
               setWarpFading(true);
               setTimeout(() => setWarpActive(false), 300);
             }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setWarpFading(true);
+              setTimeout(() => setWarpActive(false), 300);
+            }}
           >
-            Skip Launch [ESC] ⚡
+            Skip Launch ⚡
           </button>
         </div>
       )}
