@@ -1,0 +1,547 @@
+.container {
+  min-height: 100vh;
+  background-color: #050508;
+  color: #ffffff;
+  font-family: var(--font-plus-jakarta), sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* CRT Scanline Overlay Effect */
+.crtOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 999;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  opacity: 0.85;
+}
+
+/* Header Bar */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(10, 10, 16, 0.9);
+  border-bottom: 2px solid #00f0ff;
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #00f0ff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid #00f0ff;
+  background: rgba(0, 240, 255, 0.08);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+  background: #00f0ff;
+  color: #000000;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.pixelLogo {
+  font-family: var(--font-pixel), cursive;
+  font-size: 1.1rem;
+  color: #ffe600;
+  text-shadow: 2px 2px 0 #ff0055, -2px -2px 0 #00f0ff;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toggleCrtBtn {
+  background: rgba(255, 0, 85, 0.15);
+  border: 1px solid #ff0055;
+  color: #ff0055;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toggleCrtBtn:hover {
+  background: #ff0055;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+}
+
+.bookHeaderBtn {
+  background: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
+  border: 1px solid #00f0ff;
+  color: #ffffff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  padding: 6px 18px;
+  text-decoration: none;
+  border-radius: 4px;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.bookHeaderBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+}
+
+/* Canvas background */
+.pixelCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Hero Section */
+.hero {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 80px 20px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pixelBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 230, 0, 0.1);
+  border: 1px dashed #ffe600;
+  color: #ffe600;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.3rem;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 15px rgba(255, 230, 0, 0.2);
+  animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(255, 230, 0, 0.3); }
+  100% { box-shadow: 0 0 25px rgba(255, 230, 0, 0.8); }
+}
+
+.heroTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  line-height: 1.4;
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #ff0055, -3px -3px 0 #00f0ff;
+  margin-bottom: 24px;
+}
+
+.cyanGlow {
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 2px 2px 0 #7000ff;
+}
+
+.heroSubtitle {
+  font-size: 1.15rem;
+  color: #b8b8d0;
+  max-width: 780px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+.heroCtas {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.pixelBtnPrimary {
+  background: #ff0055;
+  color: #ffffff;
+  font-family: var(--font-pixel), cursive;
+  font-size: 0.95rem;
+  padding: 16px 32px;
+  border: 3px solid #ffffff;
+  box-shadow: 6px 6px 0 #000000, 6px 6px 0 2px #00f0ff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.pixelBtnPrimary:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 #000000, 9px 9px 0 2px #00f0ff;
+  background: #ff2a75;
+}
+
+.pixelBtnSecondary {
+  background: rgba(0, 240, 255, 0.1);
+  color: #00f0ff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  padding: 14px 28px;
+  border: 2px solid #00f0ff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.pixelBtnSecondary:hover {
+  background: #00f0ff;
+  color: #000000;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+}
+
+/* Specs Showcase Grid */
+.specsSection {
+  position: relative;
+  z-index: 2;
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionHeading {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  color: #ffe600;
+  text-shadow: 2px 2px 0 #ff0055;
+  margin-bottom: 12px;
+}
+
+.sectionSub {
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.4rem;
+  color: #00f0ff;
+  letter-spacing: 1px;
+}
+
+.specsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.specCard {
+  background: rgba(15, 15, 24, 0.85);
+  border: 2px solid rgba(0, 240, 255, 0.3);
+  border-radius: 12px;
+  padding: 28px;
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.specCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #ff0055, #00f0ff, #ffe600);
+}
+
+.specCard:hover {
+  transform: translateY(-6px);
+  border-color: #00f0ff;
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.25), 0 0 15px rgba(255, 0, 85, 0.2);
+}
+
+.specIconWrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid #00f0ff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00f0ff;
+  margin-bottom: 20px;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+.specTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: 1.05rem;
+  color: #ffffff;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.specDesc {
+  color: #a0a0c0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.highlightBadge {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 4px 10px;
+  background: rgba(255, 0, 85, 0.15);
+  border: 1px solid #ff0055;
+  color: #ff0055;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rem;
+  border-radius: 4px;
+}
+
+/* Interactive Game Library Showcase */
+.gamesSection {
+  position: relative;
+  z-index: 2;
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(8, 8, 14, 0.6);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 230, 0, 0.2);
+}
+
+.gameFilterTabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.filterBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #b0b0d0;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.3rem;
+  padding: 8px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterBtnActive {
+  background: #ffe600;
+  color: #000000;
+  border-color: #ffe600;
+  font-weight: bold;
+  box-shadow: 0 0 15px rgba(255, 230, 0, 0.5);
+}
+
+.gamesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.gameCard {
+  background: rgba(18, 18, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.gameCard:hover {
+  border-color: #ff0055;
+  transform: scale(1.03);
+  box-shadow: 0 12px 30px rgba(255, 0, 85, 0.3);
+}
+
+.gameCardHeader {
+  height: 140px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+}
+
+.gameCardHeader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(18, 18, 28, 0.95) 100%);
+}
+
+.gameGenreTag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rem;
+  padding: 2px 10px;
+  border-radius: 4px;
+}
+
+.playersTag {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  background: rgba(255, 0, 85, 0.85);
+  color: #ffffff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.15rem;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.gameCardBody {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.gameTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: 0.95rem;
+  color: #ffffff;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.gameDesc {
+  color: #a0a0c0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.gameFeatures {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.featurePill {
+  font-size: 0.75rem;
+  color: #ffe600;
+  background: rgba(255, 230, 0, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 230, 0, 0.3);
+}
+
+/* Call to action Banner */
+.ctaBanner {
+  position: relative;
+  z-index: 2;
+  margin: 80px auto;
+  max-width: 1000px;
+  background: linear-gradient(135deg, rgba(255, 0, 85, 0.2) 0%, rgba(0, 240, 255, 0.2) 100%);
+  border: 2px solid #00f0ff;
+  border-radius: 20px;
+  padding: 48px 32px;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 240, 255, 0.2);
+}
+
+.ctaTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+  color: #ffffff;
+  text-shadow: 3px 3px 0 #ff0055;
+  margin-bottom: 16px;
+}
+
+.ctaSub {
+  font-size: 1.1rem;
+  color: #d0d0f0;
+  max-width: 650px;
+  margin: 0 auto 32px;
+  line-height: 1.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+  }
+
+  .hero {
+    padding: 40px 16px 30px;
+  }
+
+  .pixelBtnPrimary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .pixelBtnSecondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ctaBanner {
+    padding: 32px 20px;
+    margin: 40px 16px;
+  }
+}

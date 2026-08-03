@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seo:submit": "node scripts/submit-seo.mjs"
   },
   "dependencies": {
     "firebase": "^12.16.0",

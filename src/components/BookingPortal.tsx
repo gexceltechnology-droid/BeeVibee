@@ -16,7 +16,8 @@ const PACKAGES = [
     price: 999,
     details: [
       '2-Hour Celebration Slot (Base 2 Guests)',
-      'HD Projector & Large Screen',
+      '1x PS5 Console + 2 Controllers Included',
+      'HD Projector & Large 180" Screen',
       'Air Conditioned Hall (AC)',
       'High-Speed Wi-Fi Access',
       'Vibrant Purple Theme Lighting Setup',
@@ -28,7 +29,8 @@ const PACKAGES = [
     price: 799,
     details: [
       '2-Hour Celebration Slot (Base 2 Guests)',
-      'HD Projector & Large Screen',
+      '1x PS5 Console + 2 Controllers Included',
+      'HD Projector & Large 180" Screen',
       'Air Conditioned Hall (AC)',
       'High-Speed Wi-Fi Access',
       'Warm Pink Theme Lighting Setup',
@@ -40,7 +42,8 @@ const PACKAGES = [
     price: 599,
     details: [
       '2-Hour Celebration Slot (Base 2 Guests)',
-      'HD Projector & Large Screen',
+      '1x PS5 Console + 2 Controllers Included',
+      'HD Projector & Large 180" Screen',
       'Air Conditioned Hall (AC)',
       'High-Speed Wi-Fi Access',
       'Romantic Red Theme Lighting Setup',
@@ -108,6 +111,16 @@ export default function BookingPortal() {
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr' | '2hr'>('none');
   const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
+  const [ps5Option, setPs5Option] = useState<'none' | 'requested'>('none');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'gaming') {
+        setPs5Option('requested');
+      }
+    }
+  }, []);
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     email: '',
@@ -625,6 +638,7 @@ export default function BookingPortal() {
       packageName: selectedPackage.name,
       addOns: (() => {
         const list: string[] = [];
+        if (ps5Option === 'requested') list.push('PS5 Gaming Setup (1 PS5 + 2 Controllers)');
         if (dslrOption === '30min') list.push('DSLR Camera Coverage (30 Mins — ₹300)');
         else if (dslrOption === '1hr') list.push('DSLR Camera Coverage (1 Hour — ₹500)');
         else if (dslrOption === '2hr') list.push('DSLR Camera Coverage (2 Hours — ₹800)');
@@ -1841,6 +1855,24 @@ export default function BookingPortal() {
               </p>
 
               <div className={styles.addonsGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                {/* PS5 Gaming Setup Card */}
+                <div className={`${styles.addonCard} ${ps5Option !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span className={styles.addonName}>🎮 PS5 Gaming Setup (1 PS5 + 2 Controllers)</span>
+                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: ps5Option !== 'none' ? '#00f0ff' : 'var(--text-secondary)' }}>
+                      {ps5Option === 'none' ? 'Optional' : 'Included ✓'}
+                    </span>
+                  </div>
+                  <select
+                    className={`${styles.addonSelectDropdown} ${ps5Option !== 'none' ? styles.addonSelectDropdownActive : ''}`}
+                    value={ps5Option}
+                    onChange={(e) => setPs5Option(e.target.value as any)}
+                  >
+                    <option value="none">No PS5 Gaming Needed (Movies / Music)</option>
+                    <option value="requested">Request PS5 + 2 DualSense Controllers & Games (Included ✓)</option>
+                  </select>
+                </div>
+
                 {/* DSLR Camera Dropdown Card */}
                 <div className={`${styles.addonCard} ${dslrOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1898,9 +1930,10 @@ export default function BookingPortal() {
                   <div><strong>Time Slot:</strong> {selectedSlot?.time} ({selectedSlot?.label})</div>
                   <div><strong>Vibe Package:</strong> {selectedPackage.name}</div>
                   <div>
-                    <strong>Add-ons selected:</strong>{' '}
-                    {dslrOption !== 'none' || fogOption !== 'none'
+                    <strong>Add-ons & Options selected:</strong>{' '}
+                    {dslrOption !== 'none' || fogOption !== 'none' || ps5Option !== 'none'
                       ? [
+                          ps5Option === 'requested' ? 'PS5 Setup (1 PS5 + 2 Controllers)' : null,
                           dslrOption === '30min' ? 'DSLR Camera (30 Mins — ₹300)' : dslrOption === '1hr' ? 'DSLR Camera (1 Hour — ₹500)' : dslrOption === '2hr' ? 'DSLR Camera (2 Hours — ₹800)' : null,
                           fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : fogOption === '2pots' ? 'Special Fog Entry (2 Pots — ₹500)' : null
                         ].filter(Boolean).join(', ')

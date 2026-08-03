@@ -84,6 +84,10 @@ export default function Home() {
       a: 'The theater holds up to 10 guests. The base package covers 2 members, and additional guests can join for ₹100 per head.'
     },
     {
+      q: 'Do you have PS5 gaming available in the room?',
+      a: 'Yes! We feature 1 Sony PS5 console equipped with 2 wireless DualSense controllers and popular games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7). You can play 2-player multiplayer games on our 180" 4K screen with 7.1 Dolby surround sound.'
+    },
+    {
       q: 'How can I play my own content or movies?',
       a: 'We provide casting support, Chromecast, and high-speed Wi-Fi to screen from your preferred platforms (Netflix, Prime Video, Hotstar, YouTube, etc.) or connect custom files via HDMI.'
     },
@@ -196,6 +200,7 @@ export default function Home() {
             </Link>
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
+                <li><Link href="/gaming" className={styles.navLink} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
                 <li><a href="#location" className={styles.navLink}>Location</a></li>
@@ -222,6 +227,11 @@ export default function Home() {
           {/* Mobile Navigation Drawer */}
           <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuActive : ''}`}>
             <ul className={styles.mobileNavLinks}>
+              <li>
+                <Link href="/gaming" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#00f0ff', fontWeight: 'bold' }}>
+                  Gaming World 🎮
+                </Link>
+              </li>
               <li>
                 <a href="#vibes" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
                   Our Vibes
@@ -279,15 +289,15 @@ export default function Home() {
             {/* Section 1: Hero */}
             <section id="hero" className={styles.heroSection}>
               <div className={styles.heroContent}>
-                <div className={styles.tagline}>Private Celebration Theater</div>
+                <div className={styles.tagline}>Bee Vibe Party Hall & Private Theater</div>
                 <h1 className={styles.heroTitle}>
-                  Your Private Cinema.<br />
+                  Bee Vibe Party Hall.<br />
                   <span className="text-glow" style={{ color: 'var(--accent)', transition: 'color 0.5s' }}>
-                    Your Custom Vibe.
+                    Your Private Cinema & Space.
                   </span>
                 </h1>
                 <p className={styles.heroSubtitle}>
-                  Experience luxury entertainment designed for small celebrations, romantic dates, gamer sessions, or birthday bashes. Gather up to 10 guests and enjoy massive screens, premium audio, and customizable mood lighting.
+                  Experience Bangalore's top luxury private party hall and celebration theater in Jayanagar. Book custom mini party halls for intimate birthday bashes, anniversary surprises, romantic couple date nights, or multiplayer gaming with up to 10 guests.
                 </p>
 
                 {/* Vibe Selection Panel */}
@@ -397,14 +407,48 @@ export default function Home() {
               </div>
             </section>
 
+            {/* Section 2.5: PS5 Pixel Gaming Realm Showcase */}
+            <section id="gaming-banner" className={`${styles.section} ${styles.reveal}`} style={{
+              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(255, 0, 85, 0.12) 100%)',
+              border: '2px solid #00f0ff',
+              borderRadius: '20px',
+              padding: '28px',
+              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.25)',
+              marginBottom: '40px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.3rem', marginBottom: '8px' }}>
+                <Gamepad2 size={22} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
+              </div>
+              <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff' }}>
+                1x PS5 Console + 2 Controllers & Top Games
+              </h2>
+              <p style={{ color: '#c0c0e0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px' }}>
+                Step into Bangalore's premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5 Console</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) played on our 180" 4K Screen with 7.1 Dolby surround sound!
+              </p>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff' }}>
+                  Enter Gaming World 🎮
+                </Link>
+                <Link href="/book?mode=gaming" className="btn btn-secondary">
+                  Book PS5 Slot Now
+                </Link>
+              </div>
+            </section>
+
             {/* Section 3: Amenities (Trigger camera shift 2) */}
             <section id="features" className={`${styles.section} ${styles.reveal}`}>
               <h2 className={styles.sectionTitle}>Designed for Ultimate Comfort</h2>
               <p className={styles.sectionSub}>
-                We combine high-end cinema electronics with custom interior designing to deliver an premium private space.
+                We combine high-end cinema electronics with custom interior designing to deliver a premium private space.
               </p>
 
               <div className={styles.featuresGrid}>
+                <div className={styles.featureCard}>
+                  <div className={styles.featureIcon}><Gamepad2 /></div>
+                  <h3 className={styles.featureTitle}>PS5 + 2 Controllers</h3>
+                  <p className={styles.featureDesc}>1x Sony PlayStation 5 with 2 DualSense wireless controllers & top games for head-to-head multiplayer battles.</p>
+                </div>
+
                 <div className={styles.featureCard}>
                   <div className={styles.featureIcon}><Tv /></div>
                   <h3 className={styles.featureTitle}>180" 4K Projector Screen</h3>
@@ -443,7 +487,37 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Section 4: FAQ */}
+            {/* Section 4: SEO About Bee Vibe Party Hall */}
+            <section id="about-beevibe" className={`${styles.section} ${styles.reveal}`}>
+              <h2 className={styles.sectionTitle}>Bee Vibe Party Hall Bangalore</h2>
+              <p className={styles.sectionSub}>
+                Bangalore's Top Rated Mini Party Hall & Private Celebration Theater in Jayanagar
+              </p>
+              <div style={{
+                background: 'var(--glass-bg)',
+                border: '1px solid var(--glass-border)',
+                borderRadius: '16px',
+                padding: '24px',
+                color: 'var(--text-secondary)',
+                lineHeight: '1.7',
+                fontSize: '0.95rem'
+              }}>
+                <h3 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '1.15rem' }}>
+                  Looking for Bee Vibe Party Hall in Bangalore?
+                </h3>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong>Bee Vibe Party Hall</strong> is your exclusive destination for private celebration halls, mini birthday party venues, romantic couple date nights, and immersive private cinema screenings in Jayanagar 9th Block, Bangalore.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  Whether you are planning a surprise birthday party for your loved one, celebrating an anniversary, hosting a private movie screening with friends, or enjoying a multiplayer PS5 gaming session, <strong>Bee Vibe Party Hall Bangalore</strong> provides 100% private, soundproof theater rooms equipped with massive 180-inch 4K projection screens, 7.1 Dolby Atmos sound systems, custom RGB ambient mood lighting, and full decoration setups.
+                </p>
+                <p style={{ marginBottom: '0' }}>
+                  Conveniently situated opposite Jain University in Jayanagar 9th Block, <strong>Bee Vibe Party Hall</strong> easily serves guests from Jayanagar 4th Block, JP Nagar, BTM Layout, Koramangala, Banashankari, and across South Bangalore. Book your slot online today at www.beevibe.org!
+                </p>
+              </div>
+            </section>
+
+            {/* Section 5: FAQ */}
             <section id="faq" className={`${styles.section} ${styles.reveal}`}>
               <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
               <p className={styles.sectionSub}>
@@ -626,7 +700,10 @@ export default function Home() {
           </div>
 
           <div className={styles.copyright}>
-            <p>&copy; {new Date().getFullYear()} Bee Vibe Private Celebration Theater. All Rights Reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Bee Vibe Party Hall & Private Celebration Theater. All Rights Reserved.</p>
+            <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
+              Bee Vibe Party Hall - Premium Private Celebration Space, Birthday Hall, and Private Cinema in Jayanagar 9th Block, Bangalore. Serving Jayanagar 4th Block, JP Nagar, BTM Layout, Koramangala & Banashankari.
+            </p>
           </div>
         </div>
       </footer>
