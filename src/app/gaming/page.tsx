@@ -103,6 +103,93 @@ const GAMES: GameItem[] = [
   }
 ];
 
+const THEME_CONTENT: Record<string, {
+  containerClass: string;
+  badgeText: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  btnPrimary: string;
+  btnSecondary: string;
+  specsTitle: string;
+  specsSub: string;
+  spec1Badge: string;
+  spec2Badge: string;
+  spec3Badge: string;
+  spec4Badge: string;
+  ctaTitle: string;
+  ctaSub: string;
+  ctaBtn: string;
+}> = {
+  cyberpunk: {
+    containerClass: styles.containerCyberpunk,
+    badgeText: '⚡ LEVEL UP YOUR GAME NIGHT IN BANGALORE',
+    heroTitle: 'ENTER THE PS5 CYBER REALM',
+    heroSubtitle: 'Equipped with 1 Sony PlayStation 5 Console, 2 DualSense Wireless Controllers, and 4K raytracing on a 180" 4K Projector Screen with 7.1 Dolby Surround Sound.',
+    btnPrimary: 'PRESS START TO BOOK ⚡',
+    btnSecondary: 'EXPLORE GAME LIBRARY 🎮',
+    specsTitle: 'NEXT-GEN HARDWARE SPECS',
+    specsSub: 'UNCOMPROMISED PERFORMANCE & ZERO LATENCY',
+    spec1Badge: 'PS5 Ultra HD Hardware',
+    spec2Badge: '2-Player Couch Multiplayer',
+    spec3Badge: '180" Cinematic Display',
+    spec4Badge: 'Full Spatial Surround',
+    ctaTitle: 'READY TO CLAIM YOUR HIGH SCORE?',
+    ctaSub: 'Book your private PS5 gaming slot at Bee Vibe Lounge, Jayanagar. 1 PS5 console, 2 controllers, 180" screen, and gourmet snacks delivered to your seat!',
+    ctaBtn: 'BOOK PS5 GAMING LOUNGE NOW ⚡',
+  },
+  pixel: {
+    containerClass: styles.containerPixel,
+    badgeText: '👾 INSERT COIN TO PLAY AT BEE VIBE',
+    heroTitle: 'INSERT COIN: 8-BIT PIXEL REALM',
+    heroSubtitle: 'Retro 8-bit vibes, arcade scanlines, 1 Sony PS5 Console, 2 DualSense controllers, and 100% nostalgia on our massive 180" 4K screen!',
+    btnPrimary: 'INSERT COIN TO BOOK 🕹️',
+    btnSecondary: 'VIEW PIXEL GAMES 🏆',
+    specsTitle: 'RETRO ARCADE HARDWARE',
+    specsSub: 'PIXEL PERFECT GRAPHICS & 8-BIT SOUND',
+    spec1Badge: '8-bit Retro Engine',
+    spec2Badge: '2 Controllers Ready',
+    spec3Badge: '180 Inch Arcade Screen',
+    spec4Badge: '100% Retro Vibe Lounge',
+    ctaTitle: 'PRESS START TO CONTINUE?',
+    ctaSub: 'Insert coin and reserve your 8-bit private gaming lounge in Jayanagar 9th Block!',
+    ctaBtn: 'PRESS START TO BOOK 🕹️',
+  },
+  warzone: {
+    containerClass: styles.containerWarzone,
+    badgeText: '🔴 /// TACTICAL DEPLOYMENT ACTIVE',
+    heroTitle: 'TACTICAL DEPLOYMENT: WARZONE ARENA',
+    heroSubtitle: 'Full combat readiness! 1 Sony PS5 Console, 2 DualSense Wireless Controllers, 7.1 Dolby explosive audio, and zero-latency competitive warfare.',
+    btnPrimary: 'DEPLOY TO WARZONE ARENA 💣',
+    btnSecondary: 'VIEW COMBAT LOADOUTS ⚔️',
+    specsTitle: 'TACTICAL COMBAT SPECS',
+    specsSub: 'MAXIMUM FRAME RATE & EXPLOSIVE AUDIO',
+    spec1Badge: 'Combat Engine',
+    spec2Badge: 'Squad Duo Play (2 Controllers)',
+    spec3Badge: '180" Tactical Screen',
+    spec4Badge: 'Soundproof Command Center',
+    ctaTitle: 'COMMAND CENTER READY FOR DEPLOYMENT',
+    ctaSub: 'Deploy your squad to Bee Vibe Warzone Arena, Jayanagar. Reserve your 2-hour competitive combat session!',
+    ctaBtn: 'SECURE WARZONE ARENA NOW 🔴',
+  },
+  galaxy: {
+    containerClass: styles.containerGalaxy,
+    badgeText: '🌌 JOURNEY INTO COSMIC HYPERSPACE',
+    heroTitle: 'JOURNEY INTO COSMIC GALAXY LOUNGE',
+    heroSubtitle: 'Float through infinite space! Relax in plush recliners under ultraviolet starfield lighting with 1 PS5 Console, 2 DualSense controllers, and 180" 4K projections.',
+    btnPrimary: 'LAUNCH INTO GALAXY 🚀',
+    btnSecondary: 'EXPLORE COSMIC GAMES 🪐',
+    specsTitle: 'COSMIC HYPERSPACE HARDWARE',
+    specsSub: 'NEBULA STARFIELD LIGHTING & 7.1 AUDIO',
+    spec1Badge: 'Starlight Engine',
+    spec2Badge: '2 Starship Controllers',
+    spec3Badge: '180" Galaxy Projection',
+    spec4Badge: 'Deep Space Sanctuary',
+    ctaTitle: 'READY FOR COSMIC DISCOVERY?',
+    ctaSub: 'Embark on an interstellar game night at Bee Vibe Galaxy Lounge, Jayanagar. Reserve your private cosmic sanctuary!',
+    ctaBtn: 'LAUNCH INTO GALAXY LOUNGE 🌌',
+  },
+};
+
 export default function GamingWorldPage() {
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [activeCategory, setActiveCategory] = useState<'all' | 'sports' | 'fighting' | 'action' | 'coop'>('all');
@@ -331,15 +418,17 @@ export default function GamingWorldPage() {
     ? GAMES
     : GAMES.filter(g => g.genre === activeCategory);
 
+  const currentContent = THEME_CONTENT[activeTheme] || THEME_CONTENT.cyberpunk;
+
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${currentContent.containerClass}`}>
       {/* Space Warp Entry Animation Overlay */}
       {warpActive && (
         <div className={`${styles.spaceWarpOverlay} ${warpFading ? styles.spaceWarpOverlayFading : ''}`}>
           <canvas ref={warpCanvasRef} className={styles.warpCanvas} />
           <div className={styles.warpTextContainer}>
             <div className={styles.warpStatus}>🚀 WARP DRIVE INITIALIZING... {warpProgress}%</div>
-            <h2 className={styles.warpTitle}>ENTERING PIXEL GAMING REALM</h2>
+            <h2 className={styles.warpTitle}>{currentContent.heroTitle}</h2>
             <div className={styles.warpMeterBar}>
               <div className={styles.warpMeterFill} style={{ width: `${warpProgress}%` }} />
             </div>
@@ -366,7 +455,7 @@ export default function GamingWorldPage() {
       )}
 
       {/* Optional CRT Scanline Overlay */}
-      {crtEnabled && <div className={styles.crtOverlay} />}
+      {(crtEnabled || activeTheme === 'pixel') && <div className={styles.crtOverlay} />}
 
       {/* Background Interactive Pixel Canvas */}
       <canvas ref={canvasRef} className={styles.pixelCanvas} />
@@ -378,7 +467,7 @@ export default function GamingWorldPage() {
             <ArrowLeft size={18} /> Main Theater
           </Link>
           <div className={styles.pixelLogo}>
-            <Gamepad2 size={20} color="#ffe600" /> BEE VIBE PIXEL REALM
+            <Gamepad2 size={20} color="#ffe600" /> BEE VIBE GAMING REALM
           </div>
         </div>
         <div className={styles.headerActions}>
@@ -420,48 +509,21 @@ export default function GamingWorldPage() {
       {/* Main Hero Realm */}
       <section className={styles.hero}>
         <div className={styles.pixelBadge}>
-          <Zap size={18} /> LEVEL UP YOUR GAME NIGHT IN BANGALORE
+          <Zap size={18} /> {currentContent.badgeText}
         </div>
         <h1 className={styles.heroTitle}>
-          ENTER THE{' '}
-          <span
-            className={
-              activeTheme === 'cyberpunk'
-                ? styles.cyanGlow
-                : ''
-            }
-            style={{
-              color:
-                activeTheme === 'pixel'
-                  ? '#ffe600'
-                  : activeTheme === 'warzone'
-                  ? '#ff0033'
-                  : activeTheme === 'galaxy'
-                  ? '#c084fc'
-                  : undefined,
-              textShadow:
-                activeTheme === 'pixel'
-                  ? '3px 3px 0 #ff0055'
-                  : activeTheme === 'warzone'
-                  ? '0 0 20px rgba(255, 0, 51, 0.8)'
-                  : activeTheme === 'galaxy'
-                  ? '0 0 20px rgba(192, 132, 252, 0.8)'
-                  : undefined,
-            }}
-          >
-            {THEME_HERO_TITLES[activeTheme].span}
-          </span>
+          {currentContent.heroTitle}
         </h1>
         <p className={styles.heroSubtitle}>
-          We’ve loaded Bee Vibe with <strong>1 Sony PlayStation 5 Console</strong>, <strong>2 DualSense Wireless Controllers</strong>, and a curated library of top AAA multiplayer games. Play head-to-head or co-op on our massive 180" 4K Projector Screen with 7.1 Dolby Surround Sound in a 100% private, soundproof lounge.
+          {currentContent.heroSubtitle}
         </p>
 
         <div className={styles.heroCtas}>
           <Link href="/gaming/book" className={styles.pixelBtnPrimary}>
-            <Play size={18} fill="currentColor" /> PRESS START TO BOOK
+            <Play size={18} fill="currentColor" /> {currentContent.btnPrimary}
           </Link>
           <a href="#games-library" className={styles.pixelBtnSecondary}>
-            <Trophy size={18} /> EXPLORE GAME LIBRARY
+            <Trophy size={18} /> {currentContent.btnSecondary}
           </a>
         </div>
       </section>
@@ -469,8 +531,8 @@ export default function GamingWorldPage() {
       {/* Hardware Specs Section */}
       <section className={styles.specsSection}>
         <div className={styles.sectionHeading}>
-          <h2 className={styles.sectionTitle}>NEXT-GEN GAMING SETUP</h2>
-          <p className={styles.sectionSub}>UNCOMPROMISED HARDWARE & ZERO DISTRACTIONS</p>
+          <h2 className={styles.sectionTitle}>{currentContent.specsTitle}</h2>
+          <p className={styles.sectionSub}>{currentContent.specsSub}</p>
         </div>
 
         <div className={styles.specsGrid}>
@@ -483,7 +545,7 @@ export default function GamingWorldPage() {
             <p className={styles.specDesc}>
               Powered by ultra-high-speed SSD for instant game loading and true 4K HDR graphics rendering at smooth frame rates.
             </p>
-            <span className={styles.highlightBadge}>PS5 Ultra HD Hardware</span>
+            <span className={styles.highlightBadge}>{currentContent.spec1Badge}</span>
           </div>
 
           {/* Spec 2: 2 Controllers */}
@@ -495,7 +557,7 @@ export default function GamingWorldPage() {
             <p className={styles.specDesc}>
               Equipped with 2 wireless gamepads featuring immersive haptic feedback and dynamic adaptive triggers for 1v1 multiplayer or co-op.
             </p>
-            <span className={styles.highlightBadge}>2-Player Couch Multiplayer</span>
+            <span className={styles.highlightBadge}>{currentContent.spec2Badge}</span>
           </div>
 
           {/* Spec 3: 180" Screen */}
@@ -507,7 +569,7 @@ export default function GamingWorldPage() {
             <p className={styles.specDesc}>
               Immerse your entire vision on a gigantic wall-filling 180-inch screen with low latency projection tuned specifically for gaming.
             </p>
-            <span className={styles.highlightBadge}>180" Cinematic Display</span>
+            <span className={styles.highlightBadge}>{currentContent.spec3Badge}</span>
           </div>
 
           {/* Spec 4: 7.1 Dolby Audio */}
@@ -519,31 +581,7 @@ export default function GamingWorldPage() {
             <p className={styles.specDesc}>
               Room-shaking spatial sound so every car engine roar, stadium roar, or footstep comes alive with cinematic clarity.
             </p>
-            <span className={styles.highlightBadge}>Full Spatial Surround</span>
-          </div>
-
-          {/* Spec 5: 100% Private Lounge */}
-          <div className={styles.specCard}>
-            <div className={styles.specIconWrapper}>
-              <ShieldCheck size={28} />
-            </div>
-            <h3 className={styles.specTitle}>Private Soundproof Lounge</h3>
-            <p className={styles.specDesc}>
-              No screaming kids or crowded gaming parlors. Enjoy 100% private soundproof hall access for you and your squad (Up to 10 guests).
-            </p>
-            <span className={styles.highlightBadge}>100% VIP Privacy</span>
-          </div>
-
-          {/* Spec 6: Custom RGB Vibe */}
-          <div className={styles.specCard}>
-            <div className={styles.specIconWrapper}>
-              <Sparkles size={28} />
-            </div>
-            <h3 className={styles.specTitle}>Custom RGB Gaming Lighting</h3>
-            <p className={styles.specDesc}>
-              Switch ambient room colors (Neon Purple, Rose Pink, or Crimson Red) to sync your room's mood with your favorite game theme.
-            </p>
-            <span className={styles.highlightBadge}>Interactive RGB Lighting</span>
+            <span className={styles.highlightBadge}>{currentContent.spec4Badge}</span>
           </div>
         </div>
       </section>
@@ -598,12 +636,12 @@ export default function GamingWorldPage() {
 
       {/* CTA Bottom Banner */}
       <section className={styles.ctaBanner}>
-        <h2 className={styles.ctaTitle}>READY TO CLAIM YOUR HIGH SCORE?</h2>
+        <h2 className={styles.ctaTitle}>{currentContent.ctaTitle}</h2>
         <p className={styles.ctaSub}>
-          Book your private PS5 gaming slot at Bee Vibe Party Hall, Jayanagar. 1 PS5 console, 2 controllers, 180" screen, and gourmet snacks delivered to your seats!
+          {currentContent.ctaSub}
         </p>
         <Link href="/gaming/book" className={styles.pixelBtnPrimary}>
-          <MonitorCheck size={20} /> BOOK PS5 GAMING LOUNGE NOW
+          <MonitorCheck size={20} /> {currentContent.ctaBtn}
         </Link>
       </section>
     </div>

@@ -198,6 +198,40 @@
   box-shadow: 0 0 15px rgba(147, 51, 234, 0.6);
 }
 
+/* Multi-Dimensional Theme Modifiers */
+.containerCyberpunk {
+  --theme-primary: #00f0ff;
+  --theme-secondary: #ff0055;
+  --theme-accent: #ffe600;
+  --theme-border-radius: 16px;
+  font-family: var(--font-plus-jakarta), sans-serif;
+}
+
+.containerPixel {
+  --theme-primary: #ffe600;
+  --theme-secondary: #ff0055;
+  --theme-accent: #00f0ff;
+  --theme-border-radius: 4px;
+  font-family: var(--font-pixel), cursive;
+}
+
+.containerWarzone {
+  --theme-primary: #ff0033;
+  --theme-secondary: #ff9900;
+  --theme-accent: #ffffff;
+  --theme-border-radius: 2px;
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  text-transform: uppercase;
+}
+
+.containerGalaxy {
+  --theme-primary: #c084fc;
+  --theme-secondary: #00f0ff;
+  --theme-accent: #9333ea;
+  --theme-border-radius: 32px;
+  font-family: var(--font-outfit), sans-serif;
+}
+
 /* Header Bar */
 .header {
   display: flex;
