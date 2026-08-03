@@ -429,7 +429,7 @@ export default function Home() {
                 <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff' }}>
                   Enter Gaming World 🎮
                 </Link>
-                <Link href="/book?mode=gaming" className="btn btn-secondary">
+                <Link href="/gaming/book" className="btn btn-secondary">
                   Book PS5 Slot Now
                 </Link>
               </div>

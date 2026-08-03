@@ -367,7 +367,7 @@ export default function GamingWorldPage() {
           >
             {crtEnabled ? '📺 CRT: ON' : '📺 CRT: OFF'}
           </button>
-          <Link href="/book?mode=gaming" className={styles.bookHeaderBtn}>
+          <Link href="/gaming/book" className={styles.bookHeaderBtn}>
             BOOK GAMING SLOT
           </Link>
         </div>
@@ -386,7 +386,7 @@ export default function GamingWorldPage() {
         </p>
 
         <div className={styles.heroCtas}>
-          <Link href="/book?mode=gaming" className={styles.pixelBtnPrimary}>
+          <Link href="/gaming/book" className={styles.pixelBtnPrimary}>
             <Play size={18} fill="currentColor" /> PRESS START TO BOOK
           </Link>
           <a href="#games-library" className={styles.pixelBtnSecondary}>
@@ -531,7 +531,7 @@ export default function GamingWorldPage() {
         <p className={styles.ctaSub}>
           Book your private PS5 gaming slot at Bee Vibe Party Hall, Jayanagar. 1 PS5 console, 2 controllers, 180" screen, and gourmet snacks delivered to your seats!
         </p>
-        <Link href="/book?mode=gaming" className={styles.pixelBtnPrimary}>
+        <Link href="/gaming/book" className={styles.pixelBtnPrimary}>
           <MonitorCheck size={20} /> BOOK PS5 GAMING LOUNGE NOW
         </Link>
       </section>
