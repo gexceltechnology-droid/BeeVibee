@@ -16,6 +16,10 @@ interface Booking {
   bookingType?: 'gaming' | 'theater';
   addOns: string[];
   totalPrice: number;
+  advancePaid?: number;
+  balanceDue?: number;
+  paymentStatus?: string;
+  paymentMode?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
   specialRequests?: string;
@@ -575,6 +579,22 @@ export default function AdminDashboard() {
     const itemsStr = order.items.map((i) => `• ${i.name} × ${i.quantity} (₹${i.price * i.quantity})`).join('\n');
     const text = `🍿 *NEW FOOD ORDER* 🍿\n----------------------------------------\n🆔 *Order ID*: #${order.id}\n🎭 *Room*: ${order.themeLabel}\n👤 *Customer*: ${order.customerName || 'Guest'}${order.phone ? ` (${order.phone})` : ''}\n----------------------------------------\n📋 *ITEMS*:\n${itemsStr}\n----------------------------------------\n💰 *TOTAL*: ₹${order.totalPrice}`;
     window.open(`https://wa.me/919900106474?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleSendReceiptWhatsApp = (b: Booking) => {
+    const advance = typeof b.advancePaid === 'number' ? b.advancePaid : Math.min(500, b.totalPrice);
+    const balance = typeof b.balanceDue === 'number' ? b.balanceDue : Math.max(0, b.totalPrice - advance);
+    
+    const receiptUrl = `https://bee-vibee-qljfi5nak-gexceltechnology-7323s-projects.vercel.app/receipt?id=${b.id}`;
+    const text = `🧾 *BeeVibe Advance Payment Receipt*\n\nHi ${b.customerName}! We have received your advance payment for your private celebration at BeeVibe! 🎉\n\n🎟️ *Booking ID*: ${b.id}\n📅 *Date*: ${b.date}\n⏰ *Time Slot*: ${b.timeSlot}\n\n💰 *Total Booking Price*: ₹${b.totalPrice}\n🟢 *Advance Received*: ₹${advance}\n⏳ *Remaining Balance Due at Venue*: ₹${balance}\n\n🔗 *Official Receipt Link*:\n${receiptUrl}\n\n📍 *Venue Location*: 1340, 2nd floor, 41st Cross road, 4th gate, opposite Jain University, Jayanagar 9th Block, Bengaluru 560041.\n\nSee you at BeeVibe! 🐝✨`;
+    
+    const cleanPhone = b.phone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleOpenReceiptPage = (b: Booking) => {
+    window.open(`/receipt?id=${b.id}`, '_blank');
   };
 
   // Fetch all menu items
@@ -1341,10 +1361,10 @@ export default function AdminDashboard() {
                               <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>Confirm</button>
                               <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateStatus(b.id, 'cancelled')} disabled={b.status === 'cancelled'}>Cancel</button>
                             </div>
-                            <div style={{ display: 'flex', gap: '4px' }}>
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                              <button className={styles.manualBtn} style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#10b981', fontWeight: 'bold' }} onClick={() => handleSendReceiptWhatsApp(b)} title="Send Advance Receipt to customer via WhatsApp">🧾 Receipt WA</button>
+                              <button className={styles.manualBtn} style={{ background: 'rgba(124, 58, 237, 0.2)', borderColor: '#7c3aed', color: '#a78bfa' }} onClick={() => handleOpenReceiptPage(b)} title="Open printable advance receipt">📄 View</button>
                               <button className={styles.manualBtn} onClick={() => { const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone; const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank'); }} title="Send confirmation via WhatsApp manually">💬 WA</button>
-                              <button className={styles.manualBtn} onClick={() => { const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`sms:${b.phone}${navigator.userAgent.match(/iPhone|iPad|iPod/i) ? '&' : '?'}body=${encodeURIComponent(text)}`, '_blank'); }} title="Send confirmation via SMS manually">📱 SMS</button>
-                              <button className={styles.manualBtn} onClick={() => { const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; navigator.clipboard.writeText(text); alert('Message copied to clipboard!'); }} title="Copy ticket text to clipboard">📋 Copy</button>
                             </div>
                           </div>
                         </td>
@@ -1405,10 +1425,10 @@ export default function AdminDashboard() {
                       <span className={styles.mobileCardLabel}>Status</span>
                       <span className={`${styles.badge} ${b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{b.status}</span>
                     </div>
-                    <div className={styles.mobileCardActions}>
+                    <div className={styles.mobileCardActions} style={{ flexWrap: 'wrap' }}>
                       <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>✓ Confirm</button>
-                      <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateStatus(b.id, 'cancelled')} disabled={b.status === 'cancelled'}>✗ Cancel</button>
-                      <button className={styles.manualBtn} style={{ flex: 1 }} onClick={() => { const phone = b.phone.startsWith('+') ? b.phone : '+91' + b.phone; const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank'); }}>💬 WhatsApp</button>
+                      <button className={styles.manualBtn} style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#10b981', fontWeight: 'bold', flex: 1 }} onClick={() => handleSendReceiptWhatsApp(b)}>🧾 Receipt WA</button>
+                      <button className={styles.manualBtn} style={{ background: 'rgba(124, 58, 237, 0.2)', borderColor: '#7c3aed', color: '#a78bfa' }} onClick={() => handleOpenReceiptPage(b)}>📄 View</button>
                     </div>
                   </div>
                 );
