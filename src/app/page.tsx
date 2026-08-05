@@ -188,7 +188,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Lead Chat Button */}
       <a
-        href="https://wa.me/918919178055?text=Hi%20Bee%20Vibe!%20I%20saw%20your%20digital%20marketing%20offer%20and%20want%20to%20inquire%20about%20booking%20a%20private%20theater%20slot."
+        href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20saw%20your%20digital%20marketing%20offer%20and%20want%20to%20inquire%20about%20booking%20a%20private%20theater%20slot."
         target="_blank"
         rel="noopener noreferrer"
         style={{
@@ -698,8 +698,8 @@ export default function Home() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <Phone size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
-                  <a href="tel:8919178055" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
-                    +91 89191 78055
+                  <a href="tel:9900106474" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
+                    +91 99001 06474
                   </a>
                 </span>
                 <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>

@@ -569,7 +569,7 @@ export default function AdminDashboard() {
     await handleUpdateOrderStatus(order.id, 'preparing');
     const itemsStr = order.items.map((i) => `${i.name} (x${i.quantity})`).join(', ');
     const text = `✅ *BeeVibe Order Accepted!*\n\nHi ${order.customerName || 'Guest'}, your food order *#${order.id}* for *${order.themeLabel}* has been accepted and is being prepared! 🍿🥤\n\n📋 *Items*: ${itemsStr}\n💰 *Total*: ₹${order.totalPrice}\n\nOur staff will serve it directly to your room shortly. Enjoy your vibe! 🎉`;
-    const targetPhone = order.phone || '918919178055';
+    const targetPhone = order.phone || '919900106474';
     const cleanPhone = targetPhone.replace(/\D/g, '');
     const finalPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
     window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
@@ -578,7 +578,7 @@ export default function AdminDashboard() {
   const handleForwardOrderToKitchenWhatsApp = (order: FoodOrder) => {
     const itemsStr = order.items.map((i) => `• ${i.name} × ${i.quantity} (₹${i.price * i.quantity})`).join('\n');
     const text = `🍿 *NEW FOOD ORDER* 🍿\n----------------------------------------\n🆔 *Order ID*: #${order.id}\n🎭 *Room*: ${order.themeLabel}\n👤 *Customer*: ${order.customerName || 'Guest'}${order.phone ? ` (${order.phone})` : ''}\n----------------------------------------\n📋 *ITEMS*:\n${itemsStr}\n----------------------------------------\n💰 *TOTAL*: ₹${order.totalPrice}`;
-    window.open(`https://wa.me/918919178055?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/919900106474?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const handleSendReceiptWhatsApp = (b: Booking) => {

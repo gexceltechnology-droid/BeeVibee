@@ -111,7 +111,7 @@ export default function BookPage() {
         <div className={styles.contactStrip}>
           <div className={styles.contactItem}>
             <Phone size={16} className={styles.contactIcon} />
-            <a href="tel:8919178055">+91 89191 78055</a>
+            <a href="tel:9900106474">+91 99001 06474</a>
           </div>
           <div className={styles.contactItem}>
             <InstagramIcon size={16} className={styles.contactIcon} />
