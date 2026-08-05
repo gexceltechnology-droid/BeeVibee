@@ -145,7 +145,7 @@ const localBusinessSchema = {
   ],
   "description": "Bee Vibe Party Hall is a luxury private party hall and celebration venue in Jayanagar 9th Block, Bangalore. Perfect for intimate birthday parties, anniversary surprises, romantic date nights, and private movie or gaming screenings.",
   "url": siteUrl,
-  "telephone": "+919900106474",
+  "telephone": "+918919178055",
   "priceRange": "₹599 - ₹2999",
   "currenciesAccepted": "INR",
   "paymentAccepted": "UPI, Credit Card, Debit Card, Net Banking, Cash",

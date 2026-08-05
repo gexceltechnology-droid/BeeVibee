@@ -188,7 +188,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Lead Chat Button */}
       <a
-        href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20saw%20your%20digital%20marketing%20offer%20and%20want%20to%20inquire%20about%20booking%20a%20private%20theater%20slot."
+        href="https://wa.me/918919178055?text=Hi%20Bee%20Vibe!%20I%20saw%20your%20digital%20marketing%20offer%20and%20want%20to%20inquire%20about%20booking%20a%20private%20theater%20slot."
         target="_blank"
         rel="noopener noreferrer"
         style={{
