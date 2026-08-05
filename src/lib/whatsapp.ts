@@ -38,7 +38,7 @@ export interface BookingData {
 }
 
 export function getAdminWhatsAppNumber(): string {
-  const envPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || '919900106474';
+  const envPhone = process.env.ADMIN_WHATSAPP_NUMBER || process.env.NEXT_PUBLIC_ADMIN_WHATSAPP || '918919178055';
   const clean = envPhone.replace(/\D/g, '');
   return clean.length === 10 ? '91' + clean : clean;
 }
