@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './BookingPortal.module.css';
 
 import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/lib/time';
-import { Download, Printer } from 'lucide-react';
+import { Download, Printer, FileText } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 
@@ -2159,8 +2159,18 @@ export default function BookingPortal() {
               </div>
 
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
-                <button
+                <a
+                  href={`/receipt?id=${confirmedBooking.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', fontWeight: 'bold' }}
+                >
+                  <FileText size={18} />
+                  View / Print Advance Receipt
+                </a>
+                <button
+                  className="btn btn-secondary"
                   onClick={handleDownloadSVG}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                 >

@@ -179,12 +179,64 @@ export default function Home() {
 
   return (
     <div className={styles.main} data-vibe={vibe}>
+      {/* Promo Announcement Banner for Marketing Campaigns */}
+      <div style={{
+        background: 'linear-gradient(90deg, #ff2e7e 0%, #9333ea 50%, #eab308 100%)',
+        color: '#ffffff',
+        padding: '6px 16px',
+        fontSize: '0.82rem',
+        fontWeight: '600',
+        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        letterSpacing: '0.3px',
+        zIndex: 1001,
+        position: 'relative'
+      }}>
+        <span>🎉 <strong>SPECIAL LAUNCH OFFER:</strong> Get 10% OFF on all Private Theater bookings! Use Code: <span style={{ background: 'rgba(255,255,255,0.25)', padding: '2px 8px', borderRadius: '4px', border: '1px dashed #fff' }}>BEEVIBE10</span></span>
+        <Link href="/book" style={{ color: '#fff', textDecoration: 'underline', fontWeight: 'bold' }}>Book Slot →</Link>
+      </div>
+
       {/* Scroll Progress Bar */}
       <div className={styles.scrollProgressBar} style={{ transform: `scaleX(${scrollProgress})`, transformOrigin: 'left' }} />
 
       {/* Dynamic Background Glows */}
       <div className="ambient-glow-bg" />
       <div className="gradient-overlay" />
+
+      {/* Floating WhatsApp Lead Chat Button */}
+      <a
+        href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20saw%20your%20digital%20marketing%20offer%20and%20want%20to%20inquire%20about%20booking%20a%20private%20theater%20slot."
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: 'fixed',
+          bottom: '28px',
+          right: '28px',
+          backgroundColor: '#25D366',
+          color: '#ffffff',
+          borderRadius: '50px',
+          padding: '12px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          boxShadow: '0 8px 24px rgba(37, 211, 102, 0.4), 0 0 15px rgba(37, 211, 102, 0.6)',
+          zIndex: 9999,
+          fontWeight: '700',
+          fontSize: '0.9rem',
+          textDecoration: 'none',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          cursor: 'pointer'
+        }}
+        className="whatsapp-float-btn"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <span>Instant WhatsApp Chat</span>
+      </a>
 
       {/* Navigation Header */}
       <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
