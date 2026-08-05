@@ -2159,16 +2159,6 @@ export default function BookingPortal() {
               </div>
 
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
-                <a
-                  href={`/receipt?id=${confirmedBooking.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: '#ffffff', fontWeight: 'bold' }}
-                >
-                  <FileText size={18} />
-                  View / Print Advance Receipt
-                </a>
                 <button
                   className="btn btn-secondary"
                   onClick={handleDownloadSVG}
