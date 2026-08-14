@@ -15,7 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import styles from './menu.module.css';
-import { getAdminWhatsAppDeepLink } from '@/lib/whatsapp';
+import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 
 interface MenuItem {
   id: string;

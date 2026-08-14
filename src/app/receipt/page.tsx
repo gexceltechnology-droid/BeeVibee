@@ -18,7 +18,7 @@ import {
   Building2,
   Download
 } from 'lucide-react';
-import { cleanPhoneNumber } from '@/lib/whatsapp';
+import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
 interface BookingReceiptData {
   id: string;

@@ -7,7 +7,7 @@ import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/li
 import { Download, Printer, FileText } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
-import { getAdminWhatsAppDeepLink } from '@/lib/whatsapp';
+import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 
 // Packages Constant
 const PACKAGES = [

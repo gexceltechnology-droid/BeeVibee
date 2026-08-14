@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import styles from './admin.module.css';
 import type { MenuItem } from '@/lib/db';
-import { cleanPhoneNumber } from '@/lib/whatsapp';
+import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
 interface Booking {
   id: string;
