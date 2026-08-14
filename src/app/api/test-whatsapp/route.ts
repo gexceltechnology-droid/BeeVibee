@@ -3,13 +3,29 @@ import {
   getAdminWhatsAppNumber,
   sendWhatsAppViaTwilio,
   sendWhatsAppViaCallMeBot,
-  sendWhatsAppViaWebhook,
+  sendWhatsAppViaMetaCloudApi,
 } from '@/lib/whatsapp';
+import { processWhatsAppBotMessage } from '@/lib/whatsappBot';
 import { sendSMS } from '@/lib/sms';
 import { sendAdminNotificationEmail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const mode = searchParams.get('hub.mode');
+  const token = searchParams.get('hub.verify_token');
+  const challenge = searchParams.get('hub.challenge');
+
+  const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'beevibe_bot_secret_2026';
+
+  // 1. Meta WhatsApp Webhook Verification
+  if (mode === 'subscribe' && token && (token === expectedToken || token === 'beevibe_bot_secret_2026')) {
+    console.log('[WhatsApp Webhook Verified Successfully]');
+    return new Response(challenge || '', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  }
+
   const phone = searchParams.get('phone') || getAdminWhatsAppNumber();
 
   const testMessage = `🐝 TEST ALERT - BEE VIBE WHATSAPP SYSTEM 🐝\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nIf you received this message, WhatsApp notifications are 100% working for +${phone}!`;
@@ -60,4 +76,43 @@ export async function GET(request: NextRequest) {
       callmebotSetup: "To enable free WhatsApp alerts via CallMeBot: Send 'I allow callmebot to send me messages' on WhatsApp from +919900106474 to +34 644 44 49 53. CallMeBot will reply with your API Key. Add CALLMEBOT_API_KEY=<key> to Vercel environment variables.",
     }
   });
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    if (body.message && typeof body.message === 'string') {
+      const botRes = processWhatsAppBotMessage(body.message, body.phone || '');
+      return NextResponse.json({
+        success: true,
+        response: botRes,
+      });
+    }
+
+    const entry = body.entry?.[0];
+    const change = entry?.changes?.[0];
+    const value = change?.value;
+    const message = value?.messages?.[0];
+
+    if (message && message.text?.body) {
+      const fromPhone = message.from;
+      const incomingText = message.text.body;
+
+      console.log(`[WhatsApp Bot Incoming] From +${fromPhone}: "${incomingText}"`);
+      const botResponse = processWhatsAppBotMessage(incomingText, fromPhone);
+      const metaResult = await sendWhatsAppViaMetaCloudApi(fromPhone, botResponse.replyText);
+
+      if (!metaResult.success) {
+        await sendWhatsAppViaCallMeBot(fromPhone, botResponse.replyText);
+      }
+
+      return NextResponse.json({ success: true, processed: true, reply: botResponse.replyText });
+    }
+
+    return NextResponse.json({ success: true, status: 'Payload received.' });
+  } catch (error: any) {
+    console.error('[WhatsApp Bot Webhook Exception]:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+  }
 }
