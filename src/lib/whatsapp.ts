@@ -145,8 +145,10 @@ export async function sendWhatsAppViaMetaCloudApi(
   phone: string,
   message: string
 ): Promise<{ success: boolean; error?: string }> {
-  const phoneId = process.env.META_WHATSAPP_PHONE_ID;
-  const token = process.env.META_WHATSAPP_TOKEN;
+  const phoneId = process.env.META_WHATSAPP_PHONE_ID || '1222802444258603';
+  const token =
+    process.env.META_WHATSAPP_TOKEN ||
+    'EAATYLBQrVNoBSIGoCLXxWLxlxppFH2rNRxuuogTLtBDdmgzmmHvYjiImy9gEkCzTUd64qpAhPMiqtsiPgKyHxmelrdF4WtASecRG7D739Q5Ik18Q0ZCBHcwHsF8t8PZCydUvgOAd0nDMOkypUZBivu0nvyjaYFYEZAGgpXSB3d3PyC25KDh6hJKs5sIpYFQvKyhrEEZCp3Mv7tV77edjwu7ZBx3kkgfZCp4WZBjJZAxGhninxstE6tVgjZCL7wKGL3UV7uCHAZAFJGB4eSxLYwuFHIL';
   if (!phoneId || !token) return { success: false, error: 'Meta WhatsApp Cloud API not configured' };
 
   try {
