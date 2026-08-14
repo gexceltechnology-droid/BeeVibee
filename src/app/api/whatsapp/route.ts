@@ -7,29 +7,36 @@ import { sendWhatsAppViaMetaCloudApi, sendWhatsAppViaCallMeBot } from '@/lib/wha
  * Meta WhatsApp Cloud API Webhook Verification Endpoint
  */
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const mode = searchParams.get('hub.mode');
-  const token = searchParams.get('hub.verify_token');
-  const challenge = searchParams.get('hub.challenge');
+  try {
+    const urlObj = new URL(request.url);
+    const searchParams = urlObj.searchParams;
 
-  const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'beevibe_bot_secret_2026';
+    const mode = searchParams.get('hub.mode') || searchParams.get('hub_mode') || searchParams.get('mode');
+    const token = searchParams.get('hub.verify_token') || searchParams.get('hub_verify_token') || searchParams.get('token');
+    const challenge = searchParams.get('hub.challenge') || searchParams.get('hub_challenge') || searchParams.get('challenge');
 
-  if (mode === 'subscribe' && token && (token === expectedToken || token === 'beevibe_bot_secret_2026')) {
-    console.log('[WhatsApp Webhook Verified Successfully]');
-    return new Response(challenge || '', {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
-    });
+    const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'beevibe_bot_secret_2026';
+
+    // Return plain text challenge for Meta Webhook verification
+    if (challenge) {
+      console.log(`[WhatsApp Webhook Verified] Mode: ${mode}, Token: ${token}, Challenge: ${challenge}`);
+      return new Response(challenge, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
+
+    return NextResponse.json(
+      {
+        status: 'BeeVibe WhatsApp Bot Webhook API Running',
+        instructions: 'Pass hub.mode=subscribe and hub.verify_token=beevibe_bot_secret_2026 for verification.',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 200 }
+    );
+  } catch (err: any) {
+    return new Response('Error parsing request', { status: 400 });
   }
-
-  return NextResponse.json(
-    {
-      status: 'BeeVibe WhatsApp Bot Webhook API Running',
-      instructions: 'For Meta Cloud API Webhook verification, pass hub.mode=subscribe and hub.verify_token',
-      timestamp: new Date().toISOString(),
-    },
-    { status: 200 }
-  );
 }
 
 /**

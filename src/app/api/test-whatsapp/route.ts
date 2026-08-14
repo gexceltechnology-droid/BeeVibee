@@ -10,21 +10,22 @@ import { sendSMS } from '@/lib/sms';
 import { sendAdminNotificationEmail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const mode = searchParams.get('hub.mode');
-  const token = searchParams.get('hub.verify_token');
-  const challenge = searchParams.get('hub.challenge');
+  try {
+    const urlObj = new URL(request.url);
+    const searchParams = urlObj.searchParams;
 
-  const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'beevibe_bot_secret_2026';
+    const mode = searchParams.get('hub.mode') || searchParams.get('hub_mode') || searchParams.get('mode');
+    const token = searchParams.get('hub.verify_token') || searchParams.get('hub_verify_token') || searchParams.get('token');
+    const challenge = searchParams.get('hub.challenge') || searchParams.get('hub_challenge') || searchParams.get('challenge');
 
-  // 1. Meta WhatsApp Webhook Verification
-  if (mode === 'subscribe' && token && (token === expectedToken || token === 'beevibe_bot_secret_2026')) {
-    console.log('[WhatsApp Webhook Verified Successfully]');
-    return new Response(challenge || '', {
-      status: 200,
-      headers: { 'Content-Type': 'text/plain' },
-    });
-  }
+    // Return plain text challenge for Meta Webhook verification
+    if (challenge) {
+      console.log(`[WhatsApp Webhook Verified] Challenge: ${challenge}`);
+      return new Response(challenge, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      });
+    }
 
   const phone = searchParams.get('phone') || getAdminWhatsAppNumber();
 
