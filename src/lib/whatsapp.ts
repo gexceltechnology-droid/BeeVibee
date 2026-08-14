@@ -46,6 +46,9 @@ export function getAdminWhatsAppNumber(): string {
 export function cleanPhoneNumber(phone: string): string {
   if (!phone) return '';
   let clean = phone.trim().replace(/\D/g, '');
+  while (clean.startsWith('0')) {
+    clean = clean.substring(1);
+  }
   if (clean.length === 10) {
     clean = '91' + clean;
   }
@@ -182,7 +185,7 @@ export async function sendWhatsAppViaCallMeBot(
 
   try {
     const cleanPhone = cleanPhoneNumber(phone);
-    const url = `https://api.callmebot.com/whatsapp.php?phone=+${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+    const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
     const res = await fetch(url);
     if (res.ok) {
       console.log(`[CallMeBot] Direct WhatsApp message sent to +${cleanPhone}`);
@@ -214,7 +217,7 @@ export async function sendWhatsAppViaUltraMsg(
     const url = `https://api.ultramsg.com/${instanceId}/messages/chat`;
     const params = new URLSearchParams();
     params.append('token', token);
-    params.append('to', `+${cleanTo}`);
+    params.append('to', cleanTo);
     params.append('body', message);
 
     const res = await fetch(url, {

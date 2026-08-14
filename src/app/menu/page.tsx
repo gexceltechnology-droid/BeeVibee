@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import styles from './menu.module.css';
+import { getAdminWhatsAppDeepLink } from '@/lib/whatsapp';
 
 interface MenuItem {
   id: string;
@@ -457,9 +458,32 @@ function MenuContent() {
               <strong>{orderSuccess.items.map((i: any) => `${i.name} (x${i.quantity})`).join(', ')}</strong>
             </div>
 
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', borderRadius: '10px', padding: '10px 14px', marginBottom: '20px', fontSize: '0.85rem', fontWeight: 600 }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
               ⚡ Order confirmed & sent to kitchen
             </div>
+
+            <a 
+              href={getAdminWhatsAppDeepLink('food_order', orderSuccess)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                width: '100%',
+                backgroundColor: '#25D366',
+                color: '#ffffff',
+                fontWeight: 700,
+                marginBottom: '10px',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                textDecoration: 'none'
+              }}
+            >
+              💬 Ping Kitchen on WhatsApp
+            </a>
 
             <button 
               className="btn btn-primary" 

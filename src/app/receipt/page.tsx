@@ -18,6 +18,7 @@ import {
   Building2,
   Download
 } from 'lucide-react';
+import { cleanPhoneNumber } from '@/lib/whatsapp';
 
 interface BookingReceiptData {
   id: string;
@@ -101,7 +102,7 @@ function ReceiptContent() {
   const paymentMode = booking.paymentMode || 'UPI / Online';
 
   const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}\n\nVenue Location: https://maps.google.com/?q=BeeVibe+Jayanagar`;
-  const whatsappShareUrl = `https://wa.me/91${booking.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(shareText)}`;
+  const whatsappShareUrl = `https://wa.me/${cleanPhoneNumber(booking.phone)}?text=${encodeURIComponent(shareText)}`;
 
   return (
     <div style={{ maxWidth: '780px', margin: '0 auto', padding: '20px' }}>

@@ -7,6 +7,7 @@ import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/li
 import { Download, Printer, FileText } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
+import { getAdminWhatsAppDeepLink } from '@/lib/whatsapp';
 
 // Packages Constant
 const PACKAGES = [
@@ -2308,13 +2309,13 @@ export default function BookingPortal() {
                         🎟️ View Ticket
                       </button>
                       <a
-                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Hi! Here is my booking ticket confirmation from Bee Vibe:\n\n🎟️ Ticket Code: ${b.id}\n📅 Date: ${b.date}\n⏰ Time Slot: ${b.timeSlot}\n💰 Total Price: ₹${b.totalPrice}\n\nShow this ticket code at the entrance for verification.`)}`}
+                        href={getAdminWhatsAppDeepLink('booking', b)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.orderActionBtn}
-                        style={{ color: '#25D366' }}
+                        style={{ color: '#25D366', fontWeight: 700 }}
                       >
-                        Share
+                        💬 Notify via WhatsApp
                       </a>
                     </div>
                   </div>
