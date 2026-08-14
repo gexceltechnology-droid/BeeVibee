@@ -170,11 +170,38 @@ export async function sendWhatsAppViaMetaCloudApi(
     });
 
     if (res.ok) {
-      console.log(`[Meta WhatsApp Cloud API Success] Sent to +${cleanTo}`);
-      return { success: true };
+      const json = await res.json();
+      console.log(`[Meta WhatsApp Cloud API Success] Sent text to +${cleanTo}:`, json);
+      return { success: true, data: json };
+    }
+
+    // Fallback: If Meta rejects plain text (business initiated outside 24h window), send pre-approved template 'hello_world'
+    console.log(`[Meta WhatsApp Cloud API] Plain text rejected, attempting template fallback for +${cleanTo}...`);
+    const templateRes = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanTo,
+        type: 'template',
+        template: {
+          name: 'hello_world',
+          language: { code: 'en_US' },
+        },
+      }),
+    });
+
+    if (templateRes.ok) {
+      const tmplJson = await templateRes.json();
+      console.log(`[Meta WhatsApp Cloud API Template Success] Sent hello_world to +${cleanTo}:`, tmplJson);
+      return { success: true, data: tmplJson };
     } else {
-      const errText = await res.text();
-      console.error('[Meta WhatsApp Cloud API Error]:', errText);
+      const errText = await templateRes.text();
+      console.error('[Meta WhatsApp Cloud API Template Error]:', errText);
       return { success: false, error: errText };
     }
   } catch (err: any) {
