@@ -42,14 +42,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Trigger automated server notification to admin phone & WhatsApp (+919900106474)
-    try {
-      await Promise.race([
-        notifyAdminOnWhatsAppAndSMS('food_order', newOrder),
-        new Promise((resolve) => setTimeout(resolve, 4000)),
-      ]);
-    } catch (err) {
-      console.error('Admin food order notification error:', err);
-    }
+    notifyAdminOnWhatsAppAndSMS('food_order', newOrder).catch((err) =>
+      console.error('Admin food order notification error:', err)
+    );
 
     return NextResponse.json(
       {

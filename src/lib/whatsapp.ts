@@ -236,35 +236,27 @@ export async function notifyAdminOnWhatsAppAndSMS(
   console.log(message);
   console.log(`==================================================\n`);
 
-  // 1. Mobile SMS Alert to Admin (+919900106474)
-  try {
-    const smsResult = await sendSMS(adminPhone, message);
-    console.log(`[Admin SMS Dispatch -> +${adminPhone}]:`, smsResult);
-  } catch (smsErr) {
-    console.error(`[Admin SMS Error]:`, smsErr);
-  }
+  // Execute all admin alert channels in parallel asynchronously
+  Promise.allSettled([
+    // 1. Mobile SMS Alert
+    sendSMS(adminPhone, message).catch((e) => console.error('[SMS Alert Error]:', e)),
 
-  // 2. WhatsApp Dispatch to Admin (+919900106474) via all configured gateways (Twilio, CallMeBot, UltraMsg, Meta Cloud API, Webhook)
-  try {
-    const waResults = await Promise.allSettled([
-      sendWhatsAppViaTwilio(adminPhone, message),
-      sendWhatsAppViaCallMeBot(adminPhone, message),
-      sendWhatsAppViaUltraMsg(adminPhone, message),
-      sendWhatsAppViaMetaCloudApi(adminPhone, message),
-      sendWhatsAppViaWebhook(adminPhone, message),
-    ]);
-    console.log(`[Admin WhatsApp Dispatch -> +${adminPhone}]:`, waResults);
-  } catch (waErr) {
-    console.error(`[Admin WhatsApp Error]:`, waErr);
-  }
+    // 2. WhatsApp Meta Cloud API
+    sendWhatsAppViaMetaCloudApi(adminPhone, message).catch((e) => console.error('[Meta WA Error]:', e)),
 
-  // 3. Email Alert to Admin
-  try {
-    await sendAdminNotificationEmail(
+    // 3. WhatsApp CallMeBot
+    sendWhatsAppViaCallMeBot(adminPhone, message).catch((e) => console.error('[CallMeBot Error]:', e)),
+
+    // 4. WhatsApp UltraMsg
+    sendWhatsAppViaUltraMsg(adminPhone, message).catch((e) => console.error('[UltraMsg Error]:', e)),
+
+    // 5. WhatsApp Webhook
+    sendWhatsAppViaWebhook(adminPhone, message).catch((e) => console.error('[WA Webhook Error]:', e)),
+
+    // 6. Admin Email Alert
+    sendAdminNotificationEmail(
       subject,
       `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`
-    );
-  } catch (emailErr) {
-    console.error(`[Admin Email Error]:`, emailErr);
-  }
+    ).catch((e) => console.error('[Email Alert Error]:', e)),
+  ]);
 }
