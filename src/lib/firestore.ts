@@ -6,59 +6,9 @@
 
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem } from './db';
 
-export interface Booking {
-  id: string;
-  customerName: string;
-  email: string;
-  phone: string;
-  date: string; // YYYY-MM-DD
-  timeSlot: string;
-  packageName: string;
-  bookingType?: 'gaming' | 'theater';
-  addOns: string[];
-  totalPrice: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
-  guestCount: number;
-  specialRequests?: string;
-  createdAt: string;
-}
-
-export interface TimeSlot {
-  id: string;
-  time: string;
-  label: string;
-  basePrice: number;
-}
-
-export interface FoodOrderItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-export interface FoodOrder {
-  id: string;
-  theme: 'pink' | 'purple' | 'red';
-  themeLabel: string;
-  customerName?: string;
-  phone?: string;
-  items: FoodOrderItem[];
-  totalPrice: number;
-  status: 'pending' | 'preparing' | 'served' | 'cancelled';
-  createdAt: string;
-}
-
-export interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  category: 'snacks' | 'beverages' | 'desserts';
-  inStock: boolean;
-  icon: string;
-}
+export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem };
 
 export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'menu-1', name: 'Maggie', price: 70, description: 'Hot and delicious instant noodles.', category: 'snacks', inStock: true, icon: '🍜' },

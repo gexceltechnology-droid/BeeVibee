@@ -86,20 +86,22 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
   const addOnsText = booking.addOns && booking.addOns.length > 0 ? `\n🎁 Add-ons: ${booking.addOns.join(', ')}` : '';
 
   return (
-    `🎉 NEW ROOM BOOKING - BEE VIBE 🎉\n` +
+    `🎉 NEW BOOKING ALERT - BEE VIBE 🎉\n` +
     `----------------------------------------\n` +
-    `🆔 Booking ID: #${booking.id}\n` +
-    `👤 Guest: ${booking.customerName}\n` +
-    `📞 Phone: +${cleanPhoneNumber(booking.phone)}\n` +
+    `📢 Customer ${booking.customerName} has booked a slot for ${booking.date} at ${booking.timeSlot}!\n` +
+    `----------------------------------------\n` +
+    `🆔 Ticket Code: #${booking.id}\n` +
+    `👤 Guest Name: ${booking.customerName}\n` +
+    `📞 Phone Number: +${cleanPhoneNumber(booking.phone)}\n` +
     `📧 Email: ${booking.email}\n` +
-    `🎭 Theme: ${booking.packageName}\n` +
+    `🎭 Theme Package: ${booking.packageName}\n` +
     `📅 Date: ${booking.date}\n` +
     `⏰ Time Slot: ${booking.timeSlot}\n` +
     `👥 Guests: ${booking.guestCount} Head(s)${addOnsText}\n` +
     `----------------------------------------\n` +
     `💰 Total Price: ₹${booking.totalPrice}\n` +
     `----------------------------------------\n` +
-    `Reservation logged & confirmed in system!`
+    `Reservation logged & confirmed in Bee Vibe system!`
   );
 }
 

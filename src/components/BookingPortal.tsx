@@ -2159,7 +2159,28 @@ export default function BookingPortal() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
+                <a
+                  href={getAdminWhatsAppDeepLink('booking', confirmedBooking)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: '#25D366',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    textDecoration: 'none',
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+                  }}
+                >
+                  <span style={{ fontSize: '1.2rem' }}>💬</span>
+                  Notify Admin on WhatsApp (+91 9900106474)
+                </a>
                 <button
                   className="btn btn-secondary"
                   onClick={handleDownloadSVG}

@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/auth';
 import { getAllBookings, getDb } from '@/lib/firestore';
 
 // Archive past bookings (Firestore bookings are persistent, no ephemeral issue)
 // This endpoint now just returns a count of past bookings as a no-op since Firestore is persistent.
 export async function POST(request: NextRequest) {
   try {
-    const activePasscode = request.headers.get('X-Admin-Passcode') || '';
-    const serverPasscode = process.env.ADMIN_PASSCODE || 'beevibe2026';
-
-    if (activePasscode !== serverPasscode) {
+    if (!isAuthorized(request)) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 

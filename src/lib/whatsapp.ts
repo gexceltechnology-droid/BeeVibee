@@ -144,16 +144,21 @@ export async function sendWhatsAppViaUltraMsg(
 export async function sendWhatsAppViaMetaCloudApi(
   phone: string,
   message: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; data?: any }> {
   const phoneId = process.env.META_WHATSAPP_PHONE_ID || '1222802444258603';
-  const token =
-    process.env.META_WHATSAPP_TOKEN ||
-    'EAATYLBQrVNoBSIGoCLXxWLxlxppFH2rNRxuuogTLtBDdmgzmmHvYjiImy9gEkCzTUd64qpAhPMiqtsiPgKyHxmelrdF4WtASecRG7D739Q5Ik18Q0ZCBHcwHsF8t8PZCydUvgOAd0nDMOkypUZBivu0nvyjaYFYEZAGgpXSB3d3PyC25KDh6hJKs5sIpYFQvKyhrEEZCp3Mv7tV77edjwu7ZBx3kkgfZCp4WZBjJZAxGhninxstE6tVgjZCL7wKGL3UV7uCHAZAFJGB4eSxLYwuFHIL';
-  if (!phoneId || !token) return { success: false, error: 'Meta WhatsApp Cloud API not configured' };
+  const token = process.env.META_WHATSAPP_TOKEN;
+  const templateName = process.env.META_WHATSAPP_TEMPLATE_NAME || 'hello_world';
+
+  if (!phoneId || !token) {
+    console.log('[Meta WhatsApp Cloud API] META_WHATSAPP_TOKEN is missing in environment variables.');
+    return { success: false, error: 'META_WHATSAPP_TOKEN not configured in env.' };
+  }
 
   try {
     const cleanTo = cleanPhoneNumber(phone);
     const url = `https://graph.facebook.com/v18.0/${phoneId}/messages`;
+
+    // 1. Try sending plain text message
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -171,12 +176,33 @@ export async function sendWhatsAppViaMetaCloudApi(
 
     if (res.ok) {
       const json = await res.json();
-      console.log(`[Meta WhatsApp Cloud API Success] Sent text to +${cleanTo}:`, json);
+      console.log(`[Meta WhatsApp Cloud API Success] Text message sent to +${cleanTo}:`, json);
       return { success: true, data: json };
     }
 
-    // Fallback: If Meta rejects plain text (business initiated outside 24h window), send pre-approved template 'hello_world'
-    console.log(`[Meta WhatsApp Cloud API] Plain text rejected, attempting template fallback for +${cleanTo}...`);
+    const initialErrText = await res.text();
+    console.warn('[Meta WhatsApp Cloud API] Plain text attempt failed:', initialErrText);
+
+    // 2. Fallback: If Meta rejects plain text (business-initiated outside 24h window), send template
+    console.log(`[Meta WhatsApp Cloud API] Attempting template fallback ('${templateName}') for +${cleanTo}...`);
+    
+    // Prepare template parameters if custom template is configured
+    const templateBody = templateName === 'hello_world' ? {
+      name: 'hello_world',
+      language: { code: 'en_US' },
+    } : {
+      name: templateName,
+      language: { code: 'en_US' },
+      components: [
+        {
+          type: 'body',
+          parameters: [
+            { type: 'text', text: message.slice(0, 1000) }
+          ]
+        }
+      ]
+    };
+
     const templateRes = await fetch(url, {
       method: 'POST',
       headers: {
@@ -188,21 +214,18 @@ export async function sendWhatsAppViaMetaCloudApi(
         recipient_type: 'individual',
         to: cleanTo,
         type: 'template',
-        template: {
-          name: 'hello_world',
-          language: { code: 'en_US' },
-        },
+        template: templateBody,
       }),
     });
 
     if (templateRes.ok) {
       const tmplJson = await templateRes.json();
-      console.log(`[Meta WhatsApp Cloud API Template Success] Sent hello_world to +${cleanTo}:`, tmplJson);
+      console.log(`[Meta WhatsApp Cloud API Template Success] Sent '${templateName}' to +${cleanTo}:`, tmplJson);
       return { success: true, data: tmplJson };
     } else {
       const errText = await templateRes.text();
       console.error('[Meta WhatsApp Cloud API Template Error]:', errText);
-      return { success: false, error: errText };
+      return { success: false, error: `Meta Cloud API Error: ${errText}` };
     }
   } catch (err: any) {
     console.error('[Meta WhatsApp Cloud API Exception]:', err);
@@ -243,7 +266,47 @@ export async function sendWhatsAppViaWebhook(
 }
 
 /**
- * Automatically notifies Admin Phone, WhatsApp & Email (+919900106474) on new Food Orders & Bookings
+ * Server-side Telegram Bot Notification Sender (100% free, instant push alerts)
+ */
+export async function sendTelegramNotification(
+  message: string
+): Promise<{ success: boolean; error?: string }> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!botToken || !chatId) {
+    console.log('[Telegram Alert] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured in env.');
+    return { success: false, error: 'Telegram Bot credentials not configured in env.' };
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+
+    if (res.ok) {
+      console.log(`[Telegram Alert Success] Instant alert delivered to Telegram Chat ${chatId}`);
+      return { success: true };
+    } else {
+      const errText = await res.text();
+      console.error('[Telegram Alert Error]:', errText);
+      return { success: false, error: errText };
+    }
+  } catch (err: any) {
+    console.error('[Telegram Alert Exception]:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Automatically notifies Admin Phone, WhatsApp, Telegram & Email (+919900106474) on new Food Orders & Bookings
  */
 export async function notifyAdminOnWhatsAppAndSMS(
   type: 'food_order' | 'booking',
@@ -270,22 +333,26 @@ export async function notifyAdminOnWhatsAppAndSMS(
     // 1. Mobile SMS Alert
     sendSMS(adminPhone, message).catch((e) => console.error('[SMS Alert Error]:', e)),
 
-    // 2. WhatsApp Meta Cloud API
+    // 2. Telegram Bot Instant Alert
+    sendTelegramNotification(message).catch((e) => console.error('[Telegram Alert Error]:', e)),
+
+    // 3. WhatsApp Meta Cloud API
     sendWhatsAppViaMetaCloudApi(adminPhone, message).catch((e) => console.error('[Meta WA Error]:', e)),
 
-    // 3. WhatsApp CallMeBot
+    // 4. WhatsApp CallMeBot
     sendWhatsAppViaCallMeBot(adminPhone, message).catch((e) => console.error('[CallMeBot Error]:', e)),
 
-    // 4. WhatsApp UltraMsg
+    // 5. WhatsApp UltraMsg
     sendWhatsAppViaUltraMsg(adminPhone, message).catch((e) => console.error('[UltraMsg Error]:', e)),
 
-    // 5. WhatsApp Webhook
+    // 6. WhatsApp Webhook
     sendWhatsAppViaWebhook(adminPhone, message).catch((e) => console.error('[WA Webhook Error]:', e)),
 
-    // 6. Admin Email Alert
+    // 7. Admin Email Alert
     sendAdminNotificationEmail(
       subject,
       `<pre style="font-family: monospace; font-size: 14px; background: #121217; color: #f2a900; padding: 20px; border-radius: 8px;">${message}</pre>`
     ).catch((e) => console.error('[Email Alert Error]:', e)),
   ]);
 }
+

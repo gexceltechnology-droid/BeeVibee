@@ -4,6 +4,7 @@ import {
   sendWhatsAppViaTwilio,
   sendWhatsAppViaCallMeBot,
   sendWhatsAppViaMetaCloudApi,
+  sendTelegramNotification,
 } from '@/lib/whatsapp';
 import { processWhatsAppBotMessage } from '@/lib/whatsappBot';
 import { sendSMS } from '@/lib/sms';
@@ -29,13 +30,21 @@ export async function GET(request: NextRequest) {
 
     const phone = searchParams.get('phone') || getAdminWhatsAppNumber();
 
-    const testMessage = `🐝 TEST ALERT - BEE VIBE WHATSAPP SYSTEM 🐝\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nIf you received this message, WhatsApp notifications are 100% working for +${phone}!`;
+    const testMessage = `🐝 TEST ALERT - BEE VIBE WHATSAPP & NOTIFICATION SYSTEM 🐝\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nIf you received this message, automated admin alerts are active for +${phone}!`;
 
-    console.log(`[TEST WHATSAPP ROUTE] Testing notifications for +${phone}...`);
+    console.log(`[TEST NOTIFICATION ROUTE] Testing all notification channels for +${phone}...`);
 
     const results: Record<string, any> = {};
 
-    // 1. Test CallMeBot
+    // 1. Test Telegram Bot Alert
+    try {
+      const telegramRes = await sendTelegramNotification(testMessage);
+      results.telegram = telegramRes;
+    } catch (e: any) {
+      results.telegram = { success: false, error: e.message };
+    }
+
+    // 2. Test CallMeBot
     try {
       const callmebotRes = await sendWhatsAppViaCallMeBot(phone, testMessage);
       results.callmebot = callmebotRes;
@@ -43,7 +52,7 @@ export async function GET(request: NextRequest) {
       results.callmebot = { success: false, error: e.message };
     }
 
-    // 2. Test Twilio WhatsApp
+    // 3. Test Twilio WhatsApp
     try {
       const twilioWaRes = await sendWhatsAppViaTwilio(phone, testMessage);
       results.twilioWhatsApp = twilioWaRes;
@@ -51,7 +60,7 @@ export async function GET(request: NextRequest) {
       results.twilioWhatsApp = { success: false, error: e.message };
     }
 
-    // 3. Test Twilio SMS
+    // 4. Test Twilio SMS
     try {
       const smsRes = await sendSMS(`+${phone}`, testMessage);
       results.twilioSMS = smsRes;
@@ -59,9 +68,17 @@ export async function GET(request: NextRequest) {
       results.twilioSMS = { success: false, error: e.message };
     }
 
-    // 4. Test Email Alert
+    // 5. Test Meta WhatsApp Cloud API
     try {
-      await sendAdminNotificationEmail('🐝 Bee Vibe WhatsApp Test Alert', `<p>${testMessage}</p>`);
+      const metaRes = await sendWhatsAppViaMetaCloudApi(phone, testMessage);
+      results.metaWhatsApp = metaRes;
+    } catch (e: any) {
+      results.metaWhatsApp = { success: false, error: e.message };
+    }
+
+    // 6. Test Email Alert
+    try {
+      await sendAdminNotificationEmail('🐝 Bee Vibe Notification Test Alert', `<p>${testMessage}</p>`);
       results.adminEmail = { success: true };
     } catch (e: any) {
       results.adminEmail = { success: false, error: e.message };
@@ -70,11 +87,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       targetPhone: phone,
-      callmebotApiKeyPresent: !!process.env.CALLMEBOT_API_KEY,
-      twilioAccountSidPresent: !!process.env.TWILIO_ACCOUNT_SID,
+      channelStatus: {
+        telegramConfigured: !!(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID),
+        callmebotApiKeyPresent: !!process.env.CALLMEBOT_API_KEY,
+        twilioAccountSidPresent: !!process.env.TWILIO_ACCOUNT_SID,
+        metaCloudApiPresent: !!(process.env.META_WHATSAPP_PHONE_ID && process.env.META_WHATSAPP_TOKEN),
+        smtpEmailPresent: !!(process.env.SMTP_HOST && process.env.SMTP_USER),
+      },
       results,
       instructions: {
-        callmebotSetup: "To enable free WhatsApp alerts via CallMeBot: Send 'I allow callmebot to send me messages' on WhatsApp from +919900106474 to +34 644 44 49 53. CallMeBot will reply with your API Key. Add CALLMEBOT_API_KEY=<key> to Vercel environment variables.",
+        telegramSetup: "To receive 100% free instant push alerts on Telegram: Create a bot with @BotFather on Telegram, paste TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID into environment variables.",
+        callmebotSetup: "To enable free WhatsApp alerts via CallMeBot: Send 'I allow callmebot to send me messages' on WhatsApp from +919900106474 to +34 644 44 49 53. CallMeBot will reply with your API Key. Add CALLMEBOT_API_KEY=<key> to environment variables.",
       }
     });
   } catch (err: any) {

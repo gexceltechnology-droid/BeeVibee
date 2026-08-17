@@ -115,11 +115,14 @@ export default function AdminDashboard() {
   }, []);
 
   // Play a beautiful arpeggio chord chime for new food orders (distinct, volume 0.25)
-  const playOrderSound = () => {
+  const playOrderSound = async () => {
     try {
+      initAudioContext();
       const ctx = audioContextRef.current;
-      // Only play sound if context exists and is actively running to prevent audio glitches
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {});
+      }
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
@@ -149,11 +152,14 @@ export default function AdminDashboard() {
   };
 
   // Play a distinct chime for new bookings
-  const playBookingSound = () => {
+  const playBookingSound = async () => {
     try {
+      initAudioContext();
       const ctx = audioContextRef.current;
-      // Only play sound if context exists and is actively running to prevent audio glitches
-      if (!ctx || ctx.state !== 'running') return;
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        await ctx.resume().catch(() => {});
+      }
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
@@ -597,6 +603,51 @@ export default function AdminDashboard() {
     window.open(`/receipt?id=${b.id}`, '_blank');
   };
 
+  const handleTestNotificationChime = async () => {
+    await playBookingSound();
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          new Notification('🔔 TEST ALERT - Bee Vibe Admin', {
+            body: 'Web Audio Chimes & Browser Notifications are 100% active!',
+            icon: '/icon.png',
+          });
+        } catch (e) {
+          console.warn('Browser notification error:', e);
+        }
+      } else if (Notification.permission === 'default') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            new Notification('🔔 TEST ALERT - Bee Vibe Admin', {
+              body: 'Browser notifications enabled successfully!',
+              icon: '/icon.png',
+            });
+          }
+        });
+      }
+    }
+    alert('🔔 Notification chime played! Check browser sound & notification popup.');
+  };
+
+  const handleTestServerAlerts = async () => {
+    try {
+      const res = await fetch('/api/test-whatsapp');
+      const data = await res.json();
+      const status = data.channelStatus || {};
+      const statusText =
+        `⚡ SERVER NOTIFICATION DISPATCH RESULTS ⚡\n\n` +
+        `📱 Telegram Bot Configured: ${status.telegramConfigured ? 'YES ✅' : 'NO ❌ (Set TELEGRAM_BOT_TOKEN)'}\n` +
+        `💬 CallMeBot WhatsApp: ${status.callmebotApiKeyPresent ? 'YES ✅' : 'NO ❌ (Set CALLMEBOT_API_KEY)'}\n` +
+        `📱 Twilio SMS/WhatsApp: ${status.twilioAccountSidPresent ? 'YES ✅' : 'NO ❌'}\n` +
+        `📧 SMTP Email: ${status.smtpEmailPresent ? 'YES ✅' : 'NO ❌'}\n\n` +
+        `Target Admin Phone: +${data.targetPhone}\n` +
+        `Check node server console & phone for delivered alert messages!`;
+      alert(statusText);
+    } catch (err: any) {
+      alert('Error testing server notification dispatch: ' + err.message);
+    }
+  };
+
   // Fetch all menu items
   async function fetchMenu(codeValue?: string, isBackground = false) {
     const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
@@ -997,13 +1048,31 @@ export default function AdminDashboard() {
           <h1 className={styles.title}>Bee Vibe Admin Panel</h1>
           <p className={styles.subtitle}>Manage customer celebrations, view analytics, and track room service</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={handleTestNotificationChime}
+            className="btn btn-secondary"
+            style={{ borderColor: '#f2a900', color: '#f2a900', fontSize: '0.85rem', padding: '8px 14px' }}
+            title="Test audio chime sound & browser push notification"
+          >
+            🔔 Test Sound & Push Alert
+          </button>
+          <button
+            type="button"
+            onClick={handleTestServerAlerts}
+            className="btn btn-secondary"
+            style={{ borderColor: '#3b82f6', color: '#60a5fa', fontSize: '0.85rem', padding: '8px 14px' }}
+            title="Test server notifications across Telegram, WhatsApp, SMS, Email"
+          >
+            ⚡ Test Server Alert Dispatch
+          </button>
           {typeof window !== 'undefined' && !(window as any).isNativeAndroidAdminApp && (
-            <Link href="/" className="btn btn-secondary">
+            <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '8px 14px' }}>
               View Homepage
             </Link>
           )}
-          <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171' }}>
+          <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171', fontSize: '0.85rem', padding: '8px 14px' }}>
             Sign Out
           </button>
         </div>

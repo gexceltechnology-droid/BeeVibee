@@ -1,23 +1,10 @@
-/**
- * SMS & Mobile Notification Module for Bee Vibe
- * Supports Fast2SMS (India +91 Direct SMS), Twilio, and Webhook SMS gateways
- */
+import { cleanPhoneNumber } from './whatsappUtils';
 
 export function isSMSConfigured(): boolean {
   return !!(process.env.FAST2SMS_API_KEY || process.env.TWILIO_ACCOUNT_SID || process.env.SMS_WEBHOOK_URL);
 }
 
-export function cleanSMSPhone(phone: string): string {
-  if (!phone) return '';
-  let clean = phone.trim().replace(/\D/g, '');
-  while (clean.startsWith('0')) {
-    clean = clean.substring(1);
-  }
-  if (clean.length === 10) {
-    clean = '91' + clean;
-  }
-  return clean;
-}
+export const cleanSMSPhone = cleanPhoneNumber;
 
 export async function sendSMS(
   to: string,

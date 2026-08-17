@@ -7,6 +7,7 @@ import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/li
 import { Gamepad2, ArrowLeft, Download, Printer, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
+import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 
 // Gaming Theme Constant (Single Dedicated Dark Gaming Lounge)
 const PACKAGES = [
@@ -666,7 +667,29 @@ export default function GamingBookingPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <a
+                href={getAdminWhatsAppDeepLink('booking', confirmedBooking)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.btnNavNext}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#25D366',
+                  color: '#ffffff',
+                  fontWeight: 'bold',
+                  textDecoration: 'none',
+                  border: 'none',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(37, 211, 102, 0.4)',
+                }}
+              >
+                <span style={{ fontSize: '1.2rem' }}>💬</span>
+                NOTIFY ADMIN ON WHATSAPP (+91 9900106474)
+              </a>
               <Link href="/gaming" className={styles.btnNavNext}>
                 BACK TO GAMING REALM 🎮
               </Link>

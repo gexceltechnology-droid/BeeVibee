@@ -11,6 +11,7 @@ export interface Booking {
   date: string; // YYYY-MM-DD
   timeSlot: string; // e.g. "10:00 AM - 01:00 PM"
   packageName: string;
+  bookingType?: 'gaming' | 'theater';
   addOns: string[];
   totalPrice: number;
   advancePaid?: number;

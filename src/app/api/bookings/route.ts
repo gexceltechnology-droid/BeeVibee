@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/auth';
 import { checkBookingOverlap } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 import { sendSMS } from '@/lib/sms';
@@ -11,12 +12,6 @@ import {
   getAllMenuItems,
   DEFAULT_MENU_ITEMS,
 } from '@/lib/firestore';
-
-function isAuthorized(request: NextRequest): boolean {
-  const passcode = request.headers.get('X-Admin-Passcode');
-  const serverPasscode = process.env.ADMIN_PASSCODE || 'beevibe2026';
-  return passcode === serverPasscode;
-}
 
 // GET all bookings (Admin endpoint)
 export async function GET(request: NextRequest) {
