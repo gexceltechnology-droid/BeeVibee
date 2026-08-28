@@ -41,10 +41,12 @@ export async function POST(request: NextRequest) {
       totalPrice: Number(totalPrice),
     });
 
-    // Trigger automated server notification to admin phone & WhatsApp (+919900106474)
-    notifyAdminOnWhatsAppAndSMS('food_order', newOrder).catch((err) =>
-      console.error('Admin food order notification error:', err)
-    );
+    // Trigger automated server notification to admin phone, WhatsApp & Telegram (+919900106474)
+    try {
+      await notifyAdminOnWhatsAppAndSMS('food_order', newOrder);
+    } catch (notifErr) {
+      console.error('Admin food order notification error:', notifErr);
+    }
 
     return NextResponse.json(
       {

@@ -202,10 +202,12 @@ export async function POST(request: NextRequest) {
       console.error('Failed to send booking confirmation SMS:', smsError);
     }
 
-    // Trigger automated server notification to admin phone & WhatsApp (+919900106474)
-    notifyAdminOnWhatsAppAndSMS('booking', newBooking).catch((err) =>
-      console.error('Failed sending Admin booking notification:', err)
-    );
+    // Trigger automated server notification to admin phone, WhatsApp & Telegram (+919900106474)
+    try {
+      await notifyAdminOnWhatsAppAndSMS('booking', newBooking);
+    } catch (notifErr) {
+      console.error('Failed sending Admin booking notification:', notifErr);
+    }
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {

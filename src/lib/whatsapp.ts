@@ -287,7 +287,6 @@ export async function sendTelegramNotification(
       body: JSON.stringify({
         chat_id: chatId,
         text: message,
-        parse_mode: 'HTML',
       }),
     });
 
@@ -328,8 +327,8 @@ export async function notifyAdminOnWhatsAppAndSMS(
   console.log(message);
   console.log(`==================================================\n`);
 
-  // Execute all admin alert channels in parallel asynchronously
-  Promise.allSettled([
+  // Execute all admin alert channels in parallel and wait for delivery in serverless environment
+  await Promise.allSettled([
     // 1. Mobile SMS Alert
     sendSMS(adminPhone, message).catch((e) => console.error('[SMS Alert Error]:', e)),
 
