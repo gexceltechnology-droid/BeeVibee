@@ -422,7 +422,7 @@ export default function Home() {
               marginBottom: '40px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.3rem', marginBottom: '8px' }}>
-                <Gamepad2 size={22} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
+                <Gamepad2 size={22} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE — ₹399/HOUR (MIN 1 HR)
               </div>
               <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff' }}>
                 1x PS5 Console + 2 Controllers & Top Games

@@ -88,26 +88,38 @@ export async function POST(request: NextRequest) {
 
     // Parse slot duration
     let durationHours = 2;
+    let durationMinutes = 120;
     try {
       const { parseTimeRange } = await import('@/lib/time');
       const { startMinutes, endMinutes } = parseTimeRange(timeSlot);
-      let durationMinutes = endMinutes - startMinutes;
+      durationMinutes = endMinutes - startMinutes;
       if (durationMinutes <= 0) durationMinutes += 24 * 60;
       durationHours = durationMinutes / 60;
     } catch (err) {
       return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
     }
 
+    const detectedBookingType: 'gaming' | 'theater' = body.bookingType || (packageName.includes('Gaming') || packageName.includes('Dark') ? 'gaming' : 'theater');
+
+    // Enforce minimum 1 hour (60 minutes) for Gaming Lounge
+    if (detectedBookingType === 'gaming' && durationMinutes < 55) {
+      return NextResponse.json({ error: 'Minimum booking duration for PS5 Gaming Lounge is 1 hour.' }, { status: 400 });
+    }
+
     // Dynamic theme package pricing
-    const PACKAGES_PRICE_MAP: Record<string, number> = {
-      'Pink Theme': 799,
-      'Purple Theme': 999,
-      'Red Theme': 599,
-      'Dark Gaming Theme': 999,
-      '🖤 Dark Gaming Theme': 999,
-    };
-    const packagePrice = PACKAGES_PRICE_MAP[packageName] || 999;
-    const pkgBase = Math.round((packagePrice / 2) * durationHours);
+    let pkgBase = 0;
+    if (detectedBookingType === 'gaming') {
+      // PS5 Gaming Lounge is ₹399 / hour (min 1 hour)
+      pkgBase = Math.round(399 * durationHours);
+    } else {
+      const PACKAGES_PRICE_MAP: Record<string, number> = {
+        'Pink Theme': 799,
+        'Purple Theme': 999,
+        'Red Theme': 599,
+      };
+      const packagePrice = PACKAGES_PRICE_MAP[packageName] || 999;
+      pkgBase = Math.round((packagePrice / 2) * durationHours);
+    }
 
     // Extra guest pricing (base includes 2 guests, extra guests are ₹100/head)
     const extraGuests = numericGuestCount > 2 ? (numericGuestCount - 2) * 100 : 0;
@@ -116,7 +128,7 @@ export async function POST(request: NextRequest) {
     let addonsTotal = 0;
     for (const addon of (addOns || [])) {
       const nameStr = String(addon);
-      if (nameStr.startsWith('DSLR Camera Coverage')) {
+      if (nameStr.startsWith('DSLR Camera Coverage') || nameStr.startsWith('DSLR Photography') || nameStr.includes('DSLR')) {
         if (nameStr.includes('30 Min') || nameStr.includes('30min')) {
           addonsTotal += 300;
         } else if (nameStr.includes('2 Hour') || nameStr.includes('2hr') || nameStr.includes('2 Hours')) {
@@ -124,7 +136,7 @@ export async function POST(request: NextRequest) {
         } else {
           addonsTotal += 500;
         }
-      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Special Entry')) {
+      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Fog Entry') || nameStr.includes('Fog')) {
         if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
           addonsTotal += 300;
         } else if (nameStr.includes('2 Pot') || nameStr.includes('2pot') || nameStr.includes('2 Pots')) {
@@ -132,6 +144,10 @@ export async function POST(request: NextRequest) {
         } else {
           addonsTotal += 500;
         }
+      } else if (nameStr.includes('Popcorn & Cold Mocktail Combo') || nameStr.includes('popcorn_combo')) {
+        addonsTotal += 250;
+      } else if (nameStr.includes('VIP Gamer Snack Platter') || nameStr.includes('gamer_platter')) {
+        addonsTotal += 450;
       }
     }
 
@@ -141,8 +157,6 @@ export async function POST(request: NextRequest) {
         error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.`
       }, { status: 400 });
     }
-
-    const detectedBookingType: 'gaming' | 'theater' = body.bookingType || (packageName.includes('Gaming') || packageName.includes('Dark') ? 'gaming' : 'theater');
 
     // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
     const allBookings = await getAllBookings();

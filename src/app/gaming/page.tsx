@@ -122,7 +122,7 @@ const THEME_CONTENT: Record<string, {
 }> = {
   cyberpunk: {
     containerClass: styles.containerCyberpunk,
-    badgeText: '⚡ LEVEL UP YOUR GAME NIGHT IN BANGALORE',
+    badgeText: '⚡ PS5 GAMING LOUNGE: ₹399 / HOUR (MIN 1 HOUR)',
     heroTitle: 'ENTER THE PS5 CYBER REALM',
     heroSubtitle: 'Equipped with 1 Sony PlayStation 5 Console, 2 DualSense Wireless Controllers, and 4K raytracing on a 180" 4K Projector Screen with 7.1 Dolby Surround Sound.',
     btnPrimary: 'PRESS START TO BOOK ⚡',
@@ -139,7 +139,7 @@ const THEME_CONTENT: Record<string, {
   },
   pixel: {
     containerClass: styles.containerPixel,
-    badgeText: '👾 INSERT COIN TO PLAY AT BEE VIBE',
+    badgeText: '👾 PS5 GAMING LOUNGE: ₹399 / HOUR (MIN 1 HOUR)',
     heroTitle: 'INSERT COIN: 8-BIT PIXEL REALM',
     heroSubtitle: 'Retro 8-bit vibes, arcade scanlines, 1 Sony PS5 Console, 2 DualSense controllers, and 100% nostalgia on our massive 180" 4K screen!',
     btnPrimary: 'INSERT COIN TO BOOK 🕹️',

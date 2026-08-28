@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import styles from './gamingBook.module.css';
 import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/lib/time';
-import { Gamepad2, ArrowLeft, Download, Printer, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Gamepad2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
@@ -14,11 +14,11 @@ const PACKAGES = [
   {
     id: 'pkg-dark-gaming',
     name: '🖤 Dark Gaming Theme',
-    price: 999,
+    price: 399,
     details: [
-      '2-Hour Private PS5 Gaming Session',
+      'PS5 Gaming Session (₹399 / Hour — Min 1 Hour)',
       '1x PS5 Console + 2 DualSense Controllers Included',
-      '180" 4K Projector Screen',
+      '180" 4K Projector Screen with Low Latency',
       '7.1 Dolby Surround Sound System',
       'Atmospheric Dark Gaming RGB Ambient Lighting',
       'Air Conditioned Private Lounge (AC)',
@@ -77,7 +77,7 @@ export default function GamingBookingPage() {
   // Custom Time Slot states
   const [bookingMode, setBookingMode] = useState<'predefined' | 'custom'>('predefined');
   const [customStart, setCustomStart] = useState('10:00');
-  const [customEnd, setCustomEnd] = useState('12:00');
+  const [customEnd, setCustomEnd] = useState('11:00');
   const [customSlotError, setCustomSlotError] = useState('');
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
@@ -144,6 +144,72 @@ export default function GamingBookingPage() {
     return () => { active = false; };
   }, [selectedDate]);
 
+  // Effect to calculate custom gaming slot
+  useEffect(() => {
+    if (bookingMode !== 'custom') return;
+
+    setCustomSlotError('');
+    setSelectedSlot(null);
+
+    if (!customStart || !customEnd) return;
+
+    try {
+      const [startH, startM] = customStart.split(':').map(Number);
+      const [endH, endM] = customEnd.split(':').map(Number);
+
+      if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
+        setCustomSlotError('Invalid time selection.');
+        return;
+      }
+
+      const startMinutes = startH * 60 + startM;
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayStr = `${yyyy}-${mm}-${dd}`;
+
+      if (selectedDate === todayStr) {
+        const currentMinutes = today.getHours() * 60 + today.getMinutes();
+        if (startMinutes <= currentMinutes) {
+          setCustomSlotError('Cannot select a time slot that has already passed.');
+          return;
+        }
+      }
+
+      let endMinutes = endH * 60 + endM;
+      if (endMinutes <= startMinutes) {
+        endMinutes += 24 * 60;
+      }
+
+      const durationMinutes = endMinutes - startMinutes;
+      if (durationMinutes < 60) {
+        setCustomSlotError('Minimum gaming duration is 1 hour (60 minutes).');
+        return;
+      }
+
+      const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
+      const overlaps = checkBookingOverlap(selectedDate, timeStr, activeBookings);
+      if (overlaps) {
+        setCustomSlotError('This custom time range overlaps with an existing gaming booking.');
+        return;
+      }
+
+      const durationHours = durationMinutes / 60;
+      const basePrice = Math.round(399 * durationHours);
+
+      setSelectedSlot({
+        id: 'slot-custom',
+        time: timeStr,
+        label: `Custom Gaming Slot (${durationHours} Hr${durationHours > 1 ? 's' : ''})`,
+        basePrice,
+        isBooked: false,
+      });
+    } catch (e) {
+      setCustomSlotError('Error calculating custom time range.');
+    }
+  }, [bookingMode, customStart, customEnd, selectedDate, activeBookings]);
+
   // Background 8-bit Pixel Canvas Effect
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -191,9 +257,22 @@ export default function GamingBookingPage() {
     };
   }, []);
 
+  const getSlotDurationHours = () => {
+    if (!selectedSlot) return 1;
+    try {
+      const { startMinutes, endMinutes } = parseTimeRange(selectedSlot.time);
+      let diff = endMinutes - startMinutes;
+      if (diff <= 0) diff += 24 * 60;
+      return diff / 60;
+    } catch (e) {
+      return 1;
+    }
+  };
+
   // Calculate pricing
   const calculateTotal = () => {
-    const pkgBase = selectedPackage ? selectedPackage.price : 0;
+    const durationHours = getSlotDurationHours();
+    const pkgBase = Math.round(399 * durationHours);
     const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
 
     let dslrPrice = 0;
@@ -298,7 +377,7 @@ export default function GamingBookingPage() {
         if (dslrOption === '30min') list.push('DSLR Photography (30 Mins — ₹300)');
         else if (dslrOption === '1hr') list.push('DSLR Photography (1 Hour — ₹500)');
         if (fogOption === '1pot') list.push('Fog Entry (1 Pot — ₹300)');
-        if (snackOption === 'popcorn_combo') list.push('Popcorn & Mocktail Combo (₹250)');
+        if (snackOption === 'popcorn_combo') list.push('Popcorn & Cold Mocktail Combo (₹250)');
         else if (snackOption === 'gamer_platter') list.push('VIP Gamer Snack Platter (₹450)');
         return list;
       })(),
@@ -386,22 +465,81 @@ export default function GamingBookingPage() {
               />
             </div>
 
-            <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '12px' }}>
-              Available 2-Hour Gaming Slots
-            </h3>
-            <div className={styles.slotsGrid}>
-              {slots.map((slot) => (
-                <div
-                  key={slot.id}
-                  className={`${styles.slotCard} ${slot.isBooked ? styles.slotBooked : ''} ${selectedSlot?.id === slot.id ? styles.slotSelected : ''}`}
-                  onClick={() => !slot.isBooked && setSelectedSlot(slot)}
-                >
-                  <div className={styles.slotLabel}>{slot.label}</div>
-                  <div className={styles.slotTime}>{slot.time}</div>
-                  <div className={styles.slotPrice}>{slot.isBooked ? 'Unavailable' : 'Available ✓'}</div>
-                </div>
-              ))}
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+              <button
+                type="button"
+                className={styles.backBtn}
+                style={{ flex: 1, borderColor: bookingMode === 'predefined' ? '#ffe600' : 'rgba(255,255,255,0.2)', color: bookingMode === 'predefined' ? '#ffe600' : '#fff' }}
+                onClick={() => { setBookingMode('predefined'); setSelectedSlot(null); }}
+              >
+                🎮 1-Hour Standard Slots (₹399)
+              </button>
+              <button
+                type="button"
+                className={styles.backBtn}
+                style={{ flex: 1, borderColor: bookingMode === 'custom' ? '#00f0ff' : 'rgba(255,255,255,0.2)', color: bookingMode === 'custom' ? '#00f0ff' : '#fff' }}
+                onClick={() => { setBookingMode('custom'); setSelectedSlot(null); }}
+              >
+                ⏱️ Custom Gaming Duration (Min 1 Hr)
+              </button>
             </div>
+
+            {bookingMode === 'predefined' ? (
+              <>
+                <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '12px' }}>
+                  Available 1-Hour Gaming Slots (₹399 / Hr)
+                </h3>
+                <div className={styles.slotsGrid}>
+                  {slots.map((slot) => (
+                    <div
+                      key={slot.id}
+                      className={`${styles.slotCard} ${slot.isBooked ? styles.slotBooked : ''} ${selectedSlot?.id === slot.id ? styles.slotSelected : ''}`}
+                      onClick={() => !slot.isBooked && setSelectedSlot(slot)}
+                    >
+                      <div className={styles.slotLabel}>{slot.label}</div>
+                      <div className={styles.slotTime}>{slot.time}</div>
+                      <div className={styles.slotPrice}>{slot.isBooked ? 'Unavailable' : '₹399 / Hr ✓'}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid #00f0ff', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
+                <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '0.95rem', color: '#00f0ff', marginBottom: '12px' }}>
+                  Select Custom Gaming Hours (₹399/Hour · Min 1 Hour)
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                  <div>
+                    <label className={styles.formLabel} htmlFor="custom-start">Start Time</label>
+                    <input
+                      type="time"
+                      id="custom-start"
+                      className={styles.formInput}
+                      value={customStart}
+                      onChange={(e) => setCustomStart(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabel} htmlFor="custom-end">End Time</label>
+                    <input
+                      type="time"
+                      id="custom-end"
+                      className={styles.formInput}
+                      value={customEnd}
+                      onChange={(e) => setCustomEnd(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {customSlotError ? (
+                  <div className={styles.errorMessage}>{customSlotError}</div>
+                ) : selectedSlot ? (
+                  <div style={{ color: '#00ff66', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '8px' }}>
+                    ✓ Selected Range: {selectedSlot.time} ({selectedSlot.label}) — ₹{selectedSlot.basePrice}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <div className={styles.wizardNav}>
               <div />
@@ -409,6 +547,10 @@ export default function GamingBookingPage() {
                 type="button"
                 className={styles.btnNavNext}
                 onClick={() => {
+                  if (bookingMode === 'custom' && customSlotError) {
+                    setError(customSlotError);
+                    return;
+                  }
                   if (!selectedSlot) { setError('Please select a gaming slot.'); return; }
                   setError('');
                   setStep(2);
@@ -435,7 +577,7 @@ export default function GamingBookingPage() {
                   onClick={() => setSelectedPackage(pkg)}
                 >
                   <h4 className={styles.packageName}>{pkg.name}</h4>
-                  <div className={styles.packagePrice}>₹{pkg.price} / 2 Hrs</div>
+                  <div className={styles.packagePrice}>₹399 / Hour (Min 1 Hr)</div>
                   <ul className={styles.packageDetails}>
                     {pkg.details.map((d, i) => (
                       <li key={i}>{d}</li>
@@ -529,8 +671,9 @@ export default function GamingBookingPage() {
             <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #00f0ff', padding: '16px', borderRadius: '10px', marginBottom: '24px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.9rem' }}>
                 <div><strong>Date:</strong> {selectedDate}</div>
-                <div><strong>Time Slot:</strong> {selectedSlot?.time}</div>
-                <div><strong>Vibe Theme:</strong> {selectedPackage.name}</div>
+                <div><strong>Time Slot:</strong> {selectedSlot?.time} ({getSlotDurationHours()} Hour{getSlotDurationHours() > 1 ? 's' : ''})</div>
+                <div><strong>Rate:</strong> ₹399 / Hour</div>
+                <div><strong>Gaming Vibe:</strong> {selectedPackage.name}</div>
                 <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '8px', fontSize: '1.2rem', color: '#00f0ff', fontWeight: 'bold' }}>
                   Total Cost: ₹{calculateTotal()}
                 </div>
