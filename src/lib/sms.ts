@@ -31,7 +31,7 @@ export async function sendSMS(
       } else {
         console.error('[Fast2SMS Error]:', json);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Fast2SMS Exception]:', err);
     }
   }
@@ -60,7 +60,7 @@ export async function sendSMS(
         console.log(`[Twilio SMS Success] Sent to +${rawClean}`);
         return { success: true };
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Twilio SMS Exception]:', err);
     }
   }
@@ -75,7 +75,7 @@ export async function sendSMS(
         body: JSON.stringify({ phone: rawClean, message: body }),
       });
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[SMS Webhook Exception]:', err);
     }
   }

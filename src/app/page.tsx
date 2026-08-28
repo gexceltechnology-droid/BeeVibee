@@ -192,24 +192,7 @@ export default function Home() {
 
       {/* Navigation Header */}
       <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
-        {/* Promo Announcement Banner */}
-        <div style={{
-          background: 'linear-gradient(90deg, #ff2e7e 0%, #9333ea 50%, #eab308 100%)',
-          color: '#ffffff',
-          padding: '6px 16px',
-          fontSize: '0.8rem',
-          fontWeight: '600',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '10px',
-          letterSpacing: '0.3px',
-          width: '100%'
-        }}>
-          <span>🎉 <strong>SPECIAL LAUNCH OFFER:</strong> Get 10% OFF on all Private Theater bookings! Use Code: <span style={{ background: 'rgba(255,255,255,0.25)', padding: '2px 8px', borderRadius: '4px', border: '1px dashed #fff' }}>BEEVIBE10</span></span>
-          <Link href="/book" style={{ color: '#fff', textDecoration: 'underline', fontWeight: 'bold' }}>Book Slot →</Link>
-        </div>
+
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>

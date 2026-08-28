@@ -9,7 +9,7 @@ export interface BotResponse {
   actionLink?: string;
 }
 
-export function processWhatsAppBotMessage(incomingMessage: string, phone: string = ''): BotResponse {
+export function processWhatsAppBotMessage(incomingMessage: string, _phone: string = ''): BotResponse {
   const cleanMsg = (incomingMessage || '').trim().toLowerCase();
 
   // 1. Menu selection or greetings

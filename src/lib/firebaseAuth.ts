@@ -5,11 +5,17 @@ import {
   ConfirmationResult,
 } from 'firebase/auth';
 
+declare global {
+  interface Window {
+    recaptchaVerifier?: RecaptchaVerifier | null;
+  }
+}
+
 /**
  * Format phone number to E.164 (e.g., +919900106474)
  */
 export function formatPhoneNumberE164(phone: string): string {
-  let cleaned = phone.trim().replace(/\D/g, '');
+  const cleaned = phone.trim().replace(/\D/g, '');
   if (cleaned.length === 10) {
     return `+91${cleaned}`;
   }
@@ -23,19 +29,19 @@ export function formatPhoneNumberE164(phone: string): string {
  * Initialize Invisible reCAPTCHA on a unique dynamic container.
  * Completely eliminates "reCAPTCHA has already been rendered in this element" error.
  */
-export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier | null {
+export function setupRecaptcha(_containerOrButtonId?: string): RecaptchaVerifier | null {
   if (typeof window === 'undefined' || !isFirebaseConfigured()) {
     return null;
   }
 
   // Clear previous verifier instance if any
-  if ((window as any).recaptchaVerifier) {
+  if (window.recaptchaVerifier) {
     try {
-      (window as any).recaptchaVerifier.clear();
-    } catch (e) {
+      window.recaptchaVerifier.clear();
+    } catch {
       // ignore
     }
-    (window as any).recaptchaVerifier = null;
+    window.recaptchaVerifier = null;
   }
 
   // Always create a brand-new unique container ID to guarantee zero element collision
@@ -53,16 +59,16 @@ export function setupRecaptcha(containerOrButtonId: string): RecaptchaVerifier |
       },
       'expired-callback': () => {
         console.warn('reCAPTCHA expired, clearing instance...');
-        if ((window as any).recaptchaVerifier) {
-          try { (window as any).recaptchaVerifier.clear(); } catch (e) {}
-          (window as any).recaptchaVerifier = null;
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch {}
+          window.recaptchaVerifier = null;
         }
       },
     });
 
-    (window as any).recaptchaVerifier = recaptchaVerifier;
+    window.recaptchaVerifier = recaptchaVerifier;
     return recaptchaVerifier;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error creating RecaptchaVerifier:', err);
     return null;
   }
@@ -83,24 +89,24 @@ export async function sendFirebaseOtp(
     console.error('Firebase send SMS error:', error);
     
     // Reset instance on error so next attempt gets a fresh verifier
-    if ((window as any).recaptchaVerifier) {
-      try { (window as any).recaptchaVerifier.clear(); } catch (e) {}
-      (window as any).recaptchaVerifier = null;
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch {}
+      window.recaptchaVerifier = null;
     }
 
-    let userMsg = error.message || 'Failed to send OTP via Firebase.';
+    let userMsg = error?.message || 'Failed to send OTP via Firebase.';
     
-    if (error.code === 'auth/unauthorized-domain') {
+    if (error?.code === 'auth/unauthorized-domain') {
       userMsg = 'Domain Authorization Required: Please add "beevibe.org" and "www.beevibe.org" in Firebase Console under Authentication > Settings > Authorized Domains.';
-    } else if (error.code === 'auth/invalid-phone-number') {
+    } else if (error?.code === 'auth/invalid-phone-number') {
       userMsg = 'Invalid phone number format. Please enter a valid 10-digit mobile number.';
-    } else if (error.code === 'auth/too-many-requests') {
+    } else if (error?.code === 'auth/too-many-requests') {
       userMsg = 'Too many OTP requests. Please wait a few minutes before trying again.';
-    } else if (error.code === 'auth/billing-not-enabled') {
+    } else if (error?.code === 'auth/billing-not-enabled') {
       userMsg = 'Firebase Billing Required: Please upgrade Firebase project to the Blaze (Pay-as-you-go) plan to send SMS to real mobile numbers (10,000 free SMS/month).';
-    } else if (error.code === 'auth/operation-not-allowed') {
+    } else if (error?.code === 'auth/operation-not-allowed') {
       userMsg = 'SMS Region Policy: Please enable India (+91) under Firebase Console > Authentication > Settings > SMS Region Policy.';
-    } else if (error.code === 'auth/quota-exceeded') {
+    } else if (error?.code === 'auth/quota-exceeded') {
       userMsg = 'SMS Quota Exceeded for today. Please upgrade Firebase project or try again tomorrow.';
     }
     return { success: false, error: userMsg };
@@ -120,7 +126,7 @@ export async function verifyFirebaseOtpCode(
   } catch (error: any) {
     console.error('Firebase OTP verification error:', error);
     let userMsg = 'Invalid OTP code. Please check and try again.';
-    if (error.code === 'auth/code-expired') {
+    if (error?.code === 'auth/code-expired') {
       userMsg = 'The OTP code has expired. Please request a new OTP.';
     }
     return { success: false, error: userMsg };

@@ -144,7 +144,7 @@ export async function sendWhatsAppViaUltraMsg(
 export async function sendWhatsAppViaMetaCloudApi(
   phone: string,
   message: string
-): Promise<{ success: boolean; error?: string; data?: any }> {
+): Promise<{ success: boolean; error?: string; data?: unknown }> {
   const phoneId = process.env.META_WHATSAPP_PHONE_ID || '1222802444258603';
   const token = process.env.META_WHATSAPP_TOKEN;
   const templateName = process.env.META_WHATSAPP_TEMPLATE_NAME || 'hello_world';

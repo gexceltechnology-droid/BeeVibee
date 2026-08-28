@@ -17,7 +17,7 @@ export interface FoodOrderData {
   phone?: string;
   items: FoodOrderItem[];
   totalPrice: number;
-  createdAt?: any;
+  createdAt?: string | Date;
 }
 
 export interface BookingData {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, ExternalLink, Bot, CheckCheck } from 'lucide-react';
+import { MessageSquare, X, Send, ExternalLink } from 'lucide-react';
 import styles from './WhatsAppBotWidget.module.css';
 import { processWhatsAppBotMessage, BotResponse } from '@/lib/whatsappBot';
 
@@ -14,25 +14,27 @@ interface ChatMessage {
   timestamp: string;
 }
 
+let messageCounter = 0;
+function createMessageId(prefix: string): string {
+  messageCounter += 1;
+  return `${prefix}-${messageCounter}`;
+}
+
+const INITIAL_BOT_RESPONSE: BotResponse = processWhatsAppBotMessage('hi');
+
 export default function WhatsAppBotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputVal, setInputVal] = useState('');
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
+    {
+      id: 'msg-init',
+      sender: 'bot',
+      text: INITIAL_BOT_RESPONSE.replyText,
+      options: INITIAL_BOT_RESPONSE.options,
+      timestamp: '10:00 AM',
+    },
+  ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Initialize bot greeting
-  useEffect(() => {
-    const initialRes = processWhatsAppBotMessage('hi');
-    setMessages([
-      {
-        id: 'msg-init',
-        sender: 'bot',
-        text: initialRes.replyText,
-        options: initialRes.options,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
-  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -44,11 +46,12 @@ export default function WhatsAppBotWidget() {
     const text = (textToSend || inputVal).trim();
     if (!text) return;
 
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // User message
     const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
+      id: createMessageId('user'),
       sender: 'user',
       text,
       timestamp: timeStr,
@@ -57,7 +60,7 @@ export default function WhatsAppBotWidget() {
     // Process Bot reply
     const botRes: BotResponse = processWhatsAppBotMessage(text);
     const botMsg: ChatMessage = {
-      id: `bot-${Date.now() + 1}`,
+      id: createMessageId('bot'),
       sender: 'bot',
       text: botRes.replyText,
       options: botRes.options,

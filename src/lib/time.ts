@@ -118,7 +118,7 @@ export function getIntervalRelativeToDay(
       start: startMinutes + offset,
       end: endMinutes + offset,
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

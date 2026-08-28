@@ -15,8 +15,8 @@ export function isFirebaseConfigured(): boolean {
 }
 
 let app: FirebaseApp | null = null;
-let auth: Auth | any = {};
-let db: Firestore | any = null;
+let auth: Auth = {} as Auth;
+let db: Firestore | null = null;
 
 if (typeof window !== "undefined" && isFirebaseConfigured()) {
   try {
