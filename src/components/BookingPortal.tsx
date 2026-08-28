@@ -169,7 +169,7 @@ export default function BookingPortal() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=theater`);
         if (!active) return;
 
         if (!res.ok) {

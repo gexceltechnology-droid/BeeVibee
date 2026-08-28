@@ -128,7 +128,7 @@ export default function GamingBookingPage() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=gaming`);
         if (!res.ok) throw new Error('Failed to load available gaming slots.');
         const data = await res.json();
         if (!active) return;

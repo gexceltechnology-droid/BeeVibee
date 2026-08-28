@@ -142,14 +142,22 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Double-booking check using overlap logic
-    const allBookings = await getAllBookings();
-    const isBooked = checkBookingOverlap(date, timeSlot, allBookings);
-    if (isBooked) {
-      return NextResponse.json({ error: 'This time slot overlaps with an existing booking.' }, { status: 400 });
-    }
-
     const detectedBookingType: 'gaming' | 'theater' = body.bookingType || (packageName.includes('Gaming') || packageName.includes('Dark') ? 'gaming' : 'theater');
+
+    // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
+    const allBookings = await getAllBookings();
+    const sameRoomBookings = allBookings.filter((b) => {
+      if (b.status === 'cancelled') return false;
+      const isGaming = b.bookingType === 'gaming' || b.packageName?.includes('Gaming') || b.packageName?.includes('Dark');
+      return detectedBookingType === 'gaming' ? isGaming : !isGaming;
+    });
+
+    const isBooked = checkBookingOverlap(date, timeSlot, sameRoomBookings);
+    if (isBooked) {
+      return NextResponse.json({ 
+        error: `This time slot overlaps with an existing ${detectedBookingType === 'gaming' ? 'Gaming Room' : 'Party Hall'} booking.` 
+      }, { status: 400 });
+    }
 
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
