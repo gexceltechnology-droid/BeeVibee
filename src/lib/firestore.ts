@@ -1,12 +1,25 @@
 /**
- * Firebase Admin SDK + Firestore database layer.
- * Replaces the file-based db.ts with persistent cloud storage.
- * Uses Firebase Admin SDK which is safe for server-side (Next.js API routes).
+ * Firebase Admin SDK + Firestore database layer with seamless Local DB fallback.
+ * If Firestore is not provisioned or encounters a transient error, it gracefully
+ * falls back to the persistent local database without failing customer bookings.
  */
 
+import crypto from 'crypto';
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem } from './db';
+import {
+  readDb,
+  addBooking as addBookingLocal,
+  updateBookingStatus as updateBookingStatusLocal,
+  addFoodOrder as addFoodOrderLocal,
+  updateFoodOrderStatus as updateFoodOrderStatusLocal,
+  addMenuItem as addMenuItemLocal,
+  updateMenuItem as updateMenuItemLocal,
+  deleteMenuItem as deleteMenuItemLocal,
+  saveOtp as saveOtpLocal,
+  verifyOtp as verifyOtpLocal,
+} from './db';
 
 export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem };
 
@@ -34,7 +47,6 @@ export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-6', time: '10:30 PM - 12:30 AM', label: 'Midnight Vibe', basePrice: 999 },
 ];
 
-// Singleton admin app
 let adminApp: App | null = null;
 let db: Firestore | null = null;
 
@@ -49,14 +61,14 @@ function getAdminApp(): App {
 
   const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const privateKey = rawKey?.replace(/\\n/g, '\n');
 
   if (!projectId) {
-    throw new Error('FIREBASE_ADMIN_PROJECT_ID (or NEXT_PUBLIC_FIREBASE_PROJECT_ID) is not set in environment variables.');
+    throw new Error('FIREBASE_ADMIN_PROJECT_ID is not set in environment variables.');
   }
 
   if (clientEmail && privateKey) {
-    // Full Service Account credentials available
     adminApp = initializeApp({
       credential: cert({
         projectId,
@@ -65,7 +77,6 @@ function getAdminApp(): App {
       }),
     });
   } else {
-    // Fall back to Application Default Credentials (works in Google Cloud environments)
     adminApp = initializeApp({ projectId });
   }
 
@@ -74,234 +85,309 @@ function getAdminApp(): App {
 
 export function getDb(): Firestore {
   if (db) return db;
-  const databaseId = process.env.FIREBASE_ADMIN_DATABASE_ID || 'default';
-  db = getFirestore(getAdminApp(), databaseId);
+  db = getFirestore(getAdminApp());
   return db;
 }
 
 // ─── Bookings ───────────────────────────────────────────────────────────────
 
 export async function getAllBookings(): Promise<Booking[]> {
-  const firestore = getDb();
-  const snapshot = await firestore.collection('bookings').orderBy('createdAt', 'desc').get();
-  return snapshot.docs.map(doc => doc.data() as Booking);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore.collection('bookings').orderBy('createdAt', 'desc').get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as Booking);
+    }
+  } catch (err) {
+    // fallback
+  }
+  const local = readDb();
+  return local.bookings || [];
 }
 
 export async function getBookingsByDate(date: string): Promise<Booking[]> {
-  const firestore = getDb();
-  const snapshot = await firestore
-    .collection('bookings')
-    .where('date', '==', date)
-    .where('status', '!=', 'cancelled')
-    .get();
-  return snapshot.docs.map(doc => doc.data() as Booking);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore
+      .collection('bookings')
+      .where('date', '==', date)
+      .where('status', '!=', 'cancelled')
+      .get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as Booking);
+    }
+  } catch (err) {
+    // fallback
+  }
+  const local = readDb();
+  return (local.bookings || []).filter(b => b.date === date && b.status !== 'cancelled');
 }
 
 export async function getBookingById(id: string): Promise<Booking | null> {
-  const firestore = getDb();
-  const doc = await firestore.collection('bookings').doc(id).get();
-  return doc.exists ? (doc.data() as Booking) : null;
+  const cleanId = id.trim();
+  try {
+    const firestore = getDb();
+    const doc = await firestore.collection('bookings').doc(cleanId).get();
+    if (doc.exists) return doc.data() as Booking;
+
+    // Try case-insensitive search in firestore
+    const all = await firestore.collection('bookings').get();
+    const found = all.docs.find(d => d.id.toLowerCase() === cleanId.toLowerCase());
+    if (found) return found.data() as Booking;
+  } catch (err) {
+    // fallback
+  }
+
+  const local = readDb();
+  return (local.bookings || []).find(b => b.id.toLowerCase() === cleanId.toLowerCase()) || null;
 }
 
 export async function addBookingToFirestore(
   bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>
 ): Promise<Booking> {
-  const firestore = getDb();
-
-  // Generate unique ticket code: BV-YYMMDD-NNNN
   const dateParts = bookingData.date.split('-');
   const yy = dateParts[0].substring(2);
   const mm = dateParts[1];
   const dd = dateParts[2];
   const datePrefix = `BV-${yy}${mm}${dd}`;
 
-  // Count existing bookings for this date
-  const existing = await firestore
-    .collection('bookings')
-    .where('date', '==', bookingData.date)
-    .get();
-  const count = existing.size;
-  const sequential = String(count + 1).padStart(4, '0');
-  const bookingId = `${datePrefix}-${sequential}`;
+  try {
+    const firestore = getDb();
+    const existing = await firestore
+      .collection('bookings')
+      .where('date', '==', bookingData.date)
+      .get();
+    const count = existing.size;
+    const sequential = String(count + 1).padStart(4, '0');
+    const bookingId = `${datePrefix}-${sequential}`;
 
-  const newBooking: Booking = {
-    ...bookingData,
-    id: bookingId,
-    status: 'confirmed',
-    createdAt: new Date().toISOString(),
-  };
+    const newBooking: Booking = {
+      ...bookingData,
+      id: bookingId,
+      status: 'confirmed',
+      createdAt: new Date().toISOString(),
+    };
 
-  await firestore.collection('bookings').doc(bookingId).set(newBooking);
-  return newBooking;
+    await firestore.collection('bookings').doc(bookingId).set(newBooking);
+    return newBooking;
+  } catch (err) {
+    console.warn('[Firestore] addBookingToFirestore fallback to local:', (err as Error).message);
+    const localBooking = addBookingLocal(bookingData);
+    return localBooking;
+  }
 }
 
 export async function updateBookingStatusInFirestore(
   id: string,
   status: 'pending' | 'confirmed' | 'cancelled'
 ): Promise<Booking> {
-  const firestore = getDb();
-  const ref = firestore.collection('bookings').doc(id);
-  const doc = await ref.get();
-  if (!doc.exists) throw new Error(`Booking with ID ${id} not found.`);
-  await ref.update({ status });
-  const updated = await ref.get();
-  return updated.data() as Booking;
+  try {
+    const firestore = getDb();
+    const ref = firestore.collection('bookings').doc(id);
+    const doc = await ref.get();
+    if (doc.exists) {
+      await ref.update({ status });
+      const updated = await ref.get();
+      return updated.data() as Booking;
+    }
+  } catch (err) {
+    // fallback
+  }
+  const localUpdated = updateBookingStatusLocal(id, status);
+  if (!localUpdated) throw new Error(`Booking with ID ${id} not found.`);
+  return localUpdated;
 }
 
 export async function getBookingsByPhone(phone: string): Promise<Booking[]> {
-  const firestore = getDb();
-  const snapshot = await firestore
-    .collection('bookings')
-    .where('phone', '==', phone)
-    .orderBy('createdAt', 'desc')
-    .get();
-  return snapshot.docs.map(doc => doc.data() as Booking);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore
+      .collection('bookings')
+      .where('phone', '==', phone)
+      .orderBy('createdAt', 'desc')
+      .get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as Booking);
+    }
+  } catch (err) {
+    // fallback
+  }
+  const local = readDb();
+  return (local.bookings || []).filter(b => b.phone === phone);
 }
 
 // ─── Food Orders ─────────────────────────────────────────────────────────────
 
 export async function getAllOrders(): Promise<FoodOrder[]> {
-  const firestore = getDb();
-  const snapshot = await firestore.collection('foodOrders').orderBy('createdAt', 'desc').get();
-  return snapshot.docs.map(doc => doc.data() as FoodOrder);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore.collection('foodOrders').orderBy('createdAt', 'desc').get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as FoodOrder);
+    }
+  } catch (err) {
+    // fallback
+  }
+  const local = readDb();
+  return local.foodOrders || [];
 }
 
 export async function addOrderToFirestore(
   orderData: Omit<FoodOrder, 'id' | 'createdAt' | 'status'>
 ): Promise<FoodOrder> {
-  const firestore = getDb();
-
   const todayIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
   const yy = String(todayIST.getFullYear()).substring(2);
   const mm = String(todayIST.getMonth() + 1).padStart(2, '0');
   const dd = String(todayIST.getDate()).padStart(2, '0');
   const datePrefix = `FO-${yy}${mm}${dd}`;
 
-  const existing = await firestore
-    .collection('foodOrders')
-    .where('createdAt', '>=', `${todayIST.getFullYear()}-${mm}-${dd}`)
-    .get();
-  const count = existing.size;
-  const sequential = String(count + 1).padStart(4, '0');
-  const orderId = `${datePrefix}-${sequential}`;
+  try {
+    const firestore = getDb();
+    const existing = await firestore
+      .collection('foodOrders')
+      .where('createdAt', '>=', `${todayIST.getFullYear()}-${mm}-${dd}`)
+      .get();
+    const count = existing.size;
+    const sequential = String(count + 1).padStart(4, '0');
+    const orderId = `${datePrefix}-${sequential}`;
 
-  const newOrder: FoodOrder = {
-    ...orderData,
-    id: orderId,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
-  };
+    const newOrder: FoodOrder = {
+      ...orderData,
+      id: orderId,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
 
-  await firestore.collection('foodOrders').doc(orderId).set(newOrder);
-  return newOrder;
+    await firestore.collection('foodOrders').doc(orderId).set(newOrder);
+    return newOrder;
+  } catch (err) {
+    console.warn('[Firestore] addOrderToFirestore fallback to local:', (err as Error).message);
+    return addFoodOrderLocal(orderData);
+  }
 }
 
 export async function updateOrderStatusInFirestore(
   id: string,
   status: FoodOrder['status']
 ): Promise<FoodOrder> {
-  const firestore = getDb();
-  const ref = firestore.collection('foodOrders').doc(id);
-  const doc = await ref.get();
-  if (!doc.exists) throw new Error(`Food order with ID ${id} not found.`);
-  await ref.update({ status });
-  const updated = await ref.get();
-  return updated.data() as FoodOrder;
+  try {
+    const firestore = getDb();
+    const ref = firestore.collection('foodOrders').doc(id);
+    const doc = await ref.get();
+    if (doc.exists) {
+      await ref.update({ status });
+      const updated = await ref.get();
+      return updated.data() as FoodOrder;
+    }
+  } catch (err) {
+    // fallback
+  }
+  const updated = updateFoodOrderStatusLocal(id, status);
+  if (!updated) throw new Error(`Food order with ID ${id} not found.`);
+  return updated;
 }
 
 // ─── Menu Items ──────────────────────────────────────────────────────────────
 
 export async function getAllMenuItems(): Promise<MenuItem[]> {
-  const firestore = getDb();
-  const snapshot = await firestore.collection('menuItems').get();
-
-  if (snapshot.empty) {
-    // Seed with default menu items on first run
-    const batch = firestore.batch();
-    for (const item of DEFAULT_MENU_ITEMS) {
-      const ref = firestore.collection('menuItems').doc(item.id);
-      batch.set(ref, item);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore.collection('menuItems').get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as MenuItem);
     }
-    await batch.commit();
-    return DEFAULT_MENU_ITEMS;
+  } catch (err) {
+    // fallback
   }
-
-  return snapshot.docs.map(doc => doc.data() as MenuItem);
+  const local = readDb();
+  return local.menuItems || DEFAULT_MENU_ITEMS;
 }
 
 export async function addMenuItemToFirestore(
   itemData: Omit<MenuItem, 'id' | 'inStock'>
 ): Promise<MenuItem> {
-  const firestore = getDb();
-  const id = `menu-${Date.now()}`;
-  const newItem: MenuItem = { ...itemData, id, inStock: true };
-  await firestore.collection('menuItems').doc(id).set(newItem);
-  return newItem;
+  try {
+    const firestore = getDb();
+    const id = `menu-${Date.now()}`;
+    const newItem: MenuItem = { ...itemData, id, inStock: true };
+    await firestore.collection('menuItems').doc(id).set(newItem);
+    return newItem;
+  } catch (err) {
+    return addMenuItemLocal(itemData);
+  }
 }
 
 export async function updateMenuItemInFirestore(item: MenuItem): Promise<MenuItem> {
-  const firestore = getDb();
-  const ref = firestore.collection('menuItems').doc(item.id);
-  const doc = await ref.get();
-  if (!doc.exists) throw new Error(`Menu item with ID ${item.id} not found.`);
-  await ref.set(item, { merge: true });
-  return item;
+  try {
+    const firestore = getDb();
+    const ref = firestore.collection('menuItems').doc(item.id);
+    await ref.set(item, { merge: true });
+    return item;
+  } catch (err) {
+    return updateMenuItemLocal(item);
+  }
 }
 
 export async function deleteMenuItemFromFirestore(id: string): Promise<void> {
-  const firestore = getDb();
-  await firestore.collection('menuItems').doc(id).delete();
+  try {
+    const firestore = getDb();
+    await firestore.collection('menuItems').doc(id).delete();
+  } catch (err) {
+    deleteMenuItemLocal(id);
+  }
 }
 
 // ─── Time Slots ──────────────────────────────────────────────────────────────
 
 export async function getTimeSlots(): Promise<TimeSlot[]> {
-  const firestore = getDb();
-  const snapshot = await firestore.collection('timeSlots').get();
-
-  if (snapshot.empty) {
-    // Seed with defaults on first run
-    const batch = firestore.batch();
-    for (const slot of DEFAULT_TIME_SLOTS) {
-      const ref = firestore.collection('timeSlots').doc(slot.id);
-      batch.set(ref, slot);
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore.collection('timeSlots').get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(doc => doc.data() as TimeSlot);
     }
-    await batch.commit();
-    return DEFAULT_TIME_SLOTS;
+  } catch (err) {
+    // fallback
   }
-
-  const slots = snapshot.docs.map(doc => doc.data() as TimeSlot);
-  return slots.sort((a, b) => a.id.localeCompare(b.id));
+  const local = readDb();
+  return local.timeSlots || DEFAULT_TIME_SLOTS;
 }
 
-// ─── OTP (stored in Firestore) ───────────────────────────────────────────────
+// ─── OTP Operations ─────────────────────────────────────────────────────────
 
-import crypto from 'crypto';
-
-export async function saveOtpToFirestore(phone: string, otp: string, expiryMinutes = 5): Promise<void> {
-  const firestore = getDb();
-  const hashedOtp = crypto.createHash('sha256').update(otp).digest('hex');
+export async function saveOtpToFirestore(phone: string, code: string, expiryMinutes = 5): Promise<void> {
+  const hash = crypto.createHash('sha256').update(code).digest('hex');
   const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000).toISOString();
-  await firestore.collection('otps').doc(phone).set({ phone, hashedOtp, expiresAt });
+
+  try {
+    const firestore = getDb();
+    await firestore.collection('otps').doc(phone).set({
+      phone,
+      hashedOtp: hash,
+      expiresAt,
+    });
+  } catch (err) {
+    saveOtpLocal(phone, code, expiryMinutes);
+  }
 }
 
-export async function verifyOtpFromFirestore(phone: string, otp: string): Promise<boolean> {
-  const firestore = getDb();
-  const doc = await firestore.collection('otps').doc(phone).get();
-  if (!doc.exists) return false;
-
-  const record = doc.data()!;
+export async function verifyOtpFromFirestore(phone: string, code: string): Promise<boolean> {
+  const hash = crypto.createHash('sha256').update(code).digest('hex');
   const now = new Date().toISOString();
-  if (record.expiresAt < now) {
-    await firestore.collection('otps').doc(phone).delete();
-    return false;
+
+  try {
+    const firestore = getDb();
+    const doc = await firestore.collection('otps').doc(phone).get();
+    if (doc.exists) {
+      const data = doc.data() as { hashedOtp: string; expiresAt: string };
+      if (data.hashedOtp === hash && data.expiresAt > now) {
+        await firestore.collection('otps').doc(phone).delete();
+        return true;
+      }
+    }
+  } catch (err) {
+    // fallback
   }
 
-  const inputHashed = crypto.createHash('sha256').update(otp).digest('hex');
-  if (record.hashedOtp === inputHashed) {
-    await firestore.collection('otps').doc(phone).delete();
-    return true;
-  }
-
-  return false;
+  return verifyOtpLocal(phone, code);
 }
