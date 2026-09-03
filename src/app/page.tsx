@@ -2,151 +2,62 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import {
+  Sparkles,
+  ChevronDown,
+  Phone,
+  Clock,
+  Film,
+  Music,
+  Tv,
+  Gamepad2,
+  Volume2,
+  Coffee,
+  ShieldCheck,
+  CheckCircle2,
+  MapPin,
+  Heart,
+  Cake,
+  Star,
+  Zap,
+  ArrowRight
+} from 'lucide-react';
+import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
+import GallerySection from '@/components/GallerySection';
 import styles from './page.module.css';
 
-const InteractiveShowcase = dynamic(() => import('@/components/InteractiveShowcase'), {
-  ssr: false,
-  loading: () => (
-    <div style={{ height: '350px', width: '100%', borderRadius: '20px', background: 'rgba(20, 20, 27, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }} />
-  ),
-});
-
-const GallerySection = dynamic(() => import('@/components/GallerySection'), {
-  ssr: true,
-  loading: () => (
-    <div style={{ minHeight: '300px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-      Loading visual gallery...
-    </div>
-  ),
-});
-
-import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
-import {
-  Tv,
-  Volume2,
-  Smile,
-  Heart,
-  Gamepad2,
-  Sparkles,
-  ShieldCheck,
-  Coffee,
-  Cake,
-  Phone,
-  MapPin,
-  Clock,
-  ChevronDown,
-  HelpCircle,
-  Camera
-} from 'lucide-react';
-
-// Custom Instagram icon component for maximum reliability
-const Instagram = ({ size = 24, color = "currentColor", ...props }: React.SVGProps<SVGSVGElement> & { size?: number | string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-  </svg>
-);
-
-const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
-  <img
-    src="/bee-vibe-logo.png?v=2"
-    alt="BeeVibe Mini Private Theater"
-    style={{ height: size, width: 'auto', objectFit: 'contain' }}
-  />
-);
-
-type VibeType = 'pink' | 'purple' | 'red';
-
 export default function Home() {
-  const [vibe, setVibe] = useState<VibeType>('purple');
-
-  // Load saved vibe from localStorage on first render
-  useEffect(() => {
-    const saved = localStorage.getItem('beevibe_theme') as VibeType | null;
-    if (saved && ['pink', 'purple', 'red'].includes(saved)) {
-      setVibe(saved);
-    }
-  }, []);
-
-  // Save vibe to localStorage whenever it changes so /book page can read it
-  useEffect(() => {
-    localStorage.setItem('beevibe_theme', vibe);
-  }, [vibe]);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [vibe, setVibe] = useState<'pink' | 'purple' | 'red'>('purple');
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-  const faqs = [
-    {
-      q: 'How many guests can fit in the private theater?',
-      a: 'The theater holds up to 10 guests. The base package covers 2 members, and additional guests can join for ₹100 per head.'
-    },
-    {
-      q: 'Do you have PS5 gaming available in the room?',
-      a: 'Yes! We feature 1 Sony PS5 console equipped with 2 wireless DualSense controllers and popular games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7). You can play 2-player multiplayer games on our 180" 4K screen with 7.1 Dolby surround sound.'
-    },
-    {
-      q: 'How can I play my own content or movies?',
-      a: 'We provide casting support, Chromecast, and high-speed Wi-Fi to screen from your preferred platforms (Netflix, Prime Video, Hotstar, YouTube, etc.) or connect custom files via HDMI.'
-    },
-    {
-      q: 'Is outside food and drinks allowed?',
-      a: 'We have an on-site gourmet snack bar serving fresh popcorn, mocktails, and hot appetizers. Outside beverages and main courses are restricted, but celebration cakes and baby food are fully allowed.'
-    },
-    {
-      q: 'What is the refund and rescheduling policy?',
-      a: 'You can reschedule your slot free of charge up to 24 hours prior to your booking. Cancellations made 24 hours in advance receive a full refund minus a 5% processing fee.'
-    },
-    {
-      q: 'Do you provide decorations for special occasions?',
-      a: 'Yes! Custom celebration lighting is included. For premium setups (balloon arches, flower paths, proposal signs, and fog entry), you can add decorations in Step 3 of the booking process.'
-    }
-  ];
-
-  // 1. Calculate scroll progress (0 to 1) for the scrollytelling camera path and check scroll offset
+  // 1. Scroll listener for sticky header styling & scroll progress
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const offset = window.scrollY;
+      setIsScrolled(offset > 40);
 
-      const docHeight = document.documentElement.scrollHeight;
-      const windowHeight = window.innerHeight;
-      const totalScrollable = docHeight - windowHeight;
-
-      if (totalScrollable <= 0) return;
-
-      const progress = Math.min(Math.max(window.scrollY / totalScrollable, 0), 1);
-      setScrollProgress(progress);
+      const winScroll = document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = height > 0 ? winScroll / height : 0;
+      setScrollProgress(scrolled);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 2. Set up IntersectionObserver to trigger scroll-reveal animations on grid elements
+  // 2. Intersection Observer for scroll reveal animations
   useEffect(() => {
     const observerOptions = {
       root: null,
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px',
+      rootMargin: '0px',
+      threshold: 0.12,
     };
 
-    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+    const observerCallback: IntersectionObserverCallback = (entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add(styles.revealActive);
@@ -155,29 +66,12 @@ export default function Home() {
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
-    const revealElements = document.querySelectorAll(`.${styles.reveal}`);
+    const revealElements = document.querySelectorAll('.' + styles.reveal);
     revealElements.forEach((el) => observer.observe(el));
 
     return () => {
       revealElements.forEach((el) => observer.unobserve(el));
     };
-  }, []);
-
-  // 3. Track cursor positions on cards for spotlight hover effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const cards = document.querySelectorAll(`.${styles.showcaseCard}, .${styles.featureCard}`);
-      cards.forEach((card) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        (card as HTMLElement).style.setProperty('--mouse-x', `${x}px`);
-        (card as HTMLElement).style.setProperty('--mouse-y', `${y}px`);
-      });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   const vibeLabels = {
@@ -186,10 +80,43 @@ export default function Home() {
     purple: 'Royal Purple Butterfly Theme (₹999/2hrs)',
   };
 
+  const THEMES_PREVIEWS = [
+    {
+      id: 'red',
+      name: 'Red Theme (Red Velvet Romance)',
+      price: '₹799',
+      duration: '2 Hours',
+      badge: 'Anniversary & Romantic Dates ❤️',
+      color: '#ef4444',
+      image: '/themes/theme-red.jpg',
+      features: ['Floral Heart & "Happy Anniversary" Neon', 'Red Shimmer Backdrop & Lighted Arch', 'Plush Velvet Seating & Marble Table', '180" 4K Screen & 7.1 Dolby Sound'],
+    },
+    {
+      id: 'pink',
+      name: 'Pink Theme (Angel Wings & Neon)',
+      price: '₹899',
+      duration: '2 Hours',
+      badge: 'Birthday & Parties 🩷',
+      color: '#ec4899',
+      image: '/themes/theme-pink.jpg',
+      features: ['Giant Glowing Angel Wings Backdrop', 'Pink Shimmer Arch with "Happy Birthday" Neon', 'Hot Pink Velvet Recliners & Picket Fence', '180" 4K Screen & 7.1 Dolby Sound'],
+    },
+    {
+      id: 'purple',
+      name: 'Purple Theme (Royal Butterfly Grandeur)',
+      price: '₹999',
+      duration: '2 Hours',
+      badge: 'VIP Grand Celebration Setup 💜',
+      color: '#a855f7',
+      image: '/themes/theme-purple.jpg',
+      features: ['Grand Triple Arched Decor & Balloon Arches', 'Illuminated Butterfly Wings & Gold Sequin Wall', 'Lighted "HAPPY BIRTHDAY" Marquee Letters', '180" 4K Screen & 7.1 Dolby Sound'],
+    },
+  ];
+
   return (
     <div className={styles.main} data-vibe={vibe}>
       {/* Scroll Progress Bar */}
-      <div className={styles.scrollProgressBar} style={{ transform: `scaleX(${scrollProgress})`, transformOrigin: 'left' }} />
+      <div className={styles.scrollProgressBar} style={{ transform: 'scaleX(' + scrollProgress + ')', transformOrigin: 'left' }} />
 
       {/* Dynamic Background Glows */}
       <div className="ambient-glow-bg" />
@@ -199,7 +126,7 @@ export default function Home() {
       <WhatsAppBotWidget />
 
       {/* Navigation Header */}
-      <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
+      <div className={styles.headerContainer + (isScrolled ? ' ' + styles.headerContainerScrolled : '')}>
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
@@ -207,13 +134,13 @@ export default function Home() {
                 src="/bee-vibe-logo.png?v=4"
                 alt="BeeVibe Mini Private Theater"
                 className={styles.logoImg}
-                style={{ height: '115px', width: 'auto', objectFit: 'contain' }}
+                style={{ height: '90px', width: 'auto', objectFit: 'contain' }}
               />
             </Link>
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
                 <li><Link href="/gaming" className={styles.navLink} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
-                <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
+                <li><a href="#vibes" className={styles.navLink}>Our 3 Themes</a></li>
                 <li><a href="#gallery" className={styles.navLink}>Gallery 📸</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
                 <li><a href="#location" className={styles.navLink}>Location</a></li>
@@ -222,11 +149,11 @@ export default function Home() {
               </ul>
             </nav>
             <div className={styles.headerActions}>
-              <Link href="/book" className="btn btn-primary btn-nav" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
+              <Link href="/book" className="btn btn-primary btn-nav" style={{ padding: '10px 20px', fontSize: '0.88rem', fontWeight: 'bold' }}>
                 Book Now
               </Link>
               <button
-                className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerActive : ''}`}
+                className={styles.hamburger + (isMobileMenuOpen ? ' ' + styles.hamburgerActive : '')}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -238,7 +165,7 @@ export default function Home() {
           </header>
 
           {/* Mobile Navigation Drawer */}
-          <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuActive : ''}`}>
+          <div className={styles.mobileMenu + (isMobileMenuOpen ? ' ' + styles.mobileMenuActive : '')}>
             <ul className={styles.mobileNavLinks}>
               <li>
                 <Link href="/gaming" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#00f0ff', fontWeight: 'bold' }}>
@@ -247,7 +174,7 @@ export default function Home() {
               </li>
               <li>
                 <a href="#vibes" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
-                  Our Vibes
+                  Our 3 Themes
                 </a>
               </li>
               <li>
@@ -275,18 +202,6 @@ export default function Home() {
                   Booking Portal
                 </Link>
               </li>
-              <li>
-                <a
-                  href="https://www.instagram.com/beevibe_partyhall/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.mobileNavLink}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <Instagram size={20} /> Instagram
-                </a>
-              </li>
               <li style={{ width: '100%', marginTop: '12px' }}>
                 <Link href="/book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
                   Book Now
@@ -297,294 +212,312 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Split Scrollytelling Screen Layout */}
-      <div className="container" style={{ position: 'relative' }}>
-        <div className={styles.splitLayout}>
+      {/* Hero Section */}
+      <section id="hero" className={styles.heroSection}>
+        <div className="container">
+          <div className={styles.heroWrapper}>
+            <div className={styles.heroBadge}>
+              <Sparkles size={16} color="var(--accent)" />
+              <span>BANGALORE'S PREMIER PRIVATE CELEBRATION THEATER & LOUNGE</span>
+            </div>
 
-          {/* Left Column: Normal Scrollable text sections */}
-          <div className={styles.scrollingContent}>
+            <h1 className={styles.heroTitle}>
+              Your Private Cinema.<br />
+              <span className="text-glow" style={{ color: 'var(--accent)', transition: 'color 0.5s' }}>
+                Unforgettable Celebrations.
+              </span>
+            </h1>
 
-            {/* Section 1: Hero */}
-            <section id="hero" className={styles.heroSection}>
-              <div className={styles.heroContent}>
-                <div className={styles.tagline}>Bee Vibe Party Hall & Private Theater</div>
-                <h1 className={styles.heroTitle}>
-                  Bee Vibe Party Hall.<br />
-                  <span className="text-glow" style={{ color: 'var(--accent)', transition: 'color 0.5s' }}>
-                    Your Private Cinema & Space.
-                  </span>
-                </h1>
-                <p className={styles.heroSubtitle}>
-                  Experience Bangalore's top luxury private party hall and celebration theater in Jayanagar. Book custom mini party halls for intimate birthday bashes, anniversary surprises, romantic couple date nights, or multiplayer gaming with up to 10 guests.
-                </p>
+            <p className={styles.heroSubtitle}>
+              Experience Bangalore's most luxurious private party hall and celebration theater in Jayanagar 9th Block. Book our 100% private suites with <strong>180-inch 4K screen</strong>, <strong>7.1 Dolby Atmos sound</strong>, custom lighting, and dedicated <strong>PS5 Gaming</strong> for birthdays, anniversaries, and date nights.
+            </p>
 
-                {/* Vibe Selection Panel */}
-                <div className={styles.vibePanel}>
-                  <div className={styles.vibeTitle}>Set Room Mood Lighting:</div>
-                  <div className={styles.vibeButtons}>
-                    <button
-                      className={`${styles.vibeBtn} ${vibe === 'purple' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('purple')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
-                      Purple
-                    </button>
-                    <button
-                      className={`${styles.vibeBtn} ${vibe === 'pink' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('pink')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#ff2e7e' }} />
-                      Pink
-                    </button>
-                    <button
-                      className={`${styles.vibeBtn} ${vibe === 'red' ? styles.vibeBtnActive : ''}`}
-                      onClick={() => setVibe('red')}
-                    >
-                      <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
-                      Red
-                    </button>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic', marginTop: '4px' }}>
-                    Currently active: {vibeLabels[vibe]}
-                  </div>
-                </div>
-
-                <div className={styles.mobileShowcase}>
-                  <InteractiveShowcase vibe={vibe} />
-                </div>
-
-                <div className={styles.heroCtas}>
-                  <Link href="/book" className="btn btn-primary">
-                    Reserve Your Screen
-                  </Link>
-                  <a href="#vibes" className="btn btn-secondary">
-                    Explore Packages
-                  </a>
-                </div>
+            {/* Room Mood Lighting Buttons */}
+            <div className={styles.vibePanel}>
+              <div className={styles.vibeTitle}>Set Room Mood Lighting:</div>
+              <div className={styles.vibeButtons}>
+                <button
+                  className={styles.vibeBtn + (vibe === 'red' ? ' ' + styles.vibeBtnActive : '')}
+                  onClick={() => setVibe('red')}
+                >
+                  <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
+                  ❤️ Red (₹799)
+                </button>
+                <button
+                  className={styles.vibeBtn + (vibe === 'pink' ? ' ' + styles.vibeBtnActive : '')}
+                  onClick={() => setVibe('pink')}
+                >
+                  <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
+                  🩷 Pink (₹899)
+                </button>
+                <button
+                  className={styles.vibeBtn + (vibe === 'purple' ? ' ' + styles.vibeBtnActive : '')}
+                  onClick={() => setVibe('purple')}
+                >
+                  <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
+                  💜 Purple (₹999)
+                </button>
               </div>
-            </section>
+            </div>
 
-            {/* Section 2: Packages */}
-            <section id="vibes" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Signature Celebration Themes</h2>
-              <p className={styles.sectionSub}>
-                Book the entire private party hall for your special screening. All themes include HD Projector, AC, and high-speed Wi-Fi.
-              </p>
+            <div className={styles.heroCtas}>
+              <Link href="/book" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700 }}>
+                Reserve Your Hall Now →
+              </Link>
+              <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 24px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
+                PS5 Gaming Lounge 🎮
+              </Link>
+              <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 24px', fontSize: '1rem' }}>
+                View 3 Themes ↓
+              </a>
+            </div>
 
-              <div className={styles.vibeShowcaseGrid}>
-                {/* Purple Theme */}
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#9333ea' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>💜 Purple Theme</h3>
-                    <div className={styles.showcasePrice}>₹999 / 2 Hrs</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
-                    <ul className={styles.showcaseList}>
-                      <li>2-Hour full private hall booking</li>
-                      <li>Vibrant Purple party lighting decor</li>
-                      <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: from ₹300 (optional)</li>
-                      <li>Fog entry: from ₹300 (optional)</li>
-                    </ul>
+            {/* Live Visual 3-Theme Preview Banner */}
+            <div className={styles.heroThemesShowcase}>
+              {THEMES_PREVIEWS.map((item) => (
+                <div
+                  key={item.id}
+                  className={styles.heroThemeCard + (vibe === item.id ? ' ' + styles.heroThemeCardActive : '')}
+                  onClick={() => setVibe(item.id as any)}
+                >
+                  <div className={styles.heroThemeImgWrapper}>
+                    <img src={item.image} alt={item.name} className={styles.heroThemeImg} />
+                    <span className={styles.heroThemeBadge} style={{ background: item.color }}>
+                      {item.price} / 2 Hrs
+                    </span>
+                  </div>
+                  <div className={styles.heroThemeInfo}>
+                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', color: item.color }}>{item.name}</h4>
+                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#a0a0c0' }}>{item.badge}</p>
                   </div>
                 </div>
+              ))}
+            </div>
 
-                {/* Pink Theme */}
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#ff2e7e' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>🩷 Pink Theme</h3>
-                    <div className={styles.showcasePrice}>₹799 / 2 Hrs</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
-                    <ul className={styles.showcaseList}>
-                      <li>2-Hour full private hall booking</li>
-                      <li>Warm Pink ambient lighting decor</li>
-                      <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: from ₹300 (optional)</li>
-                      <li>Fog entry: from ₹300 (optional)</li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Red Theme */}
-                <div className={styles.showcaseCard}>
-                  <div className={styles.cardBanner} style={{ backgroundColor: '#ef4444' }} />
-                  <div className={styles.showcaseContent}>
-                    <h3 className={styles.showcaseTitle}>❤️ Red Theme</h3>
-                    <div className={styles.showcasePrice}>₹599 / 2 Hrs</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>Base price for 2 members</div>
-                    <ul className={styles.showcaseList}>
-                      <li>2-Hour full private hall booking</li>
-                      <li>Romantic Crimson Red lighting setup</li>
-                      <li>Extra guest: ₹100 per head</li>
-                      <li>DSLR Photo: from ₹300 (optional)</li>
-                      <li>Fog entry: from ₹300 (optional)</li>
-                    </ul>
-                  </div>
+            {/* Trust Metrics Bar */}
+            <div className={styles.trustBar}>
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>🎬</span>
+                <div>
+                  <strong>180" 4K Laser Screen</strong>
+                  <span>Cinematic Visuals</span>
                 </div>
               </div>
-            </section>
-
-            {/* Section 2.5: PS5 Pixel Gaming Realm Showcase */}
-            <section id="gaming-banner" className={`${styles.section} ${styles.reveal}`} style={{
-              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(255, 0, 85, 0.12) 100%)',
-              border: '2px solid #00f0ff',
-              borderRadius: '20px',
-              padding: '28px',
-              boxShadow: '0 10px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.25)',
-              marginBottom: '40px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.3rem', marginBottom: '8px' }}>
-                <Gamepad2 size={22} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE — ₹399/HOUR (MIN 1 HR)
-              </div>
-              <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff' }}>
-                1x PS5 Console + 2 Controllers & Top Games
-              </h2>
-              <p style={{ color: '#c0c0e0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '20px' }}>
-                Step into Bangalore's premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5 Console</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) played on our 180" 4K Screen with 7.1 Dolby surround sound!
-              </p>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff' }}>
-                  Enter Gaming World 🎮
-                </Link>
-                <Link href="/gaming/book" className="btn btn-secondary">
-                  Book PS5 Slot Now
-                </Link>
-              </div>
-            </section>
-
-            {/* Section 3: Amenities */}
-            <section id="features" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Designed for Ultimate Comfort</h2>
-              <p className={styles.sectionSub}>
-                We combine high-end cinema electronics with custom interior designing to deliver a premium private space.
-              </p>
-
-              <div className={styles.featuresGrid}>
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Gamepad2 /></div>
-                  <h3 className={styles.featureTitle}>PS5 + 2 Controllers</h3>
-                  <p className={styles.featureDesc}>1x Sony PlayStation 5 with 2 DualSense wireless controllers & top games for head-to-head multiplayer battles.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Tv /></div>
-                  <h3 className={styles.featureTitle}>180" 4K Projector Screen</h3>
-                  <p className={styles.featureDesc}>Stunning high-contrast cinematic screens that support Netflix, Hotstar, YouTube, or your custom media files.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Volume2 /></div>
-                  <h3 className={styles.featureTitle}>7.1 Dolby surround sound</h3>
-                  <p className={styles.featureDesc}>Full room-shaking audio calibration that places you directly inside the cinematic action.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Sparkles /></div>
-                  <h3 className={styles.featureTitle}>Custom Vibe Lighting</h3>
-                  <p className={styles.featureDesc}>Interactive control over ambient colors, panel lights, and spotlights to suit the mood of your party.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Coffee /></div>
-                  <h3 className={styles.featureTitle}>Snack Bar & Kitchen</h3>
-                  <p className={styles.featureDesc}>Hot popcorn, cold drinks, cakes, mocktails, and finger foods prepared fresh and served straight to your seats.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><ShieldCheck /></div>
-                  <h3 className={styles.featureTitle}>100% Private & Soundproof</h3>
-                  <p className={styles.featureDesc}>Total security and acoustic isolation so you can shout, play, sing, or talk without disturbances.</p>
-                </div>
-
-                <div className={styles.featureCard}>
-                  <div className={styles.featureIcon}><Cake /></div>
-                  <h3 className={styles.featureTitle}>Decoration Assistance</h3>
-                  <p className={styles.featureDesc}>Custom design setup for proposal setups, anniversaries, promotions, baby showers, or children's birthdays.</p>
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>🔊</span>
+                <div>
+                  <strong>7.1 Dolby Atmos</strong>
+                  <span>Immersive Surround</span>
                 </div>
               </div>
-            </section>
-
-            {/* Section 4: SEO About Bee Vibe Party Hall */}
-            <section id="about-beevibe" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Bee Vibe Party Hall Bangalore</h2>
-              <p className={styles.sectionSub}>
-                Bangalore's Top Rated Mini Party Hall & Private Celebration Theater in Jayanagar
-              </p>
-              <div style={{
-                background: 'var(--glass-bg)',
-                border: '1px solid var(--glass-border)',
-                borderRadius: '16px',
-                padding: '24px',
-                color: 'var(--text-secondary)',
-                lineHeight: '1.7',
-                fontSize: '0.95rem'
-              }}>
-                <h3 style={{ color: 'var(--text-primary)', marginBottom: '12px', fontSize: '1.15rem' }}>
-                  Looking for Bee Vibe Party Hall in Bangalore?
-                </h3>
-                <p style={{ marginBottom: '12px' }}>
-                  <strong>Bee Vibe Party Hall</strong> is your exclusive destination for private celebration halls, mini birthday party venues, romantic couple date nights, and immersive private cinema screenings in Jayanagar 9th Block, Bangalore.
-                </p>
-                <p style={{ marginBottom: '12px' }}>
-                  Whether you are planning a surprise birthday party for your loved one, celebrating an anniversary, hosting a private movie screening with friends, or enjoying a multiplayer PS5 gaming session, <strong>Bee Vibe Party Hall Bangalore</strong> provides 100% private, soundproof theater rooms equipped with massive 180-inch 4K projection screens, 7.1 Dolby Atmos sound systems, custom RGB ambient mood lighting, and full decoration setups.
-                </p>
-                <p style={{ marginBottom: '0' }}>
-                  Conveniently situated opposite Jain University in Jayanagar 9th Block, <strong>Bee Vibe Party Hall</strong> easily serves guests from Jayanagar 4th Block, JP Nagar, BTM Layout, Koramangala, Banashankari, and across South Bangalore. Book your slot online today at www.beevibe.org!
-                </p>
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>🔒</span>
+                <div>
+                  <strong>100% Private Room</strong>
+                  <span>Acoustic Soundproof</span>
+                </div>
               </div>
-            </section>
-
-            {/* Section 5: FAQ */}
-            <section id="faq" className={`${styles.section} ${styles.reveal}`}>
-              <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
-              <p className={styles.sectionSub}>
-                Everything you need to know about booking, amenities, media streaming, and celebration planning.
-              </p>
-
-              <div className={styles.faqAccordion}>
-                {faqs.map((faq, idx) => {
-                  const isOpen = openFaq === idx;
-                  return (
-                    <div
-                      key={idx}
-                      className={`${styles.faqItem} ${isOpen ? styles.faqItemOpen : ''}`}
-                    >
-                      <button
-                        className={styles.faqQuestion}
-                        onClick={() => setOpenFaq(isOpen ? null : idx)}
-                        aria-expanded={isOpen}
-                      >
-                        <span className={styles.faqQuestText}>
-                          <HelpCircle size={18} className={styles.faqQuestIcon} style={{ flexShrink: 0 }} />
-                          {faq.q}
-                        </span>
-                        <ChevronDown size={18} className={styles.faqArrow} />
-                      </button>
-                      <div className={styles.faqAnswer}>
-                        <div className={styles.faqAnswerInner}>
-                          <p>{faq.a}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>🎮</span>
+                <div>
+                  <strong>PS5 Gaming Arena</strong>
+                  <span>2 DualSense Controllers</span>
+                </div>
               </div>
-            </section>
-
-          </div>
-
-          {/* Right Column: Sticky viewport container holding the 3D canvas */}
-          <div className={styles.stickyColumn}>
-            <div className={styles.canvasWrapper}>
-              <InteractiveShowcase vibe={vibe} />
+              <div className={styles.trustItem}>
+                <span className={styles.trustIcon}>⏰</span>
+                <div>
+                  <strong>10 AM – 12 AM (Midnight)</strong>
+                  <span>Flexible Time Slots</span>
+                </div>
+              </div>
             </div>
           </div>
-
         </div>
-      </div>
+      </section>
 
-      {/* Section: Rich Visual Gallery */}
+      {/* Section 2: Signature Themes */}
+      <section id="vibes" className={styles.section + ' ' + styles.reveal}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <div className={styles.heroBadge} style={{ display: 'inline-flex', marginBottom: '12px' }}>
+              <Heart size={14} color="var(--accent)" /> OUR 3 OFFICIAL THEMES
+            </div>
+            <h2 className={styles.sectionTitle} style={{ fontSize: '2.5rem', marginBottom: '12px' }}>
+              Signature Celebration Setups
+            </h2>
+            <p className={styles.sectionSub} style={{ maxWidth: '680px', margin: '0 auto' }}>
+              Choose from our 3 authentic handcrafted celebration themes. Every booking gets 100% private access to the entire air-conditioned theater suite with 180" 4K screen and Dolby sound.
+            </p>
+          </div>
+
+          <div className={styles.vibeShowcaseGrid}>
+            {THEMES_PREVIEWS.map((pkg) => (
+              <div
+                key={'theme-' + pkg.id}
+                className={styles.showcaseCard}
+                style={{
+                  border: '1px solid ' + pkg.color + '44',
+                  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px ' + pkg.color + '18'
+                }}
+              >
+                <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                  <img src={pkg.image} alt={pkg.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: pkg.color,
+                    color: '#ffffff',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                  }}>
+                    {pkg.badge}
+                  </div>
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '60px',
+                    background: 'linear-gradient(to top, rgba(10, 10, 14, 0.95), transparent)'
+                  }} />
+                </div>
+
+                <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
+                  <div className={styles.showcasePrice} style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
+                    {pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ {pkg.duration} (Base 2 Guests)</span>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                    Extra guests: ₹100/head (Capacity up to 10 guests)
+                  </div>
+                  <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
+                    {pkg.features.map((f, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px' }}>
+                        <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/book"
+                    className="btn btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: pkg.color,
+                      borderColor: pkg.color,
+                      fontWeight: 700,
+                      fontSize: '0.95rem'
+                    }}
+                  >
+                    Book {pkg.name.split(' ')[0]} Theme →
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2.5: PS5 Pixel Gaming Realm Showcase */}
+      <section id="gaming-banner" className={styles.section + ' ' + styles.reveal} style={{ padding: '40px 0' }}>
+        <div className="container">
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(255, 0, 85, 0.12) 100%)',
+            border: '2px solid #00f0ff',
+            borderRadius: '24px',
+            padding: '36px',
+            boxShadow: '0 15px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 240, 255, 0.25)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '30px',
+            alignItems: 'center'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
+                <Gamepad2 size={24} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE — ₹399/HOUR
+              </div>
+              <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff', fontSize: '2rem' }}>
+                Sony PlayStation 5 Console + 2 Wireless Controllers
+              </h2>
+              <p style={{ color: '#c0c0e0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '24px' }}>
+                Step into Bangalore's premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) on our 180" 4K Screen with 7.1 Dolby surround sound!
+              </p>
+              <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+                <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff', fontWeight: 700 }}>
+                  Enter Gaming World 🎮
+                </Link>
+                <Link href="/gaming/book" className="btn btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: '#ffffff' }}>
+                  Book PS5 Gaming Slot
+                </Link>
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0, 240, 255, 0.4)', height: '240px' }}>
+              <img src="/gallery/ps5-gaming.jpg" alt="PS5 Gaming Lounge" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.8)', padding: '6px 12px', borderRadius: '8px', border: '1px solid #00f0ff', color: '#00f0ff', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                ₹399 / Hour (Min 1 Hr) · Till 12 AM Midnight
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 3: Amenities */}
+      <section id="features" className={styles.section + ' ' + styles.reveal}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+            <h2 className={styles.sectionTitle} style={{ fontSize: '2.5rem' }}>Designed for Ultimate Comfort</h2>
+            <p className={styles.sectionSub} style={{ maxWidth: '600px', margin: '0 auto' }}>
+              We combine high-end cinema electronics with custom interior designing to deliver a premium private space.
+            </p>
+          </div>
+
+          <div className={styles.featuresGrid}>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><Gamepad2 color="#00f0ff" /></div>
+              <h3 className={styles.featureTitle}>PS5 + 2 Controllers</h3>
+              <p className={styles.featureDesc}>1x Sony PlayStation 5 with 2 DualSense wireless controllers & top games for head-to-head multiplayer battles.</p>
+            </div>
+
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><Tv color="#f2a900" /></div>
+              <h3 className={styles.featureTitle}>180" 4K Projector Screen</h3>
+              <p className={styles.featureDesc}>Stunning high-contrast cinematic screens that support Netflix, Hotstar, YouTube, or your custom media files.</p>
+            </div>
+
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><Volume2 color="#a855f7" /></div>
+              <h3 className={styles.featureTitle}>7.1 Dolby surround sound</h3>
+              <p className={styles.featureDesc}>Full room-shaking audio calibration that places you directly inside the cinematic action.</p>
+            </div>
+
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><Sparkles color="#ec4899" /></div>
+              <h3 className={styles.featureTitle}>Custom Vibe Lighting</h3>
+              <p className={styles.featureDesc}>Interactive control over ambient colors, panel lights, and spotlights to suit the mood of your party.</p>
+            </div>
+
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><Coffee color="#10b981" /></div>
+              <h3 className={styles.featureTitle}>Snack Bar & Kitchen</h3>
+              <p className={styles.featureDesc}>Hot popcorn, cold drinks, cakes, mocktails, and finger foods prepared fresh and served straight to your seats.</p>
+            </div>
+
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}><ShieldCheck color="#3b82f6" /></div>
+              <h3 className={styles.featureTitle}>100% Private & Soundproof</h3>
+              <p className={styles.featureDesc}>Total security and acoustic isolation so you can shout, play, sing, or talk without disturbances.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: Photo Gallery */}
       <GallerySection />
 
       {/* Interactive Google Map Location Section */}
@@ -650,6 +583,57 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Section 5: FAQ */}
+      <section id="faq" className={styles.section + ' ' + styles.reveal}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+            <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
+            <p className={styles.sectionSub}>Everything you need to know about celebrating at Bee Vibe.</p>
+          </div>
+
+          <div style={{ maxWidth: '780px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {[
+              {
+                q: 'How many guests can occupy the private theater?',
+                a: 'Our private celebration theater comfortably accommodates up to 10 guests. Base price covers 2 members, and additional guests can be added at just ₹100 per head.',
+              },
+              {
+                q: 'What are the operating hours and can we book after 12 AM?',
+                a: 'Bee Vibe operates daily from 10:00 AM to 12:00 AM Midnight. Our venue closes strictly at 12:00 AM Midnight to ensure compliance and guest safety.',
+              },
+              {
+                q: 'Can we play our own movies, videos, and music?',
+                a: 'Yes! You can connect your phone, laptop, or USB to our 180" 4K screen, or stream through Netflix, Prime Video, YouTube, Disney+ Hotstar, and Spotify.',
+              },
+              {
+                q: 'Is an advance payment required for booking confirmation?',
+                a: 'Yes, a transparent ₹500 advance deposit is required via UPI (GPay, PhonePe, Paytm) to lock your date and time slot. The remaining balance is paid upon check-in at the venue.',
+              },
+              {
+                q: 'Are food, cakes, and snacks allowed inside?',
+                a: 'You are welcome to bring your celebration cake. We also offer fresh popcorn, cold drinks, mocktails, and finger foods from our in-house menu.',
+              },
+            ].map((faq, idx) => (
+              <div
+                key={idx}
+                className={styles.faqItem + (activeFaq === idx ? ' ' + styles.faqItemActive : '')}
+                onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
+              >
+                <div className={styles.faqQuestion}>
+                  <span style={{ fontWeight: 600, color: '#ffffff' }}>{faq.q}</span>
+                  <ChevronDown size={18} className={styles.faqIcon} />
+                </div>
+                {activeFaq === idx && (
+                  <div className={styles.faqAnswer} style={{ padding: '12px 18px', color: '#c0c0d8', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Full Width Footer */}
       <footer className={styles.footer}>
         <div className="container">
@@ -660,72 +644,54 @@ export default function Home() {
                   src="/bee-vibe-logo.png?v=4"
                   alt="BeeVibe Mini Private Theater"
                   className={styles.logoImg}
-                  style={{ height: '100px', width: 'auto', objectFit: 'contain' }}
+                  style={{ height: '80px', width: 'auto', objectFit: 'contain' }}
                 />
               </Link>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                Premium private celebration theaters across the city designed for celebrations, dates, movies, and gaming events. Your premium space, your custom vibe.
+              <p className={styles.footerDesc}>
+                Bangalore's #1 Luxury Private Party Hall, Mini Cinema & PS5 Gaming Space in Jayanagar 9th Block.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
-                <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <Phone size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
-                  <a href="tel:9900106474" style={{ color: 'inherit', textDecoration: 'none' }} className="hover-accent">
-                    +91 99001 06474
-                  </a>
-                </span>
-                <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <Instagram size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
-                  <a
-                    href="https://www.instagram.com/beevibe_partyhall/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                    className="hover-accent"
-                  >
-                    @beevibe_partyhall
-                  </a>
-                </span>
-                <span style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <MapPin size={16} color="var(--accent)" style={{ flexShrink: 0, marginTop: '3px' }} />
-                  <a
-                    href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: 'inherit', textDecoration: 'none', lineHeight: '1.4' }}
-                    className="hover-accent"
-                  >
-                    1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
-                  </a>
-                </span>
-              </div>
             </div>
 
             <div className={styles.footerCol}>
-              <h4 className={styles.footerTitle}>Quick Links</h4>
+              <h4 className={styles.footerHeading}>Quick Links</h4>
               <ul className={styles.footerLinks}>
-                <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
-                <li><a href="#gallery" className={styles.footerLink}>Visual Gallery</a></li>
-                <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
-                <li><a href="#location" className={styles.footerLink}>Location Map</a></li>
-                <li><a href="#faq" className={styles.footerLink}>FAQ</a></li>
-                <li><Link href="/book" className={styles.footerLink}>Book Tickets</Link></li>
+                <li><Link href="/gaming">PS5 Gaming Lounge 🎮</Link></li>
+                <li><a href="#vibes">Our 3 Themes</a></li>
+                <li><a href="#gallery">Photo Gallery</a></li>
+                <li><Link href="/book">Book Celebration</Link></li>
+                <li><Link href="/admin/login">Staff Portal</Link></li>
               </ul>
             </div>
 
             <div className={styles.footerCol}>
-              <h4 className={styles.footerTitle}>Opening Hours</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Clock size={16} color="var(--accent)" /> Daily: 10:00 AM - 11:30 PM</span>
-                <span>Pre-booking mandatory. Pre-decoration available on demand.</span>
-              </div>
+              <h4 className={styles.footerHeading}>Location & Timing</h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: '1.6' }}>
+                1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
+              </p>
+              <p style={{ color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 600, marginTop: '8px' }}>
+                ⏰ Open Daily: 10:00 AM – 12:00 AM Midnight
+              </p>
+            </div>
+
+            <div className={styles.footerCol}>
+              <h4 className={styles.footerHeading}>Contact & WhatsApp</h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                📞 +91 9900106474
+              </p>
+              <a
+                href="https://wa.me/919900106474"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px', padding: '8px 16px', fontSize: '0.85rem', backgroundColor: '#25D366', borderColor: '#25D366', color: '#ffffff' }}
+              >
+                Chat on WhatsApp
+              </a>
             </div>
           </div>
 
-          <div className={styles.copyright}>
-            <p>&copy; {new Date().getFullYear()} Bee Vibe Party Hall & Private Celebration Theater. All Rights Reserved.</p>
-            <p style={{ marginTop: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-              Bee Vibe Party Hall - Premium Private Celebration Space, Birthday Hall, and Private Cinema in Jayanagar 9th Block, Bangalore. Serving Jayanagar 4th Block, JP Nagar, BTM Layout, Koramangala & Banashankari.
-            </p>
+          <div className={styles.footerBottom}>
+            <p>&copy; {new Date().getFullYear()} Bee Vibe Party Hall. All rights reserved.</p>
           </div>
         </div>
       </footer>
