@@ -181,9 +181,9 @@ export default function Home() {
   }, []);
 
   const vibeLabels = {
-    pink: 'Rose Pink Theme (₹799/2hrs)',
-    purple: 'Neon Purple Theme (₹999/2hrs)',
-    red: 'Crimson Red Theme (₹599/2hrs)',
+    red: 'Red Velvet Romance Theme (₹799/2hrs)',
+    pink: 'Pink Angel Wings Theme (₹899/2hrs)',
+    purple: 'Royal Purple Butterfly Theme (₹999/2hrs)',
   };
 
   return (

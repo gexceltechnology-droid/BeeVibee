@@ -46,22 +46,24 @@ export function processWhatsAppBotMessage(incomingMessage: string, _phone: strin
   if (cleanMsg === '1' || cleanMsg.includes('package') || cleanMsg.includes('price') || cleanMsg.includes('cost')) {
     return {
       replyText:
-        `🎟️ *BEE VIBE PRIVATE THEATER PACKAGES* 🎟️\n` +
-        `----------------------------------------\n` +
-        `🌸 *Rose Pink Room* — ₹999 / 2 Hours\n` +
-        `• Base 2 Guests (Extra Guest: ₹250/head)\n` +
-        `• PS5 Gaming + 2 Controllers\n` +
-        `• HD 180" Screen & Recliner Sofas\n\n` +
-        `💜 *Neon Purple Room* — ₹999 / 2 Hours\n` +
-        `• Base 2 Guests (Extra Guest: ₹250/head)\n` +
-        `• Cyberpunk Glow + PS5 & OTT Apps\n` +
-        `• Dolby Atmos Surround Sound\n\n` +
-        `❤️ *Crimson Red VIP Suite* — ₹1,299 / 2 Hours\n` +
-        `• Base 2 Guests (Extra Guest: ₹300/head)\n` +
-        `• VIP King Size Recliner Bed & Decor\n` +
-        `• PS5 + 4K Laser Projection\n` +
-        `----------------------------------------\n` +
-        `Reply *2* to Check Available Time Slots!`,
+        `🎟️ *BEE VIBE PRIVATE THEATER THEMES* 🎟️
+----------------------------------------
+❤️ *Red Theme (Red Velvet Romance)* — ₹799 / 2 Hours
+• Base 2 Guests (Extra Guest: ₹100/head)
+• Floral Heart & "Happy Anniversary" Neon Backdrop
+• 180" 4K Screen & 7.1 Dolby Surround Sound
+
+🩷 *Pink Theme (Angel Wings & Neon)* — ₹899 / 2 Hours
+• Base 2 Guests (Extra Guest: ₹100/head)
+• Giant Glowing Angel Wings & "Happy Birthday" Arch
+• Hot Pink Plush Recliners & 180" 4K Screen
+
+💜 *Purple Theme (Royal Butterfly Grandeur)* — ₹999 / 2 Hours
+• Base 2 Guests (Extra Guest: ₹100/head)
+• Grand Triple Arched Decor, Butterfly Wings & Marquee Letters
+• 180" 4K Screen, Dolby Sound & VIP Privacy
+----------------------------------------
+Reply *2* to Check Available Time Slots!`,
       options: [
         { id: '2', text: 'Check Available Slots' },
         { id: '0', text: 'Main Menu' },

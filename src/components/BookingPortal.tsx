@@ -13,47 +13,52 @@ import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 // Packages Constant
 const PACKAGES = [
   {
-    id: 'pkg-purple',
-    name: 'Purple Theme',
-    price: 999,
+    id: 'pkg-red',
+    name: 'Red Theme (Red Velvet Romance)',
+    price: 799,
+    image: '/themes/theme-red.jpg',
+    badge: 'Anniversary & Romantic Dates ❤️',
+    color: '#ef4444',
     details: [
-      '2-Hour Celebration Slot (Base 2 Guests)',
-      '7.1 Dolby Surround Sound Audio',
-      'HD Projector & Large 180" Screen',
-      'Air Conditioned Hall (AC)',
-      'High-Speed Wi-Fi Access',
-      'Vibrant Purple Theme Lighting Setup',
+      'Full Red Velvet Decor with Floral Heart & "Happy Anniversary" Neon',
+      'Romantic Red Shimmer Backdrop, Lighted Arch & Rose Petals',
+      'Plush Velvet Recliner Seating, Coffee Table & Balloon Decor',
+      '180" 4K Laser Projection Screen & 7.1 Dolby Atmos Sound',
+      '100% Private Air Conditioned (AC) Theater Suite',
     ]
   },
   {
     id: 'pkg-pink',
-    name: 'Pink Theme',
-    price: 799,
+    name: 'Pink Theme (Angel Wings & Neon)',
+    price: 899,
+    image: '/themes/theme-pink.jpg',
+    badge: 'Trending Birthday & Party Setup 🩷',
+    color: '#ec4899',
     details: [
-      '2-Hour Celebration Slot (Base 2 Guests)',
-      '7.1 Dolby Surround Sound Audio',
-      'HD Projector & Large 180" Screen',
-      'Air Conditioned Hall (AC)',
-      'High-Speed Wi-Fi Access',
-      'Warm Pink Theme Lighting Setup',
+      'Giant Glowing Illuminated Angel Wings & Balloon Backdrop',
+      'Pink Shimmer Sequin Arch with "Happy Birthday" Neon Sign',
+      'Hot Pink Plush Recliners, Picket Fence & "HAPPY" Decor',
+      '180" 4K Screen with Immersive Theater Sound',
+      'Private Air Conditioned (AC) Celebration Hall',
     ]
   },
   {
-    id: 'pkg-red',
-    name: 'Red Theme',
-    price: 599,
+    id: 'pkg-purple',
+    name: 'Purple Theme (Royal Butterfly Grandeur)',
+    price: 999,
+    image: '/themes/theme-purple.jpg',
+    badge: 'VIP Grand Celebration Setup 💜',
+    color: '#a855f7',
     details: [
-      '2-Hour Celebration Slot (Base 2 Guests)',
-      '7.1 Dolby Surround Sound Audio',
-      'HD Projector & Large 180" Screen',
-      'Air Conditioned Hall (AC)',
-      'High-Speed Wi-Fi Access',
-      'Romantic Red Theme Lighting Setup',
+      'Grand Triple Arched Purple Decor with Balloon Arches',
+      'Illuminated Butterfly Wings & Gold Shimmer Sequin Wall',
+      'Lighted "HAPPY BIRTHDAY" Marquee Letters & Cake Table Setup',
+      '180" 4K Screen, Dolby Sound & Complete Privacy',
+      'Luxury Private Air Conditioned (AC) Hall',
     ]
   }
 ];
 
-// Add-ons Constant
 const ADDONS = [
   { id: 'add-dslr', name: 'DSLR Camera Coverage (₹500/hour)', price: 500 },
   { id: 'add-fog', name: 'Special Fog Entry Effect (Flat ₹500)', price: 500 },
@@ -1948,27 +1953,90 @@ export default function BookingPortal() {
           {/* STEP 2: Choose Celebration Theme / Package */}
           {step === 2 && (
             <div className={styles.stepContainer}>
-              <h3 style={{ marginBottom: '8px', fontFamily: 'var(--font-title)' }}>Select Your Celebration Vibe</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                Pick a custom setup tailored for your special occasion.
+              <h3 style={{ marginBottom: '8px', fontFamily: 'var(--font-title)' }}>Select Your Celebration Theme</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                All themes include 180" 4K screen, 7.1 Dolby surround sound, AC, and complete room privacy.
               </p>
 
-              <div className={styles.packagesGrid}>
+              <div className={styles.packagesGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
                 {PACKAGES.map((pkg) => (
                   <div
                     key={pkg.id}
                     className={`${styles.packageCard} ${selectedPackage.id === pkg.id ? styles.packageSelected : ''}`}
                     onClick={() => setSelectedPackage(pkg)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
+                      borderRadius: '16px',
+                      border: selectedPackage.id === pkg.id ? `2px solid ${pkg.color}` : '1px solid rgba(255, 255, 255, 0.12)',
+                      background: selectedPackage.id === pkg.id ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+                      padding: 0,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: selectedPackage.id === pkg.id ? `0 8px 30px ${pkg.color}33` : 'none'
+                    }}
                   >
-                    <h4 className={styles.packageName}>{pkg.name}</h4>
-                    <div className={styles.packagePrice}>
-                      {pkg.price === 0 ? 'Included' : `+₹${pkg.price}`}
+                    {/* Real Venue Photo Header */}
+                    <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        background: pkg.color,
+                        color: '#ffffff',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+                      }}>
+                        {pkg.badge}
+                      </div>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '50px',
+                        background: 'linear-gradient(to top, rgba(12, 10, 9, 0.95), transparent)'
+                      }} />
                     </div>
-                    <ul className={styles.packageDetails}>
-                      {pkg.details.map((detail, idx) => (
-                        <li key={idx}>{detail}</li>
-                      ))}
-                    </ul>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                      <h4 className={styles.packageName} style={{ color: pkg.color, fontSize: '1.1rem', marginBottom: '6px' }}>{pkg.name}</h4>
+                      <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '12px' }}>
+                        ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 2 Hours (Base 2 Guests)</span>
+                      </div>
+                      <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
+                        {pkg.details.map((detail, idx) => (
+                          <li key={idx} style={{ fontSize: '0.8rem', color: '#d0d0e0', marginBottom: '6px', display: 'flex', gap: '6px' }}>
+                            <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {detail}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        style={{
+                          marginTop: '14px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          background: selectedPackage.id === pkg.id ? pkg.color : 'rgba(255, 255, 255, 0.08)',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {selectedPackage.id === pkg.id ? '✓ Selected' : 'Choose This Theme'}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
