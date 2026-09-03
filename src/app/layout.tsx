@@ -88,7 +88,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   verification: {
-    google: ["bPQWH4Cg2KkOj2GwUycb_OLVhaqUJzyHHQpNEpanMEE", "googleedf3ca6499a78e5c"],
+    google: ["bPQWH4Cg2KkOj2GwUycb_OLVhaqUJzyHHQpNEpanMEE", "googleedf3ca6499a78e5c", "IqvBOcdHLrFg_WHfCejyMRLX7TD6czdK-k-cE6e2scA"],
   },
   icons: {
     icon: "/bee-vibe-icon.png?v=3",

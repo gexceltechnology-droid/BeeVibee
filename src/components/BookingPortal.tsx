@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import styles from './BookingPortal.module.css';
 
-import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/lib/time';
+import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_OPEN_MINUTES, VENUE_CLOSE_MINUTES } from '@/lib/time';
+import { Copy, Check } from 'lucide-react';
 import { Download, Printer, FileText } from 'lucide-react';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
@@ -77,6 +78,10 @@ interface ConfirmedBooking {
   addOns: string[];
   totalPrice: number;
   guestCount: number;
+  advancePaid?: number;
+  balanceDue?: number;
+  paymentStatus?: string;
+  paymentMode?: string;
   status: string;
 }
 
@@ -104,9 +109,15 @@ export default function BookingPortal() {
   
   // Custom Time Slot states
   const [bookingMode, setBookingMode] = useState<'predefined' | 'custom'>('predefined');
-  const [customStart, setCustomStart] = useState('10:00');
-  const [customEnd, setCustomEnd] = useState('12:00');
+  const [customStartHour, setCustomStartHour] = useState('10');
+  const [customStartMin, setCustomStartMin] = useState('00');
+  const [customStartAmPm, setCustomStartAmPm] = useState<'AM' | 'PM'>('AM');
+  const [customEndHour, setCustomEndHour] = useState('12');
+  const [customEndMin, setCustomEndMin] = useState('00');
+  const [customEndAmPm, setCustomEndAmPm] = useState<'AM' | 'PM'>('PM');
   const [customSlotError, setCustomSlotError] = useState('');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [upiCopied, setUpiCopied] = useState(false);
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
@@ -447,32 +458,59 @@ export default function BookingPortal() {
   }, [step, confirmedBooking]);
 
   // Effect to automatically calculate custom slot details when timing inputs change
+  const applyQuickDuration = (hoursToAdd: number) => {
+    const startM = convert12HourToMinutes(
+      parseInt(customStartHour, 10),
+      parseInt(customStartMin, 10),
+      customStartAmPm
+    );
+    let endM = startM + Math.round(hoursToAdd * 60);
+    if (endM > VENUE_CLOSE_MINUTES) {
+      endM = VENUE_CLOSE_MINUTES;
+    }
+    const { hour12, minute, ampm } = convertMinutesTo12Hour(endM);
+    setCustomEndHour(String(hour12).padStart(2, '0'));
+    setCustomEndMin(String(minute).padStart(2, '0'));
+    setCustomEndAmPm(ampm);
+  };
+
   useEffect(() => {
     if (bookingMode !== 'custom') return;
 
     setCustomSlotError('');
     setSelectedSlot(null);
 
-    if (!customStart || !customEnd) {
-      return;
-    }
-
     try {
-      const [startH, startM] = customStart.split(':').map(Number);
-      const [endH, endM] = customEnd.split(':').map(Number);
-      
+      const startH = parseInt(customStartHour, 10);
+      const startM = parseInt(customStartMin, 10);
+      const endH = parseInt(customEndHour, 10);
+      const endM = parseInt(customEndMin, 10);
+
       if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
         setCustomSlotError('Invalid time selection.');
         return;
       }
 
-      const startMinutes = startH * 60 + startM;
-      
+      const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
+      let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
+
+      // 12:00 AM at end of night represents closing midnight (1440 mins)
+      if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
+        endMinutes = 1440;
+      }
+
+      // Enforce 10:00 AM to 12:00 AM Midnight operating limit
+      const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
+      if (!hoursValidation.valid) {
+        setCustomSlotError(hoursValidation.error || 'Invalid operating time.');
+        return;
+      }
+
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
+      const todayStr = yyyy + '-' + mm + '-' + dd;
 
       if (selectedDate === todayStr) {
         const currentMinutes = today.getHours() * 60 + today.getMinutes();
@@ -482,17 +520,11 @@ export default function BookingPortal() {
         }
       }
 
-      let endMinutes = endH * 60 + endM;
-
-      if (endMinutes <= startMinutes) {
-        endMinutes += 24 * 60; // crosses midnight
-      }
-
       const durationMinutes = endMinutes - startMinutes;
       if (durationMinutes < 30) {
         setCustomSlotError('Custom slot must be at least 30 minutes.');
         return;
-      }
+        }
 
       // Format custom slot time string, e.g. "10:00 AM - 12:00 PM"
       const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
@@ -505,20 +537,31 @@ export default function BookingPortal() {
       }
 
       // Base price is driven entirely by the selected package
-      const durationHours = (endMinutes - startMinutes) / 60;
+      const durationHours = durationMinutes / 60;
       const basePrice = Math.round((selectedPackage.price / 2) * durationHours);
 
       setSelectedSlot({
         id: 'slot-custom',
         time: timeStr,
-        label: 'Custom Slot',
+        label: 'Custom Slot (' + durationHours + ' Hr' + (durationHours > 1 ? 's' : '') + ')',
         basePrice,
         isBooked: false,
       });
     } catch (e) {
       setCustomSlotError('Error calculating custom time range.');
     }
-  }, [bookingMode, customStart, customEnd, selectedDate, activeBookings]);
+  }, [
+    bookingMode,
+    customStartHour,
+    customStartMin,
+    customStartAmPm,
+    customEndHour,
+    customEndMin,
+    customEndAmPm,
+    selectedDate,
+    activeBookings,
+    selectedPackage,
+  ]);
 
   const getSlotDurationHours = () => {
     if (!selectedSlot) return 2;
@@ -529,6 +572,9 @@ export default function BookingPortal() {
       return 2;
     }
   };
+
+  const calculateAdvance = () => Math.min(500, calculateTotal());
+  const calculateBalance = () => Math.max(0, calculateTotal() - calculateAdvance());
 
   // Calculate dynamic pricing
   const calculateTotal = () => {
@@ -638,8 +684,12 @@ export default function BookingPortal() {
         return list;
       })(),
       totalPrice: calculateTotal(),
+      advancePaid: calculateAdvance(),
+      balanceDue: calculateBalance(),
+      paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
+      paymentMode: 'UPI Advance',
       guestCount: customerDetails.guestCount,
-      specialRequests: customerDetails.specialRequests,
+      specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
     };
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -1758,49 +1808,138 @@ export default function BookingPortal() {
                   )}
                 </>
               ) : (
-                <div>
-                  <h3 style={{ margin: '16px 0 8px 0', fontFamily: 'var(--font-title)' }}>Customize Your Show Time</h3>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                    Book a custom duration. Pricing is calculated pro-rata based on your selected theme package in the next step.
+                <div className={styles.time12hPickerContainer}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', margin: '16px 0 8px 0' }}>
+                    <h3 style={{ margin: 0, fontFamily: 'var(--font-title)' }}>Customize Your Show Time</h3>
+                    <span style={{ fontSize: '0.78rem', background: 'rgba(242, 169, 0, 0.12)', border: '1px solid rgba(242, 169, 0, 0.3)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                      ⏰ Open 10:00 AM – 12:00 AM (Midnight)
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                    Select your start and end times using easy 12-hour format with AM / PM options. Theater closes strictly at 12:00 AM Midnight.
                   </p>
 
-                  <div className={styles.customSlotContainer}>
-                    <div className={styles.customSlotRow}>
-                      <div className={styles.customSlotField}>
-                        <label className={styles.customSlotLabel} htmlFor="custom-start">Start Time</label>
-                        <input
-                          type="time"
-                          id="custom-start"
-                          className={styles.timeInput}
-                          value={customStart}
-                          onChange={(e) => setCustomStart(e.target.value)}
-                        />
+                  <div className={styles.time12hInputsGrid}>
+                    {/* Start Time Card */}
+                    <div className={styles.timePickerCard}>
+                      <div className={styles.timePickerCardHeader}>
+                        <span className={styles.timePickerCardTitle}>🟢 START TIME</span>
                       </div>
-                      <div className={styles.customSlotField}>
-                        <label className={styles.customSlotLabel} htmlFor="custom-end">End Time</label>
-                        <input
-                          type="time"
-                          id="custom-end"
-                          className={styles.timeInput}
-                          value={customEnd}
-                          onChange={(e) => setCustomEnd(e.target.value)}
-                        />
+                      <div className={styles.timePickerControls}>
+                        <select
+                          className={styles.timeSelect}
+                          value={customStartHour}
+                          onChange={(e) => setCustomStartHour(e.target.value)}
+                        >
+                          {['10', '11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09'].map((h) => (
+                            <option key={'sh-' + h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className={styles.timeSeparator}>:</span>
+                        <select
+                          className={styles.timeSelect}
+                          value={customStartMin}
+                          onChange={(e) => setCustomStartMin(e.target.value)}
+                        >
+                          {['00', '15', '30', '45'].map((m) => (
+                            <option key={'sm-' + m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                        <div className={styles.ampmToggleGroup}>
+                          <button
+                            type="button"
+                            className={styles.ampmBtn + (customStartAmPm === 'AM' ? ' ' + styles.ampmBtnActive : '')}
+                            onClick={() => setCustomStartAmPm('AM')}
+                          >
+                            AM
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.ampmBtn + (customStartAmPm === 'PM' ? ' ' + styles.ampmBtnActive : '')}
+                            onClick={() => setCustomStartAmPm('PM')}
+                          >
+                            PM
+                          </button>
+                        </div>
                       </div>
                     </div>
 
-                    {customSlotError ? (
-                      <div className={styles.slotErrorMsg}>{customSlotError}</div>
-                    ) : selectedSlot ? (
-                      <div className={styles.customSlotPriceBox}>
-                        <div className={styles.priceLabel}>
-                          Selected Range: <strong style={{ color: '#ffffff' }}>{selectedSlot.time}</strong>
-                        </div>
-                        <div className={styles.priceVal} style={{ fontSize: '0.9rem', fontWeight: 'normal', textShadow: 'none', color: 'var(--text-secondary)' }}>
-                          Theme Selected in Step 2
+                    {/* End Time Card */}
+                    <div className={styles.timePickerCard}>
+                      <div className={styles.timePickerCardHeader}>
+                        <span className={styles.timePickerCardTitle}>🔴 END TIME (MAX 12:00 AM)</span>
+                      </div>
+                      <div className={styles.timePickerControls}>
+                        <select
+                          className={styles.timeSelect}
+                          value={customEndHour}
+                          onChange={(e) => setCustomEndHour(e.target.value)}
+                        >
+                          {['10', '11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09'].map((h) => (
+                            <option key={'eh-' + h} value={h}>{h}</option>
+                          ))}
+                        </select>
+                        <span className={styles.timeSeparator}>:</span>
+                        <select
+                          className={styles.timeSelect}
+                          value={customEndMin}
+                          onChange={(e) => setCustomEndMin(e.target.value)}
+                        >
+                          {['00', '15', '30', '45'].map((m) => (
+                            <option key={'em-' + m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                        <div className={styles.ampmToggleGroup}>
+                          <button
+                            type="button"
+                            className={styles.ampmBtn + (customEndAmPm === 'AM' ? ' ' + styles.ampmBtnActive : '')}
+                            onClick={() => setCustomEndAmPm('AM')}
+                          >
+                            AM
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.ampmBtn + (customEndAmPm === 'PM' ? ' ' + styles.ampmBtnActive : '')}
+                            onClick={() => setCustomEndAmPm('PM')}
+                          >
+                            PM
+                          </button>
                         </div>
                       </div>
-                    ) : null}
+                    </div>
                   </div>
+
+                  {/* Quick Duration */}
+                  <div className={styles.quickDurationSection}>
+                    <span className={styles.quickDurationTitle}>⚡ Quick Duration Presets (Auto-calculates End Time):</span>
+                    <div className={styles.quickDurationPills}>
+                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(2)}>
+                        +2 Hours (Standard)
+                      </button>
+                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(2.5)}>
+                        +2.5 Hours
+                      </button>
+                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(3)}>
+                        +3 Hours (Movie & Party)
+                      </button>
+                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(4)}>
+                        +4 Hours (Extended)
+                      </button>
+                    </div>
+                  </div>
+
+                  {customSlotError ? (
+                    <div className={styles.slotErrorMsg}>{customSlotError}</div>
+                  ) : selectedSlot ? (
+                    <div className={styles.customSlotPriceBox}>
+                      <div className={styles.priceLabel}>
+                        Selected Time: <strong style={{ color: '#ffffff' }}>{selectedSlot.time}</strong> ({selectedSlot.label})
+                      </div>
+                      <div className={styles.priceVal} style={{ fontSize: '0.9rem', fontWeight: 'normal', textShadow: 'none', color: '#10b981' }}>
+                        ✓ Available within operating hours
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -2016,6 +2155,86 @@ export default function BookingPortal() {
                       onChange={handleInputChange}
                     />
                   </div>
+
+                  {/* Advance Payment Checkout Card */}
+                  <div className={styles.advancePaymentCard} style={{ gridColumn: '1 / -1' }}>
+                    <div className={styles.advanceHeader}>
+                      <span style={{ fontSize: '1.4rem' }}>💳</span>
+                      <div>
+                        <h4 className={styles.advanceHeaderTitle}>Advance Payment Required to Confirm Slot</h4>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          To guarantee and block your slot on the schedule, an advance deposit of ₹{calculateAdvance()} is required.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={styles.advanceBreakdownRow}>
+                      <div className={styles.advanceBreakdownItem}>
+                        <div className={styles.advanceBreakdownLabel}>Total Hall Price</div>
+                        <div className={styles.advanceBreakdownVal}>₹{calculateTotal()}</div>
+                      </div>
+                      <div className={styles.advanceBreakdownItem + ' ' + styles.advancePayableHighlight}>
+                        <div className={styles.advanceBreakdownLabel}>🟢 Advance Payable Now</div>
+                        <div className={styles.advanceBreakdownVal}>₹{calculateAdvance()}</div>
+                      </div>
+                      <div className={styles.advanceBreakdownItem}>
+                        <div className={styles.advanceBreakdownLabel}>⏳ Remaining Balance at Venue</div>
+                        <div className={styles.advanceBreakdownVal}>₹{calculateBalance()}</div>
+                      </div>
+                    </div>
+
+                    {/* QR Code and UPI options */}
+                    <div className={styles.advanceQrSection}>
+                      <div className={styles.advanceQrImgWrapper}>
+                        <img
+                          src={"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe")}
+                          alt="UPI Advance QR Code"
+                          width={150}
+                          height={150}
+                          style={{ display: 'block' }}
+                        />
+                      </div>
+                      <div className={styles.advanceQrInfo}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
+                          📲 Scan QR with any UPI App (GPay, PhonePe, Paytm, BHIM)
+                        </div>
+                        <div className={styles.upiIdBox}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>UPI ID:</span>
+                          <span className={styles.upiIdText}>9900106474@okbizaxis</span>
+                          <button
+                            type="button"
+                            className={styles.upiCopyBtn}
+                            onClick={() => {
+                              navigator.clipboard.writeText('9900106474@okbizaxis');
+                              setUpiCopied(true);
+                              setTimeout(() => setUpiCopied(false), 2000);
+                            }}
+                          >
+                            {upiCopied ? '✓ Copied' : '📋 Copy'}
+                          </button>
+                        </div>
+                        <a
+                          href={"upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe"}
+                          className={styles.upiIntentBtn}
+                        >
+                          ⚡ Pay ₹{calculateAdvance()} via UPI App
+                        </a>
+                        <div style={{ marginTop: '6px' }}>
+                          <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                            UPI UTR/Reference ID or Last 4 Digits (Optional):
+                          </label>
+                          <input
+                            type="text"
+                            className={styles.formInput}
+                            placeholder="e.g. 423987123456 or last 4 digits"
+                            value={utrNumber}
+                            onChange={(e) => setUtrNumber(e.target.value)}
+                            style={{ padding: '8px 12px', fontSize: '0.88rem' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -2113,7 +2332,22 @@ export default function BookingPortal() {
                       <div>
                         <span className={styles.ticketLabel}>TOTAL PRICE</span>
                         <div className={styles.ticketVal} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                          ₹{confirmedBooking.totalPrice}
+                          ₹�{confirmedBooking.totalPrice}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.ticketRow} style={{ background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', padding: '8px', margin: '6px 0' }}>
+                      <div>
+                        <span className={styles.ticketLabel} style={{ color: '#10b981' }}>🟧 ADVANCE RECEIVED</span>
+                        <div className={styles.ticketVal} style={{ color: '#10b981', fontWeight: 'bold' }}>
+                          ₹{confirmedBooking.advancePaid ?? 500}
+                        </div>
+                      </div>
+                      <div>
+                        <span className={styles.ticketLabel} style={{ color: '#f59e0b' }}>⏳ BALANCE DUE</span>
+                        <div className={styles.ticketVal} style={{ color: '#f59e0b', fontWeight: 'bold' }}>
+                          ₹{confirmedBooking.balanceDue ?? Math.max(0, confirmedBooking.totalPrice - (confirmedBooking.advancePaid ?? 500))}
                         </div>
                       </div>
                     </div>
@@ -2144,6 +2378,27 @@ export default function BookingPortal() {
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '24px', flexWrap: 'wrap' }}>
+                <a
+                  href={`/receipt?id=${confirmedBooking.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: '#a855f7',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    textDecoration: 'none',
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)',
+                  }}
+                >
+                  <FileText size={18} />
+                  View Advance Receipt
+                </a>
                 <a
                   href={getAdminWhatsAppDeepLink('booking', confirmedBooking)}
                   target="_blank"
@@ -2232,7 +2487,7 @@ export default function BookingPortal() {
                       Processing...
                     </>
                   ) : (
-                    `Confirm & Reserve (₹${calculateTotal()})`
+                    `Confirm Booking (₹�{calculateAdvance()} Advance Paid) ✓`
                   )}
                 </button>
               )}

@@ -82,13 +82,13 @@ export function processWhatsAppBotMessage(incomingMessage: string, _phone: strin
       replyText:
         `📅 *SLOT AVAILABILITY & RESERVATIONS* 📅\n` +
         `----------------------------------------\n` +
-        `We operate slots every 2 hours daily from 10:00 AM to 11:00 PM!\n\n` +
+        `We operate slots daily from 10:00 AM to 12:00 AM (Midnight)!\n\n` +
         `⏰ *Popular Slots*:\n` +
         `• Morning: 10:00 AM - 12:00 PM\n` +
         `• Afternoon: 01:00 PM - 03:00 PM\n` +
         `• Evening: 04:00 PM - 06:00 PM\n` +
         `• Night Prime: 07:00 PM - 09:00 PM\n` +
-        `• Late Night: 09:30 PM - 11:30 PM\n\n` +
+        `• Midnight Vibe: 10:00 PM - 12:00 AM\n\n` +
         `🔗 Click below to pick your date, theme & book in 60 seconds:\n` +
         `https://www.beevibe.org/#booking\n\n` +
         `Reply *0* for Main Menu`,

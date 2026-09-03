@@ -30,7 +30,7 @@ if (typeof window !== "undefined" && isFirebaseConfigured()) {
     };
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
-    db = getFirestore(app);
+    db = getFirestore(app, process.env.NEXT_PUBLIC_FIREBASE_DATABASE_ID || 'default');
   } catch (err) {
     console.warn("Firebase initialization skipped or failed gracefully:", err);
   }

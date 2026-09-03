@@ -617,3 +617,287 @@
     padding: 10px 12px;
   }
 }
+
+/* 12-Hour AM/PM Time Picker for Gaming */
+.time12hPickerContainer {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid #00f0ff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.time12hInputsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.timePickerCard {
+  background: rgba(10, 10, 20, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.timePickerCardHeader {
+  margin-bottom: 10px;
+}
+
+.timePickerCardTitle {
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.15rm;
+  letter-spacing: 1px;
+  color: #00f0ff;
+  font-weight: bold;
+}
+
+.timePickerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timeSelect {
+  background: #05050c;
+  border: 1px solid #00f0ff;
+  color: #ffffff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.35rm;
+  padding: 8px 10px;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+}
+
+.timeSeparator {
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.5rm;
+  color: #00f0ff;
+  font-weight: bold;
+}
+
+.ampmToggleGroup {
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.ampmBtn {
+  background: transparent;
+  border: none;
+  color: #a0a0c0;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.15rm;
+  font-weight: bold;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ampmBtnActive {
+  background: #00f0ff;
+  color: #000000;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+}
+
+.quickDurationSection {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0, 240, 255, 0.2);
+}
+
+.quickDurationTitle {
+  display: block;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.15rm;
+  color: #ffe600;
+  margin-bottom: 8px;
+}
+
+.quickDurationPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quickDurationBtn {
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: #00f0ff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rm;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uuickDurationBtn:hover {
+  background: #00f0ff;
+  color: #000000;
+}
+
+/* Advance Payment Card for Gaming */
+.advancePaymentCard {
+  background: linear-gradient(135deg, rgba(14, 14, 28, 0.95), rgba(8, 8, 16, 0.98));
+  border: 2px solid #00f0ff;
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 10px 30px rgba(0, 240, 255, 0.15);
+}
+
+.advanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(0, 240, 255, 0.3);
+}
+
+.advanceHeaderTitle {
+  font-family: var(--font-pixel), cursive;
+  font-size: 0.95rm;
+  color: #ffe600;
+  margin: 0 0 4px 0;
+}
+
+.advanceBreakdownRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.advanceBreakdownItem {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.advanceBreakdownLabel {
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rm;
+  color: #a0a0c0;
+  margin-bottom: 4px;
+}
+
+.advanceBreakdownVal {
+  font-size: 1.25rm;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.advancePayableHighlight {
+  border-color: #00ff66;
+  background: rgba(0, 255, 102, 0.08);
+}
+
+.advancePayableHighlight .advanceBreakdownVal {
+  color: #00ff66;
+}
+
+.advanceQrSection {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.advanceQrImgWrapper {
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  border: 2px solid #00f0ff;
+  flex-shrink: 0;
+}
+
+.tY
+unidQrInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upiIdBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  width: fit-content;
+}
+
+.upiIdText {
+  font-family: monospace;
+  font-weight: bold;
+  color: #00f0ff;
+  font-size: 0.95rm;
+}
+
+.upiCopyBtn {
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid #00f0ff;
+  color: #00f0ff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.1rm;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upiIntentBtn {
+  display: inline-block;
+  background: linear-gradient(135deg, #00f0ff, #7000ff);
+  color: #ffffff;
+  font-family: var(--font-vt323), monospace;
+  font-size: 1.25rm;
+  font-weight: bold;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-align: center;
+  width: fit-content;
+  box-shadow: 0 4px 12px rgba(0, 240, 255, 0.3);
+}
+
+.advanceQrInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .time12hInputsGrid {
+    grid-template-columns: 1fr;
+  }
+  .advanceBreakdownRow {
+    grid-template-columns: 1fr;
+  }
+  .advanceQrSection {
+    flex-direction: column;
+    text-align: center;
+  }
+  .upiIdBox {
+    width: 100%;
+    justify-content: center;
+  }
+  .upiIntentBtn {
+    width: 100%;
+  }
+}

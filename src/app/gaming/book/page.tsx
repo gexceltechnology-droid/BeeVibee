@@ -1,38 +1,29 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { 
+  Gamepad2, 
+  ArrowLeft, 
+  CheckCircle2, 
+  Copy, 
+  FileText 
+} from 'lucide-react';
 import styles from './gamingBook.module.css';
-import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange } from '@/lib/time';
-import { Gamepad2, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { isFirebaseConfigured } from '@/lib/firebase';
-import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
+import { 
+  checkBookingOverlap, 
+  formatCustomTimeRange, 
+  parseTimeRange, 
+  convert12HourToMinutes, 
+  convertMinutesTo12Hour, 
+  validateSlotOperatingHours, 
+  VENUE_OPEN_MINUTES, 
+  VENUE_CLOSE_MINUTES 
+} from '@/lib/time';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
-
-// Gaming Theme Constant (Single Dedicated Dark Gaming Lounge)
-const PACKAGES = [
-  {
-    id: 'pkg-dark-gaming',
-    name: '🖤 Dark Gaming Theme',
-    price: 399,
-    details: [
-      'PS5 Gaming Session (₹399 / Hour — Min 1 Hour)',
-      '1x PS5 Console + 2 DualSense Controllers Included',
-      '180" 4K Projector Screen with Low Latency',
-      '7.1 Dolby Surround Sound System',
-      'Atmospheric Dark Gaming RGB Ambient Lighting',
-      'Air Conditioned Private Lounge (AC)',
-    ]
-  }
-];
-
-interface Slot {
-  id: string;
-  time: string;
-  label: string;
-  basePrice: number;
-  isBooked: boolean;
-}
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { sendFirebaseOtp, setupRecaptcha, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 
 interface ConfirmedBooking {
   id: string;
@@ -42,107 +33,168 @@ interface ConfirmedBooking {
   date: string;
   timeSlot: string;
   packageName: string;
-  addOns: string[];
   totalPrice: number;
   guestCount: number;
+  advancePaid?: number;
+  balanceDue?: number;
+  paymentStatus?: string;
+  paymentMode?: string;
   status: string;
+  addOns?: string[];
+  specialRequests?: string;
 }
 
-export default function GamingBookingPage() {
+const PACKAGES = [
+  {
+    id: 'cyberpunk',
+    name: 'Cyberpunk Neon Cyber-Lounge',
+    details: ['Cyan & Magenta Dual Lasers', 'Bass-Boosted RGB Audio', 'Neon Arcade Glow', 'Custom RGB Color Sync'],
+  },
+  {
+    id: 'retro_arcade',
+    name: 'Retro 80s Arcade Synth',
+    details: ['Amber CRT Glow Atmosphere', 'Synthwave Soundscapes', 'Retro Pixel Lights', 'Vaporwave Color Palette'],
+  },
+  {
+    id: 'stealth_ops',
+    name: 'Stealth Ops Blackout Arena',
+    details: ['Deep Emerald Laser Lines', 'Subtle Ambient Backlight', 'High-Contrast Pro Display', 'Competitive Lighting Mode'],
+  },
+];
+
+const PREDEFINED_SLOTS = [
+  { id: 'g-slot-1', time: '10:00 AM - 11:00 AM', label: '10:00 AM – 11:00 AM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-2', time: '11:15 AM - 12:15 PM', label: '11:15 AM – 12:15 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-3', time: '12:30 PM - 01:30 PM', label: '12:30 PM – 01:30 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-4', time: '01:45 PM - 02:45 PM', label: '01:45 PM – 02:45 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-5', time: '03:00 PM - 04:00 PM', label: '03:00 PM – 04:00 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-6', time: '04:15 PM - 05:15 PM', label: '04:15 PM – 05:15 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-7', time: '05:30 PM - 06:30 PM', label: '05:30 PM – 06:30 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-8', time: '06:45 PM - 07:45 PM', label: '06:45 PM – 07:45 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-9', time: '08:00 PM - 09:00 PM', label: '08:00 PM – 09:00 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-10', time: '09:15 PM - 10:15 PM', label: '09:15 PM – 10:15 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-11', time: '10:30 PM - 11:30 PM', label: '10:30 PM – 11:30 PM', basePrice: 399, isBooked: false },
+  { id: 'g-slot-12', time: '11:00 PM - 12:00 AM', label: '11:00 PM – 12:00 AM (Midnight)', basePrice: 399, isBooked: false },
+];
+
+export default function GamingBookPage() {
+  const router = useRouter();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [crtEnabled, setCrtEnabled] = useState(true);
-  const [selectedThemeName, setSelectedThemeName] = useState('🖤 Dark Gaming Theme');
+  const [crtEnabled, setCrtEnabled] = useState(false);
 
-  // Load saved theme choice
-  useEffect(() => {
-    const saved = sessionStorage.getItem('bee_vibe_gaming_theme');
-    if (saved === 'cyberpunk') setSelectedThemeName('⚡ Cyberpunk Neon Gaming Theme');
-    else if (saved === 'pixel') setSelectedThemeName('👾 8-Bit Pixel Arcade Theme');
-    else if (saved === 'warzone') setSelectedThemeName('🔴 Crimson Warzone Gaming Theme');
-    else if (saved === 'galaxy') setSelectedThemeName('🌌 Cosmic Galaxy Gaming Theme');
-  }, []);
-
-  // Form State
   const [selectedDate, setSelectedDate] = useState(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   });
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [activeBookings, setActiveBookings] = useState<any[]>([]);
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
-  // Custom Time Slot states
   const [bookingMode, setBookingMode] = useState<'predefined' | 'custom'>('predefined');
-  const [customStart, setCustomStart] = useState('10:00');
-  const [customEnd, setCustomEnd] = useState('11:00');
+  const [slots, setSlots] = useState(PREDEFINED_SLOTS);
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+
+  // 12-Hour Custom Time Selection States
+  const [customStartHour, setCustomStartHour] = useState('10');
+  const [customStartMin, setCustomStartMin] = useState('00');
+  const [customStartAmPm, setCustomStartAmPm] = useState<'AM' | 'PM'>('AM');
+  const [customEndHour, setCustomEndHour] = useState('11');
+  const [customEndMin, setCustomEndMin] = useState('00');
+  const [customEndAmPm, setCustomEndAmPm] = useState<'AM' | 'PM'>('AM');
   const [customSlotError, setCustomSlotError] = useState('');
 
+  // Packages & Addons
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr' | '2hr'>('none');
-  const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
+  const [selectedThemeName, setSelectedThemeName] = useState('');
+  const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr'>('none');
+  const [fogOption, setFogOption] = useState<'none' | '1pot'>('none');
   const [snackOption, setSnackOption] = useState<'none' | 'popcorn_combo' | 'gamer_platter'>('none');
 
+  // Customer Details
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
     email: '',
-    phone: '',
     guestCount: 2,
-    specialRequests: 'PS5 Gaming Setup Requested (2 Controllers & Games)',
+    specialRequests: '',
   });
 
-  // Success Confirmation State
-  const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
-  const [isPaying, setIsPaying] = useState(false);
+  // Advance Payment & Ref ID
+  const [utrNumber, setUtrNumber] = useState('');
+  const [upiCopied, setUpiCopied] = useState(false);
 
-  // Customer Auth States
-  const [customerPhone, setCustomerPhone] = useState('');
+  // Auth / OTP
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
+  const [customerPhone, setCustomerPhone] = useState('');
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginPhone, setLoginPhone] = useState('');
-  const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-  const [loginError, setLoginError] = useState('');
+  const [otpCode, setOtpCode] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [firebaseConfirmation, setFirebaseConfirmation] = useState<any>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Booking Flow & Status
+  const [activeBookings, setActiveBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [error, setError] = useState('');
+  const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
 
-  // Load customer session
+  // Check login session on mount
   useEffect(() => {
     const savedPhone = sessionStorage.getItem('bee_vibe_customer_phone');
     if (savedPhone) {
       setCustomerPhone(savedPhone);
       setIsCustomerLoggedIn(true);
-      setCustomerDetails((prev) => ({ ...prev, phone: savedPhone }));
     }
   }, []);
 
-  // Fetch slots on date change
+  // Fetch active bookings for selected date
   useEffect(() => {
-    let active = true;
-    async function fetchSlots() {
-      if (!selectedDate) return;
-      setLoading(true);
-      setError('');
+    async function fetchBookings() {
+      setLoadingBookings(true);
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=gaming`);
-        if (!res.ok) throw new Error('Failed to load available gaming slots.');
-        const data = await res.json();
-        if (!active) return;
-        setSlots(data.slots || []);
-        setActiveBookings(data.activeBookings || []);
-      } catch (err: any) {
-        if (active) setError(err.message || 'Error fetching slots.');
+        const res = await fetch(`/api/bookings?date=${selectedDate}&theaterId=gaming-ps5-arena`);
+        if (res.ok) {
+          const data = await res.json();
+          const bList = data.bookings || [];
+          setActiveBookings(bList);
+
+          // Update predefined slots availability
+          setSlots(
+            PREDEFINED_SLOTS.map((s) => {
+              const isOverlapping = checkBookingOverlap(selectedDate, s.time, bList);
+              return { ...s, isBooked: isOverlapping };
+            })
+          );
+        }
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
       } finally {
-        if (active) setLoading(false);
+        setLoadingBookings(false);
       }
     }
-    fetchSlots();
-    return () => { active = false; };
+    fetchBookings();
   }, [selectedDate]);
+
+  // Quick Duration helper
+  const applyQuickDuration = (hoursToAdd: number) => {
+    const startM = convert12HourToMinutes(
+      parseInt(customStartHour, 10),
+      parseInt(customStartMin, 10),
+      customStartAmPm
+    );
+    let endM = startM + Math.round(hoursToAdd * 60);
+    if (endM > VENUE_CLOSE_MINUTES) {
+      endM = VENUE_CLOSE_MINUTES;
+    }
+    const { hour12, minute, ampm } = convertMinutesTo12Hour(endM);
+    setCustomEndHour(String(hour12).padStart(2, '0'));
+    setCustomEndMin(String(minute).padStart(2, '0'));
+    setCustomEndAmPm(ampm);
+  };
 
   // Effect to calculate custom gaming slot
   useEffect(() => {
@@ -151,18 +203,31 @@ export default function GamingBookingPage() {
     setCustomSlotError('');
     setSelectedSlot(null);
 
-    if (!customStart || !customEnd) return;
-
     try {
-      const [startH, startM] = customStart.split(':').map(Number);
-      const [endH, endM] = customEnd.split(':').map(Number);
+      const startH = parseInt(customStartHour, 10);
+      const startM = parseInt(customStartMin, 10);
+      const endH = parseInt(customEndHour, 10);
+      const endM = parseInt(customEndMin, 10);
 
       if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
         setCustomSlotError('Invalid time selection.');
         return;
       }
 
-      const startMinutes = startH * 60 + startM;
+      const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
+      let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
+
+      if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
+        endMinutes = 1440;
+      }
+
+      // Enforce 12:00 AM Midnight operating limit
+      const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
+      if (!hoursValidation.valid) {
+        setCustomSlotError(hoursValidation.error || 'Gaming room closes strictly at 12:00 AM Midnight.');
+        return;
+      }
+
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -175,11 +240,6 @@ export default function GamingBookingPage() {
           setCustomSlotError('Cannot select a time slot that has already passed.');
           return;
         }
-      }
-
-      let endMinutes = endH * 60 + endM;
-      if (endMinutes <= startMinutes) {
-        endMinutes += 24 * 60;
       }
 
       const durationMinutes = endMinutes - startMinutes;
@@ -208,7 +268,17 @@ export default function GamingBookingPage() {
     } catch (e) {
       setCustomSlotError('Error calculating custom time range.');
     }
-  }, [bookingMode, customStart, customEnd, selectedDate, activeBookings]);
+  }, [
+    bookingMode,
+    customStartHour,
+    customStartMin,
+    customStartAmPm,
+    customEndHour,
+    customEndMin,
+    customEndAmPm,
+    selectedDate,
+    activeBookings,
+  ]);
 
   // Background 8-bit Pixel Canvas Effect
   useEffect(() => {
@@ -257,6 +327,9 @@ export default function GamingBookingPage() {
     };
   }, []);
 
+  const calculateAdvance = () => Math.min(500, calculateTotal());
+  const calculateBalance = () => Math.max(0, calculateTotal() - calculateAdvance());
+
   const getSlotDurationHours = () => {
     if (!selectedSlot) return 1;
     try {
@@ -278,11 +351,9 @@ export default function GamingBookingPage() {
     let dslrPrice = 0;
     if (dslrOption === '30min') dslrPrice = 300;
     else if (dslrOption === '1hr') dslrPrice = 500;
-    else if (dslrOption === '2hr') dslrPrice = 800;
 
     let fogPrice = 0;
     if (fogOption === '1pot') fogPrice = 300;
-    else if (fogOption === '2pots') fogPrice = 500;
 
     let snackPrice = 0;
     if (snackOption === 'popcorn_combo') snackPrice = 250;
@@ -382,8 +453,12 @@ export default function GamingBookingPage() {
         return list;
       })(),
       totalPrice: calculateTotal(),
+      advancePaid: calculateAdvance(),
+      balanceDue: calculateBalance(),
+      paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
+      paymentMode: 'UPI Advance',
       guestCount: customerDetails.guestCount,
-      specialRequests: customerDetails.specialRequests,
+      specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
     };
 
     try {
@@ -443,7 +518,7 @@ export default function GamingBookingPage() {
               3. ADD-ONS {step > 3 && '✓'}
             </div>
             <div className={`${styles.stepIndicator} ${step === 4 ? styles.stepActive : ''}`}>
-              4. GAMER INFO
+              4. GAMER INFO & ADVANCE
             </div>
           </div>
         )}
@@ -487,7 +562,7 @@ export default function GamingBookingPage() {
             {bookingMode === 'predefined' ? (
               <>
                 <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '12px' }}>
-                  Available 1-Hour Gaming Slots (₹399 / Hr)
+                  Available 1-Hour Gaming Slots (₹399 / Hr · Till 12:00 AM Midnight)
                 </h3>
                 <div className={styles.slotsGrid}>
                   {slots.map((slot) => (
@@ -504,37 +579,78 @@ export default function GamingBookingPage() {
                 </div>
               </>
             ) : (
-              <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid #00f0ff', padding: '20px', borderRadius: '12px', marginBottom: '20px' }}>
-                <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '0.95rem', color: '#00f0ff', marginBottom: '12px' }}>
-                  Select Custom Gaming Hours (₹399/Hour · Min 1 Hour)
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
-                  <div>
-                    <label className={styles.formLabel} htmlFor="custom-start">Start Time</label>
-                    <input
-                      type="time"
-                      id="custom-start"
-                      className={styles.formInput}
-                      value={customStart}
-                      onChange={(e) => setCustomStart(e.target.value)}
-                    />
+              <div className={styles.time12hPickerContainer}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                  <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '0.95rem', color: '#00f0ff', margin: 0 }}>
+                    Custom Gaming Hours (₹399/Hour · Min 1 Hour)
+                  </h3>
+                  <span style={{ fontFamily: 'var(--font-vt323)', fontSize: '1.1rem', background: 'rgba(0, 240, 255, 0.12)', border: '1px solid #00f0ff', color: '#00f0ff', padding: '2px 8px', borderRadius: '4px' }}>
+                    ⏰ Open 10:00 AM – 12:00 AM (Midnight)
+                  </span>
+                </div>
+
+                <div className={styles.time12hInputsGrid}>
+                  <div className={styles.timePickerCard}>
+                    <div className={styles.timePickerCardHeader}>
+                      <span className={styles.timePickerCardTitle}>🟢 START TIME</span>
+                    </div>
+                    <div className={styles.timePickerControls}>
+                      <select className={styles.timeSelect} value={customStartHour} onChange={(e) => setCustomStartHour(e.target.value)}>
+                        {['10', '11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09'].map((h) => (
+                          <option key={'g-sh-' + h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span className={styles.timeSeparator}>:</span>
+                      <select className={styles.timeSelect} value={customStartMin} onChange={(e) => setCustomStartMin(e.target.value)}>
+                        {['00', '15', '30', '45'].map((m) => (
+                          <option key={'g-sm-' + m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <div className={styles.ampmToggleGroup}>
+                        <button type="button" className={styles.ampmBtn + (customStartAmPm === 'AM' ? ' ' + styles.ampmBtnActive : '')} onClick={() => setCustomStartAmPm('AM')}>AM</button>
+                        <button type="button" className={styles.ampmBtn + (customStartAmPm === 'PM' ? ' ' + styles.ampmBtnActive : '')} onClick={() => setCustomStartAmPm('PM')}>PM</button>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className={styles.formLabel} htmlFor="custom-end">End Time</label>
-                    <input
-                      type="time"
-                      id="custom-end"
-                      className={styles.formInput}
-                      value={customEnd}
-                      onChange={(e) => setCustomEnd(e.target.value)}
-                    />
+
+                  <div className={styles.timePickerCard}>
+                    <div className={styles.timePickerCardHeader}>
+                      <span className={styles.timePickerCardTitle}>🔴 END TIME (MAX 12:00 AM)</span>
+                    </div>
+                    <div className={styles.timePickerControls}>
+                      <select className={styles.timeSelect} value={customEndHour} onChange={(e) => setCustomEndHour(e.target.value)}>
+                        {['10', '11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09'].map((h) => (
+                          <option key={'g-eh-' + h} value={h}>{h}</option>
+                        ))}
+                      </select>
+                      <span className={styles.timeSeparator}>:</span>
+                      <select className={styles.timeSelect} value={customEndMin} onChange={(e) => setCustomEndMin(e.target.value)}>
+                        {['00', '15', '30', '45'].map((m) => (
+                          <option key={'g-em-' + m} value={m}>{m}</option>
+                        ))}
+                      </select>
+                      <div className={styles.ampmToggleGroup}>
+                        <button type="button" className={styles.ampmBtn + (customEndAmPm === 'AM' ? ' ' + styles.ampmBtnActive : '')} onClick={() => setCustomEndAmPm('AM')}>AM</button>
+                        <button type="button" className={styles.ampmBtn + (customEndAmPm === 'PM' ? ' ' + styles.ampmBtnActive : '')} onClick={() => setCustomEndAmPm('PM')}>PM</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.quickDurationSection}>
+                  <span className={styles.quickDurationTitle}>⚡ Quick Gaming Presets:</span>
+                  <div className={styles.quickDurationPills}>
+                    <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(1)}>+1 Hour</button>
+                    <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(2)}>+2 Hours (Recommended)</button>
+                    <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(3)}>+3 Hours (Marathon)</button>
+                    <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(4)}>+4 Hours</button>
                   </div>
                 </div>
 
                 {customSlotError ? (
                   <div className={styles.errorMessage}>{customSlotError}</div>
                 ) : selectedSlot ? (
-                  <div style={{ color: '#00ff66', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '8px' }}>
+                  <div style={{ color: '#00ff66', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '10px' }}>
                     ✓ Selected Range: {selectedSlot.time} ({selectedSlot.label}) — ₹{selectedSlot.basePrice}
                   </div>
                 ) : null}
@@ -655,17 +771,17 @@ export default function GamingBookingPage() {
                 ← BACK
               </button>
               <button type="button" className={styles.btnNavNext} onClick={() => setStep(4)}>
-                NEXT: GAMER INFO →
+                NEXT: GAMER INFO & ADVANCE →
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4: Gamer Info */}
+        {/* STEP 4: Gamer Info & Advance Payment */}
         {step === 4 && (
           <div>
             <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '16px' }}>
-              Confirm Gamer Details & Checkout
+              Confirm Gamer Details & Pay Advance
             </h3>
 
             <div style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid #00f0ff', padding: '16px', borderRadius: '10px', marginBottom: '24px' }}>
@@ -750,6 +866,85 @@ export default function GamingBookingPage() {
                     onChange={(e) => setCustomerDetails({ ...customerDetails, specialRequests: e.target.value })}
                   />
                 </div>
+
+                {/* Gaming Advance Payment Card */}
+                <div className={styles.advancePaymentCard} style={{ gridColumn: '1 / -1' }}>
+                  <div className={styles.advanceHeader}>
+                    <span style={{ fontSize: '1.4rem' }}>💳</span>
+                    <div>
+                      <h4 className={styles.advanceHeaderTitle}>ADVANCE PAYMENT REQUIRED TO LOCK GAMING LOUNGE</h4>
+                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#a0a0c0' }}>
+                        To block your Gaming Lounge and consoles, an advance deposit of ₹{calculateAdvance()} is required.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className={styles.advanceBreakdownRow}>
+                    <div className={styles.advanceBreakdownItem}>
+                      <div className={styles.advanceBreakdownLabel}>TOTAL COST</div>
+                      <div className={styles.advanceBreakdownVal}>₹{calculateTotal()}</div>
+                    </div>
+                    <div className={styles.advanceBreakdownItem + ' ' + styles.advancePayableHighlight}>
+                      <div className={styles.advanceBreakdownLabel}>🟢 ADVANCE DUE NOW</div>
+                      <div className={styles.advanceBreakdownVal}>₹{calculateAdvance()}</div>
+                    </div>
+                    <div className={styles.advanceBreakdownItem}>
+                      <div className={styles.advanceBreakdownLabel}>⏳ BALANCE AT LOUNGE</div>
+                      <div className={styles.advanceBreakdownVal}>₹{calculateBalance()}</div>
+                    </div>
+                  </div>
+
+                  <div className={styles.advanceQrSection}>
+                    <div className={styles.advanceQrImgWrapper}>
+                      <img
+                        src={"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Gaming%20Booking%20BeeVibe")}
+                        alt="UPI Advance QR Code"
+                        width={150}
+                        height={150}
+                        style={{ display: 'block' }}
+                      />
+                    </div>
+                    <div className={styles.advanceQrInfo}>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
+                        📲 Scan QR with any UPI App (GPay, PhonePe, Paytm, BHIM)
+                      </div>
+                      <div className={styles.upiIdBox}>
+                        <span style={{ fontSize: '0.8rem', color: '#a0a0c0' }}>UPI ID:</span>
+                        <span className={styles.upiIdText}>9900106474@okbizaxis</span>
+                        <button
+                          type="button"
+                          className={styles.upiCopyBtn}
+                          onClick={() => {
+                            navigator.clipboard.writeText('9900106474@okbizaxis');
+                            setUpiCopied(true);
+                            setTimeout(() => setUpiCopied(false), 2000);
+                          }}
+                        >
+                          {upiCopied ? '✓ Copied' : '📋 Copy'}
+                        </button>
+                      </div>
+                      <a
+                        href={"upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Gaming%20Booking%20BeeVibe"}
+                        className={styles.upiIntentBtn}
+                      >
+                        ⚡ Pay ₹{calculateAdvance()} via UPI App
+                      </a>
+                      <div style={{ marginTop: '6px' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', color: '#a0a0c0', marginBottom: '4px' }}>
+                          UPI UTR / Reference ID or Last 4 Digits (Optional):
+                        </label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          placeholder="e.g. 423987123456 or last 4 digits"
+                          value={utrNumber}
+                          onChange={(e) => setUtrNumber(e.target.value)}
+                          style={{ padding: '8px 12px', fontSize: '0.88rem' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -763,7 +958,7 @@ export default function GamingBookingPage() {
                 onClick={handleSubmitBooking}
                 disabled={isPaying || !isCustomerLoggedIn}
               >
-                {isPaying ? 'CONFIRMING...' : 'CONFIRM GAMING BOOKING ✓'}
+                {isPaying ? 'CONFIRMING...' : `CONFIRM GAMING (₹${calculateAdvance()} ADVANCE PAID) ✓`}
               </button>
             </div>
           </div>
@@ -799,6 +994,14 @@ export default function GamingBookingPage() {
                 <span className={styles.ticketLabel}>TOTAL PRICE</span>
                 <span className={styles.ticketValue} style={{ color: '#ffe600', fontSize: '1.2rem' }}>₹{confirmedBooking.totalPrice}</span>
               </div>
+              <div className={styles.ticketRow} style={{ background: 'rgba(0, 255, 102, 0.1)', borderRadius: '6px', padding: '8px', margin: '8px 0' }}>
+                <span className={styles.ticketLabel} style={{ color: '#00ff66' }}>🟢 ADVANCE (PAID)</span>
+                <span className={styles.ticketValue} style={{ color: '#00ff66' }}>₹{confirmedBooking.advancePaid ?? 500}</span>
+              </div>
+              <div className={styles.ticketRow} style={{ background: 'rgba(255, 230, 0, 0.1)', borderRadius: '6px', padding: '8px', margin: '8px 0' }}>
+                <span className={styles.ticketLabel} style={{ color: '#ffe600' }}>⏳ BALANCE AT LOUNGE</span>
+                <span className={styles.ticketValue} style={{ color: '#ffe600' }}>₹{confirmedBooking.balanceDue ?? Math.max(0, confirmedBooking.totalPrice - (confirmedBooking.advancePaid ?? 500))}</span>
+              </div>
 
               <div className={styles.ticketQr}>
                 <img
@@ -812,7 +1015,29 @@ export default function GamingBookingPage() {
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
               <a
-                href={getAdminWhatsAppDeepLink('booking', confirmedBooking)}
+                href={`/receipt?id=${confirmedBooking.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.btnNavNext}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#a855f7',
+                  color: '#ffffff',
+                  fontWeight: 'bold',
+                  textDecoration: 'none',
+                  border: 'none',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(168, 85, 247, 0.4)',
+                }}
+              >
+                <FileText size={18} />
+                VIEW ADVANCE RECEIPT
+              </a>
+              <a
+                href={getAdminWhatsAppDeepLink('booking', confirmedBooking as any)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.btnNavNext}

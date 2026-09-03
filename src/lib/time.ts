@@ -1,11 +1,68 @@
 /**
- * Parses a time string (e.g. "10:00 AM", "12:30 PM", "10:30 PM", "12:30 AM", "14:30")
+ * Operating Hours Constants for Bee Vibe
+ * Opening: 10:00 AM (600 minutes)
+ * Closing: 12:00 AM Midnight (1440 minutes) - Strict hard stop!
+ */
+export const VENUE_OPEN_MINUTES = 600; // 10:00 AM
+export const VENUE_CLOSE_MINUTES = 1440; // 12:00 AM Midnight
+
+/**
+ * Converts 12-hour components (1-12, 0-59, AM/PM) into minutes from midnight (0 to 1439).
+ */
+export function convert12HourToMinutes(hour12: number, minute: number, ampm: 'AM' | 'PM'): number {
+  let hours = hour12 % 12;
+  if (ampm === 'PM') {
+    hours += 12;
+  }
+  return hours * 60 + minute;
+}
+
+/**
+ * Converts minutes from midnight into 12-hour components.
+ */
+export function convertMinutesTo12Hour(minutes: number): { hour12: number; minute: number; ampm: 'AM' | 'PM' } {
+  const normalized = minutes % 1440;
+  let hours = Math.floor(normalized / 60);
+  const minute = normalized % 60;
+  const ampm: 'AM' | 'PM' = hours >= 12 ? 'PM' : 'AM';
+  let hour12 = hours % 12;
+  if (hour12 === 0) hour12 = 12;
+  return { hour12, minute, ampm };
+}
+
+/**
+ * Validates that a candidate time range is strictly within Bee Vibe operating hours (10:00 AM to 12:00 AM midnight).
+ */
+export function validateSlotOperatingHours(startMinutes: number, endMinutes: number): { valid: boolean; error?: string } {
+  if (startMinutes < VENUE_OPEN_MINUTES) {
+    return {
+      valid: false,
+      error: 'Bee Vibe opens at 10:00 AM. Please select a start time from 10:00 AM onwards.',
+    };
+  }
+  if (endMinutes > VENUE_CLOSE_MINUTES) {
+    return {
+      valid: false,
+      error: 'Bee Vibe closes at 12:00 AM Midnight. Bookings cannot extend past 12:00 AM.',
+    };
+  }
+  if (endMinutes <= startMinutes) {
+    return {
+      valid: false,
+      error: 'End time must be after start time.',
+    };
+  }
+  return { valid: true };
+}
+
+/**
+ * Parses a time string (e.g. 10:00 AM, 12:30 PM, 10:30 PM, 12:00 AM, 14:30)
  * into minutes from the start of the day (0 to 1439).
  */
 export function parseTimeToMinutes(timeStr: string): number {
   const cleanStr = timeStr.trim().toUpperCase();
 
-  // Format check for AM/PM (e.g. "10:00 AM" or "02:30 PM")
+  // Format check for AM/PM (e.g. 10:00 AM or 02:30 PM)
   const ampmMatch = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
   if (ampmMatch) {
     let hours = parseInt(ampmMatch[1], 10);
@@ -20,7 +77,7 @@ export function parseTimeToMinutes(timeStr: string): number {
     return hours * 60 + minutes;
   }
 
-  // Format check for 24h military time (e.g. "14:30")
+  // Format check for 24h military time (e.g. 14:30)
   const militaryMatch = cleanStr.match(/^(\d{1,2}):(\d{2})$/);
   if (militaryMatch) {
     const hours = parseInt(militaryMatch[1], 10);
@@ -28,17 +85,17 @@ export function parseTimeToMinutes(timeStr: string): number {
     return hours * 60 + minutes;
   }
 
-  throw new Error(`Invalid time format: ${timeStr}`);
+  throw new Error('Invalid time format: ' + timeStr);
 }
 
 /**
- * Parses a time range string (e.g., "10:00 AM - 12:00 PM") into start and end minutes.
+ * Parses a time range string (e.g., 10:00 AM - 12:00 PM) into start and end minutes.
  * Handles crossing midnight by adding 1440 minutes (24 hours) to endMinutes if it falls before startMinutes.
  */
 export function parseTimeRange(timeRangeStr: string): { startMinutes: number; endMinutes: number } {
   const parts = timeRangeStr.split(/[-–—]/);
   if (parts.length !== 2) {
-    throw new Error(`Invalid time range format: ${timeRangeStr}`);
+    throw new Error('Invalid time range format: ' + timeRangeStr);
   }
 
   const startMinutes = parseTimeToMinutes(parts[0]);
@@ -53,9 +110,10 @@ export function parseTimeRange(timeRangeStr: string): { startMinutes: number; en
 }
 
 /**
- * Formats minutes from midnight to a 12-hour AM/PM string (e.g., 660 -> "11:00 AM").
+ * Formats minutes from midnight to a 12-hour AM/PM string (e.g., 660 -> 11:00 AM, 1440 -> 12:00 AM).
  */
 export function formatMinutesToTimeStr(minutes: number): string {
+  if (minutes === 1440) return '12:00 AM';
   const normalizedMinutes = minutes % 1440;
   let hours = Math.floor(normalizedMinutes / 60);
   const mins = normalizedMinutes % 60;
@@ -67,16 +125,16 @@ export function formatMinutesToTimeStr(minutes: number): string {
   const minsStr = mins.toString().padStart(2, '0');
   const hoursStr = hours.toString().padStart(2, '0');
 
-  return `${hoursStr}:${minsStr} ${ampm}`;
+  return hoursStr + ':' + minsStr + ' ' + ampm;
 }
 
 /**
- * Formats start and end minutes to a time range string (e.g., "10:00 AM - 12:00 PM").
+ * Formats start and end minutes to a time range string (e.g., 10:00 AM - 12:00 PM).
  */
 export function formatCustomTimeRange(startMinutes: number, endMinutes: number): string {
   const startStr = formatMinutesToTimeStr(startMinutes);
   const endStr = formatMinutesToTimeStr(endMinutes);
-  return `${startStr} - ${endStr}`;
+  return startStr + ' - ' + endStr;
 }
 
 /**
@@ -95,8 +153,6 @@ export function getRelativeDateStr(dateStr: string, offsetDays: number): string 
 
 /**
  * Translate a booking's time slot into start and end minutes relative to the targetDate.
- * E.g., if a booking is on targetDate - 1 and crosses midnight, its start/end relative to targetDate
- * will be adjusted by -1440 minutes.
  */
 export function getIntervalRelativeToDay(
   bookingDateStr: string,
@@ -109,7 +165,7 @@ export function getIntervalRelativeToDay(
     const diffDays = Math.round((bookingTime - targetTime) / (1000 * 60 * 60 * 24));
 
     if (Math.abs(diffDays) > 1) {
-      return null; // Too far to overlap
+      return null;
     }
 
     const { startMinutes, endMinutes } = parseTimeRange(timeSlotStr);
@@ -137,7 +193,6 @@ export function intervalsOverlap(
 
 /**
  * Checks if a candidate time slot overlaps with any active bookings.
- * Considers yesterday's midnight-crossing slots, today's slots, and tomorrow's slots.
  */
 export function checkBookingOverlap(
   targetDateStr: string,
@@ -146,8 +201,6 @@ export function checkBookingOverlap(
 ): boolean {
   try {
     const candidateRange = parseTimeRange(candidateTimeSlotStr);
-    
-    // We only filter activeBookings (i.e. status is not cancelled)
     const bookings = activeBookings.filter((b) => b.status !== 'cancelled');
 
     for (const b of bookings) {
@@ -159,7 +212,6 @@ export function checkBookingOverlap(
       }
     }
   } catch (e) {
-    // If invalid format, default to true or false? Let's treat it as no overlap but log.
     console.error('Error in overlap check:', e);
   }
   return false;

@@ -11,6 +11,16 @@ const InteractiveShowcase = dynamic(() => import('@/components/InteractiveShowca
     <div style={{ height: '350px', width: '100%', borderRadius: '20px', background: 'rgba(20, 20, 27, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }} />
   ),
 });
+
+const GallerySection = dynamic(() => import('@/components/GallerySection'), {
+  ssr: true,
+  loading: () => (
+    <div style={{ minHeight: '300px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+      Loading visual gallery...
+    </div>
+  ),
+});
+
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import {
   Tv,
@@ -26,7 +36,8 @@ import {
   MapPin,
   Clock,
   ChevronDown,
-  HelpCircle
+  HelpCircle,
+  Camera
 } from 'lucide-react';
 
 // Custom Instagram icon component for maximum reliability
@@ -122,7 +133,6 @@ export default function Home() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Trigger initial calculation
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
@@ -131,9 +141,9 @@ export default function Home() {
   // 2. Set up IntersectionObserver to trigger scroll-reveal animations on grid elements
   useEffect(() => {
     const observerOptions = {
-      root: null, // viewport
-      threshold: 0.1, // trigger when 10% visible
-      rootMargin: '0px 0px -50px 0px', // slightly offset trigger point
+      root: null,
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px',
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
@@ -145,8 +155,6 @@ export default function Home() {
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
-
-    // Query and observe elements with the 'reveal' class
     const revealElements = document.querySelectorAll(`.${styles.reveal}`);
     revealElements.forEach((el) => observer.observe(el));
 
@@ -192,7 +200,6 @@ export default function Home() {
 
       {/* Navigation Header */}
       <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
-
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
@@ -207,6 +214,7 @@ export default function Home() {
               <ul className={styles.navLinks}>
                 <li><Link href="/gaming" className={styles.navLink} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
                 <li><a href="#vibes" className={styles.navLink}>Our Vibes</a></li>
+                <li><a href="#gallery" className={styles.navLink}>Gallery 📸</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
                 <li><a href="#location" className={styles.navLink}>Location</a></li>
                 <li><a href="#faq" className={styles.navLink}>FAQ</a></li>
@@ -240,6 +248,11 @@ export default function Home() {
               <li>
                 <a href="#vibes" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
                   Our Vibes
+                </a>
+              </li>
+              <li>
+                <a href="#gallery" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>
+                  Gallery 📸
                 </a>
               </li>
               <li>
@@ -351,7 +364,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Section 2: Packages (Trigger camera shift 1) */}
+            {/* Section 2: Packages */}
             <section id="vibes" className={`${styles.section} ${styles.reveal}`}>
               <h2 className={styles.sectionTitle}>Signature Celebration Themes</h2>
               <p className={styles.sectionSub}>
@@ -440,7 +453,7 @@ export default function Home() {
               </div>
             </section>
 
-            {/* Section 3: Amenities (Trigger camera shift 2) */}
+            {/* Section 3: Amenities */}
             <section id="features" className={`${styles.section} ${styles.reveal}`}>
               <h2 className={styles.sectionTitle}>Designed for Ultimate Comfort</h2>
               <p className={styles.sectionSub}>
@@ -571,6 +584,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Section: Rich Visual Gallery */}
+      <GallerySection />
+
       {/* Interactive Google Map Location Section */}
       <section id="location" style={{ padding: '60px 0', borderTop: '1px solid var(--glass-border)', background: 'rgba(10, 10, 12, 0.4)' }}>
         <div className="container">
@@ -688,6 +704,7 @@ export default function Home() {
               <h4 className={styles.footerTitle}>Quick Links</h4>
               <ul className={styles.footerLinks}>
                 <li><a href="#vibes" className={styles.footerLink}>Packages</a></li>
+                <li><a href="#gallery" className={styles.footerLink}>Visual Gallery</a></li>
                 <li><a href="#features" className={styles.footerLink}>Amenities</a></li>
                 <li><a href="#location" className={styles.footerLink}>Location Map</a></li>
                 <li><a href="#faq" className={styles.footerLink}>FAQ</a></li>

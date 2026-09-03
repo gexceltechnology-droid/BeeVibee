@@ -44,7 +44,7 @@ export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
   { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
   { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:30 PM - 12:30 AM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
 ];
 
 let adminApp: App | null = null;
@@ -85,7 +85,13 @@ function getAdminApp(): App {
 
 export function getDb(): Firestore {
   if (db) return db;
-  db = getFirestore(getAdminApp());
+  const app = getAdminApp();
+  const databaseId = process.env.FIREBASE_DATABASE_ID || 'default';
+  try {
+    db = getFirestore(app, databaseId);
+  } catch {
+    db = getFirestore(app);
+  }
   return db;
 }
 
@@ -161,9 +167,18 @@ export async function addBookingToFirestore(
     const sequential = String(count + 1).padStart(4, '0');
     const bookingId = `${datePrefix}-${sequential}`;
 
+    const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
+    const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);
+    const paymentStatus = bookingData.paymentStatus || (balanceDue === 0 ? 'fully_paid' : 'advance_paid');
+    const paymentMode = bookingData.paymentMode || 'UPI / Online';
+
     const newBooking: Booking = {
       ...bookingData,
       id: bookingId,
+      advancePaid,
+      balanceDue,
+      paymentStatus,
+      paymentMode,
       status: 'confirmed',
       createdAt: new Date().toISOString(),
     };

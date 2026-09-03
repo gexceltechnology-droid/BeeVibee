@@ -1188,3 +1188,287 @@
   color: #ffffff;
   padding: 10px;
 }
+
+/* 12-Hour AM/PM Custom Time Picker */
+.time12hPickerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.time12hInputsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.timePickerCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timePickerCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timePickerCardTitle {
+  font-size: 0.85rm;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timePickerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.timeSelect {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm);
+  color: #ffffff;
+  padding: 10px 12px;
+  font-size: 1.05rm;
+  font-weight: 600;
+  font-family: var(--font-body);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeSelect:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(var(--accent-base), 0.25);
+}
+
+.timeSelect option {
+  background: #181822;
+  color: #ffffff;
+}
+
+.timeSeparator {
+  font-size: 1.3rm;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.ampmToggleGroup {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.ampmBtn {
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.85rm;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.uampmBtnActive {
+  background: var(--accent);
+  color: #000000;
+  box-shadow: 0 0 12px rgba(var(--accent-base), 0.4);
+}
+
+.quickDurationSection {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quickDurationTitle {
+  font-size: 0.8rm;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.quickDurationPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.uquickDurationBtn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.8rm;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quickDurationBtn:hover {
+  background: rgba(var(--accent-base), 0.1);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Advance Payment UI */
+.advancePaymentCard {
+  background: linear-gradient(145deg, rgba(242, 169, 0, 0.06) 0%, rgba(16, 185, 129, 0.04) 100%);
+  border: 1.5px solid rgba(242, 169, 0, 0.35);
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.uadvanceHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.qadvanceHeaderTitle {
+  font-family: var(--font-title);
+  font-size: 1.15rm;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0;
+}
+
+.qadvanceBreakdownRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.uadvanceBreakdownItem {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.uadvanceBreakdownLabel {
+  font-size: 0.78rm;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.advanceBreakdownVal {
+  font-size: 1.2rm;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.advancePayableHighlight {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.uadvancePayableHighlight .advanceBreakdownVal {
+  color: #10b981;
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.advanceQrSection {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 16px;
+  flex-wrap: wrap;
+}
+
+.uadvanceQrImgWrapper {
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.qadvanceQrInfo {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.upiIdBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.upiIdText {
+  font-family: monospace;
+  font-size: 0.95rm;
+  font-weight: 700;
+  color: var(--accent);
+  flex: 1;
+}
+
+.upiCopyBtn {
+  background: rgba(var(--accent-base), 0.2);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.75rm;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upiCopyBtn:hover {
+  background: var(--accent);
+  color: #000000;
+}
+
+.upiIntentBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #25D366;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rm;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+  transition: all 0.2s ease;
+}
+
+.upiIntentBtn:hover {
+  background: #20ba59;
+  transform: translateY(-1px);
+}

@@ -86,6 +86,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate venue operating hours (10:00 AM to 12:00 AM midnight)
+    try {
+      const { parseTimeRange, validateSlotOperatingHours } = await import('@/lib/time');
+      const { startMinutes, endMinutes } = parseTimeRange(timeSlot);
+      const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
+      if (!hoursValidation.valid) {
+        return NextResponse.json({ error: hoursValidation.error }, { status: 400 });
+      }
+    } catch (err: any) {
+      return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
+    }
+
     // Parse slot duration
     let durationHours = 2;
     let durationMinutes = 120;
@@ -173,6 +185,11 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const passedAdvance = typeof body.advancePaid === 'number' ? body.advancePaid : Math.min(500, calculatedTotal);
+    const passedBalance = typeof body.balanceDue === 'number' ? body.balanceDue : Math.max(0, calculatedTotal - passedAdvance);
+    const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : 'advance_paid');
+    const passedMode = body.paymentMode || 'UPI / Online Advance';
+
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
       email: trimmedEmail,
@@ -183,6 +200,10 @@ export async function POST(request: NextRequest) {
       bookingType: detectedBookingType,
       addOns: addOns || [],
       totalPrice: calculatedTotal,
+      advancePaid: passedAdvance,
+      balanceDue: passedBalance,
+      paymentStatus: passedStatus,
+      paymentMode: passedMode,
       guestCount: numericGuestCount,
       specialRequests: specialRequests || '',
     });
