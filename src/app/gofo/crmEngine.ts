@@ -120,18 +120,23 @@ export class CrmEngine {
         calculatedSegment = 'GAMER';
       }
 
-      const notes = this.customerNotes.get(`${tenantId}:${phone}`) || [];
+      const cleanPhone = phone.trim();
+      const notes = this.customerNotes.get(`${tenantId}:${cleanPhone}`) || [];
+      // True random UUID (crypto.randomUUID()) matching PostgreSQL gen_random_uuid()
+      const customerId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+        ? crypto.randomUUID() 
+        : `cust_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
       profiles.push({
-        id: `cust_${phone.replace(/\D/g, '')}`,
+        id: customerId,
         tenantId,
-        phone,
+        phone: cleanPhone,
         name: data.name,
         email: data.email,
         createdAt: data.firstVisit || now.toISOString(),
         updatedAt: data.lastVisit || now.toISOString(),
         metrics: {
-          customerId: `cust_${phone.replace(/\D/g, '')}`,
+          customerId,
           tenantId,
           totalBookings,
           completedBookings,
@@ -156,12 +161,16 @@ export class CrmEngine {
    * Add a private staff CRM note for a guest
    */
   static addCustomerNote(tenantId: string, phone: string, author: string, noteText: string): CustomerNote {
-    const key = `${tenantId}:${phone.trim()}`;
+    const cleanPhone = phone.trim();
+    const key = `${tenantId}:${cleanPhone}`;
+    const customerId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+      ? crypto.randomUUID() 
+      : `cust_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
     const existing = this.customerNotes.get(key) || [];
     const note: CustomerNote = {
-      id: `note_${Date.now()}`,
+      id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       tenantId,
-      customerId: `cust_${phone.replace(/\D/g, '')}`,
+      customerId,
       authorUserId: author,
       note: noteText,
       createdAt: new Date().toISOString(),
