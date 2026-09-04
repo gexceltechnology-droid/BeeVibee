@@ -122,6 +122,7 @@ export default function BookingPortal() {
   const [customEndAmPm, setCustomEndAmPm] = useState<'AM' | 'PM'>('PM');
   const [customSlotError, setCustomSlotError] = useState('');
   const [utrNumber, setUtrNumber] = useState('');
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
@@ -664,9 +665,19 @@ export default function BookingPortal() {
     }
     if (!customerDetails.name.trim()) { setErrorAndScroll('Please enter your full name.'); return; }
     if (!customerDetails.email.trim()) { setErrorAndScroll('Please enter your email address.'); return; }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
     if (!emailRegex.test(customerDetails.email.trim())) { setErrorAndScroll('Please enter a valid email address.'); return; }
     if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setErrorAndScroll('Guest count must be between 1 and 10.'); return; }
+
+    if (!utrNumber.trim()) {
+      setErrorAndScroll('⚠️ Please complete your UPI payment and enter the 12-digit UPI Reference Number / UTR below to confirm your booking.');
+      return;
+    }
+
+    if (!paymentConfirmed) {
+      setErrorAndScroll(`⚠️ Please check the confirmation checkbox confirming that you have transferred ₹${calculateAdvance()} to NALINAKSHI C (8123635342@sbi).`);
+      return;
+    }
 
     setIsPaying(true);
     setPaymentStep(0);
@@ -692,7 +703,8 @@ export default function BookingPortal() {
       advancePaid: calculateAdvance(),
       balanceDue: calculateBalance(),
       paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
-      paymentMode: 'UPI Advance',
+      paymentMode: 'UPI (8123635342@sbi)',
+      utrNumber: utrNumber.trim(),
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
     };
@@ -2227,11 +2239,11 @@ export default function BookingPortal() {
                   {/* Advance Payment Checkout Card */}
                   <div className={styles.advancePaymentCard} style={{ gridColumn: '1 / -1' }}>
                     <div className={styles.advanceHeader}>
-                      <span style={{ fontSize: '1.4rem' }}>💳</span>
+                      <span style={{ fontSize: '1.6rem' }}>💳</span>
                       <div>
-                        <h4 className={styles.advanceHeaderTitle}>Advance Payment Required to Confirm Slot</h4>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          To guarantee and block your slot on the schedule, an advance deposit of ₹{calculateAdvance()} is required.
+                        <h4 className={styles.advanceHeaderTitle}>Advance Payment Required to Confirm Reservation</h4>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                          To lock and confirm your slot on the schedule, please transfer the advance deposit of ₹{calculateAdvance()} using the verified SBI UPI QR below.
                         </p>
                       </div>
                     </div>
@@ -2242,7 +2254,7 @@ export default function BookingPortal() {
                         <div className={styles.advanceBreakdownVal}>₹{calculateTotal()}</div>
                       </div>
                       <div className={styles.advanceBreakdownItem + ' ' + styles.advancePayableHighlight}>
-                        <div className={styles.advanceBreakdownLabel}>🟢 Advance Payable Now</div>
+                        <div className={styles.advanceBreakdownLabel}>🟢 Advance Due Now</div>
                         <div className={styles.advanceBreakdownVal}>₹{calculateAdvance()}</div>
                       </div>
                       <div className={styles.advanceBreakdownItem}>
@@ -2251,54 +2263,84 @@ export default function BookingPortal() {
                       </div>
                     </div>
 
-                    {/* QR Code and UPI options */}
+                    {/* QR Code and Official UPI Details */}
                     <div className={styles.advanceQrSection}>
-                      <div className={styles.advanceQrImgWrapper}>
+                      <div className={styles.advanceQrImgWrapper} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                         <img
-                          src={"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe")}
-                          alt="UPI Advance QR Code"
-                          width={150}
-                          height={150}
-                          style={{ display: 'block' }}
+                          src="/beevibe-payment-qr.jpg"
+                          alt="Bee Vibe UPI Advance QR Code - NALINAKSHI C"
+                          width={160}
+                          height={220}
+                          style={{ display: 'block', borderRadius: '6px', objectFit: 'contain' }}
                         />
+                        <span style={{ fontSize: '0.7rem', color: '#555', fontWeight: 'bold' }}>Scan with any UPI App</span>
                       </div>
+
                       <div className={styles.advanceQrInfo}>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 600, color: '#ffffff' }}>
-                          📲 Scan QR with any UPI App (GPay, PhonePe, Paytm, BHIM)
+                        <div className={styles.payeeCardHeader}>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Verified Payee</div>
+                            <div className={styles.payeeNameText}>NALINAKSHI C</div>
+                          </div>
+                          <span className={styles.bankBadge}>
+                            🏦 State Bank of India (6592)
+                          </span>
                         </div>
+
                         <div className={styles.upiIdBox}>
                           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>UPI ID:</span>
-                          <span className={styles.upiIdText}>9900106474@okbizaxis</span>
+                          <span className={styles.upiIdText}>8123635342@sbi</span>
                           <button
                             type="button"
                             className={styles.upiCopyBtn}
                             onClick={() => {
-                              navigator.clipboard.writeText('9900106474@okbizaxis');
+                              navigator.clipboard.writeText('8123635342@sbi');
                               setUpiCopied(true);
                               setTimeout(() => setUpiCopied(false), 2000);
                             }}
                           >
-                            {upiCopied ? '✓ Copied' : '📋 Copy'}
+                            {upiCopied ? '✓ Copied' : '📋 Copy UPI ID'}
                           </button>
                         </div>
+
                         <a
-                          href={"upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe"}
+                          href={"upi://pay?pa=8123635342@sbi&pn=NALINAKSHI%20C&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe"}
                           className={styles.upiIntentBtn}
                         >
-                          ⚡ Pay ₹{calculateAdvance()} via UPI App
+                          ⚡ Pay ₹{calculateAdvance()} via UPI App (GPay / PhonePe / Paytm / BHIM)
                         </a>
-                        <div style={{ marginTop: '6px' }}>
-                          <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                            UPI UTR/Reference ID or Last 4 Digits (Optional):
+
+                        {/* Mandatory Payment Confirmation & UTR Entry */}
+                        <div className={styles.utrConfirmBox}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>
+                              Step 2: Enter 12-Digit UPI Transaction / UTR Number *
+                            </label>
+                            <input
+                              type="text"
+                              className={styles.formInput}
+                              placeholder="e.g. 423987123456 (Found in UPI payment receipt)"
+                              value={utrNumber}
+                              onChange={(e) => setUtrNumber(e.target.value)}
+                              style={{ padding: '10px 12px', fontSize: '0.9rem', borderColor: utrNumber.trim() ? '#10b981' : 'rgba(255,255,255,0.2)' }}
+                              required
+                            />
+                            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                              💡 After completing the payment of ₹{calculateAdvance()} in your UPI app, enter the 12-digit UTR/Ref number to confirm your booking.
+                            </div>
+                          </div>
+
+                          <label className={styles.paymentConfirmCheckLabel}>
+                            <input
+                              type="checkbox"
+                              className={styles.paymentConfirmCheckbox}
+                              checked={paymentConfirmed}
+                              onChange={(e) => setPaymentConfirmed(e.target.checked)}
+                            />
+                            <span>
+                              I confirm that I have transferred the advance payment of <strong>₹{calculateAdvance()}</strong> to <strong>NALINAKSHI C (8123635342@sbi)</strong> and entered the valid UPI UTR above.
+                            </span>
                           </label>
-                          <input
-                            type="text"
-                            className={styles.formInput}
-                            placeholder="e.g. 423987123456 or last 4 digits"
-                            value={utrNumber}
-                            onChange={(e) => setUtrNumber(e.target.value)}
-                            style={{ padding: '8px 12px', fontSize: '0.88rem' }}
-                          />
                         </div>
                       </div>
                     </div>
@@ -2407,7 +2449,7 @@ export default function BookingPortal() {
 
                     <div className={styles.ticketRow} style={{ background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', padding: '8px', margin: '6px 0' }}>
                       <div>
-                        <span className={styles.ticketLabel} style={{ color: '#10b981' }}>🟧 ADVANCE RECEIVED</span>
+                        <span className={styles.ticketLabel} style={{ color: '#10b981' }}>🟢 ADVANCE RECEIVED</span>
                         <div className={styles.ticketVal} style={{ color: '#10b981', fontWeight: 'bold' }}>
                           ₹{confirmedBooking.advancePaid ?? 500}
                         </div>
@@ -2419,6 +2461,15 @@ export default function BookingPortal() {
                         </div>
                       </div>
                     </div>
+
+                    {(confirmedBooking as any).utrNumber && (
+                      <div style={{ background: 'rgba(242, 169, 0, 0.08)', border: '1px solid rgba(242, 169, 0, 0.25)', borderRadius: '6px', padding: '8px 12px', margin: '6px 0', textAlign: 'left' }}>
+                        <span className={styles.ticketLabel} style={{ color: '#f2a900' }}>🧾 UPI TRANSACTION UTR</span>
+                        <div className={styles.ticketVal} style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                          {(confirmedBooking as any).utrNumber}
+                        </div>
+                      </div>
+                    )}
 
                     {confirmedBooking.addOns.length > 0 && (
                       <div>

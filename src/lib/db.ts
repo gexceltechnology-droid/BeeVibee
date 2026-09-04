@@ -18,6 +18,7 @@ export interface Booking {
   balanceDue?: number;
   paymentStatus?: 'advance_paid' | 'fully_paid' | 'pending';
   paymentMode?: string;
+  utrNumber?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
   specialRequests?: string;
@@ -213,7 +214,8 @@ export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'stat
   const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
   const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);
   const paymentStatus = bookingData.paymentStatus || (balanceDue === 0 ? 'fully_paid' : 'advance_paid');
-  const paymentMode = bookingData.paymentMode || 'UPI / Online';
+  const paymentMode = bookingData.paymentMode || 'UPI (8123635342@sbi)';
+  const utrNumber = (bookingData as any).utrNumber || '';
 
   const newBooking: Booking = {
     ...bookingData,
@@ -222,6 +224,7 @@ export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'stat
     balanceDue,
     paymentStatus,
     paymentMode,
+    utrNumber,
     status: 'confirmed',
     createdAt: new Date().toISOString(),
   };

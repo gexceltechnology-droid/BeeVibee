@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { customerName, email, phone, date, timeSlot, packageName, addOns, totalPrice, guestCount, specialRequests } = body;
+    const { customerName, email, phone, date, timeSlot, packageName, addOns, totalPrice, guestCount, specialRequests, utrNumber } = body;
 
     // Basic validation
     if (!customerName || !email || !phone || !date || !timeSlot || !packageName || totalPrice === undefined || !guestCount) {
@@ -124,12 +124,15 @@ export async function POST(request: NextRequest) {
       // PS5 Gaming Lounge is ₹399 / hour (min 1 hour)
       pkgBase = Math.round(399 * durationHours);
     } else {
-      const PACKAGES_PRICE_MAP: Record<string, number> = {
-        'Pink Theme': 799,
-        'Purple Theme': 999,
-        'Red Theme': 599,
-      };
-      const packagePrice = PACKAGES_PRICE_MAP[packageName] || 999;
+      const lower = (packageName || '').toLowerCase();
+      let packagePrice = 999;
+      if (lower.includes('red')) {
+        packagePrice = 799;
+      } else if (lower.includes('pink')) {
+        packagePrice = 899;
+      } else if (lower.includes('purple')) {
+        packagePrice = 999;
+      }
       pkgBase = Math.round((packagePrice / 2) * durationHours);
     }
 
@@ -188,7 +191,8 @@ export async function POST(request: NextRequest) {
     const passedAdvance = typeof body.advancePaid === 'number' ? body.advancePaid : Math.min(500, calculatedTotal);
     const passedBalance = typeof body.balanceDue === 'number' ? body.balanceDue : Math.max(0, calculatedTotal - passedAdvance);
     const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : 'advance_paid');
-    const passedMode = body.paymentMode || 'UPI / Online Advance';
+    const passedMode = body.paymentMode || 'UPI (8123635342@sbi)';
+    const passedUtr = typeof utrNumber === 'string' ? utrNumber.trim() : (typeof body.utrNumber === 'string' ? body.utrNumber.trim() : '');
 
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
@@ -204,6 +208,7 @@ export async function POST(request: NextRequest) {
       balanceDue: passedBalance,
       paymentStatus: passedStatus,
       paymentMode: passedMode,
+      utrNumber: passedUtr,
       guestCount: numericGuestCount,
       specialRequests: specialRequests || '',
     });

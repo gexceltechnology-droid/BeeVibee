@@ -10,6 +10,10 @@ interface SendMailParams {
   packageName: string;
   addOns: string[];
   totalPrice: number;
+  advancePaid?: number;
+  balanceDue?: number;
+  paymentMode?: string;
+  utrNumber?: string;
   guestCount: number;
   specialRequests?: string;
 }
@@ -173,6 +177,24 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
                 <div class="val accent-val">₹${params.totalPrice}</div>
               </td>
             </tr>
+            <tr>
+              <td style="padding-bottom: 16px;">
+                <div class="label">Advance Paid</div>
+                <div class="val" style="color: #10b981; font-weight: 700;">₹${params.advancePaid ?? 500} (UPI)</div>
+              </td>
+              <td style="padding-bottom: 16px; text-align: right;">
+                <div class="label">Balance Due at Venue</div>
+                <div class="val" style="color: #f59e0b; font-weight: 700;">₹${params.balanceDue ?? Math.max(0, params.totalPrice - (params.advancePaid ?? 500))}</div>
+              </td>
+            </tr>
+            ${params.utrNumber ? `
+            <tr>
+              <td colspan="2" style="padding-bottom: 16px; background: rgba(242, 169, 0, 0.08); border-radius: 6px; padding: 10px;">
+                <div class="label" style="color: #f2a900;">UPI Reference / UTR Number</div>
+                <div class="val" style="color: #ffffff; font-family: monospace; font-size: 14px;">${params.utrNumber}</div>
+              </td>
+            </tr>
+            ` : ''}
             <tr>
               <td colspan="2" style="padding-bottom: 16px;">
                 <div class="label">Add-ons Selected</div>

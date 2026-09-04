@@ -122,6 +122,7 @@ export default function GamingBookPage() {
 
   // Advance Payment & Ref ID
   const [utrNumber, setUtrNumber] = useState('');
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
 
   // Auth / OTP
@@ -424,13 +425,26 @@ export default function GamingBookPage() {
   };
 
   const handleSubmitBooking = async () => {
+    setError('');
+
     if (!isCustomerLoggedIn) {
       setShowLoginModal(true);
-      setError('Please verify your phone number to complete the booking.');
+      setError('Please verify your phone number first to complete the booking.');
       return;
     }
-    if (!customerDetails.name || !customerDetails.email) {
-      setError('Please fill in Name and Email.');
+    if (!customerDetails.name.trim()) { setError('Please enter your full name.'); return; }
+    if (!customerDetails.email.trim()) { setError('Please enter your email address.'); return; }
+    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
+    if (!emailRegex.test(customerDetails.email.trim())) { setError('Please enter a valid email address.'); return; }
+    if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setError('Guest count must be between 1 and 10.'); return; }
+
+    if (!utrNumber.trim()) {
+      setError('⚠️ Please complete your advance payment and enter your 12-digit UPI Reference / UTR Number below.');
+      return;
+    }
+
+    if (!paymentConfirmed) {
+      setError(`⚠️ Please check the confirmation checkbox confirming that you have transferred ₹${calculateAdvance()} to NALINAKSHI C (8123635342@sbi).`);
       return;
     }
 
@@ -456,7 +470,8 @@ export default function GamingBookPage() {
       advancePaid: calculateAdvance(),
       balanceDue: calculateBalance(),
       paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
-      paymentMode: 'UPI Advance',
+      paymentMode: 'UPI (8123635342@sbi)',
+      utrNumber: utrNumber.trim(),
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
     };

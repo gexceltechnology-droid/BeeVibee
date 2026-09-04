@@ -1219,7 +1219,7 @@
 }
 
 .timePickerCardTitle {
-  font-size: 0.85rm;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -1239,7 +1239,7 @@
   border-radius: var(--radius-sm);
   color: #ffffff;
   padding: 10px 12px;
-  font-size: 1.05rm;
+  font-size: 1.05rem;
   font-weight: 600;
   font-family: var(--font-body);
   outline: none;
@@ -1258,7 +1258,7 @@
 }
 
 .timeSeparator {
-  font-size: 1.3rm;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--accent);
 }
@@ -1276,7 +1276,7 @@
   background: transparent;
   border: none;
   color: var(--text-secondary);
-  font-size: 0.85rm;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1296,7 +1296,7 @@
 }
 
 .quickDurationTitle {
-  font-size: 0.8rm;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -1312,7 +1312,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 6px 14px;
-  font-size: 0.8rm;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--text-secondary);
   cursor: pointer;
@@ -1335,7 +1335,7 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-.uadvanceHeader {
+.advanceHeader {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1344,30 +1344,30 @@
   padding-bottom: 12px;
 }
 
-.qadvanceHeaderTitle {
+.advanceHeaderTitle {
   font-family: var(--font-title);
-  font-size: 1.15rm;
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--accent);
   margin: 0;
 }
 
-.qadvanceBreakdownRow {
+.advanceBreakdownRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   margin-bottom: 20px;
 }
 
-.uadvanceBreakdownItem {
+.advanceBreakdownItem {
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
   padding: 12px 14px;
 }
 
-.uadvanceBreakdownLabel {
-  font-size: 0.78rm;
+.advanceBreakdownLabel {
+  font-size: 0.78rem;
   color: var(--text-secondary);
   margin-bottom: 4px;
   text-transform: uppercase;
@@ -1375,7 +1375,7 @@
 }
 
 .advanceBreakdownVal {
-  font-size: 1.2rm;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #ffffff;
 }
@@ -1385,7 +1385,7 @@
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
-.uadvancePayableHighlight .advanceBreakdownVal {
+.advancePayableHighlight .advanceBreakdownVal {
   color: #10b981;
   text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
@@ -1401,7 +1401,7 @@
   flex-wrap: wrap;
 }
 
-.uadvanceQrImgWrapper {
+.advanceQrImgWrapper {
   background: #ffffff;
   padding: 8px;
   border-radius: 8px;
@@ -1409,7 +1409,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.qadvanceQrInfo {
+.advanceQrInfo {
   flex: 1;
   min-width: 200px;
   display: flex;
@@ -1429,7 +1429,7 @@
 
 .upiIdText {
   font-family: monospace;
-  font-size: 0.95rm;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--accent);
   flex: 1;
@@ -1439,7 +1439,7 @@
   background: rgba(var(--accent-base), 0.2);
   border: 1px solid var(--accent);
   color: var(--accent);
-  font-size: 0.75rm;
+  font-size: 0.75rem;
   font-weight: 700;
   border-radius: 4px;
   padding: 4px 10px;
@@ -1460,7 +1460,7 @@
   background: #25D366;
   color: #ffffff;
   font-weight: 700;
-  font-size: 0.88rm;
+  font-size: 0.88rem;
   text-decoration: none;
   padding: 10px 16px;
   border-radius: 6px;
@@ -1471,4 +1471,67 @@
 .upiIntentBtn:hover {
   background: #20ba59;
   transform: translateY(-1px);
+}
+
+
+/* Enhanced UPI Confirmation & Payee Badges */
+.payeeCardHeader {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(242, 169, 0, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payeeNameText {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.bankBadge {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.utrConfirmBox {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(242, 169, 0, 0.3);
+  border-radius: 8px;
+  padding: 14px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.paymentConfirmCheckLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #e4e4e7;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.paymentConfirmCheckbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #f2a900;
+  margin-top: 2px;
+  cursor: pointer;
 }

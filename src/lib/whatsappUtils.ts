@@ -30,6 +30,11 @@ export interface BookingData {
   packageName: string;
   addOns?: string[];
   totalPrice: number;
+  advancePaid?: number;
+  balanceDue?: number;
+  paymentStatus?: string;
+  paymentMode?: string;
+  utrNumber?: string;
   guestCount: number;
   specialRequests?: string;
 }
@@ -84,6 +89,9 @@ export function formatFoodOrderWhatsAppMessage(order: FoodOrderData): string {
  */
 export function formatBookingWhatsAppMessage(booking: BookingData): string {
   const addOnsText = booking.addOns && booking.addOns.length > 0 ? `\n🎁 Add-ons: ${booking.addOns.join(', ')}` : '';
+  const advance = typeof booking.advancePaid === 'number' ? booking.advancePaid : 500;
+  const balance = typeof booking.balanceDue === 'number' ? booking.balanceDue : Math.max(0, booking.totalPrice - advance);
+  const utrText = booking.utrNumber ? `\n🧾 UPI Ref / UTR: ${booking.utrNumber}` : '';
 
   return (
     `🎉 NEW BOOKING ALERT - BEE VIBE 🎉\n` +
@@ -100,8 +108,10 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
     `👥 Guests: ${booking.guestCount} Head(s)${addOnsText}\n` +
     `----------------------------------------\n` +
     `💰 Total Price: ₹${booking.totalPrice}\n` +
+    `🟢 Advance Received: ₹${advance} (UPI: 8123635342@sbi)\n` +
+    `⏳ Balance Due at Venue: ₹${balance}${utrText}\n` +
     `----------------------------------------\n` +
-    `Reservation logged & confirmed in Bee Vibe system!`
+    `Reservation confirmed! Staff: please verify UTR against SBI bank statement.`
   );
 }
 

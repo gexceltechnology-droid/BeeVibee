@@ -21,6 +21,7 @@ interface Booking {
   balanceDue?: number;
   paymentStatus?: string;
   paymentMode?: string;
+  utrNumber?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
   specialRequests?: string;
@@ -593,7 +594,7 @@ export default function AdminDashboard() {
     
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.beevibe.org';
     const receiptUrl = `${baseUrl}/receipt?id=${b.id}`;
-    const text = `🧾 *BeeVibe Advance Payment Receipt*\n\nHi ${b.customerName}! We have received your advance payment for your private celebration at BeeVibe! 🎉\n\n🎟️ *Booking ID*: ${b.id}\n📅 *Date*: ${b.date}\n⏰ *Time Slot*: ${b.timeSlot}\n\n💰 *Total Booking Price*: ₹${b.totalPrice}\n🟢 *Advance Received*: ₹${advance}\n⏳ *Remaining Balance Due at Venue*: ₹${balance}\n\n🔗 *Official Receipt Link*:\n${receiptUrl}\n\n📍 *Venue Location*: 1340, 2nd floor, 41st Cross road, 4th gate, opposite Jain University, Jayanagar 9th Block, Bengaluru 560041.\n\nSee you at BeeVibe! 🐝✨`;
+    const text = `🧾 *BeeVibe Advance Payment Receipt*\n\nHi ${b.customerName}! We have received your advance payment for your private celebration at BeeVibe! 🎉\n\n🎟️ *Booking ID*: ${b.id}\n📅 *Date*: ${b.date}\n⏰ *Time Slot*: ${b.timeSlot}\n\n💰 *Total Booking Price*: ₹${b.totalPrice}\n🟢 *Advance Received*: ₹${advance} (UPI: 8123635342@sbi - NALINAKSHI C)\n${b.utrNumber ? `🧾 *UPI Ref / UTR*: ${b.utrNumber}\n` : ''}⏳ *Remaining Balance Due at Venue*: ₹${balance}\n\n🔗 *Official Receipt Link*:\n${receiptUrl}\n\n📍 *Venue Location*: 1340, 2nd floor, 41st Cross road, 4th gate, opposite Jain University, Jayanagar 9th Block, Bengaluru 560041.\n\nSee you at BeeVibe! 🐝✨`;
     
     const finalPhone = cleanPhoneNumber(b.phone);
     window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
@@ -1418,7 +1419,27 @@ export default function AdminDashboard() {
                             </div>
                           )}
                         </td>
-                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{b.totalPrice}</td>
+                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
+                            <div>₹{b.totalPrice}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
+                              Adv: ₹{b.advancePaid ?? 500}
+                            </div>
+                            {b.utrNumber ? (
+                              <div style={{
+                                fontSize: '0.72rem',
+                                fontFamily: 'monospace',
+                                background: 'rgba(242, 169, 0, 0.15)',
+                                color: '#f2a900',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(242, 169, 0, 0.3)',
+                                marginTop: '4px',
+                                width: 'fit-content'
+                              }}>
+                                🧾 UTR: {b.utrNumber}
+                              </div>
+                            ) : null}
+                          </td>
                         <td>
                           <span className={`${styles.badge} ${
                             b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending

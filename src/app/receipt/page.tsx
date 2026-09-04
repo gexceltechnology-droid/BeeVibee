@@ -34,6 +34,7 @@ interface BookingReceiptData {
   balanceDue?: number;
   paymentStatus?: string;
   paymentMode?: string;
+  utrNumber?: string;
   guestCount: number;
   specialRequests?: string;
   createdAt: string;
@@ -283,9 +284,17 @@ function ReceiptContent() {
             <span style={{ fontWeight: '700', color: '#0f172a' }}>₹{booking.totalPrice}</span>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1.5px dashed #cbd5e1', fontSize: '1rem', color: '#047857', fontWeight: '800' }}>
-            <span>🟢 Advance Payment Received ({paymentMode}):</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px dashed #cbd5e1', fontSize: '1rem', color: '#047857', fontWeight: '800' }}>
+            <span>🟢 Advance Payment Received:</span>
             <span>- ₹{advancePaid}</span>
+          </div>
+
+          <div style={{ background: 'rgba(242, 169, 0, 0.08)', border: '1px solid rgba(242, 169, 0, 0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '0.82rem', color: '#334155' }}>
+            <div><strong>Paid to:</strong> NALINAKSHI C (8123635342@sbi)</div>
+            <div><strong>Bank:</strong> State Bank of India (6592)</div>
+            {booking.utrNumber && (
+              <div><strong>UPI Transaction UTR:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#b45309' }}>{booking.utrNumber}</span></div>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '1.15rem', fontWeight: '900', color: '#7c3aed' }}>

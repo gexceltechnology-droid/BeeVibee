@@ -170,7 +170,8 @@ export async function addBookingToFirestore(
     const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
     const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);
     const paymentStatus = bookingData.paymentStatus || (balanceDue === 0 ? 'fully_paid' : 'advance_paid');
-    const paymentMode = bookingData.paymentMode || 'UPI / Online';
+    const paymentMode = bookingData.paymentMode || 'UPI (8123635342@sbi)';
+    const utrNumber = (bookingData as any).utrNumber || '';
 
     const newBooking: Booking = {
       ...bookingData,
@@ -179,6 +180,7 @@ export async function addBookingToFirestore(
       balanceDue,
       paymentStatus,
       paymentMode,
+      utrNumber,
       status: 'confirmed',
       createdAt: new Date().toISOString(),
     };
