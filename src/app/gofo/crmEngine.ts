@@ -25,7 +25,24 @@ interface CustomerAccumulator {
 }
 
 export class CrmEngine {
-  private static customerNotes = new Map<string, CustomerNote[]>(); // key: `${tenantId}:${phone}`
+  private static customerRegistry = new Map<string, string>(); // key: `${tenantId}:${cleanPhone}` -> persistent customer UUID
+  private static customerNotes = new Map<string, CustomerNote[]>(); // key: `${tenantId}:${cleanPhone}`
+
+  /**
+   * Helper to retrieve or persist a stable customer UUID
+   */
+  static getOrCreateCustomerId(tenantId: string, phone: string): string {
+    const cleanPhone = phone.trim();
+    const key = `${tenantId}:${cleanPhone}`;
+    let customerId = this.customerRegistry.get(key);
+    if (!customerId) {
+      customerId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+        ? crypto.randomUUID() 
+        : `cust_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      this.customerRegistry.set(key, customerId);
+    }
+    return customerId;
+  }
 
   /**
    * Aggregate bookings and food orders into rich customer profiles
@@ -122,10 +139,7 @@ export class CrmEngine {
 
       const cleanPhone = phone.trim();
       const notes = this.customerNotes.get(`${tenantId}:${cleanPhone}`) || [];
-      // True random UUID (crypto.randomUUID()) matching PostgreSQL gen_random_uuid()
-      const customerId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
-        ? crypto.randomUUID() 
-        : `cust_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+      const customerId = this.getOrCreateCustomerId(tenantId, cleanPhone);
 
       profiles.push({
         id: customerId,
@@ -163,9 +177,7 @@ export class CrmEngine {
   static addCustomerNote(tenantId: string, phone: string, author: string, noteText: string): CustomerNote {
     const cleanPhone = phone.trim();
     const key = `${tenantId}:${cleanPhone}`;
-    const customerId = (typeof crypto !== 'undefined' && crypto.randomUUID) 
-      ? crypto.randomUUID() 
-      : `cust_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+    const customerId = this.getOrCreateCustomerId(tenantId, cleanPhone);
     const existing = this.customerNotes.get(key) || [];
     const note: CustomerNote = {
       id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
