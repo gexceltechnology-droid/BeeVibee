@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/auth';
 import {
   getAdminWhatsAppNumber,
   sendWhatsAppViaTwilio,
@@ -28,12 +29,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const phone = searchParams.get('phone') || getAdminWhatsAppNumber();
+    // In production, non-challenge testing requires admin authorization
+    if (process.env.NODE_ENV === 'production' && !isAuthorized(request)) {
+      return NextResponse.json({ error: 'Forbidden: Test endpoints are disabled in production.' }, { status: 403 });
+    }
 
-    const testMessage = `🐝 TEST ALERT - BEE VIBE WHATSAPP & NOTIFICATION SYSTEM 🐝\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nIf you received this message, automated admin alerts are active for +${phone}!`;
+    const phone = searchParams.get('phone') || getAdminWhatsAppNumber();
+    const testMessage = `?? TEST ALERT - BEE VIBE WHATSAPP & NOTIFICATION SYSTEM ??\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}\nIf you received this message, automated admin alerts are active for +${phone}!`;
 
     console.log(`[TEST NOTIFICATION ROUTE] Testing all notification channels for +${phone}...`);
-
     const results: Record<string, any> = {};
 
     // 1. Test Telegram Bot Alert
@@ -78,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // 6. Test Email Alert
     try {
-      await sendAdminNotificationEmail('🐝 Bee Vibe Notification Test Alert', `<p>${testMessage}</p>`);
+      await sendAdminNotificationEmail('?? Bee Vibe Notification Test Alert', `<p>${testMessage}</p>`);
       results.adminEmail = { success: true };
     } catch (e: any) {
       results.adminEmail = { success: false, error: e.message };
@@ -95,10 +99,6 @@ export async function GET(request: NextRequest) {
         smtpEmailPresent: !!(process.env.SMTP_HOST && process.env.SMTP_USER),
       },
       results,
-      instructions: {
-        telegramSetup: "To receive 100% free instant push alerts on Telegram: Create a bot with @BotFather on Telegram, paste TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID into environment variables.",
-        callmebotSetup: "To enable free WhatsApp alerts via CallMeBot: Send 'I allow callmebot to send me messages' on WhatsApp from +919900106474 to +34 644 44 49 53. CallMeBot will reply with your API Key. Add CALLMEBOT_API_KEY=<key> to environment variables.",
-      }
     });
   } catch (err: any) {
     return new Response('Error handling test GET request', { status: 500 });
@@ -108,6 +108,11 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    // In production, arbitrary message simulation requires admin authorization
+    if (process.env.NODE_ENV === 'production' && !isAuthorized(request) && body.message && !body.entry) {
+      return NextResponse.json({ error: 'Forbidden: Test simulation endpoints are disabled in production.' }, { status: 403 });
+    }
 
     if (body.message && typeof body.message === 'string') {
       const botRes = processWhatsAppBotMessage(body.message, body.phone || '');

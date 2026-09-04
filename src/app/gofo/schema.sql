@@ -544,29 +544,29 @@ CREATE OR REPLACE FUNCTION current_app_tenant_id() RETURNS UUID AS $$
     SELECT NULLIF(current_setting('app.current_tenant_id', true), '')::uuid;
 $$ LANGUAGE sql STABLE;
 
-CREATE POLICY rls_locations ON locations FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_resources ON resources FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_services ON services FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_availability ON availability_rules FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_booking_holds ON booking_holds FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_bookings ON bookings FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_booking_addons ON booking_addons FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_payment_accounts ON tenant_payment_accounts FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_payment_orders ON payment_orders FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_payment_transactions ON payment_transactions FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_reconciliation_logs ON reconciliation_logs FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_venue_settlements ON venue_settlements FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_refunds ON refunds FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_customers ON customers FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_customer_metrics ON customer_metrics FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_customer_notes ON customer_notes FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_crm_segment_rules ON crm_segment_rules FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_automations ON automations FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_marketing_outreach_logs ON marketing_outreach_logs FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_outbox_events ON outbox_events FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_audit_logs ON audit_logs FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_subscriptions ON subscriptions FOR ALL USING (tenant_id = current_app_tenant_id());
-CREATE POLICY rls_subscription_invoices ON subscription_invoices FOR ALL USING (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_locations ON locations FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_resources ON resources FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_services ON services FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_availability ON availability_rules FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_booking_holds ON booking_holds FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_bookings ON bookings FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_booking_addons ON booking_addons FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_payment_accounts ON tenant_payment_accounts FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_payment_orders ON payment_orders FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_payment_transactions ON payment_transactions FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_reconciliation_logs ON reconciliation_logs FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_venue_settlements ON venue_settlements FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_refunds ON refunds FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_customers ON customers FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_customer_metrics ON customer_metrics FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_customer_notes ON customer_notes FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_crm_segment_rules ON crm_segment_rules FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_automations ON automations FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_marketing_outreach_logs ON marketing_outreach_logs FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_outbox_events ON outbox_events FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_audit_logs ON audit_logs FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_subscriptions ON subscriptions FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
+CREATE POLICY rls_subscription_invoices ON subscription_invoices FOR ALL USING (tenant_id = current_app_tenant_id()) WITH CHECK (tenant_id = current_app_tenant_id());
 
 -- ============================================================================
 -- DOMAIN 7: PERFORMANCE & LOOKUP INDEXES

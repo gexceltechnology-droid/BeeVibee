@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/auth';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 
 export async function GET(request: NextRequest) {
+  if (process.env.NODE_ENV === 'production' && !isAuthorized(request)) {
+    return NextResponse.json({ error: 'Forbidden: Test endpoints are disabled in production.' }, { status: 403 });
+  }
+
   try {
     const host = process.env.SMTP_HOST;
     const port = process.env.SMTP_PORT;
@@ -12,13 +17,10 @@ export async function GET(request: NextRequest) {
 
     const maskedPass = pass ? `${pass.substring(0, 4)}...${pass.substring(Math.max(0, pass.length - 4))}` : 'NOT_CONFIGURED';
 
-    console.log('SMTP Config:', { host, port, secure, user, from });
-
     if (!host || !user || !pass) {
       return NextResponse.json({
         success: false,
         error: 'SMTP credentials missing from environment variables.',
-        config: { host, port, secure, user, maskedPass, from }
       }, { status: 400 });
     }
 
@@ -38,21 +40,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Email test ran successfully.',
-      config: { host, port, secure, user, maskedPass, from }
     });
   } catch (error: any) {
     console.error('Test email failed:', error);
     return NextResponse.json({
       success: false,
       error: error.message || 'Unknown error',
-      stack: error.stack,
-      config: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE,
-        user: process.env.SMTP_USER,
-        from: process.env.SMTP_FROM
-      }
     }, { status: 500 });
   }
 }

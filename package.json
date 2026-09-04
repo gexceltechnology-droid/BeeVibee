@@ -10,16 +10,22 @@
     "seo:submit": "node scripts/submit-seo.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@embedded-postgres/windows-x64": "^18.4.0-beta.17",
+    "@types/pg": "^8.23.1",
+    "embedded-postgres": "^18.4.0-beta.17",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.2.0",
     "lucide-react": "^1.23.0",
     "next": "16.2.10",
     "nodemailer": "^9.0.3",
+    "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.1",
