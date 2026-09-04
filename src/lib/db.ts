@@ -19,6 +19,9 @@ export interface Booking {
   paymentStatus?: 'advance_paid' | 'fully_paid' | 'pending';
   paymentMode?: string;
   utrNumber?: string;
+  sbiVerified?: boolean;
+  balanceCollected?: boolean;
+  adminNotes?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
   specialRequests?: string;
@@ -558,3 +561,24 @@ export function deleteMenuItem(id: string): void {
 }
 
 
+
+export function updateBookingPaymentVerification(id: string, updates: { sbiVerified?: boolean; balanceCollected?: boolean; adminNotes?: string; status?: 'pending' | 'confirmed' | 'cancelled' }): Booking {
+  const db = readDb();
+  const index = db.bookings.findIndex(b => b.id.toLowerCase() === id.toLowerCase());
+  if (index === -1) {
+    throw new Error(`Booking with ID ${id} not found.`);
+  }
+
+  if (updates.sbiVerified !== undefined) db.bookings[index].sbiVerified = updates.sbiVerified;
+  if (updates.balanceCollected !== undefined) {
+    db.bookings[index].balanceCollected = updates.balanceCollected;
+    if (updates.balanceCollected) {
+      db.bookings[index].paymentStatus = 'fully_paid';
+    }
+  }
+  if (updates.adminNotes !== undefined) db.bookings[index].adminNotes = updates.adminNotes;
+  if (updates.status !== undefined) db.bookings[index].status = updates.status;
+
+  writeDb(db);
+  return db.bookings[index];
+}

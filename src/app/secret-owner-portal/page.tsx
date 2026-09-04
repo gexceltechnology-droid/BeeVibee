@@ -5,6 +5,8 @@ import Link from 'next/link';
 import styles from './admin.module.css';
 import type { MenuItem } from '@/lib/db';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
+import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
+import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
 
 interface Booking {
   id: string;
@@ -22,6 +24,9 @@ interface Booking {
   paymentStatus?: string;
   paymentMode?: string;
   utrNumber?: string;
+  sbiVerified?: boolean;
+  balanceCollected?: boolean;
+  adminNotes?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
   specialRequests?: string;
@@ -48,7 +53,7 @@ interface FoodOrder {
 }
 
 export default function AdminDashboard() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // null represents checking state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [passcodeInput, setPasscodeInput] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
@@ -57,22 +62,37 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
+  const [newlyAddedOrderIds, setNewlyAddedOrderIds] = useState<string[]>([]);
   const [archiveStatus, setArchiveStatus] = useState<{ count: number; ordersCount?: number; destination: string } | null>(null);
   
-  // Food Orders and Menu States
-  const [activeTab, setActiveTab] = useState<'bookings' | 'orders' | 'qrs' | 'menu'>('bookings');
+  // Navigation Tabs
+  const [activeTab, setActiveTab] = useState<'bookings' | 'payments' | 'crm' | 'orders' | 'qrs' | 'menu'>('bookings');
+  
+  // Filter States
   const [bookingCategoryFilter, setBookingCategoryFilter] = useState<'all' | 'theater' | 'gaming'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
   const [orderDateFilter, setOrderDateFilter] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'verified' | 'pending' | 'balance_due' | 'settled'>('all');
+  const [crmTierFilter, setCrmTierFilter] = useState<'all' | 'VIP' | 'REGULAR' | 'GAMER' | 'NEW'>('all');
+  
+  // Food Orders
   const [orders, setOrders] = useState<FoodOrder[]>([]);
-  const [newlyAddedOrderIds, setNewlyAddedOrderIds] = useState<string[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [origin, setOrigin] = useState('');
   
+  // Menu Items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuLoading, setMenuLoading] = useState(false);
+
+  // CRM State
+  const [crmProfiles, setCrmProfiles] = useState<AggregatedCustomerProfile[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<AggregatedCustomerProfile | null>(null);
+  const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
+  const [newNoteText, setNewNoteText] = useState('');
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
+  const [copiedUtrId, setCopiedUtrId] = useState<string | null>(null);
 
   // Menu Modal States
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
@@ -83,10 +103,8 @@ export default function AdminDashboard() {
   const [itemDescription, setItemDescription] = useState('');
   const [itemIcon, setItemIcon] = useState('🍿');
 
-  // Web Audio Context to circumvent browser autoplay restrictions
+  // Web Audio Context
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  // Stable refs to track IDs we have already seen — avoids false-positive sounds
   const knownBookingIdsRef = useRef<Set<string> | null>(null);
   const knownOrderIdsRef = useRef<Set<string> | null>(null);
 
@@ -102,11 +120,8 @@ export default function AdminDashboard() {
     }
   };
 
-  // Bind initAudioContext to standard user gestures on the page
   useEffect(() => {
-    const handleGesture = () => {
-      initAudioContext();
-    };
+    const handleGesture = () => initAudioContext();
     window.addEventListener('click', handleGesture);
     window.addEventListener('keydown', handleGesture);
     return () => {
@@ -115,81 +130,66 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // Play a beautiful arpeggio chord chime for new food orders (distinct, volume 0.25)
   const playOrderSound = async () => {
     try {
       initAudioContext();
       const ctx = audioContextRef.current;
       if (!ctx) return;
-      if (ctx.state === 'suspended') {
-        await ctx.resume().catch(() => {});
-      }
+      if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
         const gainNode = ctx.createGain();
         osc.connect(gainNode);
         gainNode.connect(ctx.destination);
-
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, startTime);
-        
-        // Volume envelope: smooth attack, exponential decay (prevents audio click pops)
         gainNode.gain.setValueAtTime(0.0001, startTime);
         gainNode.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        
         osc.start(startTime);
         osc.stop(startTime + duration + 0.05);
       };
 
       const now = ctx.currentTime;
-      playNote(523.25, now, 0.18);       // C5
-      playNote(659.25, now + 0.12, 0.18);  // E5
-      playNote(783.99, now + 0.24, 0.35);  // G5
+      playNote(523.25, now, 0.18);
+      playNote(659.25, now + 0.12, 0.18);
+      playNote(783.99, now + 0.24, 0.35);
     } catch (e) {
-      console.warn('Could not play order notification audio:', e);
+      console.warn('Could not play order chime:', e);
     }
   };
 
-  // Play a distinct chime for new bookings
   const playBookingSound = async () => {
     try {
       initAudioContext();
       const ctx = audioContextRef.current;
       if (!ctx) return;
-      if (ctx.state === 'suspended') {
-        await ctx.resume().catch(() => {});
-      }
+      if (ctx.state === 'suspended') await ctx.resume().catch(() => {});
 
       const playNote = (freq: number, startTime: number, duration: number) => {
         const osc = ctx.createOscillator();
         const gainNode = ctx.createGain();
         osc.connect(gainNode);
         gainNode.connect(ctx.destination);
-
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, startTime);
-        
         gainNode.gain.setValueAtTime(0.0001, startTime);
         gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
         gainNode.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-        
         osc.start(startTime);
         osc.stop(startTime + duration + 0.05);
       };
 
       const now = ctx.currentTime;
-      playNote(587.33, now, 0.12);       // D5
-      playNote(698.46, now + 0.1, 0.12);  // F5
-      playNote(880.00, now + 0.2, 0.25);  // A5
+      playNote(587.33, now, 0.12);
+      playNote(698.46, now + 0.1, 0.12);
+      playNote(880.00, now + 0.2, 0.25);
     } catch (e) {
-      console.warn('Could not play booking notification audio:', e);
+      console.warn('Could not play booking chime:', e);
     }
   };
 
-
-  // Check auth and archived status on load
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  // Polling for new bookings and orders when authenticated
+  // Polling for new bookings, payments and orders
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -227,31 +227,13 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
-  const runArchiving = async (codeValue?: string) => {
-    const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    try {
-      const res = await fetch('/api/admin/archive', {
-        method: 'POST',
-        headers: {
-          'X-Admin-Passcode': activePasscode,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if ((data.count && data.count > 0) || (data.ordersCount && data.ordersCount > 0)) {
-          sessionStorage.setItem('bee_vibe_archived_count', String(data.count || 0));
-          sessionStorage.setItem('bee_vibe_archived_orders_count', String(data.ordersCount || 0));
-          sessionStorage.setItem('bee_vibe_archived_destination', data.destination);
-          setArchiveStatus({ count: data.count || 0, ordersCount: data.ordersCount || 0, destination: data.destination });
-          // Fetch updated bookings and food orders lists since past ones were archived
-          fetchBookings(activePasscode);
-          fetchOrders(activePasscode);
-        }
-      }
-    } catch (err) {
-      console.error('Error running daily archiving task:', err);
+  // Re-aggregate CRM profiles when bookings or orders update
+  useEffect(() => {
+    if (bookings.length > 0 || orders.length > 0) {
+      const profiles = CrmEngine.aggregateCustomerProfiles('tenant_beevibe', bookings, orders);
+      setCrmProfiles(profiles);
     }
-  };
+  }, [bookings, orders]);
 
   const verifyPasscode = async (codeToCheck: string) => {
     setLoginLoading(true);
@@ -271,7 +253,6 @@ export default function AdminDashboard() {
         fetchBookings(codeToCheck);
         fetchOrders(codeToCheck);
         fetchMenu(codeToCheck);
-        runArchiving(codeToCheck);
 
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
           Notification.requestPermission().catch(() => {});
@@ -300,31 +281,20 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('bee_vibe_admin_passcode');
-    sessionStorage.removeItem('bee_vibe_archived_count');
-    sessionStorage.removeItem('bee_vibe_archived_orders_count');
-    sessionStorage.removeItem('bee_vibe_archived_destination');
     setIsAuthenticated(false);
-    setPasscodeInput('');
     setBookings([]);
     setOrders([]);
     setMenuItems([]);
-    setActiveTab('bookings');
-    setArchiveStatus(null);
+    setPasscodeInput('');
   };
 
-  // Fetch all bookings with authorization header
+  // Fetch Bookings
   async function fetchBookings(codeValue?: string, isBackground = false) {
     const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    
     try {
-      if (!isBackground) {
-        setLoading(true);
-      }
-      setError('');
+      if (!isBackground) setLoading(true);
       const res = await fetch('/api/bookings', {
-        headers: {
-          'X-Admin-Passcode': activePasscode,
-        },
+        headers: { 'X-Admin-Passcode': activePasscode },
       });
 
       if (res.status === 401) {
@@ -333,563 +303,441 @@ export default function AdminDashboard() {
         throw new Error('Authentication expired. Please log in again.');
       }
 
-      if (!res.ok) throw new Error('Failed to load bookings list.');
+      if (!res.ok) throw new Error('Failed to load bookings.');
       const data = await res.json();
-      const newBookings = data.bookings || [];
+      const currentBookings: Booking[] = data.bookings || [];
 
-      if (isBackground) {
-        // Initialise the known-IDs ref on the very first background poll
-        if (knownBookingIdsRef.current === null) {
-          knownBookingIdsRef.current = new Set(newBookings.map((b: Booking) => b.id));
-          setBookings(newBookings);
-          return;
-        }
-
-        const added = newBookings.filter((b: Booking) => !knownBookingIdsRef.current!.has(b.id));
-        if (added.length > 0) {
-          const addedIds = added.map((b: Booking) => b.id);
-          added.forEach((b: Booking) => knownBookingIdsRef.current!.add(b.id));
-          setNewlyAddedIds((curr) => [...curr, ...addedIds]);
-
-          // Play a soft notification audio chime ONLY for genuinely new bookings
-          playBookingSound();
-
-          // Trigger Mobile Browser Web Push Notification
+      if (knownBookingIdsRef.current !== null) {
+        const newItems = currentBookings.filter(b => !knownBookingIdsRef.current!.has(b.id));
+        if (newItems.length > 0) {
+          setNewlyAddedIds(newItems.map(b => b.id));
+          await playBookingSound();
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             try {
-              added.forEach((b: Booking) => {
-                new Notification('🎉 NEW BOOKING ALERT - Bee Vibe', {
-                  body: `Ticket #${b.id} | ${b.customerName} | ${b.packageName} | ${b.date} @ ${b.timeSlot}`,
-                  icon: '/icon.png',
-                  tag: `booking-${b.id}`,
-                });
+              new Notification('🎬 New Bee Vibe Booking!', {
+                body: `${newItems[0].customerName} booked ${newItems[0].packageName} for ${newItems[0].date}`,
+                icon: '/icon.png',
               });
-            } catch (err) {
-              console.warn('Browser notification error:', err);
-            }
+            } catch (e) {}
           }
-
-          // Trigger Native Android APK Notification if running inside Android Admin App
-          if (typeof window !== 'undefined' && (window as any).AndroidAdminBridge) {
-            try {
-              added.forEach((b: Booking) => {
-                (window as any).AndroidAdminBridge.showNativeNotification(
-                  '🎉 NEW ROOM BOOKING ALERT!',
-                  `Ticket #${b.id} | ${b.customerName} | ${b.packageName} | ${b.date} @ ${b.timeSlot}`,
-                  'booking'
-                );
-              });
-            } catch (e) {
-              console.warn('Android native notification error:', e);
-            }
-          }
-
-          // Clear highlight animation class after 8 seconds
-          setTimeout(() => {
-            setNewlyAddedIds((curr) => curr.filter((id) => !addedIds.includes(id)));
-          }, 8000);
         }
-        setBookings(newBookings);
-      } else {
-        // Initial load — seed the ref so the first background poll has no false positives
-        knownBookingIdsRef.current = new Set(newBookings.map((b: Booking) => b.id));
-        setBookings(newBookings);
       }
+      knownBookingIdsRef.current = new Set(currentBookings.map(b => b.id));
+      setBookings(currentBookings);
     } catch (err: any) {
-      setError(err.message || 'Error loading dashboard data.');
+      if (!isBackground) setError(err.message || 'Error fetching bookings.');
     } finally {
-      if (!isBackground) {
-        setLoading(false);
-      }
+      if (!isBackground) setLoading(false);
     }
   }
 
-  // Fetch all food orders with authorization header
+  // Fetch Orders
   async function fetchOrders(codeValue?: string, isBackground = false) {
     const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    
     try {
-      if (!isBackground) {
-        setOrdersLoading(true);
-      }
+      if (!isBackground) setOrdersLoading(true);
       const res = await fetch('/api/orders', {
-        headers: {
-          'X-Admin-Passcode': activePasscode,
-        },
+        headers: { 'X-Admin-Passcode': activePasscode },
       });
-
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        throw new Error('Authentication expired. Please log in again.');
-      }
-
-      if (!res.ok) throw new Error('Failed to load food orders list.');
-      const data = await res.json();
-      const newOrders = data.orders || [];
-
-      if (isBackground) {
-        // Initialise the known-IDs ref on the very first background poll
-        if (knownOrderIdsRef.current === null) {
-          knownOrderIdsRef.current = new Set(newOrders.map((o: FoodOrder) => o.id));
-          setOrders(newOrders);
-          return;
-        }
-
-        const added = newOrders.filter((o: FoodOrder) => !knownOrderIdsRef.current!.has(o.id));
-        if (added.length > 0) {
-          const addedIds = added.map((o: FoodOrder) => o.id);
-          added.forEach((o: FoodOrder) => knownOrderIdsRef.current!.add(o.id));
-          setNewlyAddedOrderIds((curr) => [...curr, ...addedIds]);
-
-          // Play order sound ONLY for genuinely new food orders
-          playOrderSound();
-
-          // Trigger Mobile Browser Web Push Notification
-          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-            try {
-              added.forEach((o: FoodOrder) => {
-                new Notification('🍿 NEW IN-THEATER FOOD ORDER - Bee Vibe', {
-                  body: `Order #${o.id} in ${o.themeLabel} | Total: ₹${o.totalPrice}`,
-                  icon: '/icon.png',
-                  tag: `order-${o.id}`,
-                });
-              });
-            } catch (err) {
-              console.warn('Browser notification error:', err);
-            }
+      if (res.ok) {
+        const data = await res.json();
+        const currentOrders: FoodOrder[] = data.orders || [];
+        if (knownOrderIdsRef.current !== null) {
+          const newOrders = currentOrders.filter(o => !knownOrderIdsRef.current!.has(o.id));
+          if (newOrders.length > 0) {
+            setNewlyAddedOrderIds(newOrders.map(o => o.id));
+            await playOrderSound();
           }
-
-          // Trigger Native Android APK Notification if running inside Android Admin App
-          if (typeof window !== 'undefined' && (window as any).AndroidAdminBridge) {
-            try {
-              added.forEach((o: FoodOrder) => {
-                (window as any).AndroidAdminBridge.showNativeNotification(
-                  '🍿 NEW IN-THEATER FOOD ORDER!',
-                  `Order #${o.id} in ${o.themeLabel} | Total: ₹${o.totalPrice}`,
-                  'food_order'
-                );
-              });
-            } catch (e) {
-              console.warn('Android native notification error:', e);
-            }
-          }
-
-          // Clear highlight animation class after 8 seconds
-          setTimeout(() => {
-            setNewlyAddedOrderIds((curr) => curr.filter((id) => !addedIds.includes(id)));
-          }, 8000);
         }
-
-        // Merge server data: preserve local status changes from the UI by only
-        // updating items whose status has actually changed server-side
-        setOrders((prev) => {
-          const serverMap = new Map<string, FoodOrder>(newOrders.map((o: FoodOrder) => [o.id, o]));
-          // Keep prev items (with their UI-updated status) and add new ones
-          const merged: FoodOrder[] = prev.map((o) => serverMap.get(o.id) ?? o);
-          const prevIds = new Set(prev.map((o) => o.id));
-          newOrders.forEach((o: FoodOrder) => { if (!prevIds.has(o.id)) merged.push(o); });
-          return merged;
-        });
-      } else {
-        // Initial load — seed the ref
-        knownOrderIdsRef.current = new Set(newOrders.map((o: FoodOrder) => o.id));
-        setOrders(newOrders);
+        knownOrderIdsRef.current = new Set(currentOrders.map(o => o.id));
+        setOrders(currentOrders);
       }
-    } catch (err: any) {
-      console.error('Error loading food orders:', err);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
     } finally {
-      if (!isBackground) {
-        setOrdersLoading(false);
-      }
+      if (!isBackground) setOrdersLoading(false);
     }
   }
 
-  const handleUpdateStatus = async (id: string, newStatus: 'confirmed' | 'cancelled') => {
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    
-    try {
-      const res = await fetch('/api/bookings', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Admin-Passcode': activePasscode,
-        },
-        body: JSON.stringify({ id, status: newStatus }),
-      });
-
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        alert('Authentication expired. Please log in again.');
-        return;
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to update booking status.');
-      }
-
-      // Update state locally
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status: newStatus } : b))
-      );
-    } catch (err: any) {
-      alert(err.message || 'Error updating booking.');
-    }
-  };
-
-  const handleUpdateOrderStatus = async (id: string, newStatus: FoodOrder['status']) => {
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    
-    try {
-      const res = await fetch('/api/orders', {
-        method: 'PUT',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Admin-Passcode': activePasscode,
-        },
-        body: JSON.stringify({ id, status: newStatus }),
-      });
-
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        alert('Authentication expired. Please log in again.');
-        return;
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to update food order status.');
-      }
-
-      // Update state locally
-      setOrders((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
-      );
-    } catch (err: any) {
-      alert(err.message || 'Error updating order status.');
-    }
-  };
-
-  const handleAcceptOrderAndNotifyWhatsApp = async (order: FoodOrder) => {
-    await handleUpdateOrderStatus(order.id, 'preparing');
-    const itemsStr = order.items.map((i) => `${i.name} (x${i.quantity})`).join(', ');
-    const text = `✅ *BeeVibe Order Accepted!*\n\nHi ${order.customerName || 'Guest'}, your food order *#${order.id}* for *${order.themeLabel}* has been accepted and is being prepared! 🍿🥤\n\n📋 *Items*: ${itemsStr}\n💰 *Total*: ₹${order.totalPrice}\n\nOur staff will serve it directly to your room shortly. Enjoy your vibe! 🎉`;
-    const targetPhone = order.phone || '919900106474';
-    const finalPhone = cleanPhoneNumber(targetPhone);
-    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handleForwardOrderToKitchenWhatsApp = (order: FoodOrder) => {
-    const itemsStr = order.items.map((i) => `• ${i.name} × ${i.quantity} (₹${i.price * i.quantity})`).join('\n');
-    const text = `🍿 *NEW FOOD ORDER* 🍿\n----------------------------------------\n🆔 *Order ID*: #${order.id}\n🎭 *Room*: ${order.themeLabel}\n👤 *Customer*: ${order.customerName || 'Guest'}${order.phone ? ` (${order.phone})` : ''}\n----------------------------------------\n📋 *ITEMS*:\n${itemsStr}\n----------------------------------------\n💰 *TOTAL*: ₹${order.totalPrice}`;
-    window.open(`https://wa.me/919900106474?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handleSendReceiptWhatsApp = (b: Booking) => {
-    const advance = typeof b.advancePaid === 'number' ? b.advancePaid : Math.min(500, b.totalPrice);
-    const balance = typeof b.balanceDue === 'number' ? b.balanceDue : Math.max(0, b.totalPrice - advance);
-    
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.beevibe.org';
-    const receiptUrl = `${baseUrl}/receipt?id=${b.id}`;
-    const text = `🧾 *BeeVibe Advance Payment Receipt*\n\nHi ${b.customerName}! We have received your advance payment for your private celebration at BeeVibe! 🎉\n\n🎟️ *Booking ID*: ${b.id}\n📅 *Date*: ${b.date}\n⏰ *Time Slot*: ${b.timeSlot}\n\n💰 *Total Booking Price*: ₹${b.totalPrice}\n🟢 *Advance Received*: ₹${advance} (UPI: 8123635342@sbi - NALINAKSHI C)\n${b.utrNumber ? `🧾 *UPI Ref / UTR*: ${b.utrNumber}\n` : ''}⏳ *Remaining Balance Due at Venue*: ₹${balance}\n\n🔗 *Official Receipt Link*:\n${receiptUrl}\n\n📍 *Venue Location*: 1340, 2nd floor, 41st Cross road, 4th gate, opposite Jain University, Jayanagar 9th Block, Bengaluru 560041.\n\nSee you at BeeVibe! 🐝✨`;
-    
-    const finalPhone = cleanPhoneNumber(b.phone);
-    window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handleOpenReceiptPage = (b: Booking) => {
-    window.open(`/receipt?id=${b.id}`, '_blank');
-  };
-
-  const handleTestNotificationChime = async () => {
-    await playBookingSound();
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        try {
-          new Notification('🔔 TEST ALERT - Bee Vibe Admin', {
-            body: 'Web Audio Chimes & Browser Notifications are 100% active!',
-            icon: '/icon.png',
-          });
-        } catch (e) {
-          console.warn('Browser notification error:', e);
-        }
-      } else if (Notification.permission === 'default') {
-        Notification.requestPermission().then((permission) => {
-          if (permission === 'granted') {
-            new Notification('🔔 TEST ALERT - Bee Vibe Admin', {
-              body: 'Browser notifications enabled successfully!',
-              icon: '/icon.png',
-            });
-          }
-        });
-      }
-    }
-    alert('🔔 Notification chime played! Check browser sound & notification popup.');
-  };
-
-  const handleTestServerAlerts = async () => {
-    try {
-      const res = await fetch('/api/test-whatsapp');
-      const data = await res.json();
-      const status = data.channelStatus || {};
-      const statusText =
-        `⚡ SERVER NOTIFICATION DISPATCH RESULTS ⚡\n\n` +
-        `📱 Telegram Bot Configured: ${status.telegramConfigured ? 'YES ✅' : 'NO ❌ (Set TELEGRAM_BOT_TOKEN)'}\n` +
-        `💬 CallMeBot WhatsApp: ${status.callmebotApiKeyPresent ? 'YES ✅' : 'NO ❌ (Set CALLMEBOT_API_KEY)'}\n` +
-        `📱 Twilio SMS/WhatsApp: ${status.twilioAccountSidPresent ? 'YES ✅' : 'NO ❌'}\n` +
-        `📧 SMTP Email: ${status.smtpEmailPresent ? 'YES ✅' : 'NO ❌'}\n\n` +
-        `Target Admin Phone: +${data.targetPhone}\n` +
-        `Check node server console & phone for delivered alert messages!`;
-      alert(statusText);
-    } catch (err: any) {
-      alert('Error testing server notification dispatch: ' + err.message);
-    }
-  };
-
-  // Fetch all menu items
+  // Fetch Menu
   async function fetchMenu(codeValue?: string, isBackground = false) {
     const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    
     try {
-      if (!isBackground) {
-        setMenuLoading(true);
-      }
+      if (!isBackground) setMenuLoading(true);
       const res = await fetch('/api/menu', {
-        headers: {
-          'X-Admin-Passcode': activePasscode,
-        },
+        headers: { 'X-Admin-Passcode': activePasscode },
       });
-
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        throw new Error('Authentication expired. Please log in again.');
+      if (res.ok) {
+        const data = await res.json();
+        setMenuItems(data.menuItems || []);
       }
-
-      if (!res.ok) throw new Error('Failed to load menu list.');
-      const data = await res.json();
-      setMenuItems(data.menuItems || []);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching menu:', err);
     } finally {
-      if (!isBackground) {
-        setMenuLoading(false);
-      }
+      if (!isBackground) setMenuLoading(false);
     }
   }
 
-  // Toggle Stock Status
-  const handleToggleStock = async (item: MenuItem) => {
+  // Payment Reconciliation Toggle: SBI Bank Verification
+  const handleToggleSbiVerification = async (booking: Booking) => {
     const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    const newStock = !item.inStock;
+    const newSbiStatus = !booking.sbiVerified;
 
     try {
-      const res = await fetch('/api/menu', {
-        method: 'PUT',
+      const res = await fetch('/api/admin/payments', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Passcode': activePasscode,
         },
         body: JSON.stringify({
-          ...item,
-          inStock: newStock
+          id: booking.id,
+          sbiVerified: newSbiStatus,
+          status: newSbiStatus ? 'confirmed' : booking.status,
         }),
       });
 
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        alert('Authentication expired. Please log in again.');
-        return;
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, sbiVerified: newSbiStatus, status: newSbiStatus ? 'confirmed' : b.status } : b));
+      } else {
+        alert('Failed to update SBI verification status.');
       }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to update menu item stock.');
-      }
-
-      // Update state locally
-      setMenuItems((prev) =>
-        prev.map((m) => (m.id === item.id ? { ...m, inStock: newStock } : m))
-      );
     } catch (err: any) {
-      alert(err.message || 'Error updating item stock.');
+      alert('Error updating payment reconciliation: ' + err.message);
     }
   };
 
-  // Delete Menu Item
-  const handleDeleteMenuItem = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this menu item?')) return;
+  // Payment Reconciliation Toggle: Venue Balance Settlement
+  const handleToggleBalanceSettlement = async (booking: Booking) => {
     const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+    const newBalanceCollected = !booking.balanceCollected;
 
     try {
-      const res = await fetch(`/api/menu?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-Admin-Passcode': activePasscode,
-        },
-      });
-
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        alert('Authentication expired. Please log in again.');
-        return;
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to delete menu item.');
-      }
-
-      // Update state locally
-      setMenuItems((prev) => prev.filter((m) => m.id !== id));
-    } catch (err: any) {
-      alert(err.message || 'Error deleting menu item.');
-    }
-  };
-
-  // Add or Edit Menu Item Form Submit
-  const handleSaveMenuItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!itemName || !itemPrice || !itemIcon) {
-      alert('Please fill in Name, Price, and Icon.');
-      return;
-    }
-
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
-    const payload = {
-      name: itemName,
-      price: Number(itemPrice),
-      description: itemDescription,
-      category: itemCategory,
-      icon: itemIcon,
-      ...(editingMenuItem ? { id: editingMenuItem.id, inStock: editingMenuItem.inStock } : {})
-    };
-
-    try {
-      const url = '/api/menu';
-      const method = editingMenuItem ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
+      const res = await fetch('/api/admin/payments', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Passcode': activePasscode,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          id: booking.id,
+          balanceCollected: newBalanceCollected,
+        }),
       });
 
-      if (res.status === 401) {
-        setIsAuthenticated(false);
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        alert('Authentication expired. Please log in again.');
-        return;
-      }
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to save menu item.');
-      }
-
-      const data = await res.json();
-      
-      // Update local state
-      if (editingMenuItem) {
-        setMenuItems((prev) =>
-          prev.map((m) => (m.id === editingMenuItem.id ? data.menuItem : m))
-        );
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.id === booking.id ? { ...b, balanceCollected: newBalanceCollected, paymentStatus: newBalanceCollected ? 'fully_paid' : 'advance_paid' } : b));
       } else {
-        setMenuItems((prev) => [...prev, data.menuItem]);
+        alert('Failed to update balance collection status.');
       }
-
-      // Reset modal and inputs
-      setIsMenuModalOpen(false);
-      setEditingMenuItem(null);
-      setItemName('');
-      setItemPrice('');
-      setItemCategory('snacks');
-      setItemDescription('');
-      setItemIcon('🍿');
     } catch (err: any) {
-      alert(err.message || 'Error saving menu item.');
+      alert('Error updating balance collection: ' + err.message);
     }
   };
 
+  // 1-Click Copy UTR Number
+  const handleCopyUtr = (utr: string, id: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(utr);
+      setCopiedUtrId(id);
+      setTimeout(() => setCopiedUtrId(null), 2000);
+    }
+  };
 
+  // Export Payment Ledger to CSV
+  const handleExportPaymentLedger = () => {
+    if (bookings.length === 0) {
+      alert('No booking transactions to export.');
+      return;
+    }
 
-  // Filter logic for bookings & orders
-  const filteredBookings = bookings.filter((b) => {
-    const isGaming = b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark');
-    const matchesCategory =
-      bookingCategoryFilter === 'all'
-        ? true
-        : bookingCategoryFilter === 'gaming'
-        ? isGaming
-        : !isGaming;
-
-    const matchesSearch =
-      b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.phone.includes(searchTerm) ||
-      b.email.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesDate = dateFilter ? b.date === dateFilter : true;
+    const headers = ['Booking ID', 'Customer Name', 'Phone', 'Email', 'Show Date', 'Time Slot', 'Package', 'Total Amount', 'Advance Paid', 'Balance Due', 'UTR Number', 'SBI Bank Verified', 'Balance Collected', 'Payment Mode', 'Status', 'Created At'];
     
-    return matchesCategory && matchesSearch && matchesDate;
-  });
+    const rows = bookings.map(b => [
+      b.id,
+      `"${b.customerName.replace(/"/g, '""')}"`,
+      b.phone,
+      b.email,
+      b.date,
+      `"${b.timeSlot}"`,
+      `"${b.packageName}"`,
+      b.totalPrice,
+      b.advancePaid ?? 500,
+      b.balanceDue ?? Math.max(0, b.totalPrice - (b.advancePaid ?? 500)),
+      b.utrNumber || 'N/A',
+      b.sbiVerified ? 'YES' : 'NO',
+      b.balanceCollected ? 'YES' : 'NO',
+      `"UPI (NALINAKSHI C - 8123635342@sbi)"`,
+      b.status,
+      b.createdAt,
+    ]);
 
-  const filteredOrders = orders.filter((o) => {
-    const matchesSearch =
-      (o.customerName && o.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (o.phone && o.phone.includes(searchTerm));
-      
-    const matchesStatus = orderStatusFilter === 'all' ? true : o.status === orderStatusFilter;
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `BeeVibe_Payment_Ledger_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-    const orderDate = o.createdAt ? o.createdAt.slice(0, 10) : '';
-    const matchesDate = orderDateFilter ? orderDate === orderDateFilter : true;
-    
-    return matchesSearch && matchesStatus && matchesDate;
-  });
+  // Export Customer CRM to CSV
+  const handleExportCustomerCrm = () => {
+    if (crmProfiles.length === 0) {
+      alert('No customer profiles to export.');
+      return;
+    }
 
-  // Metric calculations
+    const headers = ['Customer ID', 'Customer Name', 'Phone', 'Email', 'Tier', 'Total Bookings', 'Completed Bookings', 'Lifetime Spend (INR)', 'First Visit', 'Last Visit', 'RFM Score'];
+    const rows = crmProfiles.map(c => [
+      c.id,
+      `"${c.name.replace(/"/g, '""')}"`,
+      c.phone,
+      c.email || '',
+      c.metrics.calculatedSegment,
+      c.metrics.totalBookings,
+      c.metrics.completedBookings,
+      c.metrics.lifetimeSpend,
+      c.metrics.firstVisitAt || '',
+      c.metrics.lastVisitAt || '',
+      c.metrics.rfmScore,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `BeeVibe_Customer_CRM_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Print Day-End Financial Settlement Statement
+  const handlePrintDayEndSettlement = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const todayBookings = bookings.filter(b => b.date === todayStr || b.createdAt.slice(0, 10) === todayStr);
+    const totalAdv = todayBookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + (b.advancePaid ?? 500), 0);
+    const totalBal = todayBookings.filter(b => b.balanceCollected).reduce((sum, b) => sum + (b.balanceDue ?? (b.totalPrice - 500)), 0);
+    const totalGross = totalAdv + totalBal;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Bee Vibe - Day-End Financial Settlement (${todayStr})</title>
+          <style>
+            body { font-family: 'Outfit', sans-serif; padding: 30px; color: #111; }
+            h1 { margin: 0 0 4px; font-size: 1.6rem; }
+            .meta { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
+            .kpi-row { display: flex; gap: 20px; margin-bottom: 24px; }
+            .kpi-box { border: 1px solid #ddd; border-radius: 8px; padding: 14px; flex: 1; text-align: center; }
+            .kpi-val { font-size: 1.5rem; font-weight: bold; color: #059669; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.85rem; }
+            th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+            th { background: #f3f4f6; }
+          </style>
+        </head>
+        <body>
+          <h1>🐝 Bee Vibe - Day-End Financial Settlement</h1>
+          <div class="meta">Date: ${todayStr} | Generated At: ${new Date().toLocaleTimeString()} | Payee: NALINAKSHI C (8123635342@sbi)</div>
+          
+          <div class="kpi-row">
+            <div class="kpi-box">
+              <div>Total Gross Collections</div>
+              <div class="kpi-val">₹${totalGross}</div>
+            </div>
+            <div class="kpi-box">
+              <div>Advance Received (SBI UPI)</div>
+              <div class="kpi-val">₹${totalAdv}</div>
+            </div>
+            <div class="kpi-box">
+              <div>Desk Balance Collected</div>
+              <div class="kpi-val">₹${totalBal}</div>
+            </div>
+          </div>
+
+          <h3>Daily Transaction Register</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Show Slot</th>
+                <th>Total</th>
+                <th>Adv Paid (UPI)</th>
+                <th>Balance Paid</th>
+                <th>UTR Reference</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${todayBookings.map(b => `
+                <tr>
+                  <td>${b.id}</td>
+                  <td>${b.customerName}</td>
+                  <td>${b.phone}</td>
+                  <td>${b.timeSlot}</td>
+                  <td>₹${b.totalPrice}</td>
+                  <td>₹${b.advancePaid ?? 500} ${b.sbiVerified ? '✅' : '⏳'}</td>
+                  <td>${b.balanceCollected ? '₹' + (b.balanceDue ?? (b.totalPrice - 500)) + ' ✅' : 'Pending 💵'}</td>
+                  <td>${b.utrNumber || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() { window.print(); setTimeout(() => window.close(), 500); };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // Add CRM Note for Customer
+  const handleAddCrmNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomer || !newNoteText.trim()) return;
+
+    setNoteSubmitting(true);
+    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+
+    try {
+      const res = await fetch('/api/admin/crm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({
+          phone: selectedCustomer.phone,
+          note: newNoteText.trim(),
+          author: 'Owner',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const note = data.note;
+        setSelectedCustomer(prev => prev ? { ...prev, notes: [note, ...prev.notes] } : null);
+        setCrmProfiles(prev => prev.map(p => p.phone === selectedCustomer.phone ? { ...p, notes: [note, ...p.notes] } : p));
+        setNewNoteText('');
+      } else {
+        alert('Failed to save customer note.');
+      }
+    } catch (err: any) {
+      alert('Error saving note: ' + err.message);
+    } finally {
+      setNoteSubmitting(false);
+    }
+  };
+
+  // Trigger WhatsApp Campaign for Customer
+  const handleTriggerWhatsAppCampaign = (customer: AggregatedCustomerProfile, templateId: string) => {
+    const template = CAMPAIGN_TEMPLATES.find(t => t.id === templateId);
+    if (!template) return;
+
+    const message = MarketingEngine.renderMessage(template.templateText, {
+      customerName: customer.name,
+      businessName: 'Bee Vibe Bangalore',
+      bookingLink: 'https://www.beevibe.org/book',
+      googleReviewLink: 'https://g.page/r/beevibe/review',
+      offerCode: 'VIBE200',
+    });
+
+    const url = MarketingEngine.generateWhatsAppUrl(customer.phone, message);
+    window.open(url, '_blank');
+  };
+
+  // Direct WhatsApp Chat
+  const handleDirectWhatsAppChat = (phone: string, name: string) => {
+    const message = `Hi ${name}! This is from Bee Vibe Bangalore. How can we assist with your celebration?`;
+    const url = MarketingEngine.generateWhatsAppUrl(phone, message);
+    window.open(url, '_blank');
+  };
+
+  // Financial Metric Calculations
   const totalBookings = bookings.length;
-  const activeBookings = bookings.filter((b) => b.status !== 'cancelled').length;
+  const activeBookings = bookings.filter(b => b.status !== 'cancelled').length;
 
-  const theaterBookingsCount = bookings.filter(
-    (b) => b.status !== 'cancelled' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark')
-  ).length;
+  const grossProjectedRevenue = bookings
+    .filter(b => b.status === 'confirmed')
+    .reduce((sum, b) => sum + b.totalPrice, 0);
 
-  const gamingBookingsCount = bookings.filter(
-    (b) => b.status !== 'cancelled' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark'))
-  ).length;
+  const totalAdvanceCollected = bookings
+    .filter(b => b.status === 'confirmed')
+    .reduce((sum, b) => sum + (b.advancePaid ?? 500), 0);
+
+  const totalBalanceDue = bookings
+    .filter(b => b.status === 'confirmed' && !b.balanceCollected)
+    .reduce((sum, b) => sum + (b.balanceDue ?? Math.max(0, b.totalPrice - (b.advancePaid ?? 500))), 0);
+
+  const sbiVerifiedCount = bookings.filter(b => b.sbiVerified).length;
+  const sbiPendingCount = bookings.filter(b => !b.sbiVerified && b.status !== 'cancelled').length;
 
   const theaterRevenue = bookings
-    .filter((b) => b.status === 'confirmed' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark'))
+    .filter(b => b.status === 'confirmed' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark'))
     .reduce((sum, b) => sum + b.totalPrice, 0);
 
   const gamingRevenue = bookings
-    .filter((b) => b.status === 'confirmed' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark')))
+    .filter(b => b.status === 'confirmed' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark')))
     .reduce((sum, b) => sum + b.totalPrice, 0);
 
-  const totalRevenue = bookings
-    .filter((b) => b.status === 'confirmed')
-    .reduce((sum, b) => sum + b.totalPrice, 0);
+  const activeOrdersCount = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
+  const servedOrdersCount = orders.filter(o => o.status === 'served').length;
+  const foodRevenue = orders.filter(o => o.status === 'served').reduce((sum, o) => sum + o.totalPrice, 0);
 
-  const pendingBookings = bookings.filter((b) => b.status === 'pending').length;
+  // CRM Metrics
+  const uniqueCustomersCount = crmProfiles.length;
+  const repeatGuestsCount = crmProfiles.filter(c => c.metrics.completedBookings >= 2).length;
+  const repeatRate = uniqueCustomersCount > 0 ? ((repeatGuestsCount / uniqueCustomersCount) * 100).toFixed(1) : '0.0';
+  const vipGuestsCount = crmProfiles.filter(c => c.metrics.calculatedSegment === 'VIP').length;
 
-  // Food Order metrics
-  const activeOrdersCount = orders.filter((o) => o.status === 'pending' || o.status === 'preparing').length;
-  const servedOrdersCount = orders.filter((o) => o.status === 'served').length;
-  const foodRevenue = orders
-    .filter((o) => o.status === 'served')
-    .reduce((sum, o) => sum + o.totalPrice, 0);
+  // Filter Bookings for Bookings Tab
+  const filteredBookings = bookings.filter(b => {
+    const isGaming = b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark');
+    const matchesCategory = bookingCategoryFilter === 'all' ? true : bookingCategoryFilter === 'gaming' ? isGaming : !isGaming;
+    const matchesSearch = b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.phone.includes(searchTerm) || b.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDate = dateFilter ? b.date === dateFilter : true;
+    return matchesCategory && matchesSearch && matchesDate;
+  });
 
-  // Helper to trigger print window of theme standee card
+  // Filter Bookings for Payment Portal Ledger
+  const filteredPaymentBookings = bookings.filter(b => {
+    const matchesSearch = b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.phone.includes(searchTerm) || (b.utrNumber && b.utrNumber.includes(searchTerm));
+    const matchesDate = dateFilter ? b.date === dateFilter : true;
+
+    let matchesPaymentStatus = true;
+    if (paymentFilter === 'verified') matchesPaymentStatus = !!b.sbiVerified;
+    else if (paymentFilter === 'pending') matchesPaymentStatus = !b.sbiVerified && b.status !== 'cancelled';
+    else if (paymentFilter === 'balance_due') matchesPaymentStatus = !b.balanceCollected && b.status === 'confirmed';
+    else if (paymentFilter === 'settled') matchesPaymentStatus = !!b.balanceCollected && !!b.sbiVerified;
+
+    return matchesSearch && matchesDate && matchesPaymentStatus;
+  });
+
+  // Filter CRM Customers
+  const filteredCrmProfiles = crmProfiles.filter(c => {
+    const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm) || (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesTier = crmTierFilter === 'all' ? true : c.metrics.calculatedSegment === crmTierFilter;
+    return matchesSearch && matchesTier;
+  });
+
+  // Food Orders Filter
+  const filteredOrders = orders.filter(o => {
+    const matchesSearch = (o.customerName && o.customerName.toLowerCase().includes(searchTerm.toLowerCase())) || o.id.toLowerCase().includes(searchTerm.toLowerCase()) || (o.phone && o.phone.includes(searchTerm));
+    const matchesStatus = orderStatusFilter === 'all' ? true : o.status === orderStatusFilter;
+    const orderDate = o.createdAt ? o.createdAt.slice(0, 10) : '';
+    const matchesDate = orderDateFilter ? orderDate === orderDateFilter : true;
+    return matchesSearch && matchesStatus && matchesDate;
+  });
+
+  // Standee Print Helper
   const handlePrintStandee = (themeColor: string) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -901,61 +749,14 @@ export default function AdminDashboard() {
         <head>
           <title>Print Standee - ${themeTitle}</title>
           <style>
-            body {
-              background-color: #ffffff;
-              color: #000000;
-              font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              text-align: center;
-            }
-            .standee-card {
-              border: 4px solid ${themeColor === 'pink' ? '#ff2e7e' : themeColor === 'purple' ? '#9333ea' : '#ef4848'};
-              border-radius: 24px;
-              padding: 40px;
-              width: 380px;
-              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            }
-            .logo {
-              font-size: 2.2rem;
-              margin-bottom: 5px;
-            }
-            .brand {
-              font-size: 1.8rem;
-              font-weight: 800;
-              margin-bottom: 20px;
-              letter-spacing: 1px;
-            }
-            .room-title {
-              background-color: ${themeColor === 'pink' ? 'rgba(255, 46, 126, 0.1)' : themeColor === 'purple' ? 'rgba(147, 51, 234, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
-              color: ${themeColor === 'pink' ? '#ff2e7e' : themeColor === 'purple' ? '#9333ea' : '#ef4848'};
-              font-size: 1.1rem;
-              font-weight: 700;
-              padding: 8px 16px;
-              border-radius: 30px;
-              display: inline-block;
-              margin-bottom: 24px;
-            }
-            .qr-code {
-              width: 200px;
-              height: 200px;
-              margin: 0 auto 24px;
-            }
-            .instruction {
-              font-size: 1.1rem;
-              font-weight: 700;
-              margin-bottom: 8px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .sub-instruction {
-              color: #666;
-              font-size: 0.85rem;
-              line-height: 1.4;
-            }
+            body { background: #ffffff; color: #000; font-family: 'Outfit', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            .standee-card { border: 4px solid ${themeColor === 'pink' ? '#ff2e7e' : themeColor === 'purple' ? '#9333ea' : '#ef4848'}; border-radius: 24px; padding: 40px; width: 380px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+            .logo { font-size: 2.2rem; margin-bottom: 5px; }
+            .brand { font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; }
+            .room-title { background: ${themeColor === 'pink' ? 'rgba(255, 46, 126, 0.1)' : themeColor === 'purple' ? 'rgba(147, 51, 234, 0.1)' : 'rgba(239, 68, 68, 0.1)'}; color: ${themeColor === 'pink' ? '#ff2e7e' : themeColor === 'purple' ? '#9333ea' : '#ef4848'}; font-size: 1.1rem; font-weight: 700; padding: 8px 16px; border-radius: 30px; display: inline-block; margin-bottom: 24px; }
+            .qr-code { width: 200px; height: 200px; margin: 0 auto 24px; }
+            .instruction { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+            .sub-instruction { color: #666; font-size: 0.85rem; line-height: 1.4; }
           </style>
         </head>
         <body>
@@ -968,10 +769,7 @@ export default function AdminDashboard() {
             <div class="sub-instruction">Fresh snacks and drinks will be served directly to your screen area. Enjoy!</div>
           </div>
           <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
+            window.onload = function() { window.print(); setTimeout(function() { window.close(); }, 500); };
           </script>
         </body>
       </html>
@@ -979,7 +777,7 @@ export default function AdminDashboard() {
     printWindow.document.close();
   };
 
-  // 1. Initial State: Checking session storage
+  // Status Check Screen
   if (isAuthenticated === null) {
     return (
       <div className={styles.loginWrapper}>
@@ -991,7 +789,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // 2. Lock screen state: Prompts for passcode
+  // Lock Screen
   if (isAuthenticated === false) {
     return (
       <div className={styles.loginWrapper}>
@@ -1025,7 +823,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // 3. Authenticated state: Show dashboard
+  // Authenticated State
   return (
     <div className={styles.adminContainer}>
       {/* Mobile App Bar */}
@@ -1033,9 +831,9 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '1.2rem' }}>🐝</span>
           <div>
-            <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#ffffff' }}>Bee Vibe Admin App</div>
+            <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#ffffff' }}>Bee Vibe Admin Hub</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span className={styles.mobileLiveDot} /> Live Sync Active
+              <span className={styles.mobileLiveDot} /> Live Cloud Sync Active
             </div>
           </div>
         </div>
@@ -1046,31 +844,22 @@ export default function AdminDashboard() {
 
       <div className={styles.dashboardHeader}>
         <div>
-          <h1 className={styles.title}>Bee Vibe Admin Panel</h1>
-          <p className={styles.subtitle}>Manage customer celebrations, view analytics, and track room service</p>
+          <h1 className={styles.title}>Bee Vibe Management Portal</h1>
+          <p className={styles.subtitle}>Unified Multi-Tenant Engine · Payment Reconciliation · Guest CRM & Loyalty Hub</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={handleTestNotificationChime}
+            onClick={playBookingSound}
             className="btn btn-secondary"
             style={{ borderColor: '#f2a900', color: '#f2a900', fontSize: '0.85rem', padding: '8px 14px' }}
-            title="Test audio chime sound & browser push notification"
+            title="Test sound alerts"
           >
-            🔔 Test Sound & Push Alert
-          </button>
-          <button
-            type="button"
-            onClick={handleTestServerAlerts}
-            className="btn btn-secondary"
-            style={{ borderColor: '#3b82f6', color: '#60a5fa', fontSize: '0.85rem', padding: '8px 14px' }}
-            title="Test server notifications across Telegram, WhatsApp, SMS, Email"
-          >
-            ⚡ Test Server Alert Dispatch
+            🔔 Sound Test
           </button>
           {typeof window !== 'undefined' && !(window as any).isNativeAndroidAdminApp && (
             <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '8px 14px' }}>
-              View Homepage
+              View Website
             </Link>
           )}
           <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171', fontSize: '0.85rem', padding: '8px 14px' }}>
@@ -1079,188 +868,458 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {archiveStatus && (
-        <div style={{
-          background: 'rgba(16, 185, 129, 0.08)',
-          border: '1px solid rgba(16, 185, 129, 0.25)',
-          borderRadius: '6px',
-          color: '#34d399',
-          padding: '12px 16px',
-          marginBottom: '24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.9rem',
-          animation: 'fadeIn 0.3s ease-out'
-        }}>
-          <span>
-            🧹 <strong>Daily Refresh Completed:</strong> Archived <strong>{archiveStatus.count}</strong> past booking(s) {archiveStatus.ordersCount ? <>and <strong>{archiveStatus.ordersCount}</strong> past food order(s)</> : ''} to <strong>{archiveStatus.destination === 'supabase_db' ? 'Supabase Cloud DB' : archiveStatus.destination === 'cloud_webhook' ? 'Cloud Webhook' : 'Local Archive File'}</strong>.
-          </span>
-          <button 
-            onClick={() => {
-              setArchiveStatus(null);
-              sessionStorage.removeItem('bee_vibe_archived_count');
-              sessionStorage.removeItem('bee_vibe_archived_orders_count');
-              sessionStorage.removeItem('bee_vibe_archived_destination');
-            }}
-            style={{ background: 'transparent', border: 'none', color: '#34d399', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold' }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
       {error && <div className={styles.loginError} style={{ margin: '0 0 24px 0', padding: '14px', fontSize: '0.9rem' }}>{error}</div>}
 
-      {/* Tabs navigation */}
+      {/* TABS NAVIGATION */}
       <div className={styles.tabContainerCustom}>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'bookings' ? styles.activeTabCustom : ''}`}
-          onClick={() => {
-            setActiveTab('bookings');
-            setSearchTerm('');
-            setDateFilter('');
-          }}
+          onClick={() => { setActiveTab('bookings'); setSearchTerm(''); setDateFilter(''); }}
         >
-          📅 Room Bookings ({activeBookings})
+          📅 Bookings ({activeBookings})
+        </button>
+        <button
+          className={`${styles.tabBtnCustom} ${activeTab === 'payments' ? styles.activeTabCustom : ''}`}
+          onClick={() => { setActiveTab('payments'); setSearchTerm(''); setPaymentFilter('all'); }}
+        >
+          💳 Payment Portal
+        </button>
+        <button
+          className={`${styles.tabBtnCustom} ${activeTab === 'crm' ? styles.activeTabCustom : ''}`}
+          onClick={() => { setActiveTab('crm'); setSearchTerm(''); setCrmTierFilter('all'); }}
+        >
+          👥 CRM & Guest Hub ({uniqueCustomersCount})
         </button>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'orders' ? styles.activeTabCustom : ''}`}
-          onClick={() => {
-            setActiveTab('orders');
-            setSearchTerm('');
-            setOrderStatusFilter('all');
-            setOrderDateFilter('');
-          }}
+          onClick={() => { setActiveTab('orders'); setSearchTerm(''); setOrderStatusFilter('all'); }}
         >
           🍿 Food Orders ({activeOrdersCount})
         </button>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'menu' ? styles.activeTabCustom : ''}`}
-          onClick={() => {
-            setActiveTab('menu');
-            setSearchTerm('');
-          }}
+          onClick={() => { setActiveTab('menu'); setSearchTerm(''); }}
         >
-          🍔 Manage Menu ({menuItems.length})
+          🍔 Menu ({menuItems.length})
         </button>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'qrs' ? styles.activeTabCustom : ''}`}
-          onClick={() => {
-            setActiveTab('qrs');
-          }}
+          onClick={() => setActiveTab('qrs')}
         >
-          🖨️ Printable QR Standees
+          🖨️ Standees
         </button>
       </div>
 
-      {/* Dynamic Analytics Cards */}
+      {/* TAB 1: BOOKINGS METRICS */}
       {activeTab === 'bookings' && (
         <div className={styles.metricsGrid}>
           <div className={styles.metricCard}>
             <div className={styles.metricTitle}>Active Reservations</div>
-            <div className={styles.metricValue}>{activeBookings} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>({theaterBookingsCount} Theater · {gamingBookingsCount} Gaming)</span></div>
+            <div className={styles.metricValue}>{activeBookings}</div>
           </div>
           <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Theater vs Gaming Revenue</div>
-            <div className={styles.metricValue} style={{ fontSize: '1.25rem', color: '#34d399' }}>
+            <div className={styles.metricTitle}>Projected Revenue</div>
+            <div className={styles.metricValue} style={{ color: '#34d399' }}>₹{grossProjectedRevenue}</div>
+          </div>
+          <div className={styles.metricCard}>
+            <div className={styles.metricTitle}>Theater vs Gaming</div>
+            <div className={styles.metricValue} style={{ fontSize: '1.25rem', color: '#ff0055' }}>
               🎬 ₹{theaterRevenue} <span style={{ color: '#00f0ff', fontSize: '1.1rem', marginLeft: '6px' }}>🎮 ₹{gamingRevenue}</span>
             </div>
           </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Pending Approvals</div>
-            <div className={styles.metricValue} style={{ color: pendingBookings > 0 ? '#f2a900' : 'var(--text-secondary)' }}>
-              {pendingBookings}
-            </div>
-          </div>
         </div>
       )}
 
-      {activeTab === 'orders' && (
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Active Orders</div>
-            <div className={styles.metricValue} style={{ color: activeOrdersCount > 0 ? 'var(--accent)' : 'var(--text-secondary)' }}>
-              {activeOrdersCount}
+      {/* TAB 2: PAYMENT PORTAL METRICS */}
+      {activeTab === 'payments' && (
+        <>
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Gross Revenue Pipeline</div>
+              <div className={styles.metricValue} style={{ color: '#10b981' }}>₹{grossProjectedRevenue + foodRevenue}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Advance Received (SBI UPI)</div>
+              <div className={styles.metricValue} style={{ color: 'var(--accent)' }}>₹{totalAdvanceCollected}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Balance Due at Venue Desk</div>
+              <div className={styles.metricValue} style={{ color: '#f59e0b' }}>₹{totalBalanceDue}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>SBI Verification Audit</div>
+              <div className={styles.metricValue} style={{ fontSize: '1.3rem', color: '#3b82f6' }}>
+                ✅ {sbiVerifiedCount} <span style={{ color: '#f87171', fontSize: '1rem', marginLeft: '6px' }}>⏳ {sbiPendingCount} Pending</span>
+              </div>
             </div>
           </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Completed Deliveries</div>
-            <div className={styles.metricValue}>{servedOrdersCount}</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Food Sales Revenue</div>
-            <div className={styles.metricValue} style={{ color: '#10b981' }}>
-              ₹{foodRevenue}
+
+          {/* Payment Tools Bar */}
+          <div className={styles.filterBar} style={{ justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search by Customer, Phone, UTR..."
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className={styles.dateFilter}
+                value={paymentFilter}
+                onChange={(e) => setPaymentFilter(e.target.value as any)}
+              >
+                <option value="all">📋 All Transactions</option>
+                <option value="verified">✅ SBI Bank Verified</option>
+                <option value="pending">⏳ Pending UTR Verification</option>
+                <option value="balance_due">💵 Balance Pending at Venue</option>
+                <option value="settled">✨ 100% Fully Settled</option>
+              </select>
+              <input
+                type="date"
+                className={styles.dateFilter}
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+              />
+              {(searchTerm || dateFilter || paymentFilter !== 'all') && (
+                <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setDateFilter(''); setPaymentFilter('all'); }}>Clear</button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={handleExportPaymentLedger}
+                className="btn btn-secondary"
+                style={{ borderColor: '#10b981', color: '#10b981', fontSize: '0.85rem', padding: '8px 16px' }}
+                title="Download CSV for accounting/Excel"
+              >
+                📥 Export CSV Ledger
+              </button>
+              <button
+                type="button"
+                onClick={handlePrintDayEndSettlement}
+                className="btn btn-primary"
+                style={{ fontSize: '0.85rem', padding: '8px 16px' }}
+                title="Print Day-End financial statement"
+              >
+                🖨️ Print Day-End Settlement
+              </button>
             </div>
           </div>
-        </div>
+
+          {/* Payment Ledger Table */}
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Booking Reference</th>
+                  <th>Customer Details</th>
+                  <th>Show Date & Slot</th>
+                  <th>Bill Breakdown</th>
+                  <th>Payment Method & UTR</th>
+                  <th>SBI Bank Verification</th>
+                  <th>Venue Desk Settlement</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPaymentBookings.length > 0 ? (
+                  filteredPaymentBookings.map((b) => {
+                    const balance = b.balanceDue ?? Math.max(0, b.totalPrice - (b.advancePaid ?? 500));
+                    return (
+                      <tr key={b.id}>
+                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
+                        <td>
+                          <div className={styles.customerName}>{b.customerName}</div>
+                          <div className={styles.customerContact}>📱 {b.phone}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600 }}>{b.date}</div>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 'bold', color: '#ffffff' }}>Total: ₹{b.totalPrice}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#10b981' }}>Adv: ₹{b.advancePaid ?? 500}</div>
+                          <div style={{ fontSize: '0.78rem', color: balance > 0 ? '#f59e0b' : '#34d399' }}>
+                            {balance > 0 ? `Bal Due: ₹${balance}` : 'Fully Paid ✅'}
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)' }}>
+                            UPI (NALINAKSHI C)
+                          </div>
+                          {b.utrNumber ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                              <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                {b.utrNumber}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyUtr(b.utrNumber!, b.id)}
+                                style={{ background: 'transparent', border: 'none', color: copiedUtrId === b.id ? '#10b981' : '#38bdf8', cursor: 'pointer', fontSize: '0.75rem' }}
+                                title="Copy UTR number"
+                              >
+                                {copiedUtrId === b.id ? '✓ Copied' : '📋 Copy'}
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>No UTR logged</span>
+                          )}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSbiVerification(b)}
+                            className={styles.actionBtn}
+                            style={{
+                              background: b.sbiVerified ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                              color: b.sbiVerified ? '#10b981' : '#f59e0b',
+                              borderColor: b.sbiVerified ? '#10b981' : '#f59e0b',
+                              borderWidth: '1px',
+                              borderStyle: 'solid',
+                              width: '135px'
+                            }}
+                          >
+                            {b.sbiVerified ? '✅ SBI Verified' : '⏳ Verify in Bank'}
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleBalanceSettlement(b)}
+                            className={styles.actionBtn}
+                            style={{
+                              background: b.balanceCollected ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+                              color: b.balanceCollected ? '#10b981' : '#60a5fa',
+                              borderColor: b.balanceCollected ? '#10b981' : '#60a5fa',
+                              borderWidth: '1px',
+                              borderStyle: 'solid',
+                              width: '135px'
+                            }}
+                          >
+                            {b.balanceCollected ? '💵 Balance Paid' : 'Collect Balance'}
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
+                            className={styles.actionBtn}
+                            style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                          >
+                            🧾 Receipt
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={8} className={styles.noBookings}>No transactions found matching the selected filter.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {activeTab === 'menu' && (
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Total Menu Items</div>
-            <div className={styles.metricValue}>{menuItems.length} Items</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Active (In Stock)</div>
-            <div className={styles.metricValue} style={{ color: '#10b981' }}>
-              {menuItems.filter(m => m.inStock).length} Available
+      {/* TAB 3: CRM & GUEST HUB */}
+      {activeTab === 'crm' && (
+        <>
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Total Unique Guests</div>
+              <div className={styles.metricValue}>{uniqueCustomersCount}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Repeat Guest Rate</div>
+              <div className={styles.metricValue} style={{ color: '#10b981' }}>{repeatRate}% <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>({repeatGuestsCount} guests)</span></div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>VIP Champions</div>
+              <div className={styles.metricValue} style={{ color: 'var(--accent)' }}>👑 {vipGuestsCount}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Total Customer LTV</div>
+              <div className={styles.metricValue} style={{ color: '#38bdf8' }}>
+                ₹{crmProfiles.reduce((sum, c) => sum + c.metrics.lifetimeSpend, 0)}
+              </div>
             </div>
           </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Sold Out (Out of Stock)</div>
-            <div className={styles.metricValue} style={{ color: '#ef4444' }}>
-              {menuItems.filter(m => !m.inStock).length} Sold Out
+
+          {/* CRM Filter Bar */}
+          <div className={styles.filterBar} style={{ justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search Guest Name, Phone, Email..."
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className={styles.dateFilter}
+                value={crmTierFilter}
+                onChange={(e) => setCrmTierFilter(e.target.value as any)}
+              >
+                <option value="all">🌟 All Guest Tiers</option>
+                <option value="VIP">👑 VIP Guests (High LTV)</option>
+                <option value="REGULAR">⭐ Regular Repeat Guests</option>
+                <option value="GAMER">🎮 PS5 Gaming Fans</option>
+                <option value="NEW">✨ First-Time Guests</option>
+              </select>
+              {(searchTerm || crmTierFilter !== 'all') && (
+                <button className="btn btn-secondary" style={{ padding: '8px 14px', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setCrmTierFilter('all'); }}>Clear</button>
+              )}
             </div>
+
+            <button
+              type="button"
+              onClick={handleExportCustomerCrm}
+              className="btn btn-secondary"
+              style={{ borderColor: '#10b981', color: '#10b981', fontSize: '0.85rem', padding: '8px 16px' }}
+            >
+              📥 Export Customer CRM (CSV)
+            </button>
           </div>
-        </div>
+
+          {/* Customers Directory Table */}
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Customer Profile</th>
+                  <th>Loyalty Tier</th>
+                  <th>Visits & History</th>
+                  <th>Lifetime Spend (CLV)</th>
+                  <th>Last Celebration</th>
+                  <th>1-Click WhatsApp CRM Outreach</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredCrmProfiles.length > 0 ? (
+                  filteredCrmProfiles.map((c) => (
+                    <tr key={c.id}>
+                      <td>
+                        <div className={styles.customerName}>{c.name}</div>
+                        <div className={styles.customerContact}>
+                          📱 {c.phone} {c.email && <><br />📧 {c.email}</>}
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          padding: '4px 10px',
+                          borderRadius: '50px',
+                          background: c.metrics.calculatedSegment === 'VIP' ? 'rgba(255, 0, 85, 0.15)' : c.metrics.calculatedSegment === 'REGULAR' ? 'rgba(16, 185, 129, 0.15)' : c.metrics.calculatedSegment === 'GAMER' ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255,255,255,0.08)',
+                          color: c.metrics.calculatedSegment === 'VIP' ? '#ff0055' : c.metrics.calculatedSegment === 'REGULAR' ? '#10b981' : c.metrics.calculatedSegment === 'GAMER' ? '#00f0ff' : 'var(--text-secondary)',
+                          border: '1px solid currentColor'
+                        }}>
+                          {c.metrics.calculatedSegment === 'VIP' ? '👑 VIP' : c.metrics.calculatedSegment === 'REGULAR' ? '⭐ REGULAR' : c.metrics.calculatedSegment === 'GAMER' ? '🎮 GAMER' : '✨ NEW'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{c.metrics.totalBookings} Booking(s)</div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{c.foodOrderHistory.length} Food Order(s)</div>
+                      </td>
+                      <td style={{ fontWeight: 'bold', color: '#10b981', fontSize: '1.05rem' }}>
+                        ₹{c.metrics.lifetimeSpend}
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 500 }}>{c.metrics.lastVisitAt || 'Recent'}</div>
+                        {c.notes.length > 0 && (
+                          <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '2px' }}>
+                            💬 {c.notes.length} Note(s)
+                          </div>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerWhatsAppCampaign(c, 'birthday_voucher')}
+                            className={styles.actionBtn}
+                            style={{ background: 'rgba(255, 0, 85, 0.1)', color: '#ff0055', borderColor: 'rgba(255, 0, 85, 0.3)' }}
+                            title="Send Birthday Wish with ₹200 Voucher"
+                          >
+                            🎂 Voucher
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerWhatsAppCampaign(c, 'review_request')}
+                            className={styles.actionBtn}
+                            style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }}
+                            title="Request 5-Star Google Review"
+                          >
+                            ⭐ Review
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleTriggerWhatsAppCampaign(c, 'we_miss_you')}
+                            className={styles.actionBtn}
+                            style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderColor: 'rgba(16, 185, 129, 0.3)' }}
+                            title="Send 'We Miss You' Snack Platter Offer"
+                          >
+                            🍿 Miss You
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDirectWhatsAppChat(c.phone, c.name)}
+                            className={styles.actionBtn}
+                            style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', borderColor: 'rgba(59, 130, 246, 0.3)' }}
+                            title="Direct WhatsApp Chat"
+                          >
+                            💬 Chat
+                          </button>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedCustomer(c); setIsCustomerDrawerOpen(true); }}
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                        >
+                          👁️ Profile
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className={styles.noBookings}>No customer profiles found matching your search.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {activeTab === 'qrs' && (
-        <div className={styles.metricsGrid}>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Active Rooms</div>
-            <div className={styles.metricValue}>3 Themes</div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Menu URL Target</div>
-            <div className={styles.metricValue} style={{ fontSize: '1.1rem', wordBreak: 'break-all' }}>
-              /menu?theme=[color]
-            </div>
-          </div>
-          <div className={styles.metricCard}>
-            <div className={styles.metricTitle}>Standee Format</div>
-            <div className={styles.metricValue} style={{ color: 'var(--accent)' }}>
-              Tabletop Tent Card
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Dynamic Filter and Search Bar */}
-      {activeTab !== 'qrs' && activeTab !== 'menu' && (
-        <div className={styles.filterBar}>
-          <input
-            type="text"
-            placeholder={activeTab === 'bookings' ? "Search by Name, Booking ID, Phone..." : "Search by Customer Name, Order ID, Phone..."}
-            className={styles.searchInput}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          
-          {activeTab === 'bookings' ? (
+      {/* TAB 1: BOOKINGS TABLE */}
+      {activeTab === 'bookings' && (
+        <>
+          <div className={styles.filterBar}>
+            <input
+              type="text"
+              placeholder="Search by Name, Booking ID, Phone..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <select
                 className={styles.dateFilter}
                 value={bookingCategoryFilter}
                 onChange={(e) => setBookingCategoryFilter(e.target.value as any)}
-                style={{ paddingRight: '20px', fontWeight: 'bold', borderColor: bookingCategoryFilter === 'gaming' ? '#00f0ff' : 'var(--border)' }}
               >
                 <option value="all">📋 All Categories ({activeBookings})</option>
-                <option value="theater">🎬 Celebration Theater ({theaterBookingsCount})</option>
-                <option value="gaming">🎮 PS5 Gaming Lounge ({gamingBookingsCount})</option>
+                <option value="theater">🎬 Celebration Theater</option>
+                <option value="gaming">🎮 PS5 Gaming Lounge</option>
               </select>
               <input
                 type="date"
@@ -1269,557 +1328,140 @@ export default function AdminDashboard() {
                 onChange={(e) => setDateFilter(e.target.value)}
               />
             </div>
-          ) : (
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <input
-                type="date"
-                className={styles.dateFilter}
-                value={orderDateFilter}
-                onChange={(e) => setOrderDateFilter(e.target.value)}
-                title="Filter food orders by date"
-              />
-              <select
-                className={styles.dateFilter}
-                value={orderStatusFilter}
-                onChange={(e) => setOrderStatusFilter(e.target.value)}
-                style={{ paddingRight: '20px' }}
-              >
-                <option value="all">🍛 All Statuses</option>
-                <option value="pending">🕒 Pending Orders</option>
-                <option value="preparing">🍳 Preparing Orders</option>
-                <option value="served">✅ Served Orders</option>
-                <option value="cancelled">❌ Cancelled Orders</option>
-              </select>
-            </div>
-          )}
-          
-          {(searchTerm || dateFilter || orderDateFilter || bookingCategoryFilter !== 'all' || (activeTab === 'orders' && orderStatusFilter !== 'all')) && (
-            <button
-              className="btn btn-secondary"
-              style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-              onClick={() => {
-                setSearchTerm('');
-                setDateFilter('');
-                setBookingCategoryFilter('all');
-                setOrderDateFilter('');
-                setOrderStatusFilter('all');
-              }}
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Filter and Search Bar for Menu */}
-      {activeTab === 'menu' && (
-        <div className={styles.filterBar} style={{ justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <input
-              type="text"
-              placeholder="Search food by name..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-secondary"
-                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                onClick={() => setSearchTerm('')}
-              >
-                Clear
-              </button>
+            {(searchTerm || dateFilter || bookingCategoryFilter !== 'all') && (
+              <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setDateFilter(''); setBookingCategoryFilter('all'); }}>Clear</button>
             )}
           </div>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setEditingMenuItem(null);
-              setItemName('');
-              setItemPrice('');
-              setItemCategory('snacks');
-              setItemDescription('');
-              setItemIcon('🍿');
-              setIsMenuModalOpen(true);
-            }}
-            style={{ padding: '10px 20px', fontSize: '0.85rem' }}
-          >
-            ➕ Add Food Item
-          </button>
-        </div>
-      )}
 
-      {/* DATA VIEW AREAS */}
-      
-      {/* Bookings View */}
-      {activeTab === 'bookings' && (
-        loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
-            <div className={styles.loadingSpinner} />
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Booking ID</th>
-                    <th>Customer Details</th>
-                    <th>Show Date & Time</th>
-                    <th>Package & Add-ons</th>
-                    <th>Total Bill</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBookings.length > 0 ? (
-                    filteredBookings.map((b) => {
-                      const isNew = newlyAddedIds.includes(b.id);
-                      return (
-                        <tr key={b.id} className={isNew ? styles.newRowHighlight : ''}>
-                        <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
-                        <td>
-                          <div className={styles.customerName}>{b.customerName}</div>
-                          <div className={styles.customerContact}>
-                            📱 {b.phone} <br />
-                            📧 {b.email} <br />
-                            👥 {b.guestCount} Guests
-                          </div>
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{b.date}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                            <span style={{
-                              fontSize: '0.7rem',
-                              fontWeight: 'bold',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)',
-                              color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055',
-                              border: `1px solid ${b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055'}`
-                            }}>
-                              {b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '🎮 PS5 GAMING' : '🎬 THEATER'}
-                            </span>
-                          </div>
-                          <div style={{ fontWeight: 500 }}>{b.packageName}</div>
-                          {b.addOns.length > 0 && (
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                              Add-ons: {b.addOns.join(', ')}
-                            </div>
-                          )}
-                          {b.specialRequests && (
-                            <div style={{ fontSize: '0.75rem', color: '#ffb71a', fontStyle: 'italic', marginTop: '4px' }}>
-                              💬 Note: {b.specialRequests}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
-                            <div>₹{b.totalPrice}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
-                              Adv: ₹{b.advancePaid ?? 500}
-                            </div>
-                            {b.utrNumber ? (
-                              <div style={{
-                                fontSize: '0.72rem',
-                                fontFamily: 'monospace',
-                                background: 'rgba(242, 169, 0, 0.15)',
-                                color: '#f2a900',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(242, 169, 0, 0.3)',
-                                marginTop: '4px',
-                                width: 'fit-content'
-                              }}>
-                                🧾 UTR: {b.utrNumber}
-                              </div>
-                            ) : null}
-                          </td>
-                        <td>
-                          <span className={`${styles.badge} ${
-                            b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending
-                          }`}>{b.status}</span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div className={styles.actionCell}>
-                              <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>Confirm</button>
-                              <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateStatus(b.id, 'cancelled')} disabled={b.status === 'cancelled'}>Cancel</button>
-                            </div>
-                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
-                              <button className={styles.manualBtn} style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#10b981', fontWeight: 'bold' }} onClick={() => handleSendReceiptWhatsApp(b)} title="Send Advance Receipt to customer via WhatsApp">🧾 Receipt WA</button>
-                              <button className={styles.manualBtn} style={{ background: 'rgba(124, 58, 237, 0.2)', borderColor: '#7c3aed', color: '#a78bfa' }} onClick={() => handleOpenReceiptPage(b)} title="Open printable advance receipt">📄 View</button>
-                              <button className={styles.manualBtn} onClick={() => { const phone = cleanPhoneNumber(b.phone); const text = `Hello ${b.customerName}, your booking at Bee Vibe is confirmed!\n\nTicket Code: ${b.id}\nDate: ${b.date}\nTime: ${b.timeSlot}\nTotal: ₹${b.totalPrice}\n\nPresent this code at the entrance. Thank you!`; window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank'); }} title="Send confirmation via WhatsApp manually">💬 WA</button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                      );
-                    })
-                  ) : (
-                    <tr><td colSpan={7} className={styles.noBookings}>No bookings found matching your search.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className={styles.mobileCard}>
-              {filteredBookings.length > 0 ? filteredBookings.map((b) => {
-                const isNew = newlyAddedIds.includes(b.id);
-                return (
-                  <div key={b.id} className={`${styles.mobileCardItem} ${isNew ? styles.newRowHighlight : ''}`}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Booking ID</span>
-                      <span className={styles.mobileCardValue} style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{b.id}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Customer</span>
-                      <span className={styles.mobileCardValue}>
-                        <strong>{b.customerName}</strong><br />
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📱 {b.phone} · 👥 {b.guestCount}</span>
-                      </span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Date & Time</span>
-                      <span className={styles.mobileCardValue}>{b.date}<br /><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</span></span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Category & Package</span>
-                      <span className={styles.mobileCardValue}>
-                        <span style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 'bold',
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                          marginRight: '6px',
-                          background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)',
-                          color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055',
-                          border: `1px solid ${b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '#00f0ff' : '#ff0055'}`
-                        }}>
-                          {b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark') ? '🎮 PS5 GAMING' : '🎬 THEATER'}
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Customer Details</th>
+                  <th>Show Date & Time</th>
+                  <th>Package & Add-ons</th>
+                  <th>Total Bill</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBookings.length > 0 ? (
+                  filteredBookings.map((b) => (
+                    <tr key={b.id} className={newlyAddedIds.includes(b.id) ? styles.newRowHighlight : ''}>
+                      <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
+                      <td>
+                        <div className={styles.customerName}>{b.customerName}</div>
+                        <div className={styles.customerContact}>📱 {b.phone} <br />👥 {b.guestCount} Guests</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{b.date}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)', color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? '#00f0ff' : '#ff0055' }}>
+                          {b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? '🎮 GAMING' : '🎬 THEATER'}
                         </span>
-                        {b.packageName}
-                      </span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Total</span>
-                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{b.totalPrice}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Status</span>
-                      <span className={`${styles.badge} ${b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{b.status}</span>
-                    </div>
-                    <div className={styles.mobileCardActions} style={{ flexWrap: 'wrap' }}>
-                      <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateStatus(b.id, 'confirmed')} disabled={b.status === 'confirmed'}>✓ Confirm</button>
-                      <button className={styles.manualBtn} style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#10b981', fontWeight: 'bold', flex: 1 }} onClick={() => handleSendReceiptWhatsApp(b)}>🧾 Receipt WA</button>
-                      <button className={styles.manualBtn} style={{ background: 'rgba(124, 58, 237, 0.2)', borderColor: '#7c3aed', color: '#a78bfa' }} onClick={() => handleOpenReceiptPage(b)}>📄 View</button>
-                    </div>
-                  </div>
-                );
-              }) : (
-                <div className={styles.noBookings}>No bookings found matching your search.</div>
-              )}
-            </div>
-          </>
-        )
+                        <div style={{ fontWeight: 500, marginTop: '4px' }}>{b.packageName}</div>
+                      </td>
+                      <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
+                        <div>₹{b.totalPrice}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#10b981' }}>Adv: ₹{b.advancePaid ?? 500}</div>
+                      </td>
+                      <td>
+                        <span className={`${styles.badge} ${b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
+                          {b.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button
+                            type="button"
+                            onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
+                            className={styles.actionBtn}
+                          >
+                            🧾 Receipt
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className={styles.noBookings}>No bookings found matching your search.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* Food Orders View */}
+      {/* TAB 4: FOOD ORDERS */}
       {activeTab === 'orders' && (
-        ordersLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
-            <div className={styles.loadingSpinner} />
+        <>
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Active Orders</div>
+              <div className={styles.metricValue} style={{ color: 'var(--accent)' }}>{activeOrdersCount}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Completed Deliveries</div>
+              <div className={styles.metricValue}>{servedOrdersCount}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Food Sales Revenue</div>
+              <div className={styles.metricValue} style={{ color: '#10b981' }}>₹{foodRevenue}</div>
+            </div>
           </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Room (Theme)</th>
-                    <th>Customer Info</th>
-                    <th>Items Ordered</th>
-                    <th>Total Price</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.length > 0 ? (
-                    filteredOrders.map((order) => {
-                      const isNew = newlyAddedOrderIds.includes(order.id);
-                      return (
-                        <tr key={order.id} className={isNew ? styles.newRowHighlight : ''}>
-                          <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{order.id}</td>
-                          <td>
-                            <span className={`${styles.roomThemeBadge} ${
-                              order.theme === 'pink' ? styles.roomThemePink : order.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed
-                            }`}>
-                              {order.themeLabel}
-                            </span>
-                          </td>
-                          <td>
-                            <div className={styles.customerName}>{order.customerName || 'Guest'}</div>
-                            {order.phone && (
-                              <div className={styles.customerContact}>📱 {order.phone}</div>
-                            )}
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                              🕒 {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </div>
-                          </td>
-                          <td>
-                            <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '0.85rem' }}>
-                              {order.items.map((it, idx) => (
-                                <li key={idx} style={{ color: '#fff', marginBottom: '2px' }}>
-                                  <strong>{it.name}</strong> <span style={{ color: 'var(--accent)' }}>x{it.quantity}</span> (₹{it.price * it.quantity})
-                                </li>
-                              ))}
-                            </ul>
-                          </td>
-                          <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{order.totalPrice}</td>
-                          <td>
-                            <span className={`${styles.badge} ${
-                              order.status === 'served' ? styles.badgeConfirmed : order.status === 'preparing' ? styles.badgePreparing : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending
-                            }`}>{order.status}</span>
-                          </td>
-                          <td>
-                            <div className={styles.actionCell} style={{ flexWrap: 'wrap', gap: '6px' }}>
-                              {order.status === 'pending' && (
-                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleAcceptOrderAndNotifyWhatsApp(order)} style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}>
-                                  💬 Accept & WA Notify
-                                </button>
-                              )}
-                              {order.status === 'pending' && (
-                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>
-                                  🍳 Accept & Cook
-                                </button>
-                              )}
-                              {order.status === 'preparing' && (
-                                <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>
-                                  🚀 Deliver Order
-                                </button>
-                              )}
-                              <button className={styles.actionBtn} style={{ background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.4)' }} onClick={() => handleForwardOrderToKitchenWhatsApp(order)}>
-                                📲 WA Ticket
-                              </button>
-                              {(order.status === 'pending' || order.status === 'preparing') && (
-                                <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>
-                                  Cancel
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr><td colSpan={7} className={styles.noBookings}>No food orders found matching your search.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
 
-            {/* Mobile Card View */}
-            <div className={styles.mobileCard}>
-              {filteredOrders.length > 0 ? filteredOrders.map((order) => {
-                const isNew = newlyAddedOrderIds.includes(order.id);
-                return (
-                  <div key={order.id} className={`${styles.mobileCardItem} ${isNew ? styles.newRowHighlight : ''}`}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Order ID</span>
-                      <span className={styles.mobileCardValue} style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{order.id}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Room</span>
-                      <span className={`${styles.roomThemeBadge} ${order.theme === 'pink' ? styles.roomThemePink : order.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed}`}>{order.themeLabel}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Customer</span>
-                      <span className={styles.mobileCardValue}>
-                        {order.customerName || 'Guest'}{order.phone && <><br /><span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>📱 {order.phone}</span></>}
-                      </span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Items</span>
-                      <span className={styles.mobileCardValue} style={{ textAlign: 'right' }}>
-                        {order.items.map((it, idx) => (<span key={idx} style={{ display: 'block', fontSize: '0.83rem' }}>{it.name} <span style={{ color: 'var(--accent)' }}>×{it.quantity}</span></span>))}
-                      </span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Total</span>
-                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{order.totalPrice}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Status</span>
-                      <span className={`${styles.badge} ${order.status === 'served' ? styles.badgeConfirmed : order.status === 'preparing' ? styles.badgePreparing : order.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>{order.status}</span>
-                    </div>
-                    <div className={styles.mobileCardActions} style={{ flexWrap: 'wrap', gap: '6px' }}>
-                      {order.status === 'pending' && (
-                        <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleAcceptOrderAndNotifyWhatsApp(order)} style={{ background: '#25D366', color: '#fff', borderColor: '#25D366' }}>
-                          💬 Accept & WA
-                        </button>
-                      )}
-                      {order.status === 'pending' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}>🍳 Cook</button>)}
-                      {order.status === 'preparing' && (<button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', borderColor: '#10b981' }} onClick={() => handleUpdateOrderStatus(order.id, 'served')}>🚀 Deliver</button>)}
-                      <button className={styles.actionBtn} style={{ background: 'rgba(37, 211, 102, 0.15)', color: '#25D366', borderColor: 'rgba(37, 211, 102, 0.4)' }} onClick={() => handleForwardOrderToKitchenWhatsApp(order)}>
-                        📲 WA Ticket
-                      </button>
-                      {(order.status === 'pending' || order.status === 'preparing') && (<button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleUpdateOrderStatus(order.id, 'cancelled')}>✗ Cancel</button>)}
-                    </div>
-                  </div>
-                );
-              }) : (
-                <div className={styles.noBookings}>No food orders found matching your search.</div>
-              )}
-            </div>
-          </>
-        )
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Room Source</th>
+                  <th>Items Ordered</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map(o => (
+                    <tr key={o.id}>
+                      <td style={{ fontFamily: 'monospace' }}>{o.id}</td>
+                      <td><strong>{o.themeLabel || o.theme}</strong></td>
+                      <td>{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
+                      <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{o.totalPrice}</td>
+                      <td><span className={styles.badge}>{o.status}</span></td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={5} className={styles.noBookings}>No food orders found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* Menu Management View */}
-      {activeTab === 'menu' && (
-        menuLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '60px' }}>
-            <div className={styles.loadingSpinner} />
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Icon</th>
-                    <th>Food Item Name</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                    menuItems
-                      .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                      .map((item) => (
-                        <tr key={item.id}>
-                          <td style={{ fontSize: '1.5rem' }}>{item.icon}</td>
-                          <td>
-                            <div className={styles.customerName}>{item.name}</div>
-                            {item.description && (<div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{item.description}</div>)}
-                          </td>
-                          <td><span style={{ textTransform: 'capitalize', fontSize: '0.8rem', color: 'var(--text-secondary)', padding: '2px 8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '4px' }}>{item.category}</span></td>
-                          <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{item.price}</td>
-                          <td>
-                            <button onClick={() => handleToggleStock(item)} className={`${styles.actionBtn}`} style={{ background: item.inStock ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.inStock ? '#10b981' : '#f87171', borderColor: item.inStock ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)', borderWidth: '1px', borderStyle: 'solid', width: '130px' }}>
-                              {item.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
-                            </button>
-                          </td>
-                          <td>
-                            <div className={styles.actionCell}>
-                              <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => { setEditingMenuItem(item); setItemName(item.name); setItemPrice(String(item.price)); setItemCategory(item.category); setItemDescription(item.description); setItemIcon(item.icon); setIsMenuModalOpen(true); }}>Edit</button>
-                              <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleDeleteMenuItem(item.id)}>Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                  ) : (
-                    <tr><td colSpan={6} className={styles.noBookings}>No food items found matching your search.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className={styles.mobileCard}>
-              {menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                menuItems.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => (
-                  <div key={item.id} className={styles.mobileCardItem}>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Item</span>
-                      <span className={styles.mobileCardValue}>
-                        <span style={{ fontSize: '1.4rem', marginRight: '6px' }}>{item.icon}</span>
-                        <strong>{item.name}</strong>
-                      </span>
-                    </div>
-                    {item.description && (
-                      <div className={styles.mobileCardRow}>
-                        <span className={styles.mobileCardLabel}>Desc</span>
-                        <span className={styles.mobileCardValue} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.description}</span>
-                      </div>
-                    )}
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Category</span>
-                      <span className={styles.mobileCardValue} style={{ textTransform: 'capitalize', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{item.category}</span>
-                    </div>
-                    <div className={styles.mobileCardRow}>
-                      <span className={styles.mobileCardLabel}>Price</span>
-                      <span className={styles.mobileCardValue} style={{ color: 'var(--accent)', fontWeight: 700 }}>₹{item.price}</span>
-                    </div>
-                    <div className={styles.mobileCardActions}>
-                      <button onClick={() => handleToggleStock(item)} className={styles.actionBtn} style={{ flex: 1, background: item.inStock ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: item.inStock ? '#10b981' : '#f87171', borderColor: item.inStock ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)', borderWidth: '1px', borderStyle: 'solid' }}>
-                        {item.inStock ? '🟢 In Stock' : '🔴 Out of Stock'}
-                      </button>
-                      <button className={`${styles.actionBtn} ${styles.actionBtnConfirm}`} onClick={() => { setEditingMenuItem(item); setItemName(item.name); setItemPrice(String(item.price)); setItemCategory(item.category); setItemDescription(item.description); setItemIcon(item.icon); setIsMenuModalOpen(true); }}>✏️ Edit</button>
-                      <button className={`${styles.actionBtn} ${styles.actionBtnCancel}`} onClick={() => handleDeleteMenuItem(item.id)}>🗑️ Del</button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.noBookings}>No food items found matching your search.</div>
-              )}
-            </div>
-          </>
-        )
-      )}
-
-      {/* QR Codes View */}
+      {/* TAB 5: QR STANDEES */}
       {activeTab === 'qrs' && (
         <div className={styles.qrGridContainer}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
-            Print these tabletop standees and place them physically in the respective rooms. Customers can scan them to view the food menu and order directly to their recliners.
-          </p>
-
           <div className={styles.qrStandeesList}>
             {(['pink', 'purple', 'red'] as const).map((color) => {
               const themeName = color === 'pink' ? 'Rose Pink Theme' : color === 'purple' ? 'Neon Purple Theme' : 'Crimson Red Theme';
               const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(origin + '/menu?theme=' + color)}`;
-              
               return (
-                <div key={color} className={`${styles.qrCard} ${
-                  color === 'pink' ? styles.qrCardPink : color === 'purple' ? styles.qrCardPurple : styles.qrCardRed
-                }`}>
-                  <div className={styles.qrCardHeader}>
-                    <h3>{themeName} Room</h3>
-                    <span className={styles.qrCardIcon}>🍿</span>
-                  </div>
+                <div key={color} className={styles.qrCard}>
+                  <div className={styles.qrCardHeader}><h3>${themeName} Room</h3></div>
                   <div className={styles.qrCardBody}>
-                    <div style={{ background: '#fff', padding: '12px', borderRadius: '12px', display: 'inline-block', marginBottom: '16px', border: '1px solid rgba(0,0,0,0.1)' }}>
-                      <img src={qrCodeUrl} alt={`${themeName} QR Code`} style={{ width: '150px', height: '150px', display: 'block' }} />
-                    </div>
-                    <div className={styles.qrCardUrl}>
-                      <code>/menu?theme={color}</code>
-                    </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.4' }}>
-                      Scan to order snacks directly to recliners. Automatically registers room source!
-                    </p>
+                    <img src={qrCodeUrl} alt={themeName} style={{ width: '140px', height: '140px', margin: '0 auto', display: 'block' }} />
                   </div>
                   <div className={styles.qrCardFooter}>
-                    <button 
-                      onClick={() => handlePrintStandee(color)}
-                      className="btn btn-primary"
-                      style={{ width: '100%', padding: '10px 0', fontSize: '0.85rem' }}
-                    >
-                      🖨️ Print Desktop Standee
-                    </button>
+                    <button onClick={() => handlePrintStandee(color)} className="btn btn-primary" style={{ width: '100%' }}>🖨️ Print Standee</button>
                   </div>
                 </div>
               );
@@ -1828,164 +1470,135 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Menu Item Form Editor Modal */}
-      {isMenuModalOpen && (
-        <div className={styles.modalOverlayCustom} onClick={() => setIsMenuModalOpen(false)}>
-          <div className={styles.modalContentCustom} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeaderCustom}>
-              <h3>{editingMenuItem ? '✏️ Edit Menu Item' : '➕ Add New Menu Item'}</h3>
-              <button 
-                className={styles.closeBtnCustom} 
-                onClick={() => {
-                  setIsMenuModalOpen(false);
-                  setEditingMenuItem(null);
-                }}
-              >
-                ✕
-              </button>
+      {/* CUSTOMER DETAIL PROFILE DRAWER */}
+      {isCustomerDrawerOpen && selectedCustomer && (
+        <div className={styles.modalOverlayCustom} onClick={() => setIsCustomerDrawerOpen(false)}>
+          <div className={styles.drawerContentCustom} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.drawerHeader}>
+              <div>
+                <h2>{selectedCustomer.name}</h2>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                  📱 {selectedCustomer.phone} {selectedCustomer.email && <>· 📧 {selectedCustomer.email}</>}
+                </div>
+              </div>
+              <button className={styles.closeBtnCustom} onClick={() => setIsCustomerDrawerOpen(false)}>✕</button>
             </div>
-            
-            <form onSubmit={handleSaveMenuItem}>
-              <div className={styles.modalBodyCustom}>
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ width: '80px' }}>
-                    <label className={styles.formLabelCustom}>Icon Emoji</label>
-                    <input
-                      type="text"
-                      className={styles.formInputCustom}
-                      value={itemIcon}
-                      onChange={(e) => setItemIcon(e.target.value)}
-                      placeholder="🍿"
-                      style={{ fontSize: '1.25rem', textAlign: 'center' }}
-                      required
-                    />
-                  </div>
-                  <div style={{ flexGrow: 1 }}>
-                    <label className={styles.formLabelCustom}>Food Item Name</label>
-                    <input
-                      type="text"
-                      className={styles.formInputCustom}
-                      value={itemName}
-                      onChange={(e) => setItemName(e.target.value)}
-                      placeholder="e.g. Garlic Bread"
-                      required
-                    />
-                  </div>
-                </div>
 
-                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label className={styles.formLabelCustom}>Price (₹)</label>
-                    <input
-                      type="number"
-                      className={styles.formInputCustom}
-                      value={itemPrice}
-                      onChange={(e) => setItemPrice(e.target.value)}
-                      placeholder="120"
-                      required
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label className={styles.formLabelCustom}>Category</label>
-                    <select
-                      className={styles.formInputCustom}
-                      value={itemCategory}
-                      onChange={(e) => setItemCategory(e.target.value as any)}
-                      style={{ height: '46px', textTransform: 'capitalize' }}
-                      required
-                    >
-                      <option value="snacks">🍿 Snacks</option>
-                      <option value="beverages">🥤 Beverages</option>
-                      <option value="desserts">🍨 Desserts</option>
-                    </select>
-                  </div>
+            <div className={styles.drawerBody}>
+              {/* Profile Summary KPIs */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+                <div className={styles.drawerKpi}>
+                  <div className={styles.drawerKpiLabel}>Tier</div>
+                  <div className={styles.drawerKpiVal} style={{ color: 'var(--accent)' }}>{selectedCustomer.metrics.calculatedSegment}</div>
                 </div>
+                <div className={styles.drawerKpi}>
+                  <div className={styles.drawerKpiLabel}>Total Visits</div>
+                  <div className={styles.drawerKpiVal}>{selectedCustomer.metrics.totalBookings}</div>
+                </div>
+                <div className={styles.drawerKpi}>
+                  <div className={styles.drawerKpiLabel}>Lifetime Value</div>
+                  <div className={styles.drawerKpiVal} style={{ color: '#10b981' }}>₹{selectedCustomer.metrics.lifetimeSpend}</div>
+                </div>
+              </div>
 
-                <div style={{ marginBottom: '8px' }}>
-                  <label className={styles.formLabelCustom}>Description (Optional)</label>
-                  <textarea
-                    className={styles.formTextareaCustom}
-                    value={itemDescription}
-                    onChange={(e) => setItemDescription(e.target.value)}
-                    placeholder="e.g. Delicious buttery garlic bread toasted to perfection."
-                    rows={3}
+              {/* Private Staff CRM Notes */}
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '10px' }}>📝 Private Staff Notes</h3>
+                <form onSubmit={handleAddCrmNote} style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="Add customer note (e.g. loves caramel popcorn, anniversary couple)..."
+                    className={styles.searchInput}
+                    style={{ flex: 1 }}
+                    value={newNoteText}
+                    onChange={(e) => setNewNoteText(e.target.value)}
+                    disabled={noteSubmitting}
                   />
-                </div>
+                  <button type="submit" className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} disabled={noteSubmitting}>
+                    {noteSubmitting ? 'Saving...' : 'Add Note'}
+                  </button>
+                </form>
+
+                {selectedCustomer.notes.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {selectedCustomer.notes.map((n) => (
+                      <div key={n.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '6px', padding: '10px 14px' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#ffffff' }}>{n.note}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          By {n.authorUserId} · {new Date(n.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontStyle: 'italic' }}>No notes yet. Add one above!</div>
+                )}
               </div>
 
-              <div className={styles.modalFooterCustom}>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => {
-                    setIsMenuModalOpen(false);
-                    setEditingMenuItem(null);
-                  }}
-                  style={{ flex: 1 }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn btn-primary" 
-                  style={{ flex: 1 }}
-                >
-                  {editingMenuItem ? 'Save Changes' : 'Add Item'}
-                </button>
+              {/* Booking History Timeline */}
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{ fontSize: '1rem', marginBottom: '10px' }}>🎬 Celebration Timeline ({selectedCustomer.bookingHistory.length})</h3>
+                {selectedCustomer.bookingHistory.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {selectedCustomer.bookingHistory.map((b) => (
+                      <div key={b.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '8px', padding: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <strong>{b.packageName}</strong>
+                          <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>₹{b.totalPrice}</span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          📅 {b.date} · ⏰ {b.timeSlot} · 👥 {b.guestCount} Guests
+                        </div>
+                        {b.addOns && b.addOns.length > 0 && (
+                          <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '4px' }}>
+                            Add-ons: {b.addOns.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>No reservation history found.</div>
+                )}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
-      {/* Fixed Mobile App Bottom Navigation Bar */}
+
+      {/* Fixed Mobile Bottom Navigation */}
       <div className={styles.mobileBottomNav}>
         <button
           type="button"
           className={`${styles.mobileNavItem} ${activeTab === 'bookings' ? styles.mobileNavItemActive : ''}`}
-          onClick={() => {
-            setActiveTab('bookings');
-            setSearchTerm('');
-            setDateFilter('');
-          }}
+          onClick={() => setActiveTab('bookings')}
         >
           <span className={styles.mobileNavIcon}>📅</span>
           <span>Bookings</span>
-          {pendingBookings > 0 && <span className={styles.mobileNavBadge}>{pendingBookings}</span>}
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'payments' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('payments')}
+        >
+          <span className={styles.mobileNavIcon}>💳</span>
+          <span>Payments</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'crm' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('crm')}
+        >
+          <span className={styles.mobileNavIcon}>👥</span>
+          <span>CRM</span>
         </button>
         <button
           type="button"
           className={`${styles.mobileNavItem} ${activeTab === 'orders' ? styles.mobileNavItemActive : ''}`}
-          onClick={() => {
-            setActiveTab('orders');
-            setSearchTerm('');
-            setOrderStatusFilter('all');
-            setOrderDateFilter('');
-          }}
+          onClick={() => setActiveTab('orders')}
         >
           <span className={styles.mobileNavIcon}>🍿</span>
           <span>Orders</span>
-          {activeOrdersCount > 0 && <span className={styles.mobileNavBadge}>{activeOrdersCount}</span>}
-        </button>
-        <button
-          type="button"
-          className={`${styles.mobileNavItem} ${activeTab === 'menu' ? styles.mobileNavItemActive : ''}`}
-          onClick={() => {
-            setActiveTab('menu');
-            setSearchTerm('');
-          }}
-        >
-          <span className={styles.mobileNavIcon}>🍔</span>
-          <span>Menu</span>
-        </button>
-        <button
-          type="button"
-          className={`${styles.mobileNavItem} ${activeTab === 'qrs' ? styles.mobileNavItemActive : ''}`}
-          onClick={() => {
-            setActiveTab('qrs');
-          }}
-        >
-          <span className={styles.mobileNavIcon}>🖨️</span>
-          <span>QR Standees</span>
         </button>
       </div>
     </div>

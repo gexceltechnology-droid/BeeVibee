@@ -408,3 +408,32 @@ export async function verifyOtpFromFirestore(phone: string, code: string): Promi
 
   return verifyOtpLocal(phone, code);
 }
+
+export async function updateBookingPaymentVerificationInFirestore(
+  id: string,
+  updates: { sbiVerified?: boolean; balanceCollected?: boolean; adminNotes?: string; status?: 'pending' | 'confirmed' | 'cancelled' }
+): Promise<Booking> {
+  const cleanId = id.trim();
+  try {
+    const firestore = getDb();
+    const updatePayload: Record<string, any> = {};
+    if (updates.sbiVerified !== undefined) updatePayload.sbiVerified = updates.sbiVerified;
+    if (updates.balanceCollected !== undefined) {
+      updatePayload.balanceCollected = updates.balanceCollected;
+      if (updates.balanceCollected) updatePayload.paymentStatus = 'fully_paid';
+    }
+    if (updates.adminNotes !== undefined) updatePayload.adminNotes = updates.adminNotes;
+    if (updates.status !== undefined) updatePayload.status = updates.status;
+
+    await firestore.collection('bookings').doc(cleanId).set(updatePayload, { merge: true });
+    const updatedDoc = await firestore.collection('bookings').doc(cleanId).get();
+    if (updatedDoc.exists) {
+      return updatedDoc.data() as Booking;
+    }
+  } catch (err) {
+    console.warn('Firestore update failed, falling back to local DB:', err);
+  }
+
+  const { updateBookingPaymentVerification } = await import('./db');
+  return updateBookingPaymentVerification(cleanId, updates);
+}
