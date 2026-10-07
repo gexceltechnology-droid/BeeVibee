@@ -1390,149 +1390,280 @@
   text-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
 }
 
-.advanceQrSection {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-  padding: 16px;
-  flex-wrap: wrap;
+/* ==========================================================================
+   Modern Luxury UPI Payment Console
+   ========================================================================== */
+
+.paymentConsoleGrid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 14px;
 }
 
-.advanceQrImgWrapper {
-  background: #ffffff;
-  padding: 8px;
-  border-radius: 8px;
-  display: inline-flex;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+@media (max-width: 768px) {
+  .paymentConsoleGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.advanceQrInfo {
-  flex: 1;
-  min-width: 200px;
+/* Left QR Station Card */
+.paymentQrCard {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(242, 169, 0, 0.25);
+  border-radius: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.upiIdBox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 8px 12px;
-}
-
-.upiIdText {
-  font-family: monospace;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--accent);
-  flex: 1;
-}
-
-.upiCopyBtn {
-  background: rgba(var(--accent-base), 0.2);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 4px;
-  padding: 4px 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.upiCopyBtn:hover {
-  background: var(--accent);
-  color: #000000;
-}
-
-.upiIntentBtn {
-  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: #25D366;
-  color: #ffffff;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.qrHeaderPill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.qrScanBadge {
+  font-size: 0.72rem;
   font-weight: 700;
-  font-size: 0.88rem;
-  text-decoration: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
-  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
 }
 
-.upiIntentBtn:hover {
-  background: #20ba59;
-  transform: translateY(-1px);
+.qrAmountText {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #10b981;
 }
 
+.qrImageFrame {
+  background: #ffffff;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  display: inline-flex;
+  margin-bottom: 10px;
+  transition: transform 0.2s ease;
+}
 
-/* Enhanced UPI Confirmation & Payee Badges */
-.payeeCardHeader {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(242, 169, 0, 0.25);
-  border-radius: 8px;
-  padding: 10px 14px;
+.qrImageFrame:hover {
+  transform: scale(1.02);
+}
+
+.supportedAppsStrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.appPill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d4d4d8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 12px;
+}
+
+/* Right Side Actions Column */
+.paymentActionsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+/* Card 1: Unified Payee Card */
+.payeeUnifiedCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payeeMetaRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.payeeNameText {
+.payeeNameLabel {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payeeFullName {
+  font-size: 0.92rem;
+  font-weight: 800;
   color: #ffffff;
-  font-weight: 700;
-  font-size: 0.95rem;
+  margin-top: 1px;
 }
 
-.bankBadge {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
+.bankPillBadge {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   color: #10b981;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.utrConfirmBox {
+.upiDetailsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(242, 169, 0, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.upiIdDisplay {
+  font-family: monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.copyUpiBtn {
+  background: rgba(242, 169, 0, 0.15);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copyUpiBtn:hover {
+  background: var(--accent);
+  color: #000000;
+}
+
+.mobileUpiBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(242, 169, 0, 0.12);
+  border: 1px solid rgba(242, 169, 0, 0.35);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.mobileUpiBtn:hover {
+  background: rgba(242, 169, 0, 0.22);
+}
+
+/* Card 2: UTR Verification Card */
+.utrVerificationCard {
   background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(242, 169, 0, 0.3);
-  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   padding: 14px;
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.paymentConfirmCheckLabel {
+.utrHeaderRow {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #e4e4e7;
-  line-height: 1.4;
-  user-select: none;
+  align-items: center;
+  gap: 8px;
 }
 
-.paymentConfirmCheckbox {
-  width: 18px;
-  height: 18px;
-  accent-color: #f2a900;
-  margin-top: 2px;
+.utrStepBadge {
+  background: var(--accent);
+  color: #000000;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.utrTitleText {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.utrLargeInput {
+  background: rgba(0, 0, 0, 0.6);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 1.05rem;
+  font-family: monospace;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.utrLargeInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(242, 169, 0, 0.2);
+}
+
+.utrLiveFeedbackRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.74rem;
+}
+
+.compactConfirmationLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #d4d4d8;
+  user-select: none;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.compactConfirmationCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 

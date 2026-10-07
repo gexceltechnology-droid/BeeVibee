@@ -2473,108 +2473,116 @@ export default function BookingPortal() {
                       </div>
                     </div>
 
-                    {/* QR Code and Official UPI Details */}
-                    <div className={styles.advanceQrSection}>
-                      <div className={styles.advanceQrImgWrapper} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src="/beevibe-payment-qr.jpg"
-                          alt="Bee Vibe UPI Advance QR Code - NALINAKSHI C"
-                          width={160}
-                          height={220}
-                          style={{ display: 'block', borderRadius: '6px', objectFit: 'contain' }}
-                        />
-                        <span style={{ fontSize: '0.7rem', color: '#555', fontWeight: 'bold' }}>Scan with any UPI App</span>
+                    {/* Modern 2-Column Luxury Payment Console */}
+                    <div className={styles.paymentConsoleGrid}>
+                      {/* Column 1: QR Station */}
+                      <div className={styles.paymentQrCard}>
+                        <div className={styles.qrHeaderPill}>
+                          <span className={styles.qrScanBadge}>📲 SCAN & PAY</span>
+                          <span className={styles.qrAmountText}>₹{calculateAdvance()}</span>
+                        </div>
+                        <div className={styles.qrImageFrame}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src="/beevibe-payment-qr.jpg"
+                            alt="Bee Vibe UPI Advance QR Code - NALINAKSHI C"
+                            width={170}
+                            height={230}
+                            style={{ display: 'block', borderRadius: '6px', objectFit: 'contain' }}
+                          />
+                        </div>
+                        <div className={styles.supportedAppsStrip}>
+                          <span className={styles.appPill}>GPay</span>
+                          <span className={styles.appPill}>PhonePe</span>
+                          <span className={styles.appPill}>Paytm</span>
+                          <span className={styles.appPill}>BHIM</span>
+                          <span className={styles.appPill}>Cred</span>
+                        </div>
                       </div>
 
-                      <div className={styles.advanceQrInfo}>
-                        <div className={styles.payeeCardHeader}>
-                          <div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Verified Payee</div>
-                            <div className={styles.payeeNameText}>NALINAKSHI C</div>
+                      {/* Column 2: Payee & UTR Verification */}
+                      <div className={styles.paymentActionsCol}>
+                        {/* Card 1: Official Payee */}
+                        <div className={styles.payeeUnifiedCard}>
+                          <div className={styles.payeeMetaRow}>
+                            <div>
+                              <div className={styles.payeeNameLabel}>Verified Beneficiary</div>
+                              <div className={styles.payeeFullName}>NALINAKSHI C</div>
+                            </div>
+                            <span className={styles.bankPillBadge}>
+                              🏦 State Bank of India (6592)
+                            </span>
                           </div>
-                          <span className={styles.bankBadge}>
-                            🏦 State Bank of India (6592)
-                          </span>
-                        </div>
 
-                        <div className={styles.upiIdBox}>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>UPI ID:</span>
-                          <span className={styles.upiIdText}>8123635342@sbi</span>
-                          <button
-                            type="button"
-                            className={styles.upiCopyBtn}
-                            onClick={() => {
-                              navigator.clipboard.writeText('8123635342@sbi');
-                              setUpiCopied(true);
-                              setTimeout(() => setUpiCopied(false), 2000);
-                            }}
+                          <div className={styles.upiDetailsRow}>
+                            <div>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>UPI ID: </span>
+                              <span className={styles.upiIdDisplay}>8123635342@sbi</span>
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.copyUpiBtn}
+                              onClick={() => {
+                                navigator.clipboard.writeText('8123635342@sbi');
+                                setUpiCopied(true);
+                                setTimeout(() => setUpiCopied(false), 2000);
+                              }}
+                            >
+                              {upiCopied ? '✓ Copied' : '📋 Copy'}
+                            </button>
+                          </div>
+
+                          <a
+                            href={"upi://pay?pa=8123635342@sbi&pn=NALINAKSHI%20C&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe"}
+                            className={styles.mobileUpiBtn}
                           >
-                            {upiCopied ? '✓ Copied' : '📋 Copy UPI ID'}
-                          </button>
+                            ⚡ Open in UPI App (GPay / PhonePe)
+                          </a>
                         </div>
 
-                        <a
-                          href={"upi://pay?pa=8123635342@sbi&pn=NALINAKSHI%20C&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Booking%20BeeVibe"}
-                          className={styles.upiIntentBtn}
-                        >
-                          ⚡ Pay ₹{calculateAdvance()} via UPI App (GPay / PhonePe / Paytm / BHIM)
-                        </a>
+                        {/* Card 2: UTR Verification */}
+                        <div className={styles.utrVerificationCard}>
+                          <div className={styles.utrHeaderRow}>
+                            <span className={styles.utrStepBadge}>STEP 2</span>
+                            <span className={styles.utrTitleText}>Confirm with 12-Digit UPI Ref / UTR *</span>
+                          </div>
 
-                        {/* Mandatory Payment Confirmation & UTR Entry */}
-                        <div className={styles.utrConfirmBox}>
-                          <div>
-                            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#ffffff', marginBottom: '6px' }}>
-                              Step 2: Enter 12-Digit UPI Transaction / UTR Number *
-                            </label>
+                          <div className={styles.utrInputContainer}>
                             <input
                               type="text"
                               inputMode="numeric"
                               pattern="[0-9]*"
                               maxLength={12}
-                              className={styles.formInput}
-                              placeholder="e.g. 423987123456 (12 digits only)"
+                              className={styles.utrLargeInput}
+                              placeholder="e.g. 423987123456"
                               value={utrNumber}
                               onChange={(e) => {
                                 const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
                                 setUtrNumber(digitsOnly);
                               }}
                               style={{
-                                padding: '10px 14px',
-                                fontSize: '1rem',
-                                letterSpacing: '2px',
-                                fontFamily: 'monospace',
-                                fontWeight: 700,
                                 borderColor: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : 'rgba(255,255,255,0.2)'
                               }}
                               required
                             />
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.75rem' }}>
+                            <div className={styles.utrLiveFeedbackRow}>
                               <span style={{ color: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : 'var(--text-secondary)', fontWeight: 500 }}>
-                                {utrNumber.length === 12 ? (
-                                  '✓ Valid 12-digit UPI UTR number'
-                                ) : utrNumber.length > 0 ? (
-                                  `⚠️ UPI Reference / UTR must be 12 digits (entered: ${utrNumber.length}/12)`
-                                ) : (
-                                  `💡 After transferring ₹${calculateAdvance()} in your UPI app, paste the 12-digit UTR/Ref number.`
-                                )}
+                                {utrNumber.length === 12 ? '✓ 12-digit UTR verified' : utrNumber.length > 0 ? `⚠️ ${utrNumber.length}/12 digits entered` : 'Enter 12 digits from UPI receipt'}
                               </span>
-                              <span style={{ color: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : '#a1a1aa', fontWeight: 700, fontFamily: 'monospace' }}>
+                              <span style={{ color: utrNumber.length === 12 ? '#10b981' : '#a1a1aa', fontWeight: 700, fontFamily: 'monospace' }}>
                                 {utrNumber.length}/12
                               </span>
                             </div>
                           </div>
 
-                          <label className={styles.paymentConfirmCheckLabel}>
+                          <label className={styles.compactConfirmationLabel}>
                             <input
                               type="checkbox"
-                              className={styles.paymentConfirmCheckbox}
+                              className={styles.compactConfirmationCheckbox}
                               checked={paymentConfirmed}
                               onChange={(e) => setPaymentConfirmed(e.target.checked)}
                             />
-                            <span>
-                              I confirm that I have transferred the advance payment of <strong>₹{calculateAdvance()}</strong> to <strong>NALINAKSHI C (8123635342@sbi)</strong> and entered the valid UPI UTR above.
-                            </span>
+                            <span>I have transferred the advance of <strong>₹{calculateAdvance()}</strong> to <strong>8123635342@sbi</strong></span>
                           </label>
                         </div>
                       </div>
@@ -2855,7 +2863,7 @@ export default function BookingPortal() {
                       Processing...
                     </>
                   ) : (
-                    `Confirm Booking (₹�{calculateAdvance()} Advance Paid) ✓`
+                    `Confirm Booking (₹${calculateAdvance()} Advance Paid) ✓`
                   )}
                 </button>
               )}
