@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './admin.module.css';
 import type { MenuItem } from '@/lib/db';
-import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
 
@@ -59,11 +58,8 @@ export default function AdminDashboard() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
-  const [newlyAddedOrderIds, setNewlyAddedOrderIds] = useState<string[]>([]);
-  const [archiveStatus, setArchiveStatus] = useState<{ count: number; ordersCount?: number; destination: string } | null>(null);
   
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState<'bookings' | 'payments' | 'crm' | 'orders' | 'qrs' | 'menu'>('bookings');
@@ -76,18 +72,15 @@ export default function AdminDashboard() {
   const [orderDateFilter, setOrderDateFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'all' | 'verified' | 'pending' | 'balance_due' | 'settled'>('all');
   const [crmTierFilter, setCrmTierFilter] = useState<'all' | 'VIP' | 'REGULAR' | 'GAMER' | 'NEW'>('all');
+  const [menuCategoryFilter, setMenuCategoryFilter] = useState<'all' | 'snacks' | 'beverages' | 'desserts'>('all');
   
   // Food Orders
   const [orders, setOrders] = useState<FoodOrder[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const [origin, setOrigin] = useState('');
   
   // Menu Items
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [menuLoading, setMenuLoading] = useState(false);
 
   // CRM State
-  const [crmProfiles, setCrmProfiles] = useState<AggregatedCustomerProfile[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<AggregatedCustomerProfile | null>(null);
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [newNoteText, setNewNoteText] = useState('');
@@ -102,15 +95,22 @@ export default function AdminDashboard() {
   const [itemCategory, setItemCategory] = useState<'snacks' | 'beverages' | 'desserts'>('snacks');
   const [itemDescription, setItemDescription] = useState('');
   const [itemIcon, setItemIcon] = useState('🍿');
+  const [menuSubmitting, setMenuSubmitting] = useState(false);
+
+  // Invoice / Bill Generator Modal State
+  const [selectedBookingForInvoice, setSelectedBookingForInvoice] = useState<Booking | null>(null);
 
   // Web Audio Context
   const audioContextRef = useRef<AudioContext | null>(null);
   const knownBookingIdsRef = useRef<Set<string> | null>(null);
   const knownOrderIdsRef = useRef<Set<string> | null>(null);
 
-  const initAudioContext = () => {
+  const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      interface WindowWithWebkitAudio extends Window {
+        webkitAudioContext?: typeof AudioContext;
+      }
+      const AudioCtxClass = window.AudioContext || (window as WindowWithWebkitAudio).webkitAudioContext;
       if (AudioCtxClass) {
         audioContextRef.current = new AudioCtxClass();
       }
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
     if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume().catch(() => {});
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleGesture = () => initAudioContext();
@@ -128,9 +128,9 @@ export default function AdminDashboard() {
       window.removeEventListener('click', handleGesture);
       window.removeEventListener('keydown', handleGesture);
     };
-  }, []);
+  }, [initAudioContext]);
 
-  const playOrderSound = async () => {
+  const playOrderSound = useCallback(async () => {
     try {
       initAudioContext();
       const ctx = audioContextRef.current;
@@ -158,9 +158,9 @@ export default function AdminDashboard() {
     } catch (e) {
       console.warn('Could not play order chime:', e);
     }
-  };
+  }, [initAudioContext]);
 
-  const playBookingSound = async () => {
+  const playBookingSound = useCallback(async () => {
     try {
       initAudioContext();
       const ctx = audioContextRef.current;
@@ -188,111 +188,14 @@ export default function AdminDashboard() {
     } catch (e) {
       console.warn('Could not play booking chime:', e);
     }
-  };
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setOrigin(window.location.origin);
-    }
-
-    const savedCode = sessionStorage.getItem('bee_vibe_admin_passcode');
-    if (savedCode) {
-      verifyPasscode(savedCode);
-    } else {
-      setIsAuthenticated(false);
-    }
-
-    const savedCount = sessionStorage.getItem('bee_vibe_archived_count');
-    const savedOrdersCount = sessionStorage.getItem('bee_vibe_archived_orders_count');
-    const savedDest = sessionStorage.getItem('bee_vibe_archived_destination');
-    if ((savedCount || savedOrdersCount) && savedDest) {
-      setArchiveStatus({
-        count: parseInt(savedCount || '0', 10),
-        ordersCount: parseInt(savedOrdersCount || '0', 10),
-        destination: savedDest
-      });
-    }
-  }, []);
-
-  // Polling for new bookings, payments and orders
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const interval = setInterval(() => {
-      fetchBookings(undefined, true);
-      fetchOrders(undefined, true);
-      fetchMenu(undefined, true);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
-  // Re-aggregate CRM profiles when bookings or orders update
-  useEffect(() => {
-    if (bookings.length > 0 || orders.length > 0) {
-      const profiles = CrmEngine.aggregateCustomerProfiles('tenant_beevibe', bookings, orders);
-      setCrmProfiles(profiles);
-    }
-  }, [bookings, orders]);
-
-  const verifyPasscode = async (codeToCheck: string) => {
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passcode: codeToCheck }),
-      });
-
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        sessionStorage.setItem('bee_vibe_admin_passcode', codeToCheck);
-        setIsAuthenticated(true);
-        fetchBookings(codeToCheck);
-        fetchOrders(codeToCheck);
-        fetchMenu(codeToCheck);
-
-        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-          Notification.requestPermission().catch(() => {});
-        }
-      } else {
-        sessionStorage.removeItem('bee_vibe_admin_passcode');
-        setIsAuthenticated(false);
-        setLoginError(data.error || 'Incorrect admin passcode.');
-      }
-    } catch (err) {
-      setLoginError('Error connecting to authentication server.');
-      setIsAuthenticated(false);
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passcodeInput) {
-      setLoginError('Please enter the passcode.');
-      return;
-    }
-    verifyPasscode(passcodeInput);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem('bee_vibe_admin_passcode');
-    setIsAuthenticated(false);
-    setBookings([]);
-    setOrders([]);
-    setMenuItems([]);
-    setPasscodeInput('');
-  };
+  }, [initAudioContext]);
 
   // Fetch Bookings
-  async function fetchBookings(codeValue?: string, isBackground = false) {
-    const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+  const fetchBookings = useCallback(async (codeValue?: string, isBackground = false) => {
+    const activePasscode = (codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    if (!activePasscode) return;
+
     try {
-      if (!isBackground) setLoading(true);
       const res = await fetch('/api/bookings', {
         headers: { 'X-Admin-Passcode': activePasscode },
       });
@@ -316,26 +219,29 @@ export default function AdminDashboard() {
             try {
               new Notification('🎬 New Bee Vibe Booking!', {
                 body: `${newItems[0].customerName} booked ${newItems[0].packageName} for ${newItems[0].date}`,
-                icon: '/icon.png',
+                icon: '/logo.png',
               });
-            } catch (e) {}
+            } catch {
+              // Ignore notification error
+            }
           }
         }
       }
       knownBookingIdsRef.current = new Set(currentBookings.map(b => b.id));
       setBookings(currentBookings);
-    } catch (err: any) {
-      if (!isBackground) setError(err.message || 'Error fetching bookings.');
-    } finally {
-      if (!isBackground) setLoading(false);
+    } catch (err: unknown) {
+      if (!isBackground) {
+        setError(err instanceof Error ? err.message : 'Error fetching bookings.');
+      }
     }
-  }
+  }, [playBookingSound]);
 
   // Fetch Orders
-  async function fetchOrders(codeValue?: string, isBackground = false) {
-    const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+  const fetchOrders = useCallback(async (codeValue?: string) => {
+    const activePasscode = (codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    if (!activePasscode) return;
+
     try {
-      if (!isBackground) setOrdersLoading(true);
       const res = await fetch('/api/orders', {
         headers: { 'X-Admin-Passcode': activePasscode },
       });
@@ -345,7 +251,6 @@ export default function AdminDashboard() {
         if (knownOrderIdsRef.current !== null) {
           const newOrders = currentOrders.filter(o => !knownOrderIdsRef.current!.has(o.id));
           if (newOrders.length > 0) {
-            setNewlyAddedOrderIds(newOrders.map(o => o.id));
             await playOrderSound();
           }
         }
@@ -354,16 +259,15 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-    } finally {
-      if (!isBackground) setOrdersLoading(false);
     }
-  }
+  }, [playOrderSound]);
 
   // Fetch Menu
-  async function fetchMenu(codeValue?: string, isBackground = false) {
-    const activePasscode = codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+  const fetchMenu = useCallback(async (codeValue?: string) => {
+    const activePasscode = (codeValue || sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    if (!activePasscode) return;
+
     try {
-      if (!isBackground) setMenuLoading(true);
       const res = await fetch('/api/menu', {
         headers: { 'X-Admin-Passcode': activePasscode },
       });
@@ -373,14 +277,172 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Error fetching menu:', err);
-    } finally {
-      if (!isBackground) setMenuLoading(false);
     }
-  }
+  }, []);
+
+  const verifyPasscode = useCallback(async (codeToCheck: string) => {
+    const cleanCode = codeToCheck.trim();
+    if (!cleanCode) {
+      setLoginError('Please enter the passcode.');
+      return;
+    }
+
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: cleanCode }),
+      });
+
+      const data = await res.json();
+      
+      if (res.ok && data.success) {
+        sessionStorage.setItem('bee_vibe_admin_passcode', cleanCode);
+        setIsAuthenticated(true);
+        fetchBookings(cleanCode);
+        fetchOrders(cleanCode);
+        fetchMenu(cleanCode);
+
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+          Notification.requestPermission().catch(() => {});
+        }
+      } else {
+        sessionStorage.removeItem('bee_vibe_admin_passcode');
+        setIsAuthenticated(false);
+        setLoginError(data.error || 'Incorrect admin passcode.');
+      }
+    } catch {
+      setLoginError('Error connecting to authentication server.');
+      setIsAuthenticated(false);
+    } finally {
+      setLoginLoading(false);
+    }
+  }, [fetchBookings, fetchOrders, fetchMenu]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const savedCode = typeof window !== 'undefined' ? sessionStorage.getItem('bee_vibe_admin_passcode') : null;
+      if (savedCode) {
+        verifyPasscode(savedCode);
+      } else {
+        setIsAuthenticated(false);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [verifyPasscode]);
+
+
+  // Polling for live bookings, payments and orders
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      fetchBookings(undefined, true);
+      fetchOrders(undefined);
+      fetchMenu(undefined);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, fetchBookings, fetchOrders, fetchMenu]);
+
+  // Derived CRM profiles memoized without cascading effects
+  const crmProfiles = useMemo(() => {
+    if (bookings.length > 0 || orders.length > 0) {
+      return CrmEngine.aggregateCustomerProfiles('tenant_beevibe', bookings, orders);
+    }
+    return [];
+  }, [bookings, orders]);
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passcodeInput.trim()) {
+      setLoginError('Please enter the passcode.');
+      return;
+    }
+    verifyPasscode(passcodeInput.trim());
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('bee_vibe_admin_passcode');
+    setIsAuthenticated(false);
+    setBookings([]);
+    setOrders([]);
+    setMenuItems([]);
+    setPasscodeInput('');
+  };
+
+  // Booking Status Update Handler
+  const handleUpdateBookingStatus = async (id: string, newStatus: 'pending' | 'confirmed' | 'cancelled') => {
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+      } else {
+        alert('Failed to update booking status.');
+      }
+    } catch (err: unknown) {
+      alert('Error updating booking: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  // Delete Booking Handler
+  const handleDeleteBooking = async (id: string) => {
+    if (!confirm(`Are you sure you want to permanently delete booking #${id}?`)) return;
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setBookings(prev => prev.filter(b => b.id !== id));
+      } else {
+        alert('Failed to delete booking.');
+      }
+    } catch (err: unknown) {
+      alert('Error deleting booking: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  // Food Order Status Update Handler
+  const handleUpdateOrderStatus = async (id: string, newStatus: 'pending' | 'preparing' | 'served' | 'cancelled') => {
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({ id, status: newStatus }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+      } else {
+        alert('Failed to update order status.');
+      }
+    } catch (err: unknown) {
+      alert('Error updating order: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
 
   // Payment Reconciliation Toggle: SBI Bank Verification
   const handleToggleSbiVerification = async (booking: Booking) => {
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
     const newSbiStatus = !booking.sbiVerified;
 
     try {
@@ -402,14 +464,14 @@ export default function AdminDashboard() {
       } else {
         alert('Failed to update SBI verification status.');
       }
-    } catch (err: any) {
-      alert('Error updating payment reconciliation: ' + err.message);
+    } catch (err: unknown) {
+      alert('Error updating payment reconciliation: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
 
   // Payment Reconciliation Toggle: Venue Balance Settlement
   const handleToggleBalanceSettlement = async (booking: Booking) => {
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
     const newBalanceCollected = !booking.balanceCollected;
 
     try {
@@ -430,8 +492,8 @@ export default function AdminDashboard() {
       } else {
         alert('Failed to update balance collection status.');
       }
-    } catch (err: any) {
-      alert('Error updating balance collection: ' + err.message);
+    } catch (err: unknown) {
+      alert('Error updating balance collection: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -517,7 +579,10 @@ export default function AdminDashboard() {
   // Print Day-End Financial Settlement Statement
   const handlePrintDayEndSettlement = () => {
     const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    if (!printWindow) {
+      alert('Popup blocked. Please allow popups to print the financial settlement.');
+      return;
+    }
 
     const todayStr = new Date().toISOString().slice(0, 10);
     const todayBookings = bookings.filter(b => b.date === todayStr || b.createdAt.slice(0, 10) === todayStr);
@@ -526,11 +591,12 @@ export default function AdminDashboard() {
     const totalGross = totalAdv + totalBal;
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Bee Vibe - Day-End Financial Settlement (${todayStr})</title>
           <style>
-            body { font-family: 'Outfit', sans-serif; padding: 30px; color: #111; }
+            body { font-family: sans-serif; padding: 30px; color: #111; }
             h1 { margin: 0 0 4px; font-size: 1.6rem; }
             .meta { color: #666; font-size: 0.9rem; margin-bottom: 24px; }
             .kpi-row { display: flex; gap: 20px; margin-bottom: 24px; }
@@ -605,7 +671,7 @@ export default function AdminDashboard() {
     if (!selectedCustomer || !newNoteText.trim()) return;
 
     setNoteSubmitting(true);
-    const activePasscode = sessionStorage.getItem('bee_vibe_admin_passcode') || '';
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
 
     try {
       const res = await fetch('/api/admin/crm', {
@@ -625,13 +691,12 @@ export default function AdminDashboard() {
         const data = await res.json();
         const note = data.note;
         setSelectedCustomer(prev => prev ? { ...prev, notes: [note, ...prev.notes] } : null);
-        setCrmProfiles(prev => prev.map(p => p.phone === selectedCustomer.phone ? { ...p, notes: [note, ...p.notes] } : p));
         setNewNoteText('');
       } else {
         alert('Failed to save customer note.');
       }
-    } catch (err: any) {
-      alert('Error saving note: ' + err.message);
+    } catch (err: unknown) {
+      alert('Error saving note: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setNoteSubmitting(false);
     }
@@ -661,8 +726,135 @@ export default function AdminDashboard() {
     window.open(url, '_blank');
   };
 
+  // Menu Handlers
+  const handleOpenAddMenuModal = () => {
+    setEditingMenuItem(null);
+    setItemName('');
+    setItemPrice('');
+    setItemCategory('snacks');
+    setItemDescription('');
+    setItemIcon('🍿');
+    setIsMenuModalOpen(true);
+  };
+
+  const handleOpenEditMenuModal = (item: MenuItem) => {
+    setEditingMenuItem(item);
+    setItemName(item.name);
+    setItemPrice(String(item.price));
+    setItemCategory(item.category);
+    setItemDescription(item.description);
+    setItemIcon(item.icon);
+    setIsMenuModalOpen(true);
+  };
+
+  const handleToggleStock = async (item: MenuItem) => {
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/menu', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({
+          ...item,
+          inStock: !item.inStock,
+        }),
+      });
+      if (res.ok) {
+        setMenuItems(prev => prev.map(m => m.id === item.id ? { ...m, inStock: !m.inStock } : m));
+      } else {
+        alert('Failed to update stock status.');
+      }
+    } catch (err: unknown) {
+      alert('Error updating stock status: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const handleDeleteMenuItem = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this menu item?')) return;
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch(`/api/menu?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Passcode': activePasscode,
+        },
+      });
+      if (res.ok) {
+        setMenuItems(prev => prev.filter(m => m.id !== id));
+      } else {
+        alert('Failed to delete menu item.');
+      }
+    } catch (err: unknown) {
+      alert('Error deleting menu item: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const handleSubmitMenuItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!itemName.trim() || !itemPrice || isNaN(Number(itemPrice))) {
+      alert('Please enter a valid item name and numeric price.');
+      return;
+    }
+    setMenuSubmitting(true);
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      if (editingMenuItem) {
+        const res = await fetch('/api/menu', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Passcode': activePasscode,
+          },
+          body: JSON.stringify({
+            id: editingMenuItem.id,
+            name: itemName.trim(),
+            price: Number(itemPrice),
+            category: itemCategory,
+            description: itemDescription.trim(),
+            icon: itemIcon.trim() || '🍿',
+            inStock: editingMenuItem.inStock,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMenuItems(prev => prev.map(m => m.id === editingMenuItem.id ? data.menuItem : m));
+          setIsMenuModalOpen(false);
+        } else {
+          alert('Failed to update menu item.');
+        }
+      } else {
+        const res = await fetch('/api/menu', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Passcode': activePasscode,
+          },
+          body: JSON.stringify({
+            name: itemName.trim(),
+            price: Number(itemPrice),
+            category: itemCategory,
+            description: itemDescription.trim(),
+            icon: itemIcon.trim() || '🍿',
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMenuItems(prev => [...prev, data.menuItem]);
+          setIsMenuModalOpen(false);
+        } else {
+          alert('Failed to create menu item.');
+        }
+      }
+    } catch (err: unknown) {
+      alert('Error saving menu item: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setMenuSubmitting(false);
+    }
+  };
+
   // Financial Metric Calculations
-  const totalBookings = bookings.length;
   const activeBookings = bookings.filter(b => b.status !== 'cancelled').length;
 
   const grossProjectedRevenue = bookings
@@ -737,19 +929,31 @@ export default function AdminDashboard() {
     return matchesSearch && matchesStatus && matchesDate;
   });
 
+  // Menu Items Filter
+  const filteredMenuItems = menuItems.filter(item => {
+    const matchesCategory = menuCategoryFilter === 'all' ? true : item.category === menuCategoryFilter;
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || item.description.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
   // Standee Print Helper
   const handlePrintStandee = (themeColor: string) => {
     const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+    if (!printWindow) {
+      alert('Popup blocked. Please allow popups to print the standee.');
+      return;
+    }
     const themeTitle = themeColor === 'pink' ? 'Rose Pink Theme' : themeColor === 'purple' ? 'Neon Purple Theme' : 'Crimson Red Theme';
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(origin + '/menu?theme=' + themeColor)}`;
+    const hostOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(hostOrigin + '/menu?theme=' + themeColor)}`;
     
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Print Standee - ${themeTitle}</title>
           <style>
-            body { background: #ffffff; color: #000; font-family: 'Outfit', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            body { background: #ffffff; color: #000; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
             .standee-card { border: 4px solid ${themeColor === 'pink' ? '#ff2e7e' : themeColor === 'purple' ? '#9333ea' : '#ef4848'}; border-radius: 24px; padding: 40px; width: 380px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
             .logo { font-size: 2.2rem; margin-bottom: 5px; }
             .brand { font-size: 1.8rem; font-weight: 800; margin-bottom: 20px; }
@@ -857,11 +1061,9 @@ export default function AdminDashboard() {
           >
             🔔 Sound Test
           </button>
-          {typeof window !== 'undefined' && !(window as any).isNativeAndroidAdminApp && (
-            <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '8px 14px' }}>
-              View Website
-            </Link>
-          )}
+          <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '8px 14px' }}>
+            View Website
+          </Link>
           <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171', fontSize: '0.85rem', padding: '8px 14px' }}>
             Sign Out
           </button>
@@ -898,7 +1100,7 @@ export default function AdminDashboard() {
         </button>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'menu' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('menu'); setSearchTerm(''); }}
+          onClick={() => { setActiveTab('menu'); setSearchTerm(''); setMenuCategoryFilter('all'); }}
         >
           🍔 Menu ({menuItems.length})
         </button>
@@ -967,7 +1169,7 @@ export default function AdminDashboard() {
               <select
                 className={styles.dateFilter}
                 value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value as any)}
+                onChange={(e) => setPaymentFilter(e.target.value as 'all' | 'verified' | 'pending' | 'balance_due' | 'settled')}
               >
                 <option value="all">📋 All Transactions</option>
                 <option value="verified">✅ SBI Bank Verified</option>
@@ -1102,14 +1304,24 @@ export default function AdminDashboard() {
                           </button>
                         </td>
                         <td>
-                          <button
-                            type="button"
-                            onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
-                            className={styles.actionBtn}
-                            style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                          >
-                            🧾 Receipt
-                          </button>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
+                              className={styles.actionBtn}
+                              style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                            >
+                              🧾 Receipt
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBookingForInvoice(b)}
+                              className={styles.actionBtn}
+                              style={{ borderColor: '#a855f7', color: '#c084fc' }}
+                            >
+                              📄 Bill
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1162,7 +1374,7 @@ export default function AdminDashboard() {
               <select
                 className={styles.dateFilter}
                 value={crmTierFilter}
-                onChange={(e) => setCrmTierFilter(e.target.value as any)}
+                onChange={(e) => setCrmTierFilter(e.target.value as 'all' | 'VIP' | 'REGULAR' | 'GAMER' | 'NEW')}
               >
                 <option value="all">🌟 All Guest Tiers</option>
                 <option value="VIP">👑 VIP Guests (High LTV)</option>
@@ -1315,7 +1527,7 @@ export default function AdminDashboard() {
               <select
                 className={styles.dateFilter}
                 value={bookingCategoryFilter}
-                onChange={(e) => setBookingCategoryFilter(e.target.value as any)}
+                onChange={(e) => setBookingCategoryFilter(e.target.value as 'all' | 'theater' | 'gaming')}
               >
                 <option value="all">📋 All Categories ({activeBookings})</option>
                 <option value="theater">🎬 Celebration Theater</option>
@@ -1364,6 +1576,11 @@ export default function AdminDashboard() {
                           {b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? '🎮 GAMING' : '🎬 THEATER'}
                         </span>
                         <div style={{ fontWeight: 500, marginTop: '4px' }}>{b.packageName}</div>
+                        {b.addOns && b.addOns.length > 0 && (
+                          <div style={{ fontSize: '0.72rem', color: '#a1a1aa', marginTop: '2px' }}>
+                            +{b.addOns.join(', ')}
+                          </div>
+                        )}
                       </td>
                       <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
                         <div>₹{b.totalPrice}</div>
@@ -1375,13 +1592,51 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '6px' }}>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {b.status !== 'confirmed' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateBookingStatus(b.id, 'confirmed')}
+                              className={`${styles.actionBtn} ${styles.btnSuccess}`}
+                              title="Confirm booking"
+                            >
+                              ✓ Confirm
+                            </button>
+                          )}
+                          {b.status !== 'cancelled' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateBookingStatus(b.id, 'cancelled')}
+                              className={`${styles.actionBtn} ${styles.btnWarning}`}
+                              title="Cancel booking"
+                            >
+                              ✕ Cancel
+                            </button>
+                          )}
                           <button
                             type="button"
                             onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
                             className={styles.actionBtn}
+                            title="View online receipt"
                           >
                             🧾 Receipt
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBookingForInvoice(b)}
+                            className={styles.actionBtn}
+                            style={{ borderColor: '#a855f7', color: '#c084fc' }}
+                            title="Generate and print bill"
+                          >
+                            📄 Bill
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBooking(b.id)}
+                            className={`${styles.actionBtn} ${styles.btnDanger}`}
+                            title="Delete booking"
+                          >
+                            🗑️
                           </button>
                         </div>
                       </td>
@@ -1416,6 +1671,38 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          <div className={styles.filterBar}>
+            <input
+              type="text"
+              placeholder="Search by Order ID, Room, Customer..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <select
+                className={styles.dateFilter}
+                value={orderStatusFilter}
+                onChange={(e) => setOrderStatusFilter(e.target.value)}
+              >
+                <option value="all">📋 All Statuses</option>
+                <option value="pending">⏳ Pending ({orders.filter(o => o.status === 'pending').length})</option>
+                <option value="preparing">🍳 Preparing ({orders.filter(o => o.status === 'preparing').length})</option>
+                <option value="served">✅ Served ({orders.filter(o => o.status === 'served').length})</option>
+                <option value="cancelled">❌ Cancelled</option>
+              </select>
+              <input
+                type="date"
+                className={styles.dateFilter}
+                value={orderDateFilter}
+                onChange={(e) => setOrderDateFilter(e.target.value)}
+              />
+            </div>
+            {(searchTerm || orderDateFilter || orderStatusFilter !== 'all') && (
+              <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setOrderDateFilter(''); setOrderStatusFilter('all'); }}>Clear</button>
+            )}
+          </div>
+
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
@@ -1425,6 +1712,7 @@ export default function AdminDashboard() {
                   <th>Items Ordered</th>
                   <th>Total</th>
                   <th>Status</th>
+                  <th>Order Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1432,14 +1720,62 @@ export default function AdminDashboard() {
                   filteredOrders.map(o => (
                     <tr key={o.id}>
                       <td style={{ fontFamily: 'monospace' }}>{o.id}</td>
-                      <td><strong>{o.themeLabel || o.theme}</strong></td>
+                      <td>
+                        <span className={`${styles.roomThemeBadge} ${o.theme === 'pink' ? styles.roomThemePink : o.theme === 'purple' ? styles.roomThemePurple : styles.roomThemeRed}`}>
+                          {o.themeLabel || o.theme}
+                        </span>
+                        {o.customerName && <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Guest: {o.customerName}</div>}
+                      </td>
                       <td>{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
                       <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{o.totalPrice}</td>
-                      <td><span className={styles.badge}>{o.status}</span></td>
+                      <td>
+                        <span className={`${styles.badge} ${o.status === 'served' ? styles.badgeConfirmed : o.status === 'preparing' ? styles.badgePreparing : o.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
+                          {o.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          {o.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(o.id, 'preparing')}
+                              className={`${styles.actionBtn} ${styles.btnWarning}`}
+                              title="Mark order as preparing in kitchen"
+                            >
+                              🍳 Start Prep
+                            </button>
+                          )}
+                          {o.status === 'preparing' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(o.id, 'served')}
+                              className={`${styles.actionBtn} ${styles.btnSuccess}`}
+                              title="Mark order as served to room"
+                            >
+                              ✅ Mark Served
+                            </button>
+                          )}
+                          {o.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrderStatus(o.id, 'cancelled')}
+                              className={`${styles.actionBtn} ${styles.btnDanger}`}
+                              title="Cancel order"
+                            >
+                              ✕ Cancel
+                            </button>
+                          )}
+                          {o.status === 'served' && (
+                            <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600 }}>
+                              ✓ Delivered
+                            </span>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={5} className={styles.noBookings}>No food orders found.</td></tr>
+                  <tr><td colSpan={6} className={styles.noBookings}>No food orders found.</td></tr>
                 )}
               </tbody>
             </table>
@@ -1447,25 +1783,387 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {/* TAB 5: QR STANDEES */}
+      {/* TAB 5: MENU MANAGER */}
+      {activeTab === 'menu' && (
+        <>
+          <div className={styles.metricsGrid}>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Total Menu Items</div>
+              <div className={styles.metricValue}>{menuItems.length}</div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>In Stock</div>
+              <div className={styles.metricValue} style={{ color: '#10b981' }}>
+                {menuItems.filter(m => m.inStock).length}
+              </div>
+            </div>
+            <div className={styles.metricCard}>
+              <div className={styles.metricTitle}>Out of Stock</div>
+              <div className={styles.metricValue} style={{ color: '#f87171' }}>
+                {menuItems.filter(m => !m.inStock).length}
+              </div>
+            </div>
+          </div>
+
+          {/* Menu Action & Filter Bar */}
+          <div className={styles.filterBar} style={{ justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search dish or beverage..."
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className={styles.dateFilter}
+                value={menuCategoryFilter}
+                onChange={(e) => setMenuCategoryFilter(e.target.value as 'all' | 'snacks' | 'beverages' | 'desserts')}
+              >
+                <option value="all">🌟 All Categories</option>
+                <option value="snacks">🍿 Snacks</option>
+                <option value="beverages">🥤 Beverages</option>
+                <option value="desserts">🍨 Desserts</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleOpenAddMenuModal}
+              className="btn btn-primary"
+              style={{ fontSize: '0.85rem', padding: '8px 18px' }}
+            >
+              ➕ Add New Menu Item
+            </button>
+          </div>
+
+          {/* Menu Items Grid */}
+          <div className={styles.menuItemsGrid}>
+            {filteredMenuItems.length > 0 ? (
+              filteredMenuItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`${styles.menuCard} ${!item.inStock ? styles.menuCardOutStock : ''}`}
+                  onClick={() => handleOpenEditMenuModal(item)}
+                >
+                  <div className={styles.menuCardHeader}>
+                    <span className={styles.menuCardIcon}>{item.icon || '🍿'}</span>
+                    <div className={styles.menuCardInfo}>
+                      <div className={styles.menuCardName}>{item.name}</div>
+                      <div className={styles.menuCardPrice}>₹{item.price}</div>
+                    </div>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      textTransform: 'uppercase',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      background: 'rgba(255,255,255,0.06)',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      {item.category}
+                    </span>
+                  </div>
+
+                  <div className={styles.menuCardDesc}>
+                    {item.description || 'No description provided.'}
+                  </div>
+
+                  <div className={styles.menuCardFooter}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStock(item);
+                      }}
+                      className={`${styles.stockToggleBtn} ${item.inStock ? styles.stockIn : styles.stockOut}`}
+                    >
+                      {item.inStock ? '● In Stock' : '○ Out of Stock'}
+                    </button>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditMenuModal(item);
+                        }}
+                        className={styles.actionBtn}
+                        style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMenuItem(item.id);
+                        }}
+                        className={`${styles.actionBtn} ${styles.btnDanger}`}
+                        style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                No menu items found. Click &quot;Add New Menu Item&quot; to create one!
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* TAB 6: QR STANDEES */}
       {activeTab === 'qrs' && (
         <div className={styles.qrGridContainer}>
           <div className={styles.qrStandeesList}>
             {(['pink', 'purple', 'red'] as const).map((color) => {
               const themeName = color === 'pink' ? 'Rose Pink Theme' : color === 'purple' ? 'Neon Purple Theme' : 'Crimson Red Theme';
-              const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(origin + '/menu?theme=' + color)}`;
+              const hostOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+              const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(hostOrigin + '/menu?theme=' + color)}`;
               return (
-                <div key={color} className={styles.qrCard}>
-                  <div className={styles.qrCardHeader}><h3>${themeName} Room</h3></div>
+                <div key={color} className={`${styles.qrCard} ${color === 'pink' ? styles.qrCardPink : color === 'purple' ? styles.qrCardPurple : styles.qrCardRed}`}>
+                  <div className={styles.qrCardHeader}>
+                    <h3>{themeName} Room</h3>
+                  </div>
                   <div className={styles.qrCardBody}>
-                    <img src={qrCodeUrl} alt={themeName} style={{ width: '140px', height: '140px', margin: '0 auto', display: 'block' }} />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={qrCodeUrl} alt={themeName} width={140} height={140} style={{ margin: '0 auto', display: 'block', borderRadius: '8px' }} />
                   </div>
                   <div className={styles.qrCardFooter}>
-                    <button onClick={() => handlePrintStandee(color)} className="btn btn-primary" style={{ width: '100%' }}>🖨️ Print Standee</button>
+                    <button onClick={() => handlePrintStandee(color)} className="btn btn-primary" style={{ width: '100%' }}>
+                      🖨️ Print Standee
+                    </button>
                   </div>
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT MENU ITEM MODAL */}
+      {isMenuModalOpen && (
+        <div className={styles.modalOverlayCustom} onClick={() => setIsMenuModalOpen(false)}>
+          <div className={styles.modalContentCustom} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeaderCustom}>
+              <h3>{editingMenuItem ? 'Edit Menu Item' : 'Add New Menu Item'}</h3>
+              <button className={styles.closeBtnCustom} onClick={() => setIsMenuModalOpen(false)}>✕</button>
+            </div>
+            <form onSubmit={handleSubmitMenuItem}>
+              <div className={styles.modalBodyCustom}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Item Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Cheese Popcorn"
+                    className={styles.formInputCustom}
+                    value={itemName}
+                    onChange={(e) => setItemName(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      placeholder="e.g. 100"
+                      className={styles.formInputCustom}
+                      value={itemPrice}
+                      onChange={(e) => setItemPrice(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Category</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={itemCategory}
+                      onChange={(e) => setItemCategory(e.target.value as 'snacks' | 'beverages' | 'desserts')}
+                    >
+                      <option value="snacks">🍿 Snacks</option>
+                      <option value="beverages">🥤 Beverages</option>
+                      <option value="desserts">🍨 Desserts</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Emoji Icon</label>
+                  <input
+                    type="text"
+                    placeholder="🍿, 🥤, 🍟, 🍔, ☕"
+                    className={styles.formInputCustom}
+                    value={itemIcon}
+                    onChange={(e) => setItemIcon(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Description</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Delicious snacks served warm..."
+                    className={styles.formTextareaCustom}
+                    value={itemDescription}
+                    onChange={(e) => setItemDescription(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.modalFooterCustom}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsMenuModalOpen(false)} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={menuSubmitting} style={{ flex: 1 }}>
+                  {menuSubmitting ? 'Saving...' : editingMenuItem ? 'Update Item' : 'Add Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* BILL / INVOICE GENERATOR MODAL */}
+      {selectedBookingForInvoice && (
+        <div className={styles.modalOverlayCustom} onClick={() => setSelectedBookingForInvoice(null)}>
+          <div className={styles.invoiceModalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeaderCustom}>
+              <h3>Tax Invoice & Receipt · #{selectedBookingForInvoice.id}</h3>
+              <button className={styles.closeBtnCustom} onClick={() => setSelectedBookingForInvoice(null)}>✕</button>
+            </div>
+
+            <div className={styles.invoicePaper} id="printable-bill-area">
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #e2e8f0', paddingBottom: '20px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>🐝 Bee Vibe Cinema</div>
+                  <div style={{ fontSize: '0.85rem', color: '#64748b' }}>Private Celebration Theater & PS5 Gaming Lounge</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>Bangalore, Karnataka · support@beevibe.org</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0284c7' }}>TAX INVOICE</div>
+                  <div style={{ fontFamily: 'monospace', fontWeight: 700, color: '#334155' }}>#{selectedBookingForInvoice.id}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '4px' }}>Date: {selectedBookingForInvoice.date}</div>
+                </div>
+              </div>
+
+              {/* Customer & Slot Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: '#f8fafc', padding: '16px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>Billed To</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>{selectedBookingForInvoice.customerName}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>📱 {selectedBookingForInvoice.phone}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>📧 {selectedBookingForInvoice.email}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>Show Schedule</div>
+                  <div style={{ fontWeight: 700, color: '#0f172a' }}>📅 {selectedBookingForInvoice.date}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>⏰ {selectedBookingForInvoice.timeSlot}</div>
+                  <div style={{ fontSize: '0.85rem', color: '#475569' }}>👥 {selectedBookingForInvoice.guestCount} Guests</div>
+                </div>
+              </div>
+
+              {/* Itemized Table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1', textAlign: 'left' }}>
+                    <th style={{ padding: '10px 12px', color: '#334155' }}>Description</th>
+                    <th style={{ padding: '10px 12px', color: '#334155', textAlign: 'right' }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '10px 12px' }}>
+                      <strong>{selectedBookingForInvoice.packageName}</strong>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Standard 2-Hour Private Theater Screening</div>
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>
+                      ₹{selectedBookingForInvoice.totalPrice - (selectedBookingForInvoice.addOns?.length ? selectedBookingForInvoice.addOns.length * 200 : 0)}
+                    </td>
+                  </tr>
+                  {selectedBookingForInvoice.addOns && selectedBookingForInvoice.addOns.map((add, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                      <td style={{ padding: '10px 12px', color: '#475569' }}>
+                        + Add-on: {add}
+                      </td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', color: '#475569' }}>
+                        Included
+                      </td>
+                    </tr>
+                  ))}
+                  <tr style={{ borderTop: '2px solid #0f172a', fontWeight: 800 }}>
+                    <td style={{ padding: '12px' }}>Total Amount</td>
+                    <td style={{ padding: '12px', textAlign: 'right', color: '#0f172a', fontSize: '1.1rem' }}>₹{selectedBookingForInvoice.totalPrice}</td>
+                  </tr>
+                  <tr style={{ color: '#059669', fontWeight: 600 }}>
+                    <td style={{ padding: '6px 12px' }}>Advance Paid (UPI)</td>
+                    <td style={{ padding: '6px 12px', textAlign: 'right' }}>- ₹{selectedBookingForInvoice.advancePaid ?? 500}</td>
+                  </tr>
+                  <tr style={{ color: selectedBookingForInvoice.balanceCollected ? '#059669' : '#d97706', fontWeight: 800, fontSize: '1.05rem', borderTop: '1px dashed #cbd5e1' }}>
+                    <td style={{ padding: '12px' }}>Balance Due at Desk</td>
+                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                      {selectedBookingForInvoice.balanceCollected
+                        ? '₹0 (Settled ✅)'
+                        : `₹${selectedBookingForInvoice.balanceDue ?? Math.max(0, selectedBookingForInvoice.totalPrice - (selectedBookingForInvoice.advancePaid ?? 500))}`}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div style={{ textAlign: 'center', fontSize: '0.78rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+                Thank you for celebrating with Bee Vibe Cinema! For inquiries call +91 81236 35342.
+              </div>
+            </div>
+
+            <div className={styles.modalFooterCustom}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setSelectedBookingForInvoice(null)}
+                style={{ flex: 1 }}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  const printContents = document.getElementById('printable-bill-area')?.innerHTML;
+                  if (!printContents) return;
+                  const win = window.open('', '_blank');
+                  if (!win) {
+                    alert('Popup blocked.');
+                    return;
+                  }
+                  win.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                      <head>
+                        <title>Invoice - ${selectedBookingForInvoice.id}</title>
+                        <style>
+                          body { font-family: sans-serif; padding: 20px; color: #1e293b; }
+                        </style>
+                      </head>
+                      <body>
+                        ${printContents}
+                        <script>
+                          window.onload = function() { window.print(); setTimeout(() => window.close(), 500); };
+                        </script>
+                      </body>
+                    </html>
+                  `);
+                  win.document.close();
+                }}
+                style={{ flex: 1 }}
+              >
+                🖨️ Print Invoice
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1599,6 +2297,14 @@ export default function AdminDashboard() {
         >
           <span className={styles.mobileNavIcon}>🍿</span>
           <span>Orders</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'menu' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('menu')}
+        >
+          <span className={styles.mobileNavIcon}>🍔</span>
+          <span>Menu</span>
         </button>
       </div>
     </div>

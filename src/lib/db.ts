@@ -582,3 +582,10 @@ export function updateBookingPaymentVerification(id: string, updates: { sbiVerif
   writeDb(db);
   return db.bookings[index];
 }
+
+export function deleteBooking(id: string): void {
+  const db = readDb();
+  db.bookings = db.bookings.filter(b => b.id.toLowerCase() !== id.toLowerCase());
+  writeDb(db);
+}
+

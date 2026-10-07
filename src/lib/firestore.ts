@@ -437,3 +437,17 @@ export async function updateBookingPaymentVerificationInFirestore(
   const { updateBookingPaymentVerification } = await import('./db');
   return updateBookingPaymentVerification(cleanId, updates);
 }
+
+export async function deleteBookingFromFirestore(id: string): Promise<void> {
+  const cleanId = id.trim();
+  try {
+    const firestore = getDb();
+    await firestore.collection('bookings').doc(cleanId).delete();
+  } catch (err) {
+    console.warn('Firestore delete failed, falling back to local DB:', err);
+  }
+
+  const { deleteBooking } = await import('./db');
+  deleteBooking(cleanId);
+}
+

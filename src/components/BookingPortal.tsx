@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import styles from './BookingPortal.module.css';
 
-import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_OPEN_MINUTES, VENUE_CLOSE_MINUTES } from '@/lib/time';
-import { Copy, Check } from 'lucide-react';
+import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_CLOSE_MINUTES } from '@/lib/time';
 import { Download, Printer, FileText } from 'lucide-react';
+import type { ConfirmationResult } from 'firebase/auth';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
@@ -59,11 +59,6 @@ const PACKAGES = [
   }
 ];
 
-const ADDONS = [
-  { id: 'add-dslr', name: 'DSLR Camera Coverage (₹500/hour)', price: 500 },
-  { id: 'add-fog', name: 'Special Fog Entry Effect (Flat ₹500)', price: 500 },
-];
-
 interface Slot {
   id: string;
   time: string;
@@ -88,6 +83,7 @@ interface ConfirmedBooking {
   paymentStatus?: string;
   paymentMode?: string;
   status: string;
+  utrNumber?: string;
 }
 
 interface ActiveBooking {
@@ -126,7 +122,6 @@ export default function BookingPortal() {
   const [upiCopied, setUpiCopied] = useState(false);
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr' | '2hr'>('none');
   const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
   const [customerDetails, setCustomerDetails] = useState({
@@ -155,7 +150,7 @@ export default function BookingPortal() {
   const [otpSent, setOtpSent] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
-  const [firebaseConfirmation, setFirebaseConfirmation] = useState<any>(null);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
   const [customerBookings, setCustomerBookings] = useState<ConfirmedBooking[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
@@ -203,7 +198,7 @@ export default function BookingPortal() {
         const dd = String(today.getDate()).padStart(2, '0');
         const todayStr = `${yyyy}-${mm}-${dd}`;
 
-        const parsedSlots = (data.slots || []).map((slot: any) => {
+        const parsedSlots = (data.slots || []).map((slot: Slot) => {
           if (selectedDate === todayStr) {
             try {
               const { startMinutes } = parseTimeRange(slot.time);
@@ -221,31 +216,42 @@ export default function BookingPortal() {
         setSlots(parsedSlots);
         setActiveBookings(data.activeBookings || []);
 
-        if (selectedSlot && bookingMode === 'predefined') {
-          const stillAvailable = parsedSlots.find(
-            (s: any) => s.time === selectedSlot.time && !s.isBooked
-          );
-          if (!stillAvailable) setSelectedSlot(null);
+        if (bookingMode === 'predefined') {
+          setSelectedSlot((prev) => {
+            if (!prev) return null;
+            const stillAvailable = parsedSlots.find(
+              (s: Slot) => s.time === prev.time && !s.isBooked
+            );
+            return stillAvailable ? prev : null;
+          });
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!active) return;
-        setError(err.message || 'Error fetching available slots.');
+        const msg = err instanceof Error ? err.message : 'Error fetching available slots.';
+        setError(msg);
       } finally {
         if (active) setLoading(false);
       }
     }
 
     fetchSlots();
+
+    return () => {
+      active = false;
+    };
   }, [selectedDate, bookingMode]);
 
   // Load customer session on mount
   useEffect(() => {
-    const savedPhone = sessionStorage.getItem('bee_vibe_customer_phone');
-    if (savedPhone) {
-      setCustomerPhone(savedPhone);
-      setIsCustomerLoggedIn(true);
-      setCustomerDetails((prev) => ({ ...prev, phone: savedPhone }));
-    }
+    const timer = setTimeout(() => {
+      const savedPhone = sessionStorage.getItem('bee_vibe_customer_phone');
+      if (savedPhone) {
+        setCustomerPhone(savedPhone);
+        setIsCustomerLoggedIn(true);
+        setCustomerDetails((prev) => ({ ...prev, phone: savedPhone }));
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Fetch bookings for the logged-in customer
@@ -257,17 +263,20 @@ export default function BookingPortal() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load bookings.');
       setCustomerBookings(data.bookings || []);
-    } catch (err: any) {
-      setOrdersError(err.message || 'Error loading bookings list.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error loading bookings list.';
+      setOrdersError(msg);
     } finally {
       setLoadingOrders(false);
     }
   };
 
   useEffect(() => {
-    if (isCustomerLoggedIn && customerPhone) {
+    if (!isCustomerLoggedIn || !customerPhone) return;
+    const timer = setTimeout(() => {
       fetchCustomerBookings(customerPhone);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [isCustomerLoggedIn, customerPhone]);
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -311,8 +320,9 @@ export default function BookingPortal() {
 
         setOtpSent(true);
       }
-    } catch (err: any) {
-      setLoginError(err.message || 'Failed to send OTP. Please check the number.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send OTP. Please check the number.';
+      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -365,8 +375,9 @@ export default function BookingPortal() {
       setLoginPhone('');
       setLoginError('');
       setFirebaseConfirmation(null);
-    } catch (err: any) {
-      setLoginError(err.message || 'OTP verification failed. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'OTP verification failed. Please try again.';
+      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -483,79 +494,83 @@ export default function BookingPortal() {
   useEffect(() => {
     if (bookingMode !== 'custom') return;
 
-    setCustomSlotError('');
-    setSelectedSlot(null);
+    const timer = setTimeout(() => {
+      setCustomSlotError('');
+      setSelectedSlot(null);
 
-    try {
-      const startH = parseInt(customStartHour, 10);
-      const startM = parseInt(customStartMin, 10);
-      const endH = parseInt(customEndHour, 10);
-      const endM = parseInt(customEndMin, 10);
+      try {
+        const startH = parseInt(customStartHour, 10);
+        const startM = parseInt(customStartMin, 10);
+        const endH = parseInt(customEndHour, 10);
+        const endM = parseInt(customEndMin, 10);
 
-      if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
-        setCustomSlotError('Invalid time selection.');
-        return;
-      }
-
-      const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
-      let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
-
-      // 12:00 AM at end of night represents closing midnight (1440 mins)
-      if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
-        endMinutes = 1440;
-      }
-
-      // Enforce 10:00 AM to 12:00 AM Midnight operating limit
-      const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
-      if (!hoursValidation.valid) {
-        setCustomSlotError(hoursValidation.error || 'Invalid operating time.');
-        return;
-      }
-
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = yyyy + '-' + mm + '-' + dd;
-
-      if (selectedDate === todayStr) {
-        const currentMinutes = today.getHours() * 60 + today.getMinutes();
-        if (startMinutes <= currentMinutes) {
-          setCustomSlotError('Cannot select a time slot that has already passed.');
+        if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
+          setCustomSlotError('Invalid time selection.');
           return;
         }
-      }
 
-      const durationMinutes = endMinutes - startMinutes;
-      if (durationMinutes < 30) {
-        setCustomSlotError('Custom slot must be at least 30 minutes.');
-        return;
+        const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
+        let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
+
+        // 12:00 AM at end of night represents closing midnight (1440 mins)
+        if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
+          endMinutes = 1440;
         }
 
-      // Format custom slot time string, e.g. "10:00 AM - 12:00 PM"
-      const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
+        // Enforce 10:00 AM to 12:00 AM Midnight operating limit
+        const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
+        if (!hoursValidation.valid) {
+          setCustomSlotError(hoursValidation.error || 'Invalid operating time.');
+          return;
+        }
 
-      // Perform client-side overlap check against active bookings
-      const overlaps = checkBookingOverlap(selectedDate, timeStr, activeBookings);
-      if (overlaps) {
-        setCustomSlotError('This custom time range overlaps with an existing booking.');
-        return;
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = yyyy + '-' + mm + '-' + dd;
+
+        if (selectedDate === todayStr) {
+          const currentMinutes = today.getHours() * 60 + today.getMinutes();
+          if (startMinutes <= currentMinutes) {
+            setCustomSlotError('Cannot select a time slot that has already passed.');
+            return;
+          }
+        }
+
+        const durationMinutes = endMinutes - startMinutes;
+        if (durationMinutes < 30) {
+          setCustomSlotError('Custom slot must be at least 30 minutes.');
+          return;
+        }
+
+        // Format custom slot time string, e.g. "10:00 AM - 12:00 PM"
+        const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
+
+        // Perform client-side overlap check against active bookings
+        const overlaps = checkBookingOverlap(selectedDate, timeStr, activeBookings);
+        if (overlaps) {
+          setCustomSlotError('This custom time range overlaps with an existing booking.');
+          return;
+        }
+
+        // Base price is driven entirely by the selected package
+        const durationHours = durationMinutes / 60;
+        const basePrice = Math.round((selectedPackage.price / 2) * durationHours);
+
+        setSelectedSlot({
+          id: 'slot-custom',
+          time: timeStr,
+          label: 'Custom Slot (' + durationHours + ' Hr' + (durationHours > 1 ? 's' : '') + ')',
+          basePrice,
+          isBooked: false,
+        });
+      } catch {
+        setCustomSlotError('Error calculating custom time range.');
       }
+    }, 0);
 
-      // Base price is driven entirely by the selected package
-      const durationHours = durationMinutes / 60;
-      const basePrice = Math.round((selectedPackage.price / 2) * durationHours);
-
-      setSelectedSlot({
-        id: 'slot-custom',
-        time: timeStr,
-        label: 'Custom Slot (' + durationHours + ' Hr' + (durationHours > 1 ? 's' : '') + ')',
-        basePrice,
-        isBooked: false,
-      });
-    } catch (e) {
-      setCustomSlotError('Error calculating custom time range.');
-    }
+    return () => clearTimeout(timer);
   }, [
     bookingMode,
     customStartHour,
@@ -574,7 +589,7 @@ export default function BookingPortal() {
     try {
       const { startMinutes, endMinutes } = parseTimeRange(selectedSlot.time);
       return (endMinutes - startMinutes) / 60;
-    } catch (e) {
+    } catch {
       return 2;
     }
   };
@@ -598,12 +613,6 @@ export default function BookingPortal() {
     else if (fogOption === '2pots') fogPrice = 500;
 
     return pkgBase + extraGuests + dslrPrice + fogPrice;
-  };
-
-  const handleAddonToggle = (addonId: string) => {
-    setSelectedAddons((prev) =>
-      prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
-    );
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -737,9 +746,10 @@ export default function BookingPortal() {
       await sleep(1500);
       setIsPaying(false);
       setStep(5);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsPaying(false);
-      setErrorAndScroll(err.message || 'Payment transaction failed. Please try again.');
+      const msg = err instanceof Error ? err.message : 'Payment transaction failed. Please try again.';
+      setErrorAndScroll(msg);
     }
   };
 
@@ -1462,6 +1472,7 @@ export default function BookingPortal() {
 
                 <div className={styles.ticketQrCode}>
                   <div className={styles.qrCodeWrapper}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${selectedTicketToView.id}`}
                       alt="Booking QR Code"
@@ -1705,6 +1716,14 @@ export default function BookingPortal() {
                               <span class="val val-accent">₹${price}</span>
                             </div>
                           </div>
+                          ${addons ? `
+                          <div class="row">
+                            <div class="col">
+                              <span class="label">Add-ons</span>
+                              <span class="val">${addons}</span>
+                            </div>
+                          </div>
+                          ` : ''}
                           <div class="divider"></div>
                           <div class="qr-box">
                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${id}" alt="QR Code" width="130" height="130" />
@@ -1967,7 +1986,7 @@ export default function BookingPortal() {
             <div className={styles.stepContainer}>
               <h3 style={{ marginBottom: '8px', fontFamily: 'var(--font-title)' }}>Select Your Celebration Theme</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-                All themes include 180" 4K screen, 7.1 Dolby surround sound, AC, and complete room privacy.
+                All themes include 180&quot; 4K screen, 7.1 Dolby surround sound, AC, and complete room privacy.
               </p>
 
               <div className={styles.packagesGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
@@ -1991,6 +2010,7 @@ export default function BookingPortal() {
                   >
                     {/* Real Venue Photo Header */}
                     <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={pkg.image}
                         alt={pkg.name}
@@ -2089,7 +2109,7 @@ export default function BookingPortal() {
                   <select
                     className={`${styles.addonSelectDropdown} ${dslrOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
                     value={dslrOption}
-                    onChange={(e) => setDslrOption(e.target.value as any)}
+                    onChange={(e) => setDslrOption(e.target.value as 'none' | '30min' | '1hr' | '2hr')}
                   >
                     <option value="none">No DSLR Camera (₹0)</option>
                     <option value="30min">30 Mins DSLR Photography (+₹300)</option>
@@ -2109,7 +2129,7 @@ export default function BookingPortal() {
                   <select
                     className={`${styles.addonSelectDropdown} ${fogOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
                     value={fogOption}
-                    onChange={(e) => setFogOption(e.target.value as any)}
+                    onChange={(e) => setFogOption(e.target.value as 'none' | '1pot' | '2pots')}
                   >
                     <option value="none">No Fog Entry Effect (₹0)</option>
                     <option value="1pot">1 Pot Special Fog Entry (+₹300)</option>
@@ -2266,6 +2286,7 @@ export default function BookingPortal() {
                     {/* QR Code and Official UPI Details */}
                     <div className={styles.advanceQrSection}>
                       <div className={styles.advanceQrImgWrapper} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src="/beevibe-payment-qr.jpg"
                           alt="Bee Vibe UPI Advance QR Code - NALINAKSHI C"
@@ -2462,11 +2483,11 @@ export default function BookingPortal() {
                       </div>
                     </div>
 
-                    {(confirmedBooking as any).utrNumber && (
+                    {confirmedBooking.utrNumber && (
                       <div style={{ background: 'rgba(242, 169, 0, 0.08)', border: '1px solid rgba(242, 169, 0, 0.25)', borderRadius: '6px', padding: '8px 12px', margin: '6px 0', textAlign: 'left' }}>
                         <span className={styles.ticketLabel} style={{ color: '#f2a900' }}>🧾 UPI TRANSACTION UTR</span>
                         <div className={styles.ticketVal} style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.9rem' }}>
-                          {(confirmedBooking as any).utrNumber}
+                          {confirmedBooking.utrNumber}
                         </div>
                       </div>
                     )}
@@ -2482,6 +2503,7 @@ export default function BookingPortal() {
 
                     <div className={styles.ticketQrCode}>
                       <div className={styles.qrCodeWrapper}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${confirmedBooking.id}`}
                           alt="Booking QR Code"
@@ -2563,7 +2585,8 @@ export default function BookingPortal() {
                 onClick={() => {
                   setStep(1);
                   setSelectedSlot(null);
-                  setSelectedAddons([]);
+                  setDslrOption('none');
+                  setFogOption('none');
                   setCustomerDetails({ name: '', email: '', phone: '', guestCount: 2, specialRequests: '' });
                   setConfirmedBooking(null);
                 }}
@@ -2636,7 +2659,7 @@ export default function BookingPortal() {
           ) : customerBookings.length === 0 ? (
             <div className={styles.noOrdersCard}>
               <h3>No bookings found</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>You haven't made any theater room bookings with this verified phone number yet.</p>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>You haven&apos;t made any theater room bookings with this verified phone number yet.</p>
               <button
                 className="btn btn-primary"
                 style={{ marginTop: '20px' }}

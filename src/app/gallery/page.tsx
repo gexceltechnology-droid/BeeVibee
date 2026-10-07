@@ -12,11 +12,7 @@ import {
   Phone,
   MapPin,
   Clock,
-  Home as HomeIcon,
-  Tv,
-  Gamepad2,
-  Volume2,
-  ShieldCheck
+  Home as HomeIcon
 } from 'lucide-react';
 
 const Instagram = ({ size = 20, color = "currentColor", ...props }: React.SVGProps<SVGSVGElement> & { size?: number | string }) => (
@@ -52,6 +48,7 @@ export default function GalleryPage() {
         <div className="container">
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/bee-vibe-logo.png?v=4"
                 alt="BeeVibe Mini Private Theater"
@@ -113,21 +110,21 @@ export default function GalleryPage() {
           </div>
 
           <div className={styles.heroTag}>
-            <Sparkles size={14} /> REAL CELEBRATIONS & THEATER AMBIANCE
+            <Sparkles size={14} /> REAL CELEBRATIONS &amp; THEATER AMBIANCE
           </div>
 
           <h1 className={styles.heroTitle}>
-            Bee Vibe Photo & Experience Gallery
+            Bee Vibe Photo &amp; Experience Gallery
           </h1>
 
           <p className={styles.heroSubtitle}>
-            Take a look inside Bangalore’s top private celebration theater and mini party hall in Jayanagar 9th Block. See our custom lighting vibes, 180" 4K screens, fog entry, PS5 multiplayer gaming lounge, and romantic couple decors.
+            Take a look inside Bangalore’s top private celebration theater and mini party hall in Jayanagar 9th Block. See our custom lighting vibes, 180&quot; 4K screens, fog entry, PS5 multiplayer gaming lounge, and romantic couple decors.
           </p>
 
           {/* Quick Highlight Stats */}
           <div className={styles.heroStats}>
             <div className={styles.statItem}>
-              <div className={styles.statValue}>180" 4K</div>
+              <div className={styles.statValue}>180&quot; 4K</div>
               <div className={styles.statLabel}>Projection Screen</div>
             </div>
             <div className={styles.statItem}>
@@ -155,6 +152,7 @@ export default function GalleryPage() {
           <div className={pageStyles.footerGrid}>
             <div className={pageStyles.footerCol}>
               <Link href="/" className={pageStyles.logoWrapper}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/bee-vibe-logo.png?v=4"
                   alt="BeeVibe Mini Private Theater"

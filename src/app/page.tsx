@@ -5,22 +5,13 @@ import Link from 'next/link';
 import {
   Sparkles,
   ChevronDown,
-  Phone,
-  Clock,
-  Film,
-  Music,
   Tv,
   Gamepad2,
   Volume2,
   Coffee,
   ShieldCheck,
-  CheckCircle2,
   MapPin,
-  Heart,
-  Cake,
-  Star,
-  Zap,
-  ArrowRight
+  Heart
 } from 'lucide-react';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import GallerySection from '@/components/GallerySection';
@@ -74,12 +65,6 @@ export default function Home() {
     };
   }, []);
 
-  const vibeLabels = {
-    red: 'Red Velvet Romance Theme (₹799/2hrs)',
-    pink: 'Pink Angel Wings Theme (₹899/2hrs)',
-    purple: 'Royal Purple Butterfly Theme (₹999/2hrs)',
-  };
-
   const THEMES_PREVIEWS = [
     {
       id: 'red',
@@ -130,6 +115,7 @@ export default function Home() {
         <div className="container" style={{ position: 'relative' }}>
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/bee-vibe-logo.png?v=4"
                 alt="BeeVibe Mini Private Theater"
@@ -218,7 +204,7 @@ export default function Home() {
           <div className={styles.heroWrapper}>
             <div className={styles.heroBadge}>
               <Sparkles size={16} color="var(--accent)" />
-              <span>BANGALORE'S PREMIER PRIVATE CELEBRATION THEATER & LOUNGE</span>
+              <span>BANGALORE&apos;S PREMIER PRIVATE CELEBRATION THEATER &amp; LOUNGE</span>
             </div>
 
             <h1 className={styles.heroTitle}>
@@ -229,7 +215,7 @@ export default function Home() {
             </h1>
 
             <p className={styles.heroSubtitle}>
-              Experience Bangalore's most luxurious private party hall and celebration theater in Jayanagar 9th Block. Book our 100% private suites with <strong>180-inch 4K screen</strong>, <strong>7.1 Dolby Atmos sound</strong>, custom lighting, and dedicated <strong>PS5 Gaming</strong> for birthdays, anniversaries, and date nights.
+              Experience Bangalore&apos;s most luxurious private party hall and celebration theater in Jayanagar 9th Block. Book our 100% private suites with <strong>180-inch 4K screen</strong>, <strong>7.1 Dolby Atmos sound</strong>, custom lighting, and dedicated <strong>PS5 Gaming</strong> for birthdays, anniversaries, and date nights.
             </p>
 
             {/* Room Mood Lighting Buttons */}
@@ -278,9 +264,10 @@ export default function Home() {
                 <div
                   key={item.id}
                   className={styles.heroThemeCard + (vibe === item.id ? ' ' + styles.heroThemeCardActive : '')}
-                  onClick={() => setVibe(item.id as any)}
+                  onClick={() => setVibe(item.id as 'pink' | 'purple' | 'red')}
                 >
                   <div className={styles.heroThemeImgWrapper}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.image} alt={item.name} className={styles.heroThemeImg} />
                     <span className={styles.heroThemeBadge} style={{ background: item.color }}>
                       {item.price} / 2 Hrs
@@ -299,7 +286,7 @@ export default function Home() {
               <div className={styles.trustItem}>
                 <span className={styles.trustIcon}>🎬</span>
                 <div>
-                  <strong>180" 4K Laser Screen</strong>
+                  <strong>180&quot; 4K Laser Screen</strong>
                   <span>Cinematic Visuals</span>
                 </div>
               </div>
@@ -347,7 +334,7 @@ export default function Home() {
               Signature Celebration Setups
             </h2>
             <p className={styles.sectionSub} style={{ maxWidth: '680px', margin: '0 auto' }}>
-              Choose from our 3 authentic handcrafted celebration themes. Every booking gets 100% private access to the entire air-conditioned theater suite with 180" 4K screen and Dolby sound.
+              Choose from our 3 authentic handcrafted celebration themes. Every booking gets 100% private access to the entire air-conditioned theater suite with 180&quot; 4K screen and Dolby sound.
             </p>
           </div>
 
@@ -362,6 +349,7 @@ export default function Home() {
                 }}
               >
                 <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={pkg.image} alt={pkg.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   <div style={{
                     position: 'absolute',
@@ -445,7 +433,7 @@ export default function Home() {
                 Sony PlayStation 5 Console + 2 Wireless Controllers
               </h2>
               <p style={{ color: '#c0c0e0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '24px' }}>
-                Step into Bangalore's premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) on our 180" 4K Screen with 7.1 Dolby surround sound!
+                Step into Bangalore&apos;s premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) on our 180&quot; 4K Screen with 7.1 Dolby surround sound!
               </p>
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
                 <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff', fontWeight: 700 }}>
@@ -458,6 +446,7 @@ export default function Home() {
             </div>
 
             <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0, 240, 255, 0.4)', height: '240px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/gallery/ps5-gaming.jpg" alt="PS5 Gaming Lounge" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.8)', padding: '6px 12px', borderRadius: '8px', border: '1px solid #00f0ff', color: '#00f0ff', fontSize: '0.85rem', fontWeight: 'bold' }}>
                 ₹399 / Hour (Min 1 Hr) · Till 12 AM Midnight
@@ -486,7 +475,7 @@ export default function Home() {
 
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}><Tv color="#f2a900" /></div>
-              <h3 className={styles.featureTitle}>180" 4K Projector Screen</h3>
+              <h3 className={styles.featureTitle}>180&quot; 4K Projector Screen</h3>
               <p className={styles.featureDesc}>Stunning high-contrast cinematic screens that support Netflix, Hotstar, YouTube, or your custom media files.</p>
             </div>
 
@@ -640,6 +629,7 @@ export default function Home() {
           <div className={styles.footerGrid}>
             <div className={styles.footerCol}>
               <Link href="/" className={styles.logoWrapper}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/bee-vibe-logo.png?v=4"
                   alt="BeeVibe Mini Private Theater"
@@ -648,7 +638,7 @@ export default function Home() {
                 />
               </Link>
               <p className={styles.footerDesc}>
-                Bangalore's #1 Luxury Private Party Hall, Mini Cinema & PS5 Gaming Space in Jayanagar 9th Block.
+                Bangalore&apos;s #1 Luxury Private Party Hall, Mini Cinema &amp; PS5 Gaming Space in Jayanagar 9th Block.
               </p>
             </div>
 
@@ -659,7 +649,7 @@ export default function Home() {
                 <li><a href="#vibes">Our 3 Themes</a></li>
                 <li><a href="#gallery">Photo Gallery</a></li>
                 <li><Link href="/book">Book Celebration</Link></li>
-                <li><Link href="/admin/login">Staff Portal</Link></li>
+                <li><Link href="/secret-owner-portal">Staff Portal</Link></li>
               </ul>
             </div>
 

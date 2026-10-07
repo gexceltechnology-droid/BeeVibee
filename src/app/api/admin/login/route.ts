@@ -5,13 +5,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { passcode } = body;
 
-    const serverPasscode = process.env.ADMIN_PASSCODE || 'beevibe2026';
+    const serverPasscode = (process.env.ADMIN_PASSCODE || 'beevibe2026').trim();
+    const cleanPasscode = typeof passcode === 'string' ? passcode.trim() : '';
 
-    if (!passcode) {
+    if (!cleanPasscode) {
       return NextResponse.json({ error: 'Passcode is required.' }, { status: 400 });
     }
 
-    if (passcode === serverPasscode) {
+    if (cleanPasscode === serverPasscode) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ success: false, error: 'Invalid admin passcode.' }, { status: 401 });

@@ -278,3 +278,35 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
   }
 }
+
+// DELETE a booking (Admin endpoint)
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
+    let id: string | null = null;
+    try {
+      const body = await request.json();
+      id = body?.id || null;
+    } catch {
+      const { searchParams } = new URL(request.url);
+      id = searchParams.get('id');
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Booking ID is required.' }, { status: 400 });
+    }
+
+    const { deleteBookingFromFirestore } = await import('@/lib/firestore');
+    await deleteBookingFromFirestore(id);
+
+    return NextResponse.json({ success: true, message: `Booking ${id} deleted.` });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Internal Server Error';
+    console.error('Error deleting booking:', error);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+

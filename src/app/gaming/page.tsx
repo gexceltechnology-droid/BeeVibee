@@ -7,12 +7,10 @@ import {
   Gamepad2,
   Tv,
   Volume2,
-  ShieldCheck,
   Zap,
   Users,
   Trophy,
   ArrowLeft,
-  Sparkles,
   Play,
   MonitorCheck,
   Rocket
@@ -195,34 +193,31 @@ export default function GamingWorldPage() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'sports' | 'fighting' | 'action' | 'coop'>('all');
   
   // 4 Interactive Live Themes State
-  const [activeTheme, setActiveTheme] = useState<'cyberpunk' | 'pixel' | 'warzone' | 'galaxy'>('cyberpunk');
+  type GamingTheme = 'cyberpunk' | 'pixel' | 'warzone' | 'galaxy';
+  const [activeTheme, setActiveTheme] = useState<GamingTheme>('cyberpunk');
 
   // Load saved theme from sessionStorage
   useEffect(() => {
-    const saved = sessionStorage.getItem('bee_vibe_gaming_theme') as any;
-    if (saved && ['cyberpunk', 'pixel', 'warzone', 'galaxy'].includes(saved)) {
-      setActiveTheme(saved);
-    }
+    const timer = setTimeout(() => {
+      const saved = sessionStorage.getItem('bee_vibe_gaming_theme') as GamingTheme | null;
+      if (saved && ['cyberpunk', 'pixel', 'warzone', 'galaxy'].includes(saved)) {
+        setActiveTheme(saved);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
-  const handleThemeChange = (theme: 'cyberpunk' | 'pixel' | 'warzone' | 'galaxy') => {
+  const handleThemeChange = (theme: GamingTheme) => {
     setActiveTheme(theme);
     sessionStorage.setItem('bee_vibe_gaming_theme', theme);
   };
 
-  const THEMES = [
+  const THEMES: { id: GamingTheme; name: string; color: string; activeClass: string }[] = [
     { id: 'cyberpunk', name: '⚡ Cyberpunk Neon', color: '#00f0ff', activeClass: styles.themeCyberpunkActive },
     { id: 'pixel', name: '👾 Pixel Arcade', color: '#ffe600', activeClass: styles.themePixelActive },
     { id: 'warzone', name: '🔴 Crimson Warzone', color: '#ff0033', activeClass: styles.themeWarzoneActive },
     { id: 'galaxy', name: '🌌 Cosmic Galaxy', color: '#c084fc', activeClass: styles.themeGalaxyActive },
   ];
-
-  const THEME_HERO_TITLES: Record<string, { span: string }> = {
-    cyberpunk: { span: 'PS5 CYBER REALM' },
-    pixel: { span: '8-BIT PIXEL REALM' },
-    warzone: { span: 'CRIMSON WARZONE ARENA' },
-    galaxy: { span: 'COSMIC GALAXY LOUNGE' },
-  };
 
   // Space Warp Animation States
   const [warpActive, setWarpActive] = useState(true);
@@ -271,7 +266,7 @@ export default function GamingWorldPage() {
       size: Math.random() * 2 + 1,
     }));
 
-    let startTime = Date.now();
+    const startTime = Date.now();
     const duration = 2800; // 2.8 seconds space flight
 
     function renderWarp() {
@@ -499,7 +494,7 @@ export default function GamingWorldPage() {
             key={t.id}
             type="button"
             className={`${styles.themePill} ${activeTheme === t.id ? t.activeClass : ''}`}
-            onClick={() => handleThemeChange(t.id as any)}
+            onClick={() => handleThemeChange(t.id)}
           >
             {t.name}
           </button>
@@ -565,7 +560,7 @@ export default function GamingWorldPage() {
             <div className={styles.specIconWrapper}>
               <Tv size={28} />
             </div>
-            <h3 className={styles.specTitle}>180" 4K Projector Screen</h3>
+            <h3 className={styles.specTitle}>180&quot; 4K Projector Screen</h3>
             <p className={styles.specDesc}>
               Immerse your entire vision on a gigantic wall-filling 180-inch screen with low latency projection tuned specifically for gaming.
             </p>

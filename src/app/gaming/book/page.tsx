@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Gamepad2, 
   ArrowLeft, 
   CheckCircle2, 
-  Copy, 
   FileText 
 } from 'lucide-react';
 import styles from './gamingBook.module.css';
@@ -18,12 +16,12 @@ import {
   convert12HourToMinutes, 
   convertMinutesTo12Hour, 
   validateSlotOperatingHours, 
-  VENUE_OPEN_MINUTES, 
   VENUE_CLOSE_MINUTES 
 } from '@/lib/time';
-import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
+import { getAdminWhatsAppDeepLink, BookingData } from '@/lib/whatsappUtils';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { sendFirebaseOtp, setupRecaptcha, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
+import type { ConfirmationResult } from 'firebase/auth';
 
 interface ConfirmedBooking {
   id: string;
@@ -78,7 +76,6 @@ const PREDEFINED_SLOTS = [
 ];
 
 export default function GamingBookPage() {
-  const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [step, setStep] = useState(1);
@@ -92,9 +89,17 @@ export default function GamingBookPage() {
     return `${yyyy}-${mm}-${dd}`;
   });
 
+  interface GamingSlot {
+    id: string;
+    time: string;
+    label: string;
+    basePrice: number;
+    isBooked: boolean;
+  }
+
   const [bookingMode, setBookingMode] = useState<'predefined' | 'custom'>('predefined');
-  const [slots, setSlots] = useState(PREDEFINED_SLOTS);
-  const [selectedSlot, setSelectedSlot] = useState<any>(null);
+  const [slots, setSlots] = useState<GamingSlot[]>(PREDEFINED_SLOTS);
+  const [selectedSlot, setSelectedSlot] = useState<GamingSlot | null>(null);
 
   // 12-Hour Custom Time Selection States
   const [customStartHour, setCustomStartHour] = useState('10');
@@ -107,9 +112,8 @@ export default function GamingBookPage() {
 
   // Packages & Addons
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [selectedThemeName, setSelectedThemeName] = useState('');
   const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr'>('none');
-  const [fogOption, setFogOption] = useState<'none' | '1pot'>('none');
+  const [fogOption] = useState<'none' | '1pot'>('none');
   const [snackOption, setSnackOption] = useState<'none' | 'popcorn_combo' | 'gamer_platter'>('none');
 
   // Customer Details
@@ -122,7 +126,6 @@ export default function GamingBookPage() {
 
   // Advance Payment & Ref ID
   const [utrNumber, setUtrNumber] = useState('');
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
 
   // Auth / OTP
@@ -134,28 +137,29 @@ export default function GamingBookPage() {
   const [otpCode, setOtpCode] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [firebaseConfirmation, setFirebaseConfirmation] = useState<any>(null);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
 
   // Booking Flow & Status
-  const [activeBookings, setActiveBookings] = useState<any[]>([]);
-  const [loadingBookings, setLoadingBookings] = useState(false);
+  const [activeBookings, setActiveBookings] = useState<ConfirmedBooking[]>([]);
   const [isPaying, setIsPaying] = useState(false);
   const [error, setError] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState<ConfirmedBooking | null>(null);
 
   // Check login session on mount
   useEffect(() => {
-    const savedPhone = sessionStorage.getItem('bee_vibe_customer_phone');
-    if (savedPhone) {
-      setCustomerPhone(savedPhone);
-      setIsCustomerLoggedIn(true);
-    }
+    const timer = setTimeout(() => {
+      const savedPhone = sessionStorage.getItem('bee_vibe_customer_phone');
+      if (savedPhone) {
+        setCustomerPhone(savedPhone);
+        setIsCustomerLoggedIn(true);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Fetch active bookings for selected date
   useEffect(() => {
     async function fetchBookings() {
-      setLoadingBookings(true);
       try {
         const res = await fetch(`/api/bookings?date=${selectedDate}&theaterId=gaming-ps5-arena`);
         if (res.ok) {
@@ -173,8 +177,6 @@ export default function GamingBookPage() {
         }
       } catch (err) {
         console.error('Error fetching bookings:', err);
-      } finally {
-        setLoadingBookings(false);
       }
     }
     fetchBookings();
@@ -201,74 +203,78 @@ export default function GamingBookPage() {
   useEffect(() => {
     if (bookingMode !== 'custom') return;
 
-    setCustomSlotError('');
-    setSelectedSlot(null);
+    const timer = setTimeout(() => {
+      setCustomSlotError('');
+      setSelectedSlot(null);
 
-    try {
-      const startH = parseInt(customStartHour, 10);
-      const startM = parseInt(customStartMin, 10);
-      const endH = parseInt(customEndHour, 10);
-      const endM = parseInt(customEndMin, 10);
+      try {
+        const startH = parseInt(customStartHour, 10);
+        const startM = parseInt(customStartMin, 10);
+        const endH = parseInt(customEndHour, 10);
+        const endM = parseInt(customEndMin, 10);
 
-      if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
-        setCustomSlotError('Invalid time selection.');
-        return;
-      }
-
-      const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
-      let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
-
-      if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
-        endMinutes = 1440;
-      }
-
-      // Enforce 12:00 AM Midnight operating limit
-      const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
-      if (!hoursValidation.valid) {
-        setCustomSlotError(hoursValidation.error || 'Gaming room closes strictly at 12:00 AM Midnight.');
-        return;
-      }
-
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      const todayStr = `${yyyy}-${mm}-${dd}`;
-
-      if (selectedDate === todayStr) {
-        const currentMinutes = today.getHours() * 60 + today.getMinutes();
-        if (startMinutes <= currentMinutes) {
-          setCustomSlotError('Cannot select a time slot that has already passed.');
+        if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
+          setCustomSlotError('Invalid time selection.');
           return;
         }
+
+        const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
+        let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
+
+        if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
+          endMinutes = 1440;
+        }
+
+        // Enforce 12:00 AM Midnight operating limit
+        const hoursValidation = validateSlotOperatingHours(startMinutes, endMinutes);
+        if (!hoursValidation.valid) {
+          setCustomSlotError(hoursValidation.error || 'Gaming room closes strictly at 12:00 AM Midnight.');
+          return;
+        }
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        if (selectedDate === todayStr) {
+          const currentMinutes = today.getHours() * 60 + today.getMinutes();
+          if (startMinutes <= currentMinutes) {
+            setCustomSlotError('Cannot select a time slot that has already passed.');
+            return;
+          }
+        }
+
+        const durationMinutes = endMinutes - startMinutes;
+        if (durationMinutes < 60) {
+          setCustomSlotError('Minimum gaming duration is 1 hour (60 minutes).');
+          return;
+        }
+
+        const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
+        const overlaps = checkBookingOverlap(selectedDate, timeStr, activeBookings);
+        if (overlaps) {
+          setCustomSlotError('This custom time range overlaps with an existing gaming booking.');
+          return;
+        }
+
+        const durationHours = durationMinutes / 60;
+        const basePrice = Math.round(399 * durationHours);
+
+        setSelectedSlot({
+          id: 'slot-custom',
+          time: timeStr,
+          label: `Custom Gaming Slot (${durationHours} Hr${durationHours > 1 ? 's' : ''})`,
+          basePrice,
+          isBooked: false,
+        });
+      } catch {
+        setCustomSlotError('Error calculating custom time range.');
       }
+    }, 0);
 
-      const durationMinutes = endMinutes - startMinutes;
-      if (durationMinutes < 60) {
-        setCustomSlotError('Minimum gaming duration is 1 hour (60 minutes).');
-        return;
-      }
-
-      const timeStr = formatCustomTimeRange(startMinutes, endMinutes);
-      const overlaps = checkBookingOverlap(selectedDate, timeStr, activeBookings);
-      if (overlaps) {
-        setCustomSlotError('This custom time range overlaps with an existing gaming booking.');
-        return;
-      }
-
-      const durationHours = durationMinutes / 60;
-      const basePrice = Math.round(399 * durationHours);
-
-      setSelectedSlot({
-        id: 'slot-custom',
-        time: timeStr,
-        label: `Custom Gaming Slot (${durationHours} Hr${durationHours > 1 ? 's' : ''})`,
-        basePrice,
-        isBooked: false,
-      });
-    } catch (e) {
-      setCustomSlotError('Error calculating custom time range.');
-    }
+    return () => clearTimeout(timer);
   }, [
     bookingMode,
     customStartHour,
@@ -338,7 +344,7 @@ export default function GamingBookPage() {
       let diff = endMinutes - startMinutes;
       if (diff <= 0) diff += 24 * 60;
       return diff / 60;
-    } catch (e) {
+    } catch {
       return 1;
     }
   };
@@ -369,7 +375,7 @@ export default function GamingBookPage() {
     setLoginLoading(true);
     const phoneTrimmed = loginPhone.trim();
     if (!phoneTrimmed) { setLoginError('Phone number is required.'); setLoginLoading(false); return; }
-    let finalPhone = phoneTrimmed.startsWith('+') ? phoneTrimmed : `+91${phoneTrimmed.replace(/^0+/, '')}`;
+    const finalPhone = phoneTrimmed.startsWith('+') ? phoneTrimmed : `+91${phoneTrimmed.replace(/^0+/, '')}`;
 
     try {
       if (isFirebaseConfigured()) {
@@ -377,7 +383,7 @@ export default function GamingBookPage() {
         if (!recaptchaVerifier) throw new Error('reCAPTCHA failed to initialize.');
         const fbRes = await sendFirebaseOtp(finalPhone, recaptchaVerifier);
         if (!fbRes.success) throw new Error(fbRes.error || 'Failed to send OTP.');
-        setFirebaseConfirmation(fbRes.confirmationResult);
+        setFirebaseConfirmation(fbRes.confirmationResult || null);
       } else {
         const res = await fetch('/api/otp/send', {
           method: 'POST',
@@ -387,8 +393,9 @@ export default function GamingBookPage() {
         if (!res.ok) throw new Error('Failed to send OTP.');
       }
       setOtpSent(true);
-    } catch (err: any) {
-      setLoginError(err.message || 'Error sending OTP.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error sending OTP.';
+      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -398,7 +405,7 @@ export default function GamingBookPage() {
     e.preventDefault();
     setLoginError('');
     setLoginLoading(true);
-    let finalPhone = loginPhone.trim().startsWith('+') ? loginPhone.trim() : `+91${loginPhone.trim().replace(/^0+/, '')}`;
+    const finalPhone = loginPhone.trim().startsWith('+') ? loginPhone.trim() : `+91${loginPhone.trim().replace(/^0+/, '')}`;
 
     try {
       if (isFirebaseConfigured() && firebaseConfirmation) {
@@ -417,8 +424,9 @@ export default function GamingBookPage() {
       setCustomerPhone(finalPhone);
       setIsCustomerLoggedIn(true);
       setShowLoginModal(false);
-    } catch (err: any) {
-      setLoginError(err.message || 'OTP verification failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'OTP verification failed.';
+      setLoginError(msg);
     } finally {
       setLoginLoading(false);
     }
@@ -443,11 +451,6 @@ export default function GamingBookPage() {
       return;
     }
 
-    if (!paymentConfirmed) {
-      setError(`⚠️ Please check the confirmation checkbox confirming that you have transferred ₹${calculateAdvance()} to NALINAKSHI C (8123635342@sbi).`);
-      return;
-    }
-
     setIsPaying(true);
     const bookingPayload = {
       customerName: customerDetails.name,
@@ -455,7 +458,7 @@ export default function GamingBookPage() {
       phone: customerPhone,
       date: selectedDate,
       timeSlot: selectedSlot?.time,
-      packageName: selectedThemeName || selectedPackage.name,
+      packageName: selectedPackage.name,
       bookingType: 'gaming',
       addOns: (() => {
         const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];
@@ -486,8 +489,9 @@ export default function GamingBookPage() {
       if (!res.ok) throw new Error(data.error || 'Failed to complete transaction.');
       setConfirmedBooking(data.booking);
       setStep(5);
-    } catch (err: any) {
-      setError(err.message || 'Transaction failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Transaction failed.';
+      setError(msg);
     } finally {
       setIsPaying(false);
     }
@@ -755,11 +759,11 @@ export default function GamingBookPage() {
                 <select
                   className={`${styles.addonSelectDropdown} ${snackOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
                   value={snackOption}
-                  onChange={(e) => setSnackOption(e.target.value as any)}
+                  onChange={(e) => setSnackOption(e.target.value as 'none' | 'popcorn_combo' | 'gamer_platter')}
                 >
                   <option value="none">No Food (Order later from seat)</option>
-                  <option value="popcorn_combo">Popcorn & Cold Mocktail Combo (+₹250)</option>
-                  <option value="gamer_platter">VIP Gamer Snack Platter & Drinks (+₹450)</option>
+                  <option value="popcorn_combo">Popcorn &amp; Cold Mocktail Combo (+₹250)</option>
+                  <option value="gamer_platter">VIP Gamer Snack Platter &amp; Drinks (+₹450)</option>
                 </select>
               </div>
 
@@ -772,7 +776,7 @@ export default function GamingBookPage() {
                 <select
                   className={`${styles.addonSelectDropdown} ${dslrOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
                   value={dslrOption}
-                  onChange={(e) => setDslrOption(e.target.value as any)}
+                  onChange={(e) => setDslrOption(e.target.value as 'none' | '30min' | '1hr')}
                 >
                   <option value="none">No DSLR Photography (₹0)</option>
                   <option value="30min">30 Mins DSLR Photography (+₹300)</option>
@@ -911,6 +915,7 @@ export default function GamingBookPage() {
 
                   <div className={styles.advanceQrSection}>
                     <div className={styles.advanceQrImgWrapper}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={"https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("upi://pay?pa=9900106474@okbizaxis&pn=Bee%20Vibe%20Theater&am=" + calculateAdvance() + "&cu=INR&tn=Advance%20Gaming%20Booking%20BeeVibe")}
                         alt="UPI Advance QR Code"
@@ -1019,6 +1024,7 @@ export default function GamingBookPage() {
               </div>
 
               <div className={styles.ticketQr}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${confirmedBooking.id}`}
                   alt="QR Code"
@@ -1052,7 +1058,7 @@ export default function GamingBookPage() {
                 VIEW ADVANCE RECEIPT
               </a>
               <a
-                href={getAdminWhatsAppDeepLink('booking', confirmedBooking as any)}
+                href={getAdminWhatsAppDeepLink('booking', confirmedBooking as unknown as BookingData)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.btnNavNext}

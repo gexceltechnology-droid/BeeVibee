@@ -15,14 +15,6 @@ const BookingPortal = dynamic(() => import('@/components/BookingPortal'), {
   ),
 });
 
-const BeeVibeLogoIcon = ({ size = 44 }: { size?: number }) => (
-  <img
-    src="/bee-vibe-logo.png?v=2"
-    alt="BeeVibe Mini Private Theater"
-    style={{ height: size, width: 'auto', objectFit: 'contain' }}
-  />
-);
-
 const InstagramIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
     fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -40,10 +32,13 @@ export default function BookPage() {
 
   // Read saved vibe from localStorage (set by home page)
   useEffect(() => {
-    const saved = localStorage.getItem('beevibe_theme') as VibeType | null;
-    if (saved && ['pink', 'purple', 'red'].includes(saved)) {
-      setVibe(saved);
-    }
+    const timer = setTimeout(() => {
+      const saved = localStorage.getItem('beevibe_theme') as VibeType | null;
+      if (saved && ['pink', 'purple', 'red'].includes(saved)) {
+        setVibe(saved);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -63,6 +58,7 @@ export default function BookPage() {
       <div className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logo}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/bee-vibe-logo.png?v=4"
               alt="BeeVibe Mini Private Theater"

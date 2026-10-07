@@ -6,17 +6,8 @@ import Link from 'next/link';
 import {
   Printer,
   Share2,
-  CheckCircle2,
-  Calendar,
-  Clock,
-  User,
-  Phone,
-  MapPin,
   Sparkles,
-  ArrowLeft,
-  CreditCard,
-  Building2,
-  Download
+  ArrowLeft
 } from 'lucide-react';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
@@ -49,28 +40,41 @@ function ReceiptContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (!bookingId) {
-      setError('No booking ID specified in URL.');
-      setLoading(false);
-      return;
+      const timer = setTimeout(() => {
+        if (!active) return;
+        setError('No booking ID specified in URL.');
+        setLoading(false);
+      }, 0);
+      return () => {
+        active = false;
+        clearTimeout(timer);
+      };
     }
 
     const fetchReceipt = async () => {
       try {
         const res = await fetch(`/api/receipt?id=${encodeURIComponent(bookingId)}`);
         const data = await res.json();
+        if (!active) return;
         if (!res.ok) {
           throw new Error(data.error || 'Failed to load booking receipt.');
         }
         setBooking(data.booking);
-      } catch (err: any) {
-        setError(err.message || 'Error fetching receipt.');
+      } catch (err: unknown) {
+        if (!active) return;
+        const msg = err instanceof Error ? err.message : 'Error fetching receipt.';
+        setError(msg);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchReceipt();
+    return () => {
+      active = false;
+    };
   }, [bookingId]);
 
   if (loading) {
@@ -100,7 +104,6 @@ function ReceiptContent() {
 
   const advancePaid = typeof booking.advancePaid === 'number' ? booking.advancePaid : Math.min(500, booking.totalPrice);
   const balanceDue = typeof booking.balanceDue === 'number' ? booking.balanceDue : Math.max(0, booking.totalPrice - advancePaid);
-  const paymentMode = booking.paymentMode || 'UPI / Online';
 
   const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}\n\nVenue Location: https://maps.google.com/?q=BeeVibe+Jayanagar`;
   const whatsappShareUrl = `https://wa.me/${cleanPhoneNumber(booking.phone)}?text=${encodeURIComponent(shareText)}`;
@@ -171,6 +174,7 @@ function ReceiptContent() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px dashed #e5e7eb', paddingBottom: '24px', marginBottom: '24px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/bee-vibe-logo.png" alt="BeeVibe Logo" style={{ height: '36px', width: 'auto' }} />
               <div>
                 <h1 style={{ fontSize: '1.4rem', fontWeight: '800', margin: 0, color: '#111827' }}>BeeVibe</h1>
@@ -254,7 +258,7 @@ function ReceiptContent() {
             <tbody>
               <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
                 <td style={{ padding: '10px 0', color: '#111827', fontWeight: '600' }}>
-                  {booking.packageName} (180" 4K Cinema & Dolby Sound)
+                  {booking.packageName} (180&quot; 4K Cinema &amp; Dolby Sound)
                 </td>
                 <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: '700', color: '#111827' }}>
                   ₹{booking.totalPrice - (booking.addOns.length * 200)}

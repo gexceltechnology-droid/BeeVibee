@@ -7,7 +7,6 @@ import {
   ShoppingBag, 
   Plus, 
   Minus, 
-  Coffee, 
   Sparkles, 
   X, 
   CheckCircle2, 
@@ -15,7 +14,7 @@ import {
   Info
 } from 'lucide-react';
 import styles from './menu.module.css';
-import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
+import { getAdminWhatsAppDeepLink, FoodOrderData, FoodOrderItem } from '@/lib/whatsappUtils';
 
 interface MenuItem {
   id: string;
@@ -54,8 +53,7 @@ function MenuContent() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
-  const [orderWhatsAppUrl, setOrderWhatsAppUrl] = useState<string | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState<FoodOrderData | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -140,8 +138,9 @@ function MenuContent() {
       setOrderSuccess(data.order);
       setCart([]);
       setIsCheckoutOpen(false);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error processing your order. Please try again.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error processing your order. Please try again.';
+      setErrorMsg(msg);
     } finally {
       setSubmitting(false);
     }
@@ -164,6 +163,7 @@ function MenuContent() {
             <ArrowLeft size={16} /> Home
           </Link>
           <Link href="/" className={styles.logoWrapper}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/bee-vibe-logo.png?v=4"
               alt="BeeVibe Mini Private Theater"
@@ -216,7 +216,16 @@ function MenuContent() {
             {filteredItems.map((item) => {
               const quantity = getQuantityInCart(item.id);
               return (
-                <div key={item.id} className={`${styles.menuCard} ${!item.inStock ? styles.outOfStockCard : ''}`}>
+                <div 
+                  key={item.id} 
+                  className={`${styles.menuCard} ${!item.inStock ? styles.outOfStockCard : ''}`}
+                  onClick={() => {
+                    if (item.inStock && quantity === 0) {
+                      addToCart(item);
+                    }
+                  }}
+                  style={{ cursor: item.inStock ? 'pointer' : 'default' }}
+                >
                   <div className={styles.cardHeader}>
                     <span className={styles.itemIcon}>{item.icon}</span>
                     {item.inStock ? (
@@ -235,7 +244,7 @@ function MenuContent() {
                         Out of Stock
                       </button>
                     ) : quantity > 0 ? (
-                      <div className={styles.quantityControls}>
+                      <div className={styles.quantityControls} onClick={(e) => e.stopPropagation()}>
                         <button 
                           onClick={() => removeFromCart(item.id)}
                           className={styles.qtyBtn}
@@ -254,7 +263,10 @@ function MenuContent() {
                       </div>
                     ) : (
                       <button 
-                        onClick={() => addToCart(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToCart(item);
+                        }}
                         className={styles.addBtn}
                       >
                         <Plus size={14} style={{ marginRight: '6px' }} /> Add to Screen
@@ -455,7 +467,7 @@ function MenuContent() {
             </p>
             <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '16px', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Items: </span>
-              <strong>{orderSuccess.items.map((i: any) => `${i.name} (x${i.quantity})`).join(', ')}</strong>
+              <strong>{orderSuccess.items.map((i: FoodOrderItem) => `${i.name} (x${i.quantity})`).join(', ')}</strong>
             </div>
 
             <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
