@@ -734,8 +734,13 @@ export default function BookingPortal() {
     if (!emailRegex.test(customerDetails.email.trim())) { setErrorAndScroll('Please enter a valid email address.'); return; }
     if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setErrorAndScroll('Guest count must be between 1 and 10.'); return; }
 
-    if (!utrNumber.trim()) {
+    const cleanUtr = utrNumber.replace(/\D/g, '').trim();
+    if (!cleanUtr) {
       setErrorAndScroll('⚠️ Please complete your UPI payment and enter the 12-digit UPI Reference Number / UTR below to confirm your booking.');
+      return;
+    }
+    if (cleanUtr.length !== 12) {
+      setErrorAndScroll(`⚠️ Invalid UTR Number (${cleanUtr.length}/12 digits). The UPI Transaction UTR must be exactly 12 numeric digits (no letters or symbols).`);
       return;
     }
 
@@ -776,11 +781,11 @@ export default function BookingPortal() {
       balanceDue: calculateBalance(),
       paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
       paymentMode: 'UPI (8123635342@sbi)',
-      utrNumber: utrNumber.trim(),
+      utrNumber: cleanUtr,
       couponCode: isCouponApplied ? (appliedCoupon || 'BEEVIBE999') : undefined,
       discountAmount: isCouponApplied ? calculateDiscount() : undefined,
       guestCount: customerDetails.guestCount,
-      specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
+      specialRequests: customerDetails.specialRequests + (cleanUtr ? (' | UPI Ref: ' + cleanUtr) : ''),
     };
 
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -2524,15 +2529,39 @@ export default function BookingPortal() {
                             </label>
                             <input
                               type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={12}
                               className={styles.formInput}
-                              placeholder="e.g. 423987123456 (Found in UPI payment receipt)"
+                              placeholder="e.g. 423987123456 (12 digits only)"
                               value={utrNumber}
-                              onChange={(e) => setUtrNumber(e.target.value)}
-                              style={{ padding: '10px 12px', fontSize: '0.9rem', borderColor: utrNumber.trim() ? '#10b981' : 'rgba(255,255,255,0.2)' }}
+                              onChange={(e) => {
+                                const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 12);
+                                setUtrNumber(digitsOnly);
+                              }}
+                              style={{
+                                padding: '10px 14px',
+                                fontSize: '1rem',
+                                letterSpacing: '2px',
+                                fontFamily: 'monospace',
+                                fontWeight: 700,
+                                borderColor: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : 'rgba(255,255,255,0.2)'
+                              }}
                               required
                             />
-                            <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                              💡 After completing the payment of ₹{calculateAdvance()} in your UPI app, enter the 12-digit UTR/Ref number to confirm your booking.
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.75rem' }}>
+                              <span style={{ color: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : 'var(--text-secondary)', fontWeight: 500 }}>
+                                {utrNumber.length === 12 ? (
+                                  '✓ Valid 12-digit UPI UTR number'
+                                ) : utrNumber.length > 0 ? (
+                                  `⚠️ UPI Reference / UTR must be 12 digits (entered: ${utrNumber.length}/12)`
+                                ) : (
+                                  `💡 After transferring ₹${calculateAdvance()} in your UPI app, paste the 12-digit UTR/Ref number.`
+                                )}
+                              </span>
+                              <span style={{ color: utrNumber.length === 12 ? '#10b981' : utrNumber.length > 0 ? '#f59e0b' : '#a1a1aa', fontWeight: 700, fontFamily: 'monospace' }}>
+                                {utrNumber.length}/12
+                              </span>
                             </div>
                           </div>
 

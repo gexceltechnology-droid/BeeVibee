@@ -197,7 +197,18 @@ export async function POST(request: NextRequest) {
     const passedBalance = typeof body.balanceDue === 'number' ? body.balanceDue : Math.max(0, calculatedTotal - passedAdvance);
     const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : 'advance_paid');
     const passedMode = body.paymentMode || 'UPI (8123635342@sbi)';
-    const passedUtr = typeof utrNumber === 'string' ? utrNumber.trim() : (typeof body.utrNumber === 'string' ? body.utrNumber.trim() : '');
+    const passedUtr = typeof utrNumber === 'string'
+      ? utrNumber.replace(/\D/g, '').trim()
+      : (typeof body.utrNumber === 'string' ? body.utrNumber.replace(/\D/g, '').trim() : '');
+
+    // Strict 12-digit numeric UTR validation for theater bookings requiring advance payment
+    if (detectedBookingType === 'theater' && passedAdvance > 0) {
+      if (!passedUtr || passedUtr.length !== 12) {
+        return NextResponse.json({
+          error: `Invalid UPI Transaction Reference Number (UTR). Must be exactly 12 numeric digits (received ${passedUtr.length}/12).`
+        }, { status: 400 });
+      }
+    }
 
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
