@@ -15,7 +15,7 @@ const PACKAGES = [
   {
     id: 'pkg-red',
     name: 'Red Theme (Red Velvet Romance)',
-    price: 799,
+    price: 1099,
     image: '/themes/theme-red.jpg',
     badge: 'Anniversary & Romantic Dates ❤️',
     color: '#ef4444',
@@ -30,7 +30,7 @@ const PACKAGES = [
   {
     id: 'pkg-pink',
     name: 'Pink Theme (Angel Wings & Neon)',
-    price: 899,
+    price: 1299,
     image: '/themes/theme-pink.jpg',
     badge: 'Trending Birthday & Party Setup 🩷',
     color: '#ec4899',
@@ -45,7 +45,7 @@ const PACKAGES = [
   {
     id: 'pkg-purple',
     name: 'Purple Theme (Royal Butterfly Grandeur)',
-    price: 999,
+    price: 1499,
     image: '/themes/theme-purple.jpg',
     badge: 'VIP Grand Celebration Setup 💜',
     color: '#a855f7',
@@ -84,6 +84,8 @@ interface ConfirmedBooking {
   paymentMode?: string;
   status: string;
   utrNumber?: string;
+  couponCode?: string;
+  discountAmount?: number;
 }
 
 interface ActiveBooking {
@@ -120,6 +122,11 @@ export default function BookingPortal() {
   const [utrNumber, setUtrNumber] = useState('');
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const [upiCopied, setUpiCopied] = useState(false);
+
+  // Coupon State
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState('');
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
   const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
@@ -593,20 +600,75 @@ export default function BookingPortal() {
     }
   };
 
-  const calculateAdvance = () => Math.min(500, calculateTotal());
-  const calculateBalance = () => Math.max(0, calculateTotal() - calculateAdvance());
+  const isCouponApplied = appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999';
+
+  // Standard package base without discounts
+  const getStandardPackagePrice = () => {
+    const durationHours = getSlotDurationHours();
+    return selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
+  };
+
+  // Base theme package price (flat ₹999 for 2 hrs when coupon is applied)
+  const getEffectivePackagePrice = () => {
+    const durationHours = getSlotDurationHours();
+    if (isCouponApplied) {
+      return Math.round((999 / 2) * durationHours);
+    }
+    return selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
+  };
+
+  // Effective Fog Entry Price (Complimentary 1 pot included with coupon)
+  const getEffectiveFogPrice = () => {
+    if (isCouponApplied) {
+      if (fogOption === '2pots') return 200; // upgrade charge for 2nd pot
+      return 0; // free with coupon
+    }
+    if (fogOption === '1pot') return 300;
+    if (fogOption === '2pots') return 500;
+    return 0;
+  };
+
+  // Calculate discount amount
+  const calculateDiscount = () => {
+    if (!isCouponApplied) return 0;
+    const stdPkg = getStandardPackagePrice();
+    const effPkg = getEffectivePackagePrice();
+    const stdFog = fogOption === '1pot' ? 300 : fogOption === '2pots' ? 500 : 300;
+    const effFog = getEffectiveFogPrice();
+    return Math.max(0, (stdPkg - effPkg) + (stdFog - effFog));
+  };
 
   // Calculate dynamic pricing
   const calculateTotal = () => {
-    const durationHours = getSlotDurationHours();
-    const pkgBase = selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
+    const pkgBase = getEffectivePackagePrice();
     const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
-
-    let fogPrice = 0;
-    if (fogOption === '1pot') fogPrice = 300;
-    else if (fogOption === '2pots') fogPrice = 500;
+    const fogPrice = getEffectiveFogPrice();
 
     return pkgBase + extraGuests + fogPrice;
+  };
+
+  const calculateAdvance = () => Math.min(500, calculateTotal());
+  const calculateBalance = () => Math.max(0, calculateTotal() - calculateAdvance());
+
+  const handleApplyCoupon = (codeToApply?: string) => {
+    const code = (codeToApply || couponInput).trim().toUpperCase();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    if (code === 'BEEVIBE999' || code === 'VIBE999') {
+      setAppliedCoupon(code);
+      setCouponInput(code);
+      setCouponError('');
+    } else {
+      setCouponError('Invalid coupon code. Try "BEEVIBE999" for flat ₹999 on any theme!');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError('');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -694,8 +756,19 @@ export default function BookingPortal() {
       packageName: selectedPackage.name,
       addOns: (() => {
         const list: string[] = [];
-        if (fogOption === '1pot') list.push('Special Fog Entry Effect (1 Pot — ₹300)');
-        else if (fogOption === '2pots') list.push('Special Fog Entry Effect (2 Pots — ₹500)');
+        if (isCouponApplied) {
+          list.push('BEEVIBE999 Offer: Flat ₹999 Base Theme');
+          list.push('BEEVIBE999 Offer: Complimentary Fog Entry');
+          list.push('BEEVIBE999 Offer: LED Name Board Setup');
+          list.push('BEEVIBE999 Offer: Candlelit Table Decor');
+          list.push('BEEVIBE999 Offer: All OTT Platforms Access');
+          if (fogOption === '2pots') {
+            list.push('Grand Fog Upgrade (+1 Extra Pot — ₹200)');
+          }
+        } else {
+          if (fogOption === '1pot') list.push('Special Fog Entry Effect (1 Pot — ₹300)');
+          else if (fogOption === '2pots') list.push('Special Fog Entry Effect (2 Pots — ₹500)');
+        }
         return list;
       })(),
       totalPrice: calculateTotal(),
@@ -704,6 +777,8 @@ export default function BookingPortal() {
       paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
       paymentMode: 'UPI (8123635342@sbi)',
       utrNumber: utrNumber.trim(),
+      couponCode: isCouponApplied ? (appliedCoupon || 'BEEVIBE999') : undefined,
+      discountAmount: isCouponApplied ? calculateDiscount() : undefined,
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
     };
@@ -2032,8 +2107,21 @@ export default function BookingPortal() {
 
                     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                       <h4 className={styles.packageName} style={{ color: pkg.color, fontSize: '1.1rem', marginBottom: '6px' }}>{pkg.name}</h4>
-                      <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '12px' }}>
+                      <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '6px' }}>
                         ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 2 Hours (Base 2 Guests)</span>
+                      </div>
+                      <div style={{
+                        background: 'rgba(242, 169, 0, 0.12)',
+                        border: '1px dashed rgba(242, 169, 0, 0.4)',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                        marginBottom: '10px',
+                        fontSize: '0.76rem',
+                        color: 'var(--accent)',
+                        fontWeight: 600,
+                        lineHeight: 1.3
+                      }}>
+                        🎟️ Use code <strong>BEEVIBE999</strong> at payment for <strong>flat ₹999</strong> + Free Fog Entry, LED Name Board, Candles &amp; OTT!
                       </div>
                       <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
                         {pkg.details.map((detail, idx) => (
@@ -2090,21 +2178,28 @@ export default function BookingPortal() {
 
 
                 {/* Special Fog Entry Effect Dropdown Card */}
-                <div className={`${styles.addonCard} ${fogOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
+                <div className={`${styles.addonCard} ${fogOption !== 'none' || isCouponApplied ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className={styles.addonName}>🌫️ Special Fog Entry Effect</span>
-                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: fogOption !== 'none' ? 'var(--accent)' : 'var(--text-secondary)' }}>
-                      {fogOption === 'none' ? 'Optional' : fogOption === '1pot' ? '+₹300' : '+₹500'}
+                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: isCouponApplied ? '#10b981' : fogOption !== 'none' ? 'var(--accent)' : 'var(--text-secondary)' }}>
+                      {isCouponApplied
+                        ? fogOption === '2pots' ? '+₹200 (Upgrade)' : 'FREE with Coupon 🎟️'
+                        : fogOption === 'none' ? 'Included in Offer / Optional' : fogOption === '1pot' ? '+₹300' : '+₹500'}
                     </span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: isCouponApplied ? '#10b981' : 'var(--accent)', fontWeight: 500 }}>
+                    {isCouponApplied
+                      ? '✓ 1 Pot Fog Entry is included 100% Free with your coupon!'
+                      : '💡 Offer: Entering coupon BEEVIBE999 at checkout gives you 1 Pot Fog Entry completely FREE!'}
                   </div>
                   <select
                     className={`${styles.addonSelectDropdown} ${fogOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
                     value={fogOption}
                     onChange={(e) => setFogOption(e.target.value as 'none' | '1pot' | '2pots')}
                   >
-                    <option value="none">No Fog Entry Effect (₹0)</option>
-                    <option value="1pot">1 Pot Special Fog Entry (+₹300)</option>
-                    <option value="2pots">2 Pots Special Fog Entry (+₹500)</option>
+                    <option value="none">{isCouponApplied ? '1 Pot Fog Entry Included (Free)' : 'No Fog Entry Effect (₹0)'}</option>
+                    <option value="1pot">{isCouponApplied ? '1 Pot Special Fog Entry (Free with Coupon)' : '1 Pot Special Fog Entry (+₹300)'}</option>
+                    <option value="2pots">{isCouponApplied ? '2 Pots Grand Fog Entry (+₹200 Upgrade)' : '2 Pots Special Fog Entry (+₹500)'}</option>
                   </select>
                 </div>
               </div>
@@ -2120,19 +2215,55 @@ export default function BookingPortal() {
               </p>
 
               <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '24px' }}>
-                <h4 style={{ fontFamily: 'var(--font-title)', color: 'var(--accent)', marginBottom: '12px' }}>Summary</h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                  <h4 style={{ fontFamily: 'var(--font-title)', color: 'var(--accent)', margin: 0 }}>Booking Summary</h4>
+                  {isCouponApplied && (
+                    <span style={{ fontSize: '0.78rem', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#10b981', padding: '3px 10px', borderRadius: '12px', fontWeight: 700 }}>
+                      🎉 BEEVIBE999 Offer Active
+                    </span>
+                  )}
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px 16px', fontSize: '0.9rem' }}>
                   <div><strong>Date:</strong> {selectedDate}</div>
                   <div><strong>Time Slot:</strong> {selectedSlot?.time} ({selectedSlot?.label})</div>
-                  <div><strong>Vibe Package:</strong> {selectedPackage.name}</div>
                   <div>
-                    <strong>Add-ons & Options selected:</strong>{' '}
-                    {fogOption !== 'none'
-                      ? fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : 'Special Fog Entry (2 Pots — ₹500)'
-                      : 'None'}
+                    <strong>Theme Package:</strong> {selectedPackage.name}{' '}
+                    {isCouponApplied ? (
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                        (<s style={{ color: '#ef4444' }}>₹{getStandardPackagePrice()}</s> → <strong style={{ color: '#10b981' }}>₹{getEffectivePackagePrice()}</strong>)
+                      </span>
+                    ) : (
+                      <span>(₹{getStandardPackagePrice()})</span>
+                    )}
                   </div>
-                  <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 'bold' }}>
-                    Total Cost: ₹{calculateTotal()}
+                  <div>
+                    <strong>Add-ons & Perks:</strong>{' '}
+                    {isCouponApplied ? (
+                      <span style={{ color: '#10b981', fontWeight: 600 }}>
+                        Free Fog Entry + LED Name Board + Candle Decor + OTT Apps
+                        {fogOption === '2pots' && ' (+1 Extra Pot Upgrade: ₹200)'}
+                      </span>
+                    ) : fogOption !== 'none' ? (
+                      fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : 'Special Fog Entry (2 Pots — ₹500)'
+                    ) : (
+                      'None'
+                    )}
+                  </div>
+                  {isCouponApplied && (
+                    <div style={{ color: '#10b981', fontWeight: 600 }}>
+                      <strong>Coupon Savings:</strong> -₹{calculateDiscount()}
+                    </div>
+                  )}
+                  <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.15rem', color: 'var(--accent)', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Total Cost:</span>
+                    <span>
+                      {isCouponApplied && (
+                        <span style={{ fontSize: '0.85rem', color: '#a1a1aa', textDecoration: 'line-through', marginRight: '8px', fontWeight: 'normal' }}>
+                          ₹{getStandardPackagePrice() + (customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0) + (fogOption === '1pot' ? 300 : fogOption === '2pots' ? 500 : 0)}
+                        </span>
+                      )}
+                      ₹{calculateTotal()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -2224,6 +2355,85 @@ export default function BookingPortal() {
                     />
                   </div>
 
+                  {/* Coupon Code Slot */}
+                  <div className={`${styles.couponSection} ${isCouponApplied ? styles.couponSectionActive : ''}`}>
+                    <div className={styles.couponHeader}>
+                      <span style={{ fontSize: '1.4rem' }}>🎟️</span>
+                      <div>
+                        <div className={styles.couponTitle}>Have a Coupon or Promo Code?</div>
+                        <div className={styles.couponSub}>Apply your coupon to unlock special flat rates and complimentary inclusions!</div>
+                      </div>
+                    </div>
+
+                    {!isCouponApplied ? (
+                      <>
+                        <div className={styles.couponInputWrapper}>
+                          <input
+                            type="text"
+                            className={styles.couponInput}
+                            placeholder="Enter Code (e.g. BEEVIBE999)"
+                            value={couponInput}
+                            onChange={(e) => {
+                              setCouponInput(e.target.value.toUpperCase());
+                              setCouponError('');
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleApplyCoupon();
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className={styles.couponApplyBtn}
+                            onClick={() => handleApplyCoupon()}
+                          >
+                            Apply Code
+                          </button>
+                        </div>
+
+                        <div className={styles.couponSuggestionRow}>
+                          <span>🔥 Limited Deal:</span>
+                          <button
+                            type="button"
+                            className={styles.couponSuggestionChip}
+                            onClick={() => handleApplyCoupon('BEEVIBE999')}
+                          >
+                            ⚡ Click to Apply BEEVIBE999 (Flat ₹999)
+                          </button>
+                        </div>
+
+                        {couponError && <div className={styles.couponErrorMsg}>{couponError}</div>}
+                      </>
+                    ) : (
+                      <div className={styles.couponAppliedContainer}>
+                        <div className={styles.couponAppliedTop}>
+                          <div className={styles.couponAppliedBadge}>
+                            ✓ Code <strong>{appliedCoupon}</strong> Applied! (Flat ₹999 Unlocked)
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.couponRemoveBtn}
+                            onClick={handleRemoveCoupon}
+                          >
+                            Remove Code
+                          </button>
+                        </div>
+                        <div className={styles.couponPerksList}>
+                          <div className={styles.couponPerkTitle}>✨ All Offer Inclusions Activated:</div>
+                          <div className={styles.couponPerksGrid}>
+                            <div className={styles.couponPerkItem}>✓ Any Theme Base: Flat ₹999</div>
+                            <div className={styles.couponPerkItem}>✓ Complimentary Fog Entry Effect Included</div>
+                            <div className={styles.couponPerkItem}>✓ Glowing LED Name Board Included</div>
+                            <div className={styles.couponPerkItem}>✓ Romantic Candlelit Table Decor Included</div>
+                            <div className={styles.couponPerkItem}>✓ All OTT Platforms (Netflix/Prime/Hotstar) Included</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Advance Payment Checkout Card */}
                   <div className={styles.advancePaymentCard} style={{ gridColumn: '1 / -1' }}>
                     <div className={styles.advanceHeader}>
@@ -2239,7 +2449,14 @@ export default function BookingPortal() {
                     <div className={styles.advanceBreakdownRow}>
                       <div className={styles.advanceBreakdownItem}>
                         <div className={styles.advanceBreakdownLabel}>Total Hall Price</div>
-                        <div className={styles.advanceBreakdownVal}>₹{calculateTotal()}</div>
+                        <div className={styles.advanceBreakdownVal}>
+                          ₹{calculateTotal()}
+                          {isCouponApplied && (
+                            <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600, marginTop: '2px' }}>
+                              (Saved ₹{calculateDiscount()})
+                            </div>
+                          )}
+                        </div>
                       </div>
                       <div className={styles.advanceBreakdownItem + ' ' + styles.advancePayableHighlight}>
                         <div className={styles.advanceBreakdownLabel}>🟢 Advance Due Now</div>
@@ -2431,10 +2648,23 @@ export default function BookingPortal() {
                       <div>
                         <span className={styles.ticketLabel}>TOTAL PRICE</span>
                         <div className={styles.ticketVal} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
-                          ₹�{confirmedBooking.totalPrice}
+                          ₹{confirmedBooking.totalPrice}
                         </div>
                       </div>
                     </div>
+
+                    {confirmedBooking.couponCode && (
+                      <div className={styles.ticketRow} style={{ background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', padding: '6px 10px', margin: '4px 0' }}>
+                        <div>
+                          <span className={styles.ticketLabel} style={{ color: '#10b981' }}>COUPON APPLIED</span>
+                          <div className={styles.ticketVal} style={{ color: '#10b981', fontWeight: 'bold' }}>{confirmedBooking.couponCode}</div>
+                        </div>
+                        <div>
+                          <span className={styles.ticketLabel} style={{ color: '#10b981' }}>OFFER SAVINGS</span>
+                          <div className={styles.ticketVal} style={{ color: '#10b981', fontWeight: 'bold' }}>- ₹{confirmedBooking.discountAmount || 0}</div>
+                        </div>
+                      </div>
+                    )}
 
                     <div className={styles.ticketRow} style={{ background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', padding: '8px', margin: '6px 0' }}>
                       <div>

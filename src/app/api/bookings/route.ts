@@ -118,22 +118,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Minimum booking duration for PS5 Gaming Lounge is 1 hour.' }, { status: 400 });
     }
 
+    const rawCoupon = String(body.couponCode || '').trim().toUpperCase();
+    const isSpecialOfferCoupon = rawCoupon === 'BEEVIBE999' || rawCoupon === 'VIBE999';
+
     // Dynamic theme package pricing
     let pkgBase = 0;
     if (detectedBookingType === 'gaming') {
       // PS5 Gaming Lounge is ₹399 / hour (min 1 hour)
       pkgBase = Math.round(399 * durationHours);
     } else {
-      const lower = (packageName || '').toLowerCase();
-      let packagePrice = 999;
-      if (lower.includes('red')) {
-        packagePrice = 799;
-      } else if (lower.includes('pink')) {
-        packagePrice = 899;
-      } else if (lower.includes('purple')) {
-        packagePrice = 999;
+      if (isSpecialOfferCoupon) {
+        // Flat ₹999 / 2 hours promo for any theme!
+        pkgBase = Math.round((999 / 2) * durationHours);
+      } else {
+        const lower = (packageName || '').toLowerCase();
+        let packagePrice = 1499;
+        if (lower.includes('red')) {
+          packagePrice = 1099;
+        } else if (lower.includes('pink')) {
+          packagePrice = 1299;
+        } else if (lower.includes('purple')) {
+          packagePrice = 1499;
+        }
+        pkgBase = Math.round((packagePrice / 2) * durationHours);
       }
-      pkgBase = Math.round((packagePrice / 2) * durationHours);
     }
 
     // Extra guest pricing (base includes 2 guests, extra guests are ₹100/head)
@@ -143,16 +151,13 @@ export async function POST(request: NextRequest) {
     let addonsTotal = 0;
     for (const addon of (addOns || [])) {
       const nameStr = String(addon);
-      if (nameStr.startsWith('DSLR Camera Coverage') || nameStr.startsWith('DSLR Photography') || nameStr.includes('DSLR')) {
-        if (nameStr.includes('30 Min') || nameStr.includes('30min')) {
-          addonsTotal += 300;
-        } else if (nameStr.includes('2 Hour') || nameStr.includes('2hr') || nameStr.includes('2 Hours')) {
-          addonsTotal += 800;
-        } else {
-          addonsTotal += 500;
-        }
+      if (nameStr.includes('Upgrade (+1 Extra Pot') || (nameStr.includes('Upgrade') && nameStr.includes('200'))) {
+        addonsTotal += 200;
       } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Fog Entry') || nameStr.includes('Fog')) {
-        if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
+        if (isSpecialOfferCoupon) {
+          // Fog entry is complimentary with the coupon
+          addonsTotal += 0;
+        } else if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
           addonsTotal += 300;
         } else if (nameStr.includes('2 Pot') || nameStr.includes('2pot') || nameStr.includes('2 Pots')) {
           addonsTotal += 500;
@@ -209,6 +214,8 @@ export async function POST(request: NextRequest) {
       paymentStatus: passedStatus,
       paymentMode: passedMode,
       utrNumber: passedUtr,
+      couponCode: isSpecialOfferCoupon ? rawCoupon : (body.couponCode ? String(body.couponCode).trim() : undefined),
+      discountAmount: typeof body.discountAmount === 'number' ? body.discountAmount : undefined,
       guestCount: numericGuestCount,
       specialRequests: specialRequests || '',
     });

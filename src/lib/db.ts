@@ -21,6 +21,8 @@ export interface Booking {
   utrNumber?: string;
   sbiVerified?: boolean;
   balanceCollected?: boolean;
+  couponCode?: string;
+  discountAmount?: number;
   adminNotes?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;

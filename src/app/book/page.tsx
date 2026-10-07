@@ -89,12 +89,36 @@ export default function BookPage() {
 
           {/* Quick Info Pills */}
           <div className={styles.infoPills}>
-            <span className={styles.pill}>💜 Purple Theme — ₹999/2hrs</span>
-            <span className={styles.pill}>🩷 Pink Theme — ₹799/2hrs</span>
-            <span className={styles.pill}>❤️ Red Theme — ₹599/2hrs</span>
+            <span className={styles.pill}>💜 Purple Theme — ₹1,499/2hrs</span>
+            <span className={styles.pill}>🩷 Pink Theme — ₹1,299/2hrs</span>
+            <span className={styles.pill}>❤️ Red Theme — ₹1,099/2hrs</span>
+          </div>
+          <div style={{
+            margin: '12px auto 8px auto',
+            maxWidth: '640px',
+            background: 'rgba(242, 169, 0, 0.12)',
+            border: '1.5px dashed var(--accent)',
+            borderRadius: '12px',
+            padding: '10px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            fontSize: '0.86rem',
+            color: '#ffffff',
+            fontWeight: 600,
+            flexWrap: 'wrap'
+          }}>
+            <span>🎉 Special Offer: Any theme for flat ₹999 with code</span>
+            <span style={{ background: 'var(--accent)', color: '#000', padding: '3px 10px', borderRadius: '6px', fontWeight: 800 }}>
+              BEEVIBE999
+            </span>
+            <span style={{ fontSize: '0.78rem', color: '#10b981', display: 'block', width: '100%', textAlign: 'center', marginTop: '2px' }}>
+              ✓ Includes Free Fog Entry + LED Name Board + Candle Decor + All OTT Platforms
+            </span>
           </div>
           <p className={styles.extraInfo}>
-            Base price for 2 guests · Extra guests: ₹100/head · Fog Entry: from ₹300
+            Base price for 2 guests · Extra guests: ₹100/head · 100% Private Theater Suite
           </p>
         </div>
 

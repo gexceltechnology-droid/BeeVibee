@@ -25,6 +25,8 @@ interface Booking {
   utrNumber?: string;
   sbiVerified?: boolean;
   balanceCollected?: boolean;
+  couponCode?: string;
+  discountAmount?: number;
   adminNotes?: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   guestCount: number;
@@ -1585,6 +1587,11 @@ export default function AdminDashboard() {
                       <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
                         <div>₹{b.totalPrice}</div>
                         <div style={{ fontSize: '0.75rem', color: '#10b981' }}>Adv: ₹{b.advancePaid ?? 500}</div>
+                        {b.couponCode && (
+                          <div style={{ fontSize: '0.72rem', color: '#a855f7', fontWeight: 600, marginTop: '2px' }}>
+                            🎟️ {b.couponCode}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <span className={`${styles.badge} ${b.status === 'confirmed' ? styles.badgeConfirmed : b.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending}`}>
@@ -2100,6 +2107,12 @@ export default function AdminDashboard() {
                     <td style={{ padding: '12px' }}>Total Amount</td>
                     <td style={{ padding: '12px', textAlign: 'right', color: '#0f172a', fontSize: '1.1rem' }}>₹{selectedBookingForInvoice.totalPrice}</td>
                   </tr>
+                  {selectedBookingForInvoice.couponCode && (
+                    <tr style={{ color: '#16a34a', fontWeight: 600 }}>
+                      <td style={{ padding: '6px 12px' }}>Coupon Applied ({selectedBookingForInvoice.couponCode})</td>
+                      <td style={{ padding: '6px 12px', textAlign: 'right' }}>- ₹{selectedBookingForInvoice.discountAmount || 0}</td>
+                    </tr>
+                  )}
                   <tr style={{ color: '#059669', fontWeight: 600 }}>
                     <td style={{ padding: '6px 12px' }}>Advance Paid (UPI)</td>
                     <td style={{ padding: '6px 12px', textAlign: 'right' }}>- ₹{selectedBookingForInvoice.advancePaid ?? 500}</td>

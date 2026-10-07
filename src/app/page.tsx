@@ -69,7 +69,7 @@ export default function Home() {
     {
       id: 'red',
       name: 'Red Theme (Red Velvet Romance)',
-      price: '₹799',
+      price: '₹1,099',
       duration: '2 Hours',
       badge: 'Anniversary & Romantic Dates ❤️',
       color: '#ef4444',
@@ -79,7 +79,7 @@ export default function Home() {
     {
       id: 'pink',
       name: 'Pink Theme (Angel Wings & Neon)',
-      price: '₹899',
+      price: '₹1,299',
       duration: '2 Hours',
       badge: 'Birthday & Parties 🩷',
       color: '#ec4899',
@@ -89,7 +89,7 @@ export default function Home() {
     {
       id: 'purple',
       name: 'Purple Theme (Royal Butterfly Grandeur)',
-      price: '₹999',
+      price: '₹1,499',
       duration: '2 Hours',
       badge: 'VIP Grand Celebration Setup 💜',
       color: '#a855f7',
@@ -227,22 +227,56 @@ export default function Home() {
                   onClick={() => setVibe('red')}
                 >
                   <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
-                  ❤️ Red (₹799)
+                  ❤️ Red (₹1,099)
                 </button>
                 <button
                   className={styles.vibeBtn + (vibe === 'pink' ? ' ' + styles.vibeBtnActive : '')}
                   onClick={() => setVibe('pink')}
                 >
                   <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
-                  🩷 Pink (₹899)
+                  🩷 Pink (₹1,299)
                 </button>
                 <button
                   className={styles.vibeBtn + (vibe === 'purple' ? ' ' + styles.vibeBtnActive : '')}
                   onClick={() => setVibe('purple')}
                 >
                   <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
-                  💜 Purple (₹999)
+                  💜 Purple (₹1,499)
                 </button>
+              </div>
+            </div>
+
+            {/* Special Flat 999 Coupon Offer Banner */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(242, 169, 0, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
+              border: '1.5px dashed var(--accent)',
+              borderRadius: '14px',
+              padding: '14px 20px',
+              margin: '20px 0 24px 0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '1.8rem' }}>🎉</span>
+                <div>
+                  <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.98rem' }}>
+                    Special Offer: Any Theme at Flat ₹999 with Coupon!
+                  </div>
+                  <div style={{ color: '#d0d0e0', fontSize: '0.8rem', marginTop: '2px' }}>
+                    Includes <strong>Free Fog Entry</strong> + <strong>LED Name Board</strong> + <strong>Candle Decor</strong> + <strong>All OTT Apps</strong>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ background: 'var(--accent)', color: '#000', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', letterSpacing: '0.5px' }}>
+                  CODE: BEEVIBE999
+                </span>
+                <Link href="/book" style={{ background: '#ffffff', color: '#000', padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
+                  Claim Offer →
+                </Link>
               </div>
             </div>
 
@@ -379,6 +413,18 @@ export default function Home() {
                   <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
                   <div className={styles.showcasePrice} style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
                     {pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ {pkg.duration} (Base 2 Guests)</span>
+                  </div>
+                  <div style={{
+                    background: 'rgba(242, 169, 0, 0.1)',
+                    border: '1px dashed rgba(242, 169, 0, 0.35)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    marginBottom: '12px',
+                    fontSize: '0.78rem',
+                    color: 'var(--accent)',
+                    fontWeight: 600
+                  }}>
+                    🎟️ Use code <strong>BEEVIBE999</strong> for flat ₹999 + Free Fog Entry &amp; LED Board
                   </div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
                     Extra guests: ₹100/head (Capacity up to 10 guests)

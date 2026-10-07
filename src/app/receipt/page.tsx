@@ -27,6 +27,8 @@ interface BookingReceiptData {
   paymentMode?: string;
   utrNumber?: string;
   guestCount: number;
+  couponCode?: string;
+  discountAmount?: number;
   specialRequests?: string;
   createdAt: string;
 }
@@ -287,6 +289,13 @@ function ReceiptContent() {
             <span>Total Booking Amount:</span>
             <span style={{ fontWeight: '700', color: '#0f172a' }}>₹{booking.totalPrice}</span>
           </div>
+
+          {booking.couponCode && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.92rem', color: '#16a34a', fontWeight: 600 }}>
+              <span>🎟️ Special Offer Coupon ({booking.couponCode}):</span>
+              <span>- ₹{booking.discountAmount || 0}</span>
+            </div>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px dashed #cbd5e1', fontSize: '1rem', color: '#047857', fontWeight: '800' }}>
             <span>🟢 Advance Payment Received:</span>
