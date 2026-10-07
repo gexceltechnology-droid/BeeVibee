@@ -122,7 +122,6 @@ export default function BookingPortal() {
   const [upiCopied, setUpiCopied] = useState(false);
 
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr' | '2hr'>('none');
   const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
@@ -603,16 +602,11 @@ export default function BookingPortal() {
     const pkgBase = selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
     const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
 
-    let dslrPrice = 0;
-    if (dslrOption === '30min') dslrPrice = 300;
-    else if (dslrOption === '1hr') dslrPrice = 500;
-    else if (dslrOption === '2hr') dslrPrice = 800;
-
     let fogPrice = 0;
     if (fogOption === '1pot') fogPrice = 300;
     else if (fogOption === '2pots') fogPrice = 500;
 
-    return pkgBase + extraGuests + dslrPrice + fogPrice;
+    return pkgBase + extraGuests + fogPrice;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -700,10 +694,6 @@ export default function BookingPortal() {
       packageName: selectedPackage.name,
       addOns: (() => {
         const list: string[] = [];
-        if (dslrOption === '30min') list.push('DSLR Camera Coverage (30 Mins — ₹300)');
-        else if (dslrOption === '1hr') list.push('DSLR Camera Coverage (1 Hour — ₹500)');
-        else if (dslrOption === '2hr') list.push('DSLR Camera Coverage (2 Hours — ₹800)');
-
         if (fogOption === '1pot') list.push('Special Fog Entry Effect (1 Pot — ₹300)');
         else if (fogOption === '2pots') list.push('Special Fog Entry Effect (2 Pots — ₹500)');
         return list;
@@ -2098,25 +2088,6 @@ export default function BookingPortal() {
                   </a>
                 </div>
 
-                {/* DSLR Camera Dropdown Card */}
-                <div className={`${styles.addonCard} ${dslrOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className={styles.addonName}>📸 DSLR Camera Coverage</span>
-                    <span className={styles.addonPrice} style={{ fontSize: '0.9rem', color: dslrOption !== 'none' ? 'var(--accent)' : 'var(--text-secondary)' }}>
-                      {dslrOption === 'none' ? 'Optional' : dslrOption === '30min' ? '+₹300' : dslrOption === '1hr' ? '+₹500' : '+₹800'}
-                    </span>
-                  </div>
-                  <select
-                    className={`${styles.addonSelectDropdown} ${dslrOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
-                    value={dslrOption}
-                    onChange={(e) => setDslrOption(e.target.value as 'none' | '30min' | '1hr' | '2hr')}
-                  >
-                    <option value="none">No DSLR Camera (₹0)</option>
-                    <option value="30min">30 Mins DSLR Photography (+₹300)</option>
-                    <option value="1hr">1 Hour DSLR Photography (+₹500)</option>
-                    <option value="2hr">2 Hours DSLR Photography (+₹800)</option>
-                  </select>
-                </div>
 
                 {/* Special Fog Entry Effect Dropdown Card */}
                 <div className={`${styles.addonCard} ${fogOption !== 'none' ? styles.addonSelected : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px', padding: '16px' }}>
@@ -2156,11 +2127,8 @@ export default function BookingPortal() {
                   <div><strong>Vibe Package:</strong> {selectedPackage.name}</div>
                   <div>
                     <strong>Add-ons & Options selected:</strong>{' '}
-                    {dslrOption !== 'none' || fogOption !== 'none'
-                      ? [
-                          dslrOption === '30min' ? 'DSLR Camera (30 Mins — ₹300)' : dslrOption === '1hr' ? 'DSLR Camera (1 Hour — ₹500)' : dslrOption === '2hr' ? 'DSLR Camera (2 Hours — ₹800)' : null,
-                          fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : fogOption === '2pots' ? 'Special Fog Entry (2 Pots — ₹500)' : null
-                        ].filter(Boolean).join(', ')
+                    {fogOption !== 'none'
+                      ? fogOption === '1pot' ? 'Special Fog Entry (1 Pot — ₹300)' : 'Special Fog Entry (2 Pots — ₹500)'
                       : 'None'}
                   </div>
                   <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.1rem', color: 'var(--accent)', fontWeight: 'bold' }}>
@@ -2585,7 +2553,6 @@ export default function BookingPortal() {
                 onClick={() => {
                   setStep(1);
                   setSelectedSlot(null);
-                  setDslrOption('none');
                   setFogOption('none');
                   setCustomerDetails({ name: '', email: '', phone: '', guestCount: 2, specialRequests: '' });
                   setConfirmedBooking(null);

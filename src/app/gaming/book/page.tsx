@@ -2,21 +2,21 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { 
-  Gamepad2, 
-  ArrowLeft, 
-  CheckCircle2, 
-  FileText 
+import {
+  Gamepad2,
+  ArrowLeft,
+  CheckCircle2,
+  FileText
 } from 'lucide-react';
 import styles from './gamingBook.module.css';
-import { 
-  checkBookingOverlap, 
-  formatCustomTimeRange, 
-  parseTimeRange, 
-  convert12HourToMinutes, 
-  convertMinutesTo12Hour, 
-  validateSlotOperatingHours, 
-  VENUE_CLOSE_MINUTES 
+import {
+  checkBookingOverlap,
+  formatCustomTimeRange,
+  parseTimeRange,
+  convert12HourToMinutes,
+  convertMinutesTo12Hour,
+  validateSlotOperatingHours,
+  VENUE_CLOSE_MINUTES
 } from '@/lib/time';
 import { getAdminWhatsAppDeepLink, BookingData } from '@/lib/whatsappUtils';
 import { isFirebaseConfigured } from '@/lib/firebase';

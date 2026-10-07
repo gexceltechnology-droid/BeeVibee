@@ -94,7 +94,7 @@ export default function BookPage() {
             <span className={styles.pill}>❤️ Red Theme — ₹599/2hrs</span>
           </div>
           <p className={styles.extraInfo}>
-            Base price for 2 guests · Extra guests: ₹100/head · DSLR Camera: from ₹300 · Fog Entry: from ₹300
+            Base price for 2 guests · Extra guests: ₹100/head · Fog Entry: from ₹300
           </p>
         </div>
 
