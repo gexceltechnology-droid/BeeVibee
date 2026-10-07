@@ -11,9 +11,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",
-    "@embedded-postgres/windows-x64": "^18.4.0-beta.17",
     "@types/pg": "^8.23.1",
-    "embedded-postgres": "^18.4.0-beta.17",
     "firebase": "^12.16.0",
     "firebase-admin": "^14.2.0",
     "lucide-react": "^1.23.0",
