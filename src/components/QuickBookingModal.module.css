@@ -594,15 +594,124 @@
 }
 
 @media (max-width: 480px) {
-  .modalCard {
-    padding: 20px 16px 18px 16px;
-    border-radius: 16px;
+  .backdrop {
+    padding: 8px 6px;
   }
+
+  .modalCard {
+    padding: 18px 14px 16px 14px;
+    border-radius: 16px;
+    max-height: 94vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .closeButton {
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .header {
+    margin-bottom: 14px;
+  }
+
+  .pillBadge {
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    margin-bottom: 6px;
+  }
+
+  .title {
+    font-size: 1.22rem;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.78rem;
+  }
+
+  .sectionLabel {
+    font-size: 0.74rem;
+    margin-bottom: 6px;
+  }
+
+  .roomGrid {
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .roomCard {
+    padding: 6px 4px;
+    border-radius: 10px;
+    min-height: 96px;
+  }
+
+  .roomThumbWrapper {
+    height: 44px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+  }
+
+  .roomName {
+    font-size: 0.7rem;
+    line-height: 1.2;
+    margin-bottom: 1px;
+  }
+
+  .roomPrice {
+    font-size: 0.82rem;
+  }
+
+  .roomDuration {
+    font-size: 0.6rem;
+  }
+
   .row2 {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  .title {
-    font-size: 1.3rem;
+
+  .textInput,
+  .phoneInput,
+  .selectInput {
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    padding: 10px 12px;
+  }
+
+  .phonePrefix {
+    font-size: 0.85rem;
+    padding: 10px 10px;
+  }
+
+  .occasionChip {
+    padding: 5px 8px;
+    font-size: 0.72rem;
+  }
+
+  .submitBtn {
+    min-height: 46px;
+    font-size: 0.95rem;
+    padding: 12px 16px;
+  }
+
+  .switchPortalBtn {
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .summaryBox {
+    padding: 12px;
+    font-size: 0.8rem;
+    gap: 8px;
+  }
+
+  .summaryRow {
+    font-size: 0.78rem;
+  }
+
+  .whatsappCtaBtn {
+    min-height: 46px;
+    font-size: 0.9rem;
   }
 }
