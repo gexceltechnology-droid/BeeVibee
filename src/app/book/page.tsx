@@ -110,12 +110,12 @@ export default function BookPage() {
             fontWeight: 600,
             flexWrap: 'wrap'
           }}>
-            <span>🎉 Special Offer: Any theme for flat ₹999 with code</span>
+            <span>🔥 Limited Month Offer: Any theme for flat ₹999 with code</span>
             <span style={{ background: 'var(--accent)', color: '#000', padding: '3px 10px', borderRadius: '6px', fontWeight: 800 }}>
               BEEVIBE999
             </span>
             <span style={{ fontSize: '0.78rem', color: '#10b981', display: 'block', width: '100%', textAlign: 'center', marginTop: '2px' }}>
-              ✓ Includes Free Fog Entry + LED Name Board + Candle Decor + All OTT Platforms
+              ✓ Includes Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTT Platforms
             </span>
           </div>
           <p className={styles.extraInfo}>

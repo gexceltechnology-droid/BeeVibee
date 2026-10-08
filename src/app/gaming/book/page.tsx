@@ -61,18 +61,18 @@ const PACKAGES = [
 ];
 
 const PREDEFINED_SLOTS = [
-  { id: 'g-slot-1', time: '10:00 AM - 11:00 AM', label: '10:00 AM – 11:00 AM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-2', time: '11:15 AM - 12:15 PM', label: '11:15 AM – 12:15 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-3', time: '12:30 PM - 01:30 PM', label: '12:30 PM – 01:30 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-4', time: '01:45 PM - 02:45 PM', label: '01:45 PM – 02:45 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-5', time: '03:00 PM - 04:00 PM', label: '03:00 PM – 04:00 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-6', time: '04:15 PM - 05:15 PM', label: '04:15 PM – 05:15 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-7', time: '05:30 PM - 06:30 PM', label: '05:30 PM – 06:30 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-8', time: '06:45 PM - 07:45 PM', label: '06:45 PM – 07:45 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-9', time: '08:00 PM - 09:00 PM', label: '08:00 PM – 09:00 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-10', time: '09:15 PM - 10:15 PM', label: '09:15 PM – 10:15 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-11', time: '10:30 PM - 11:30 PM', label: '10:30 PM – 11:30 PM', basePrice: 399, isBooked: false },
-  { id: 'g-slot-12', time: '11:00 PM - 12:00 AM', label: '11:00 PM – 12:00 AM (Midnight)', basePrice: 399, isBooked: false },
+  { id: 'g-slot-1', time: '10:00 AM - 11:00 AM', label: '10:00 AM – 11:00 AM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-2', time: '11:15 AM - 12:15 PM', label: '11:15 AM – 12:15 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-3', time: '12:30 PM - 01:30 PM', label: '12:30 PM – 01:30 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-4', time: '01:45 PM - 02:45 PM', label: '01:45 PM – 02:45 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-5', time: '03:00 PM - 04:00 PM', label: '03:00 PM – 04:00 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-6', time: '04:15 PM - 05:15 PM', label: '04:15 PM – 05:15 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-7', time: '05:30 PM - 06:30 PM', label: '05:30 PM – 06:30 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-8', time: '06:45 PM - 07:45 PM', label: '06:45 PM – 07:45 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-9', time: '08:00 PM - 09:00 PM', label: '08:00 PM – 09:00 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-10', time: '09:15 PM - 10:15 PM', label: '09:15 PM – 10:15 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-11', time: '10:30 PM - 11:30 PM', label: '10:30 PM – 11:30 PM', basePrice: 99, isBooked: false },
+  { id: 'g-slot-12', time: '11:00 PM - 12:00 AM', label: '11:00 PM – 12:00 AM (Midnight)', basePrice: 99, isBooked: false },
 ];
 
 export default function GamingBookPage() {
@@ -260,7 +260,7 @@ export default function GamingBookPage() {
         }
 
         const durationHours = durationMinutes / 60;
-        const basePrice = Math.round(399 * durationHours);
+        const basePrice = Math.round(99 * Math.max(1, customerDetails.guestCount) * durationHours);
 
         setSelectedSlot({
           id: 'slot-custom',
@@ -352,8 +352,8 @@ export default function GamingBookPage() {
   // Calculate pricing
   const calculateTotal = () => {
     const durationHours = getSlotDurationHours();
-    const pkgBase = Math.round(399 * durationHours);
-    const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
+    const pkgBase = Math.round(99 * Math.max(1, customerDetails.guestCount) * durationHours);
+    const extraGuests = 0;
 
     let dslrPrice = 0;
     if (dslrOption === '30min') dslrPrice = 300;
@@ -566,7 +566,7 @@ export default function GamingBookPage() {
                 style={{ flex: 1, borderColor: bookingMode === 'predefined' ? '#ffe600' : 'rgba(255,255,255,0.2)', color: bookingMode === 'predefined' ? '#ffe600' : '#fff' }}
                 onClick={() => { setBookingMode('predefined'); setSelectedSlot(null); }}
               >
-                🎮 1-Hour Standard Slots (₹399)
+                🎮 1-Hour Standard Slots (₹99/Person)
               </button>
               <button
                 type="button"
@@ -581,7 +581,7 @@ export default function GamingBookPage() {
             {bookingMode === 'predefined' ? (
               <>
                 <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '12px' }}>
-                  Available 1-Hour Gaming Slots (₹399 / Hr · Till 12:00 AM Midnight)
+                  Available 1-Hour Gaming Slots (₹99 / Person / Hr · Till 12:00 AM Midnight)
                 </h3>
                 <div className={styles.slotsGrid}>
                   {slots.map((slot) => (
@@ -592,7 +592,7 @@ export default function GamingBookPage() {
                     >
                       <div className={styles.slotLabel}>{slot.label}</div>
                       <div className={styles.slotTime}>{slot.time}</div>
-                      <div className={styles.slotPrice}>{slot.isBooked ? 'Unavailable' : '₹399 / Hr ✓'}</div>
+                      <div className={styles.slotPrice}>{slot.isBooked ? 'Unavailable' : '₹99 / Person ✓'}</div>
                     </div>
                   ))}
                 </div>
@@ -601,7 +601,7 @@ export default function GamingBookPage() {
               <div className={styles.time12hPickerContainer}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
                   <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '0.95rem', color: '#00f0ff', margin: 0 }}>
-                    Custom Gaming Hours (₹399/Hour · Min 1 Hour)
+                    Custom Gaming Hours (₹99/Person/Hour · Min 1 Hour)
                   </h3>
                   <span style={{ fontFamily: 'var(--font-vt323)', fontSize: '1.1rem', background: 'rgba(0, 240, 255, 0.12)', border: '1px solid #00f0ff', color: '#00f0ff', padding: '2px 8px', borderRadius: '4px' }}>
                     ⏰ Open 10:00 AM – 12:00 AM (Midnight)

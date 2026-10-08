@@ -764,8 +764,9 @@ export default function BookingPortal({
         if (isCouponApplied) {
           list.push('BEEVIBE999 Offer: Flat ₹999 Base Theme');
           list.push('BEEVIBE999 Offer: Complimentary Fog Entry');
-          list.push('BEEVIBE999 Offer: LED Name Board Setup');
-          list.push('BEEVIBE999 Offer: Candlelit Table Decor');
+          list.push('BEEVIBE999 Offer: Floor Balloons Setup');
+          list.push('BEEVIBE999 Offer: Table Decor Setup');
+          list.push('BEEVIBE999 Offer: Custom LED Name Board');
           list.push('BEEVIBE999 Offer: All OTT Platforms Access');
           if (fogOption === '2pots') {
             list.push('Grand Fog Upgrade (+1 Extra Pot — ₹200)');
@@ -1933,7 +1934,7 @@ export default function BookingPortal({
                         fontWeight: 600,
                         lineHeight: 1.3
                       }}>
-                        🎟️ Use code <strong>BEEVIBE999</strong> at payment for <strong>flat ₹999</strong> + Free Fog Entry, LED Name Board, Candles &amp; OTT!
+                        🎟️ Use code <strong>BEEVIBE999</strong> for <strong>flat ₹999</strong> + Free Fog Entry, Floor Balloons, Table Decor, LED Name Board &amp; All OTTs!
                       </div>
                       <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
                         {pkg.details.map((detail, idx) => (

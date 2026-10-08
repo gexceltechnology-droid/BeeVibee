@@ -172,7 +172,8 @@ export default function QuickBookingModal({
 👤 *Name:* ${name.trim()}
 📞 *Phone:* +91 ${phone}
 🎬 *Room:* ${currentPackage.shortName}
-⏱️ *Duration:* 2 Hours Private Suite
+💰 *Offer Price:* ₹999 / 2 Hours (Standard: ₹${currentPackage.originalPrice})
+🎁 *Inclusions:* Fog Entry, Floor Balloons, Table Decor, LED Name Board, All OTTs
 📅 *Date:* ${date}
 ⏰ *Time Slot:* ${timeSlot}
 🎉 *Occasion:* ${occasion}
@@ -248,10 +249,29 @@ Please confirm my slot reservation!`;
                       )}
                     </div>
                     <div className={styles.roomName}>{pkg.shortName}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.82rem', marginTop: '2px' }}>
+                      <span style={{ textDecoration: 'line-through', opacity: 0.55, fontSize: '0.72rem' }}>₹{pkg.originalPrice}</span>
+                      <strong style={{ color: '#f2a900' }}>₹999</strong>
+                    </div>
                     <div className={styles.roomDuration}>2 Hours Private Suite</div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Month Offer Inclusions Banner */}
+            <div style={{
+              background: 'rgba(242, 169, 0, 0.1)',
+              border: '1px solid rgba(242, 169, 0, 0.28)',
+              borderRadius: '10px',
+              padding: '7px 10px',
+              marginBottom: '14px',
+              fontSize: '0.74rem',
+              color: '#e2e2ec',
+              textAlign: 'center',
+              lineHeight: '1.4'
+            }}>
+              🎁 <strong>Month Offer Inclusions in ₹999:</strong> Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs!
             </div>
 
             {/* Form */}
@@ -410,8 +430,12 @@ Please confirm my slot reservation!`;
                 <span className={styles.summaryValue}>{currentPackage.name}</span>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Duration:</span>
-                <span className={styles.summaryValueGold}>2 Hours Private Suite</span>
+                <span className={styles.summaryLabel}>Offer Price:</span>
+                <span className={styles.summaryValueGold}>₹999 / 2 Hours (Standard: ₹{currentPackage.originalPrice})</span>
+              </div>
+              <div className={styles.summaryRow}>
+                <span className={styles.summaryLabel}>Inclusions:</span>
+                <span className={styles.summaryValue} style={{ fontSize: '0.75rem', textAlign: 'right', color: '#e0e0f0' }}>Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs</span>
               </div>
               <div className={styles.summaryRow}>
                 <span className={styles.summaryLabel}>Date & Time:</span>

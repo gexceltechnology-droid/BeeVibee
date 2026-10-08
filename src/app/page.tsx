@@ -146,6 +146,8 @@ export default function Home() {
     id: exp.slug.replace('-theme', ''),
     name: exp.name,
     shortName: exp.shortName,
+    originalPrice: exp.originalPrice,
+    price: exp.price,
     duration: exp.durationLabel,
     badge: exp.badge,
     color: exp.color,
@@ -337,16 +339,16 @@ export default function Home() {
                   <span style={{ fontSize: '1.6rem' }}>🎉</span>
                   <div>
                     <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.94rem' }}>
-                      Special Celebration Offer: All Themes with Complete Luxury Inclusions!
+                      🔥 Limited Month Offer: Any Theme at Flat ₹999/-
                     </div>
                     <div style={{ color: '#d0d0e0', fontSize: '0.78rem', marginTop: '2px' }}>
-                      Includes <strong>Free Fog Entry</strong> + <strong>LED Name Board</strong> + <strong>Candle Decor</strong> + <strong>All OTT Apps</strong>
+                      Includes <strong>Fog Entry</strong> + <strong>Floor Balloons</strong> + <strong>Table Decor</strong> + <strong>LED Name Board</strong> + <strong>All OTT Platforms</strong>!
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ background: 'var(--accent)', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.82rem', letterSpacing: '0.5px' }}>
-                    COUPON: BEEVIBE999
+                    OFFER: ₹999
                   </span>
                   <button
                     type="button"
@@ -366,10 +368,10 @@ export default function Home() {
                   className="btn btn-primary"
                   style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  Book {activeExperience.shortName} →
+                  Book at ₹999 Offer →
                 </button>
                 <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
-                  PS5 Gaming Lounge 🎮
+                  PS5 Gaming (₹99/Person) 🎮
                 </Link>
                 <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 20px', fontSize: '1rem' }}>
                   View 3 Themes ↓
@@ -412,7 +414,8 @@ export default function Home() {
                     📸 Authentic BeeVibe Room Setup
                   </span>
                   <span className={styles.heroStagePriceBadge} style={{ background: activeExperience.color }}>
-                    2 Hours AC Suite
+                    <span style={{ textDecoration: 'line-through', opacity: 0.7, fontSize: '0.75rem', marginRight: '4px' }}>₹{activeExperience.originalPrice}</span>
+                    <strong>₹999 / 2 Hours</strong>
                   </span>
                 </div>
 
@@ -452,7 +455,10 @@ export default function Home() {
                       <img src={exp.image} alt={exp.shortName} className={styles.heroThumbImg} />
                       <div className={styles.heroThumbText}>
                         <span className={styles.heroThumbName}>{exp.shortName}</span>
-                        <span className={styles.heroThumbPrice} style={{ color: exp.color }}>2 Hours Suite</span>
+                        <span className={styles.heroThumbPrice} style={{ color: exp.color, display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: '0.68rem' }}>₹{exp.originalPrice}</span>
+                          <strong>₹999 / 2h</strong>
+                        </span>
                       </div>
                     </button>
                   );
@@ -578,23 +584,31 @@ export default function Home() {
 
                   <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                     <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
-                    <div className={styles.showcasePrice} style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
-                      {pkg.duration} Private Suite <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>· 100% AC Private Theater</span>
+                    <div className={styles.showcasePrice} style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
+                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.05rem', marginRight: '8px' }}>₹{pkg.originalPrice}</span>
+                      <span style={{ color: 'var(--accent)' }}>₹999</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}> / 2 Hours (Month Special Offer)</span>
                     </div>
                     <div style={{
-                      background: 'rgba(242, 169, 0, 0.1)',
-                      border: '1px dashed rgba(242, 169, 0, 0.35)',
-                      borderRadius: '8px',
-                      padding: '6px 10px',
-                      marginBottom: '12px',
-                      fontSize: '0.78rem',
-                      color: 'var(--accent)',
-                      fontWeight: 600
+                      background: 'rgba(242, 169, 0, 0.12)',
+                      border: '1px solid rgba(242, 169, 0, 0.35)',
+                      borderRadius: '10px',
+                      padding: '10px 12px',
+                      marginBottom: '14px',
+                      fontSize: '0.82rem',
+                      color: '#f8f6f0',
+                      lineHeight: '1.5'
                     }}>
-                      🎟️ Use coupon <strong>BEEVIBE999</strong> for Complimentary Fog Entry, LED Name Board &amp; Candles
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                      👥 Private Suite · Comfortably accommodates up to 10 guests
+                      <div style={{ color: 'var(--accent)', fontWeight: 800, marginBottom: '6px' }}>
+                        🎁 Included Free In This Month&apos;s ₹999 Offer:
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', fontSize: '0.78rem', color: '#e0e0eb' }}>
+                        <span>🌫️ Fog Entry Effect</span>
+                        <span>🎈 Floor Balloons Setup</span>
+                        <span>🕯️ Candle &amp; Table Decor</span>
+                        <span>💡 Custom LED Name Board</span>
+                        <span style={{ gridColumn: 'span 2' }}>📺 All OTT Platforms (Netflix, Prime, Hotstar &amp; More)</span>
+                      </div>
                     </div>
                     <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
                       {pkg.features.map((f, i) => (
@@ -908,8 +922,10 @@ export default function Home() {
       {/* Sticky Mobile Booking CTA */}
       <div className={styles.stickyMobileCta}>
         <div className={styles.stickyMobileCtaText}>
-          <span className={styles.stickyFrom}>{activeExperience.shortName}</span>
-          <span className={styles.stickySub}>100% Private Theater Suite</span>
+          <span className={styles.stickyFrom}>
+            {activeExperience.shortName}: <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: '0.75rem' }}>₹{activeExperience.originalPrice}</span> <strong style={{ color: '#f2a900' }}>₹999</strong>
+          </span>
+          <span className={styles.stickySub}>Includes Fog, Balloons, LED &amp; OTT</span>
         </div>
         <button
           type="button"

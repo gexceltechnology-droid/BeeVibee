@@ -120,25 +120,26 @@ export async function POST(request: NextRequest) {
 
     const rawCoupon = String(body.couponCode || '').trim().toUpperCase();
     const isSpecialOfferCoupon = rawCoupon === 'BEEVIBE999' || rawCoupon === 'VIBE999';
+    const isQuickBooking = Boolean(body.isQuickReservation || body.paymentMode === 'PAY_AT_VENUE' || body.paymentStatus === 'pay_at_venue' || body.paymentStatus === 'pending');
 
     // Dynamic theme package pricing
     let pkgBase = 0;
     if (detectedBookingType === 'gaming') {
-      // PS5 Gaming Lounge is ₹399 / hour (min 1 hour)
-      pkgBase = Math.round(399 * durationHours);
+      // PS5 Gaming Lounge is ₹99 per person / hour
+      pkgBase = Math.round(99 * numericGuestCount * durationHours);
     } else {
-      if (isSpecialOfferCoupon) {
-        // Flat ₹999 / 2 hours promo for any theme!
+      if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+        // Month Offer: Any theme at flat ₹999 / 2 hours promo!
         pkgBase = Math.round((999 / 2) * durationHours);
       } else {
         const lower = (packageName || '').toLowerCase();
-        let packagePrice = 999;
-        if (lower.includes('red')) {
-          packagePrice = 799;
+        let packagePrice = 1499;
+        if (lower.includes('purple')) {
+          packagePrice = 1499;
         } else if (lower.includes('pink')) {
-          packagePrice = 899;
-        } else if (lower.includes('purple')) {
-          packagePrice = 999;
+          packagePrice = 1299;
+        } else if (lower.includes('red')) {
+          packagePrice = 1099;
         }
         pkgBase = Math.round((packagePrice / 2) * durationHours);
       }
@@ -154,8 +155,8 @@ export async function POST(request: NextRequest) {
       if (nameStr.includes('Upgrade (+1 Extra Pot') || (nameStr.includes('Upgrade') && nameStr.includes('200'))) {
         addonsTotal += 200;
       } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Fog Entry') || nameStr.includes('Fog')) {
-        if (isSpecialOfferCoupon) {
-          // Fog entry is complimentary with the coupon
+        if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+          // Fog entry is complimentary with the month offer
           addonsTotal += 0;
         } else if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
           addonsTotal += 300;
@@ -193,7 +194,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const isQuickBooking = Boolean(body.isQuickReservation || body.paymentMode === 'PAY_AT_VENUE' || body.paymentStatus === 'pay_at_venue' || body.paymentStatus === 'pending');
     const passedAdvance = typeof body.advancePaid === 'number'
       ? body.advancePaid
       : (isQuickBooking ? 0 : Math.min(500, calculatedTotal));

@@ -3,6 +3,7 @@ export interface ExperiencePackage {
   name: string;
   shortName: string;
   slug: string;
+  originalPrice: number;
   price: number;
   durationHours: number;
   durationLabel: string;
@@ -10,7 +11,20 @@ export interface ExperiencePackage {
   color: string;
   image: string;
   details: string[];
+  offerInclusions?: string[];
 }
+
+export const MONTH_OFFER = {
+  title: 'Limited Month Offer: Any Theme at Flat ₹999/-',
+  price: 999,
+  inclusions: [
+    'Fog Entry Effect',
+    'Floor Balloon Setup',
+    'Table Decor',
+    'Custom LED Name Board',
+    'All OTT Platforms (Netflix, Prime, Hotstar, YouTube, Spotify)',
+  ],
+};
 
 export const EXPERIENCES: ExperiencePackage[] = [
   {
@@ -18,7 +32,8 @@ export const EXPERIENCES: ExperiencePackage[] = [
     name: 'Red Theme (Red Velvet Romance)',
     shortName: 'Red Velvet Romance',
     slug: 'red-theme',
-    price: 799,
+    originalPrice: 1099,
+    price: 999, // Month offer price
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Anniversary & Romantic Dates ❤️',
@@ -30,14 +45,22 @@ export const EXPERIENCES: ExperiencePackage[] = [
       'Plush Red Velvet Couch, Marble Table & Romantic Rose Petal Setup',
       '180" 4K Laser Projection Screen & 7.1 Dolby Atmos Sound',
       '100% Private Air Conditioned (AC) Theater Suite',
-    ]
+    ],
+    offerInclusions: [
+      'Complimentary Fog Entry Effect',
+      'Floor Balloon Setup',
+      'Romantic Table Decor',
+      'Custom LED Name Board',
+      'All OTT Platforms Included',
+    ],
   },
   {
     id: 'pkg-pink',
     name: 'Pink Theme (Angel Wings & Neon)',
     shortName: 'Angel Wings & Neon',
     slug: 'pink-theme',
-    price: 899,
+    originalPrice: 1299,
+    price: 999, // Month offer price
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Trending Birthday & Party Setup 🩷',
@@ -49,14 +72,22 @@ export const EXPERIENCES: ExperiencePackage[] = [
       'Hot Pink Plush Velvet Seating, White Marble Tables & Picket Fence',
       'Cake Cutting Cylindrical Pedestals, Golden Birdcages & Floor Fog',
       '180" 4K Laser Screen & Private Air Conditioned (AC) Suite',
-    ]
+    ],
+    offerInclusions: [
+      'Complimentary Fog Entry Effect',
+      'Floor Balloon Setup',
+      'Celebration Table Decor',
+      'Custom LED Name Board',
+      'All OTT Platforms Included',
+    ],
   },
   {
     id: 'pkg-purple',
     name: 'Purple Theme (Royal Butterfly Grandeur)',
     shortName: 'Royal Butterfly',
     slug: 'purple-theme',
-    price: 999,
+    originalPrice: 1499,
+    price: 999, // Month offer price
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'VIP Grand Celebration Setup 💜',
@@ -68,8 +99,15 @@ export const EXPERIENCES: ExperiencePackage[] = [
       'Warm Lighted "HAPPY BIRTHDAY" Marquee Letters & Cake Stage',
       'Official BeeVibe 180" 4K Laser Screen with 7.1 Dolby Atmos Sound',
       'Royal Purple Plush Seating & 100% Private VIP Air Conditioned Suite',
-    ]
-  }
+    ],
+    offerInclusions: [
+      'Complimentary Fog Entry Effect',
+      'Floor Balloon Setup',
+      'VIP Table Decor',
+      'Custom LED Name Board',
+      'All OTT Platforms Included',
+    ],
+  },
 ];
 
 export const GAMING_EXPERIENCE = {
@@ -77,10 +115,11 @@ export const GAMING_EXPERIENCE = {
   name: 'PS5 Gaming Lounge',
   shortName: 'PS5 Gaming',
   slug: 'ps5-gaming',
-  price: 399,
+  originalPrice: 199,
+  price: 99, // ₹99 per person
   durationHours: 1,
-  durationLabel: 'Per Hour',
-  badge: 'Dual DualSense & 180" 4K Laser Screen 🎮',
+  durationLabel: 'Per Person / Hour',
+  badge: 'Dual DualSense & 180" 4K Laser Screen 🎮 (₹99/person)',
   color: '#00f0ff',
   image: '/gaming-banner.jpg',
   details: [
@@ -88,7 +127,7 @@ export const GAMING_EXPERIENCE = {
     '2 Wireless DualSense Controllers with haptic feedback',
     '180" 4K Ultra HD Display & High Refresh Gaming',
     'Acoustically treated private gaming suite',
-  ]
+  ],
 };
 
 export const ALL_EXPERIENCES = [...EXPERIENCES, GAMING_EXPERIENCE];

@@ -127,12 +127,12 @@ const GALLERY_ITEMS: GalleryItem[] = [
     title: 'PS5 Pro Multiplayer Gaming Arena',
     category: 'gaming',
     categoryLabel: 'PS5 Gaming Lounge 🎮',
-    theme: 'Cyber Gaming 🎮 (₹399/hr)',
+    theme: 'Cyber Gaming 🎮 (₹99/person)',
     themeColor: '#00f0ff',
     image: '/gallery/ps5-gaming.jpg',
     description: 'Private high-octane gaming lounge with Sony PlayStation 5 console, DualSense wireless controllers, top AAA games (FC 24, Tekken 8, MK1, Spider-Man 2), and 180" 4K display.',
     tags: ['Sony PlayStation 5', '2x DualSense Controllers', 'EA Sports FC 24', 'Tekken 8', '180" 4K Screen'],
-    highlights: ['₹399 / Hour (Min 1 Hr)', 'No Waiting / Full Room Privacy', 'Open Daily Till 12 AM Midnight'],
+    highlights: ['₹99 / Person / Hour', 'No Waiting / Full Room Privacy', 'Open Daily Till 12 AM Midnight'],
     bookingLink: '/gaming/book'
   }
 ];
