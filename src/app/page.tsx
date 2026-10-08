@@ -146,7 +146,6 @@ export default function Home() {
     id: exp.slug.replace('-theme', ''),
     name: exp.name,
     shortName: exp.shortName,
-    price: `₹${exp.price}`,
     duration: exp.durationLabel,
     badge: exp.badge,
     color: exp.color,
@@ -338,7 +337,7 @@ export default function Home() {
                   <span style={{ fontSize: '1.6rem' }}>🎉</span>
                   <div>
                     <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.94rem' }}>
-                      Special Offer: Any Theme at Flat ₹999 with Coupon!
+                      Special Celebration Offer: All Themes with Complete Luxury Inclusions!
                     </div>
                     <div style={{ color: '#d0d0e0', fontSize: '0.78rem', marginTop: '2px' }}>
                       Includes <strong>Free Fog Entry</strong> + <strong>LED Name Board</strong> + <strong>Candle Decor</strong> + <strong>All OTT Apps</strong>
@@ -347,7 +346,7 @@ export default function Home() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ background: 'var(--accent)', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.82rem', letterSpacing: '0.5px' }}>
-                    CODE: BEEVIBE999
+                    COUPON: BEEVIBE999
                   </span>
                   <button
                     type="button"
@@ -367,7 +366,7 @@ export default function Home() {
                   className="btn btn-primary"
                   style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  Book {activeExperience.shortName} (₹{activeExperience.price}) →
+                  Book {activeExperience.shortName} →
                 </button>
                 <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
                   PS5 Gaming Lounge 🎮
@@ -413,7 +412,7 @@ export default function Home() {
                     📸 Authentic BeeVibe Room Setup
                   </span>
                   <span className={styles.heroStagePriceBadge} style={{ background: activeExperience.color }}>
-                    ₹{activeExperience.price} / 2 Hours
+                    2 Hours AC Suite
                   </span>
                 </div>
 
@@ -453,7 +452,7 @@ export default function Home() {
                       <img src={exp.image} alt={exp.shortName} className={styles.heroThumbImg} />
                       <div className={styles.heroThumbText}>
                         <span className={styles.heroThumbName}>{exp.shortName}</span>
-                        <span className={styles.heroThumbPrice} style={{ color: exp.color }}>₹{exp.price} / 2h</span>
+                        <span className={styles.heroThumbPrice} style={{ color: exp.color }}>2 Hours Suite</span>
                       </div>
                     </button>
                   );
@@ -579,8 +578,8 @@ export default function Home() {
 
                   <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                     <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
-                    <div className={styles.showcasePrice} style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
-                      {pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ {pkg.duration} (Base 2 Guests)</span>
+                    <div className={styles.showcasePrice} style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
+                      {pkg.duration} Private Suite <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>· 100% AC Private Theater</span>
                     </div>
                     <div style={{
                       background: 'rgba(242, 169, 0, 0.1)',
@@ -592,10 +591,10 @@ export default function Home() {
                       color: 'var(--accent)',
                       fontWeight: 600
                     }}>
-                      🎟️ Use code <strong>BEEVIBE999</strong> for flat ₹999 + Free Fog Entry &amp; LED Board
+                      🎟️ Use coupon <strong>BEEVIBE999</strong> for Complimentary Fog Entry, LED Name Board &amp; Candles
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                      Extra guests: ₹100/head (Capacity up to 10 guests)
+                      👥 Private Suite · Comfortably accommodates up to 10 guests
                     </div>
                     <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
                       {pkg.features.map((f, i) => (
@@ -804,7 +803,7 @@ export default function Home() {
             {[
               {
                 q: 'How many guests can occupy the private theater?',
-                a: 'Our private celebration theater comfortably accommodates up to 10 guests. Base price covers 2 members, and additional guests can be added at just ₹100 per head.',
+                a: 'Our private celebration theater comfortably accommodates up to 10 guests. Base package covers 2 members, and additional guests can be comfortably accommodated with plush couch seating.',
               },
               {
                 q: 'What are the operating hours and can we book after 12 AM?',
@@ -909,7 +908,7 @@ export default function Home() {
       {/* Sticky Mobile Booking CTA */}
       <div className={styles.stickyMobileCta}>
         <div className={styles.stickyMobileCtaText}>
-          <span className={styles.stickyFrom}>{activeExperience.shortName}: <strong>₹{activeExperience.price}</strong> / 2h</span>
+          <span className={styles.stickyFrom}>{activeExperience.shortName}</span>
           <span className={styles.stickySub}>100% Private Theater Suite</span>
         </div>
         <button

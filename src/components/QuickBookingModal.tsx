@@ -172,7 +172,7 @@ export default function QuickBookingModal({
 👤 *Name:* ${name.trim()}
 📞 *Phone:* +91 ${phone}
 🎬 *Room:* ${currentPackage.shortName}
-💰 *Price:* ₹${currentPackage.price} / 2 Hours
+⏱️ *Duration:* 2 Hours Private Suite
 📅 *Date:* ${date}
 ⏰ *Time Slot:* ${timeSlot}
 🎉 *Occasion:* ${occasion}
@@ -248,8 +248,7 @@ Please confirm my slot reservation!`;
                       )}
                     </div>
                     <div className={styles.roomName}>{pkg.shortName}</div>
-                    <div className={styles.roomPrice}>₹{pkg.price}</div>
-                    <div className={styles.roomDuration}>2 Hours AC Suite</div>
+                    <div className={styles.roomDuration}>2 Hours Private Suite</div>
                   </div>
                 );
               })}
@@ -411,8 +410,8 @@ Please confirm my slot reservation!`;
                 <span className={styles.summaryValue}>{currentPackage.name}</span>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Price:</span>
-                <span className={styles.summaryValueGold}>₹{currentPackage.price} / 2 Hours</span>
+                <span className={styles.summaryLabel}>Duration:</span>
+                <span className={styles.summaryValueGold}>2 Hours Private Suite</span>
               </div>
               <div className={styles.summaryRow}>
                 <span className={styles.summaryLabel}>Date & Time:</span>
