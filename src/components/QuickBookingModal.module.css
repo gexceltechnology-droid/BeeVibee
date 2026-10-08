@@ -23,19 +23,19 @@
   max-width: 520px;
   max-height: 94vh;
   overflow-y: auto;
-  background: #0d0d12;
-  border: 1px solid rgba(242, 169, 0, 0.28);
+  background: #0d0a18;
+  border: 1px solid rgba(217, 70, 239, 0.28);
   border-radius: 20px;
   box-shadow: 
     0 25px 80px rgba(0, 0, 0, 0.95),
-    0 0 50px rgba(242, 169, 0, 0.12),
+    0 0 50px rgba(217, 70, 239, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   padding: 26px 26px 22px 26px;
   color: #f8f6f0;
   animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Subtle gold ambient glow at top inside the card */
+/* Subtle neon ambient glow at top inside the card */
 .cardGlow {
   position: absolute;
   top: -60px;
@@ -43,7 +43,7 @@
   transform: translateX(-50%);
   width: 240px;
   height: 120px;
-  background: radial-gradient(circle, rgba(242, 169, 0, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(217, 70, 239, 0.25) 0%, transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -86,9 +86,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(242, 169, 0, 0.12);
-  border: 1px solid rgba(242, 169, 0, 0.35);
-  color: #f2a900;
+  background: rgba(217, 70, 239, 0.12);
+  border: 1px solid rgba(217, 70, 239, 0.35);
+  color: var(--accent);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -108,7 +108,7 @@
 }
 
 .titleGold {
-  background: linear-gradient(135deg, #f2a900 0%, #ffc83b 50%, #f2a900 100%);
+  background: linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -163,15 +163,15 @@
 }
 
 .roomCard:hover {
-  border-color: rgba(242, 169, 0, 0.4);
+  border-color: rgba(217, 70, 239, 0.4);
   transform: translateY(-2px);
-  background: #181824;
+  background: #181226;
 }
 
 .roomCardActive {
-  background: #1a1816;
-  border: 1px solid #f2a900;
-  box-shadow: 0 0 16px rgba(242, 169, 0, 0.25);
+  background: #1c102a;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 16px rgba(217, 70, 239, 0.3);
   transform: translateY(-2px);
 }
 
@@ -202,8 +202,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #f2a900;
-  color: #000000;
+  background: var(--accent);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,7 +225,7 @@
 .roomPrice {
   font-size: 0.88rem;
   font-weight: 800;
-  color: #f2a900;
+  color: var(--accent);
 }
 
 .roomDuration {
@@ -258,7 +258,7 @@
 }
 
 .inputLabel span {
-  color: #f2a900;
+  color: var(--accent);
 }
 
 .textInput {
@@ -275,9 +275,9 @@
 }
 
 .textInput:focus {
-  border-color: #f2a900;
-  background: #181826;
-  box-shadow: 0 0 0 3px rgba(242, 169, 0, 0.15);
+  border-color: var(--accent);
+  background: #1a122a;
+  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
 }
 
 .phoneInputWrapper {
@@ -291,14 +291,14 @@
 }
 
 .phoneInputWrapper:focus-within {
-  border-color: #f2a900;
-  background: #181826;
-  box-shadow: 0 0 0 3px rgba(242, 169, 0, 0.15);
+  border-color: var(--accent);
+  background: #1a122a;
+  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
 }
 
 .phonePrefix {
-  background: rgba(242, 169, 0, 0.1);
-  color: #f2a900;
+  background: rgba(217, 70, 239, 0.12);
+  color: var(--accent);
   font-weight: 700;
   font-size: 0.88rem;
   padding: 11px 12px;
@@ -350,9 +350,9 @@
 }
 
 .selectInput:focus {
-  border-color: #f2a900;
-  background: #181826;
-  box-shadow: 0 0 0 3px rgba(242, 169, 0, 0.15);
+  border-color: var(--accent);
+  background: #1a122a;
+  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
 }
 
 .selectInput option {
@@ -381,14 +381,14 @@
 }
 
 .occasionChip:hover {
-  border-color: rgba(242, 169, 0, 0.35);
+  border-color: rgba(217, 70, 239, 0.4);
   color: #ffffff;
 }
 
 .occasionChipActive {
-  background: rgba(242, 169, 0, 0.15);
-  border-color: #f2a900;
-  color: #f2a900;
+  background: rgba(217, 70, 239, 0.18);
+  border-color: var(--accent);
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -408,8 +408,8 @@
 .submitBtn {
   width: 100%;
   margin-top: 6px;
-  background: linear-gradient(135deg, #f2a900 0%, #ffc83b 50%, #f2a900 100%);
-  color: #000000;
+  background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%);
+  color: #ffffff;
   font-weight: 800;
   font-size: 0.98rem;
   letter-spacing: 0.02em;
@@ -417,7 +417,7 @@
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(242, 169, 0, 0.35);
+  box-shadow: 0 6px 20px rgba(217, 70, 239, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -427,7 +427,7 @@
 
 .submitBtn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(242, 169, 0, 0.5);
+  box-shadow: 0 10px 28px rgba(217, 70, 239, 0.65);
   filter: brightness(1.05);
 }
 
@@ -467,7 +467,7 @@
 }
 
 .switchPortalBtn:hover {
-  color: #f2a900;
+  color: var(--accent);
 }
 
 /* ─── Success Confirmation Screen ─── */
@@ -507,8 +507,8 @@
 }
 
 .summaryBox {
-  background: #14141d;
-  border: 1px solid rgba(242, 169, 0, 0.3);
+  background: #140e22;
+  border: 1px solid rgba(217, 70, 239, 0.3);
   border-radius: 14px;
   padding: 16px;
   text-align: left;
@@ -535,7 +535,7 @@
 }
 
 .summaryValueGold {
-  color: #f2a900;
+  color: var(--accent);
   font-weight: 800;
 }
 

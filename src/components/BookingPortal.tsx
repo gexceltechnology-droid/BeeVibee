@@ -412,7 +412,7 @@ export default function BookingPortal({
     };
     window.addEventListener('resize', handleResize);
 
-    const colors = ['#f2a900', '#ffffff', '#ff2e7e', '#00d4ff', '#9333ea'];
+    const colors = ['#d946ef', '#a855f7', '#ec4899', '#00d4ff', '#ffffff'];
     const particles = Array.from({ length: 120 }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * height - height,
@@ -987,12 +987,12 @@ export default function BookingPortal({
           <title>Bee Vibe Ticket - ${id}</title>
           <style>
             :root {
-              --accent: #f2a900;
-              --bg-primary: #0a0a0c;
-              --bg-card: #121217;
+              --accent: #d946ef;
+              --bg-primary: #0a0614;
+              --bg-card: #140d24;
               --text-primary: #ffffff;
-              --text-secondary: #a0a0b0;
-              --text-muted: #626272;
+              --text-secondary: #c4bcd8;
+              --text-muted: #847a9e;
             }
 
             * {
@@ -1698,11 +1698,11 @@ export default function BookingPortal({
                         <title>Bee Vibe Ticket - ${id}</title>
                         <style>
                           :root {
-                            --accent: #f2a900;
-                            --bg-primary: #0a0a0c;
+                            --accent: #d946ef;
+                            --bg-primary: #0a0614;
                             --text-primary: #ffffff;
-                            --text-secondary: #a0a0b0;
-                            --text-muted: #626272;
+                            --text-secondary: #c4bcd8;
+                            --text-muted: #847a9e;
                           }
                           * { box-sizing: border-box; margin: 0; padding: 0; }
                           body {
@@ -2515,6 +2515,83 @@ export default function BookingPortal({
                       </div>
                     </div>
 
+                    {/* Live Payment Step Coupon Apply Option */}
+                    <div className={styles.paymentCouponCard}>
+                      {!isCouponApplied ? (
+                        <div className={styles.paymentCouponRow}>
+                          <div className={styles.paymentCouponInfo}>
+                            <span style={{ fontSize: '1.4rem' }}>🎟️</span>
+                            <div>
+                              <strong style={{ color: '#ffffff', fontSize: '0.88rem', display: 'block' }}>
+                                Have a Coupon Code?
+                              </strong>
+                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem' }}>
+                                Apply here while paying to unlock flat ₹999 on any theme + free fog entry!
+                              </span>
+                            </div>
+                          </div>
+                          <div className={styles.paymentCouponForm}>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <input
+                                type="text"
+                                className={styles.paymentCouponInput}
+                                placeholder="Enter code (e.g. BEEVIBE999)"
+                                value={couponInput}
+                                onChange={(e) => {
+                                  setCouponInput(e.target.value.toUpperCase());
+                                  setCouponError('');
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleApplyCoupon();
+                                  }
+                                }}
+                              />
+                              <button
+                                type="button"
+                                className={styles.paymentCouponApplyBtn}
+                                onClick={() => handleApplyCoupon()}
+                              >
+                                Apply
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              className={styles.paymentCouponChip}
+                              onClick={() => handleApplyCoupon('BEEVIBE999')}
+                            >
+                              ⚡ 1-Tap Apply: BEEVIBE999
+                            </button>
+                          </div>
+                          {couponError && (
+                            <div className={styles.paymentCouponError}>{couponError}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={styles.paymentCouponAppliedRow}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#10b981', fontSize: '1.4rem' }}>✓</span>
+                            <div>
+                              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.88rem' }}>
+                                Coupon {appliedCoupon} Applied! (Flat ₹999 Theme Rate Unlocked)
+                              </div>
+                              <div style={{ color: '#e0e0f0', fontSize: '0.76rem' }}>
+                                Complimentary 1-Pot Fog Entry + Floor Balloons + Table Decor + LED Board Included! (Saved ₹{calculateDiscount()})
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.paymentCouponRemoveBtn}
+                            onClick={handleRemoveCoupon}
+                          >
+                            Remove Code
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Modern 2-Column Luxury Payment Console */}
                     <div className={styles.paymentConsoleGrid}>
                       {/* Column 1: QR Station */}
@@ -2762,7 +2839,7 @@ export default function BookingPortal({
 
                     {confirmedBooking.utrNumber && (
                       <div style={{ background: 'rgba(242, 169, 0, 0.08)', border: '1px solid rgba(242, 169, 0, 0.25)', borderRadius: '6px', padding: '8px 12px', margin: '6px 0', textAlign: 'left' }}>
-                        <span className={styles.ticketLabel} style={{ color: '#f2a900' }}>🧾 UPI TRANSACTION UTR</span>
+                        <span className={styles.ticketLabel} style={{ color: 'var(--accent)' }}>🧾 UPI TRANSACTION UTR</span>
                         <div className={styles.ticketVal} style={{ color: '#ffffff', fontFamily: 'monospace', fontSize: '0.9rem' }}>
                           {confirmedBooking.utrNumber}
                         </div>

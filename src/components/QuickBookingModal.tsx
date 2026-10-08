@@ -171,8 +171,7 @@ export default function QuickBookingModal({
 ━━━━━━━━━━━━━━━━━━
 👤 *Name:* ${name.trim()}
 📞 *Phone:* +91 ${phone}
-🎬 *Room:* ${currentPackage.shortName}
-💰 *Offer Price:* ₹999 / 2 Hours (Standard: ₹${currentPackage.originalPrice})
+🎬 *Room:* ${currentPackage.shortName} (2 Hours Private Suite)
 🎁 *Inclusions:* Fog Entry, Floor Balloons, Table Decor, LED Name Board, All OTTs
 📅 *Date:* ${date}
 ⏰ *Time Slot:* ${timeSlot}
@@ -249,10 +248,6 @@ Please confirm my slot reservation!`;
                       )}
                     </div>
                     <div className={styles.roomName}>{pkg.shortName}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '0.82rem', marginTop: '2px' }}>
-                      <span style={{ textDecoration: 'line-through', opacity: 0.55, fontSize: '0.72rem' }}>₹{pkg.originalPrice}</span>
-                      <strong style={{ color: '#f2a900' }}>₹999</strong>
-                    </div>
                     <div className={styles.roomDuration}>2 Hours Private Suite</div>
                   </div>
                 );
@@ -261,17 +256,17 @@ Please confirm my slot reservation!`;
 
             {/* Month Offer Inclusions Banner */}
             <div style={{
-              background: 'rgba(242, 169, 0, 0.1)',
-              border: '1px solid rgba(242, 169, 0, 0.28)',
+              background: 'rgba(217, 70, 239, 0.12)',
+              border: '1px solid rgba(217, 70, 239, 0.32)',
               borderRadius: '10px',
-              padding: '7px 10px',
+              padding: '8px 12px',
               marginBottom: '14px',
               fontSize: '0.74rem',
-              color: '#e2e2ec',
+              color: '#f8f6fe',
               textAlign: 'center',
               lineHeight: '1.4'
             }}>
-              🎁 <strong>Month Offer Inclusions in ₹999:</strong> Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs!
+              🎁 <strong>Month Inclusions with Coupon &quot;BEEVIBE999&quot;:</strong> Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs!
             </div>
 
             {/* Form */}
@@ -394,7 +389,7 @@ Please confirm my slot reservation!`;
               </button>
 
               <div className={styles.trustFooter}>
-                <ShieldCheck size={14} color="#f2a900" />
+                <ShieldCheck size={14} color="var(--accent)" />
                 <span>Zero advance required to hold slot • Pay at venue</span>
               </div>
 
@@ -430,8 +425,8 @@ Please confirm my slot reservation!`;
                 <span className={styles.summaryValue}>{currentPackage.name}</span>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Offer Price:</span>
-                <span className={styles.summaryValueGold}>₹999 / 2 Hours (Standard: ₹{currentPackage.originalPrice})</span>
+                <span className={styles.summaryLabel}>Session:</span>
+                <span className={styles.summaryValueGold}>2 Hours VIP Private Suite</span>
               </div>
               <div className={styles.summaryRow}>
                 <span className={styles.summaryLabel}>Inclusions:</span>

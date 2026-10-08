@@ -37,6 +37,17 @@ export default function Home() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [copiedCodeToast, setCopiedCodeToast] = useState(false);
+
+  const handleCopyCouponCode = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText('BEEVIBE999');
+    }
+    setCopiedCodeToast(true);
+    setTimeout(() => {
+      setCopiedCodeToast(false);
+    }, 3000);
+  };
 
   // Read saved vibe from localStorage on mount
   useEffect(() => {
@@ -268,6 +279,24 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Infinite Horizontal Scrolling Coupon Code Marquee Ticker */}
+      <div
+        className={styles.tickerContainer}
+        onClick={handleCopyCouponCode}
+        title="Tap to copy coupon code BEEVIBE999"
+      >
+        <div className={styles.tickerTrack}>
+          {[1, 2, 3, 4].map((idx) => (
+            <div key={idx} className={styles.tickerItem}>
+              <span>🎉 SPECIAL MONTH PROMO:</span>
+              <span className={styles.tickerCouponBadge}>🎟️ CODE: BEEVIBE999</span>
+              <span>✦ Apply at Payment for Special Theme Rate ✦ Includes Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs!</span>
+              <span className={styles.tickerCopyPrompt}>Tap to Copy Code</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Hero Section: Interactive Split Spotlight with Real Photography */}
       <section id="hero" className={styles.heroSection}>
         <div className="container">
@@ -300,7 +329,7 @@ export default function Home() {
                     onClick={() => handleSelectVibe('red')}
                   >
                     <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
-                    ❤️ Red Velvet Romance (₹799)
+                    ❤️ Red Velvet Romance
                   </button>
                   <button
                     type="button"
@@ -308,7 +337,7 @@ export default function Home() {
                     onClick={() => handleSelectVibe('pink')}
                   >
                     <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
-                    🩷 Angel Wings &amp; Neon (₹899)
+                    🩷 Angel Wings &amp; Neon
                   </button>
                   <button
                     type="button"
@@ -316,14 +345,14 @@ export default function Home() {
                     onClick={() => handleSelectVibe('purple')}
                   >
                     <span className={styles.colorIndicator} style={{ backgroundColor: '#a855f7' }} />
-                    💜 Royal Butterfly (₹999)
+                    💜 Royal Butterfly
                   </button>
                 </div>
               </div>
 
-              {/* Special Flat 999 Coupon Offer Banner */}
+              {/* Special Month Coupon Offer Banner */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(242, 169, 0, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
+                background: 'linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)',
                 border: '1.5px dashed var(--accent)',
                 borderRadius: '14px',
                 padding: '12px 18px',
@@ -336,26 +365,41 @@ export default function Home() {
                 width: '100%'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '1.6rem' }}>🎉</span>
+                  <span style={{ fontSize: '1.6rem' }}>🎟️</span>
                   <div>
                     <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.94rem' }}>
-                      🔥 Limited Month Offer: Any Theme at Flat ₹999/-
+                      Limited Month Promo: Apply Coupon &quot;BEEVIBE999&quot; at Checkout!
                     </div>
-                    <div style={{ color: '#d0d0e0', fontSize: '0.78rem', marginTop: '2px' }}>
-                      Includes <strong>Fog Entry</strong> + <strong>Floor Balloons</strong> + <strong>Table Decor</strong> + <strong>LED Name Board</strong> + <strong>All OTT Platforms</strong>!
+                    <div style={{ color: '#d8c8e2', fontSize: '0.78rem', marginTop: '2px' }}>
+                      Includes Complimentary <strong>Fog Entry</strong> + <strong>Floor Balloons</strong> + <strong>Table Decor</strong> + <strong>LED Name Board</strong> + <strong>All OTTs</strong>!
                     </div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ background: 'var(--accent)', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.82rem', letterSpacing: '0.5px' }}>
-                    OFFER: ₹999
-                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyCouponCode}
+                    style={{
+                      background: 'linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%)',
+                      color: '#ffffff',
+                      padding: '6px 14px',
+                      borderRadius: '6px',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      letterSpacing: '0.5px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(217, 70, 239, 0.4)'
+                    }}
+                  >
+                    📋 Copy Code BEEVIBE999
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleOpenBooking(vibe)}
-                    style={{ background: '#ffffff', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer' }}
+                    style={{ background: '#ffffff', color: '#000', padding: '6px 14px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer' }}
                   >
-                    Claim Offer →
+                    Book Experience →
                   </button>
                 </div>
               </div>
@@ -368,10 +412,10 @@ export default function Home() {
                   className="btn btn-primary"
                   style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  Book at ₹999 Offer →
+                  Reserve VIP Suite →
                 </button>
                 <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
-                  PS5 Gaming (₹99/Person) 🎮
+                  PS5 Gaming Lounge 🎮
                 </Link>
                 <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 20px', fontSize: '1rem' }}>
                   View 3 Themes ↓
@@ -414,8 +458,7 @@ export default function Home() {
                     📸 Authentic BeeVibe Room Setup
                   </span>
                   <span className={styles.heroStagePriceBadge} style={{ background: activeExperience.color }}>
-                    <span style={{ textDecoration: 'line-through', opacity: 0.7, fontSize: '0.75rem', marginRight: '4px' }}>₹{activeExperience.originalPrice}</span>
-                    <strong>₹999 / 2 Hours</strong>
+                    <strong>✨ 2 Hours VIP Suite</strong>
                   </span>
                 </div>
 
@@ -455,9 +498,8 @@ export default function Home() {
                       <img src={exp.image} alt={exp.shortName} className={styles.heroThumbImg} />
                       <div className={styles.heroThumbText}>
                         <span className={styles.heroThumbName}>{exp.shortName}</span>
-                        <span className={styles.heroThumbPrice} style={{ color: exp.color, display: 'flex', gap: '4px', alignItems: 'center' }}>
-                          <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: '0.68rem' }}>₹{exp.originalPrice}</span>
-                          <strong>₹999 / 2h</strong>
+                        <span className={styles.heroThumbPrice} style={{ color: exp.color, fontWeight: 700 }}>
+                          2 Hours Suite
                         </span>
                       </div>
                     </button>
@@ -584,14 +626,13 @@ export default function Home() {
 
                   <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                     <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
-                    <div className={styles.showcasePrice} style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
-                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '1.05rem', marginRight: '8px' }}>₹{pkg.originalPrice}</span>
-                      <span style={{ color: 'var(--accent)' }}>₹999</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}> / 2 Hours (Month Special Offer)</span>
+                    <div className={styles.showcasePrice} style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
+                      <span style={{ color: 'var(--accent)' }}>2 Hours Private Suite</span>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}> · All VIP Amenities Included</span>
                     </div>
                     <div style={{
-                      background: 'rgba(242, 169, 0, 0.12)',
-                      border: '1px solid rgba(242, 169, 0, 0.35)',
+                      background: 'rgba(217, 70, 239, 0.1)',
+                      border: '1px solid rgba(217, 70, 239, 0.3)',
                       borderRadius: '10px',
                       padding: '10px 12px',
                       marginBottom: '14px',
@@ -600,7 +641,7 @@ export default function Home() {
                       lineHeight: '1.5'
                     }}>
                       <div style={{ color: 'var(--accent)', fontWeight: 800, marginBottom: '6px' }}>
-                        🎁 Included Free In This Month&apos;s ₹999 Offer:
+                        🎁 Complimentary Inclusions with Coupon Code BEEVIBE999:
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', fontSize: '0.78rem', color: '#e0e0eb' }}>
                         <span>🌫️ Fog Entry Effect</span>
@@ -660,7 +701,7 @@ export default function Home() {
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
-                <Gamepad2 size={24} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE — ₹399/HOUR
+                <Gamepad2 size={24} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
               </div>
               <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff', fontSize: '2rem' }}>
                 Sony PlayStation 5 Console + 2 Wireless Controllers
@@ -682,7 +723,7 @@ export default function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/gallery/ps5-gaming.jpg" alt="PS5 Gaming Lounge" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.8)', padding: '6px 12px', borderRadius: '8px', border: '1px solid #00f0ff', color: '#00f0ff', fontSize: '0.85rem', fontWeight: 'bold' }}>
-                ₹399 / Hour (Min 1 Hr) · Till 12 AM Midnight
+                180&quot; 4K Laser Display · DualSense Wireless · Till 12 AM
               </div>
             </div>
           </div>
@@ -829,7 +870,7 @@ export default function Home() {
               },
               {
                 q: 'Is an advance payment required for booking confirmation?',
-                a: 'Yes, a transparent ₹500 advance deposit is required via UPI (GPay, PhonePe, Paytm) to lock your date and time slot. The remaining balance is paid upon check-in at the venue.',
+                a: 'Yes, a nominal advance deposit is required via UPI (GPay, PhonePe, Paytm) to lock your date and time slot. The remaining balance is paid upon check-in at the venue.',
               },
               {
                 q: 'Are food, cakes, and snacks allowed inside?',
@@ -923,7 +964,7 @@ export default function Home() {
       <div className={styles.stickyMobileCta}>
         <div className={styles.stickyMobileCtaText}>
           <span className={styles.stickyFrom}>
-            {activeExperience.shortName}: <span style={{ textDecoration: 'line-through', opacity: 0.6, fontSize: '0.75rem' }}>₹{activeExperience.originalPrice}</span> <strong style={{ color: '#f2a900' }}>₹999</strong>
+            {activeExperience.shortName} VIP Suite · 2 Hours
           </span>
           <span className={styles.stickySub}>Includes Fog, Balloons, LED &amp; OTT</span>
         </div>
@@ -933,9 +974,17 @@ export default function Home() {
           className="btn btn-primary"
           style={{ padding: '10px 20px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
         >
-          Book Experience →
+          Reserve VIP Suite →
         </button>
       </div>
+
+      {/* Tap-to-Copy Coupon Toast Feedback */}
+      {copiedCodeToast && (
+        <div className={styles.tickerToast}>
+          <span>✓</span>
+          <span>Coupon Code <strong>BEEVIBE999</strong> Copied! Apply it at payment checkout.</span>
+        </div>
+      )}
 
       {/* Quick Booking Modal with Basic Details & Number */}
       <QuickBookingModal

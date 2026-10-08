@@ -62,12 +62,12 @@ const GALLERY_ITEMS: GalleryItem[] = [
     title: 'Royal Butterfly VIP Celebration Suite',
     category: 'birthday',
     categoryLabel: 'VIP Birthday Celebration 💜',
-    theme: 'Purple Theme 💜 (₹999)',
+    theme: 'Purple Theme 💜',
     themeColor: '#a855f7',
     image: '/gallery/theme-purple.jpg',
     description: 'Authentic BeeVibe Purple VIP Suite featuring grand balloon arches, illuminated butterfly wings, warm "HAPPY BIRTHDAY" marquee letters, gold shimmer backdrop, and 180" 4K laser projection screen with Dolby Atmos 7.1.',
     tags: ['Illuminated Butterfly Wings', 'HAPPY BIRTHDAY Marquee', 'Purple Balloon Arches', '180" 4K Screen', 'Dolby Atmos 7.1'],
-    highlights: ['₹999 for 2 Hours (Base 2 Guests)', '100% Private VIP Celebration Hall', 'Cake Cutting Pedestal Stage'],
+    highlights: ['2 Hours Private VIP Session', '100% Private VIP Celebration Hall', 'Cake Cutting Pedestal Stage'],
     bookingLink: '/book?theme=purple'
   },
   {
@@ -75,12 +75,12 @@ const GALLERY_ITEMS: GalleryItem[] = [
     title: 'Angel Wings & Neon Birthday Celebration',
     category: 'birthday',
     categoryLabel: 'Birthday Celebration 🩷',
-    theme: 'Pink Theme 🩷 (₹899)',
+    theme: 'Pink Theme 🩷',
     themeColor: '#ec4899',
     image: '/gallery/theme-pink.jpg',
     description: 'Authentic BeeVibe Pink Suite featuring giant glowing illuminated angel wings, pink shimmer sequin wall, "Happy Birthday" & "Let\'s Party" neon lights, hot pink plush recliners, and ground fog effect.',
     tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Pink Shimmer Wall', 'Ground Fog Effect', 'Hot Pink Seating'],
-    highlights: ['₹899 for 2 Hours (Base 2 Guests)', 'Private Cake Cutting Stage', 'Air Conditioned Suite'],
+    highlights: ['2 Hours Private VIP Session', 'Private Cake Cutting Stage', 'Air Conditioned Suite'],
     bookingLink: '/book?theme=pink'
   },
   {
@@ -88,12 +88,12 @@ const GALLERY_ITEMS: GalleryItem[] = [
     title: 'Red Velvet Romance & Proposal Suite',
     category: 'romantic',
     categoryLabel: 'Romantic Dates & Anniversary ❤️',
-    theme: 'Red Theme ❤️ (₹799)',
+    theme: 'Red Theme ❤️',
     themeColor: '#ef4444',
     image: '/gallery/theme-red.jpg',
     description: 'Authentic BeeVibe Red Romance Suite featuring giant red floral heart with "Will You Marry Me?" neon, lighted arch, red shimmer sequin wall, "LOVE" illuminated block boxes, and plush red couch.',
     tags: ['Floral Red Heart Arch', 'Will You Marry Me Neon', 'LOVE Lighted Boxes', '180" 4K Laser Screen', 'Ground Fog Effect'],
-    highlights: ['₹799 for 2 Hours (Base 2 Guests)', '100% Private & Soundproof Suite', 'Custom Marquee Board'],
+    highlights: ['2 Hours Private VIP Session', '100% Private & Soundproof Suite', 'Custom Marquee Board'],
     bookingLink: '/book?theme=red'
   },
   {
@@ -102,7 +102,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'cinema',
     categoryLabel: 'Private Cinema Experience 🎬',
     theme: 'Cinema Suite 🍿',
-    themeColor: '#f2a900',
+    themeColor: '#d946ef',
     image: '/gallery/theme-purple.jpg',
     description: 'Massive 180-inch 4K high-contrast laser projection screen with 7.1 Dolby Atmos sound. Stream your favorite movies from Netflix, Prime Video, Hotstar, YouTube, or play personal celebration videos.',
     tags: ['180" Laser Projection', 'Dolby Atmos 7.1', 'Netflix & OTT Streaming', 'Soundproof Privacy', 'Acoustic Suite'],
@@ -127,12 +127,12 @@ const GALLERY_ITEMS: GalleryItem[] = [
     title: 'PS5 Pro Multiplayer Gaming Arena',
     category: 'gaming',
     categoryLabel: 'PS5 Gaming Lounge 🎮',
-    theme: 'Cyber Gaming 🎮 (₹99/person)',
+    theme: 'Cyber Gaming 🎮',
     themeColor: '#00f0ff',
     image: '/gallery/ps5-gaming.jpg',
     description: 'Private high-octane gaming lounge with Sony PlayStation 5 console, DualSense wireless controllers, top AAA games (FC 24, Tekken 8, MK1, Spider-Man 2), and 180" 4K display.',
     tags: ['Sony PlayStation 5', '2x DualSense Controllers', 'EA Sports FC 24', 'Tekken 8', '180" 4K Screen'],
-    highlights: ['₹99 / Person / Hour', 'No Waiting / Full Room Privacy', 'Open Daily Till 12 AM Midnight'],
+    highlights: ['Sony PlayStation 5 Console', 'No Waiting / Full Room Privacy', 'Open Daily Till 12 AM Midnight'],
     bookingLink: '/gaming/book'
   }
 ];

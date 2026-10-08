@@ -11,17 +11,17 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(8, 8, 10, 0.94);
+  background: rgba(7, 5, 14, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(242, 169, 0, 0.12);
+  border-bottom: 1px solid rgba(217, 70, 239, 0.18);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
   transition: all 0.3s ease;
 }
 
 .headerContainerScrolled {
-  background: rgba(6, 6, 8, 0.98);
-  border-bottom: 1px solid rgba(242, 169, 0, 0.22);
+  background: rgba(5, 3, 11, 0.98);
+  border-bottom: 1px solid rgba(217, 70, 239, 0.3);
 }
 
 .scrollProgressBar {
@@ -135,9 +135,9 @@
   top: 100%;
   left: 16px;
   right: 16px;
-  background: rgba(8, 8, 12, 0.98);
-  border: 1px solid rgba(242, 169, 0, 0.18);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(242, 169, 0, 0.08);
+  background: rgba(10, 7, 18, 0.98);
+  border: 1px solid rgba(217, 70, 239, 0.25);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(217, 70, 239, 0.12);
   backdrop-filter: blur(20px);
   border-radius: 16px;
   padding: 20px;
@@ -192,8 +192,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(242, 169, 0, 0.08);
-  border: 1px solid rgba(242, 169, 0, 0.25);
+  background: rgba(217, 70, 239, 0.1);
+  border: 1px solid rgba(217, 70, 239, 0.32);
   border-radius: 30px;
   padding: 6px 16px;
   color: var(--accent);
@@ -359,8 +359,8 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   width: 100%;
-  background: rgba(14, 14, 19, 0.75);
-  border: 1px solid rgba(242, 169, 0, 0.14);
+  background: rgba(17, 12, 28, 0.75);
+  border: 1px solid rgba(217, 70, 239, 0.18);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   border-radius: 16px;
   padding: 18px 20px;
@@ -528,8 +528,8 @@
 /* Footer */
 .footer {
   padding: 60px 0 24px 0;
-  border-top: 1px solid rgba(242, 169, 0, 0.14);
-  background: rgba(5, 5, 7, 0.98);
+  border-top: 1px solid rgba(217, 70, 239, 0.18);
+  background: rgba(5, 3, 11, 0.98);
 }
 
 .footerGrid {
@@ -627,10 +627,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 18px;
-    background: rgba(8, 8, 10, 0.96);
+    background: rgba(7, 5, 14, 0.96);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(242, 169, 0, 0.22);
+    border-top: 1px solid rgba(217, 70, 239, 0.25);
     box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7);
   }
 
@@ -823,7 +823,7 @@
 
 .heroStageBookBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(242, 169, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(217, 70, 239, 0.5);
 }
 
 .heroThumbnailsRow {
@@ -910,10 +910,10 @@
   max-width: 1100px;
   max-height: 92vh;
   overflow-y: auto;
-  background: #0f0f15;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #0f0a1c;
+  border: 1px solid rgba(217, 70, 239, 0.25);
   border-radius: 20px;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 40px rgba(242, 169, 0, 0.12);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 40px rgba(217, 70, 239, 0.15);
   padding: 24px;
   animation: scaleUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -964,4 +964,107 @@
   from { opacity: 0; transform: scale(0.95) translateY(12px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
+
+/* ─── Infinite Horizontal Scrolling Coupon Marquee Ticker ─── */
+.tickerContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(90deg, #120924 0%, #240c38 50%, #120924 100%);
+  border-top: 1px solid rgba(217, 70, 239, 0.28);
+  border-bottom: 1px solid rgba(217, 70, 239, 0.38);
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.6), 0 0 16px rgba(217, 70, 239, 0.15);
+  padding: 10px 0;
+  cursor: pointer;
+  user-select: none;
+  z-index: 95;
+  transition: all 0.3s ease;
+}
+
+.tickerContainer:hover {
+  background: linear-gradient(90deg, #170b2e 0%, #2e0e47 50%, #170b2e 100%);
+  border-color: rgba(217, 70, 239, 0.55);
+}
+
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  animation: tickerScroll 26s linear infinite;
+}
+
+.tickerContainer:hover .tickerTrack {
+  animation-play-state: paused;
+}
+
+.tickerItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 32px;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fbf9fe;
+}
+
+.tickerCouponBadge {
+  background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  box-shadow: 0 2px 10px rgba(217, 70, 239, 0.5);
+  border: 1px dashed rgba(255, 255, 255, 0.6);
+  font-size: 0.84rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tickerCopyPrompt {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(217, 70, 239, 0.45);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.tickerContainer:hover .tickerCopyPrompt {
+  background: rgba(217, 70, 239, 0.3);
+  border-color: #d946ef;
+}
+
+.tickerToast {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #150c2c;
+  border: 1.5px solid #d946ef;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.85), 0 0 25px rgba(217, 70, 239, 0.45);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeInModal 0.25s ease-out;
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 
