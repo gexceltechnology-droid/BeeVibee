@@ -63,7 +63,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'birthday',
     categoryLabel: 'VIP Birthday Celebration 💜',
     theme: 'Purple Theme 💜',
-    themeColor: '#a855f7',
+    themeColor: '#09090b',
     image: '/gallery/theme-purple.jpg',
     description: 'Authentic BeeVibe Purple VIP Suite featuring grand balloon arches, illuminated butterfly wings, warm "HAPPY BIRTHDAY" marquee letters, gold shimmer backdrop, and 180" 4K laser projection screen with Dolby Atmos 7.1.',
     tags: ['Illuminated Butterfly Wings', 'HAPPY BIRTHDAY Marquee', 'Purple Balloon Arches', '180" 4K Screen', 'Dolby Atmos 7.1'],
@@ -76,7 +76,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'birthday',
     categoryLabel: 'Birthday Celebration 🩷',
     theme: 'Pink Theme 🩷',
-    themeColor: '#ec4899',
+    themeColor: '#09090b',
     image: '/gallery/theme-pink.jpg',
     description: 'Authentic BeeVibe Pink Suite featuring giant glowing illuminated angel wings, pink shimmer sequin wall, "Happy Birthday" & "Let\'s Party" neon lights, hot pink plush recliners, and ground fog effect.',
     tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Pink Shimmer Wall', 'Ground Fog Effect', 'Hot Pink Seating'],
@@ -89,7 +89,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'romantic',
     categoryLabel: 'Romantic Dates & Anniversary ❤️',
     theme: 'Red Theme ❤️',
-    themeColor: '#ef4444',
+    themeColor: '#09090b',
     image: '/gallery/theme-red.jpg',
     description: 'Authentic BeeVibe Red Romance Suite featuring giant red floral heart with "Will You Marry Me?" neon, lighted arch, red shimmer sequin wall, "LOVE" illuminated block boxes, and plush red couch.',
     tags: ['Floral Red Heart Arch', 'Will You Marry Me Neon', 'LOVE Lighted Boxes', '180" 4K Laser Screen', 'Ground Fog Effect'],
@@ -102,7 +102,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'cinema',
     categoryLabel: 'Private Cinema Experience 🎬',
     theme: 'Cinema Suite 🍿',
-    themeColor: '#d946ef',
+    themeColor: '#09090b',
     image: '/gallery/theme-purple.jpg',
     description: 'Massive 180-inch 4K high-contrast laser projection screen with 7.1 Dolby Atmos sound. Stream your favorite movies from Netflix, Prime Video, Hotstar, YouTube, or play personal celebration videos.',
     tags: ['180" Laser Projection', 'Dolby Atmos 7.1', 'Netflix & OTT Streaming', 'Soundproof Privacy', 'Acoustic Suite'],
@@ -115,7 +115,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'decor',
     categoryLabel: 'Special Effects & Decor ✨',
     theme: 'Special Effects 🌫️',
-    themeColor: '#ec4899',
+    themeColor: '#09090b',
     image: '/gallery/theme-pink.jpg',
     description: 'Create unforgettable cinematic memories with ground-hugging cold dry ice fog rolling across the private theater floor during cake cutting, romantic proposals, or surprise grand entries.',
     tags: ['Cold Fog Machine', 'Surprise Grand Entry', 'Photo & Video Friendly', 'Safe & Odorless'],
@@ -128,7 +128,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     category: 'gaming',
     categoryLabel: 'PS5 Gaming Lounge 🎮',
     theme: 'Cyber Gaming 🎮',
-    themeColor: '#00f0ff',
+    themeColor: '#09090b',
     image: '/gallery/ps5-gaming.jpg',
     description: 'Private high-octane gaming lounge with Sony PlayStation 5 console, DualSense wireless controllers, top AAA games (FC 24, Tekken 8, MK1, Spider-Man 2), and 180" 4K display.',
     tags: ['Sony PlayStation 5', '2x DualSense Controllers', 'EA Sports FC 24', 'Tekken 8', '180" 4K Screen'],
@@ -347,7 +347,7 @@ export default function GallerySection({ initialCategory = 'all', isStandalonePa
                 <div className={styles.imageWrapper}>
                   <div
                     className={styles.cardThemeBadge}
-                    style={{ borderLeft: `3px solid ${item.themeColor}` }}
+                    style={{ borderLeft: '3px solid #09090b' }}
                   >
                     {item.theme}
                   </div>
@@ -475,9 +475,9 @@ export default function GallerySection({ initialCategory = 'all', isStandalonePa
                 <div
                   className={styles.modalThemeBadge}
                   style={{
-                    backgroundColor: `${activeItem.themeColor}22`,
-                    border: `1px solid ${activeItem.themeColor}`,
-                    color: activeItem.themeColor
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #09090b',
+                    color: '#09090b'
                   }}
                 >
                   <Sparkles size={14} /> {activeItem.theme}
@@ -490,13 +490,13 @@ export default function GallerySection({ initialCategory = 'all', isStandalonePa
                 <ul className={styles.highlightsList}>
                   {activeItem.highlights.map((hl, hIdx) => (
                     <li key={hIdx} className={styles.highlightItem}>
-                      <span className={styles.highlightDot} style={{ backgroundColor: activeItem.themeColor }} />
+                      <span className={styles.highlightDot} style={{ backgroundColor: '#09090b' }} />
                       {hl}
                     </li>
                   ))}
                   {activeItem.tags.map((tag, tIdx) => (
                     <li key={`tag-${tIdx}`} className={styles.highlightItem}>
-                      <span className={styles.highlightDot} style={{ backgroundColor: activeItem.themeColor }} />
+                      <span className={styles.highlightDot} style={{ backgroundColor: '#09090b' }} />
                       {tag}
                     </li>
                   ))}

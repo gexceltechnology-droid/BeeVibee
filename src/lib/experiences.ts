@@ -37,7 +37,7 @@ export const EXPERIENCES: ExperiencePackage[] = [
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Anniversary & Romantic Dates ❤️',
-    color: '#ef4444',
+    color: '#09090b',
     image: '/themes/theme-red.jpg',
     details: [
       'Authentic Red Velvet Decor with Floral Heart & "Will You Marry Me?" Neon',
@@ -64,7 +64,7 @@ export const EXPERIENCES: ExperiencePackage[] = [
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Trending Birthday & Party Setup 🩷',
-    color: '#ec4899',
+    color: '#09090b',
     image: '/themes/theme-pink.jpg',
     details: [
       'Giant Glowing Illuminated Angel Wings & Birthday Stage Setup',
@@ -91,7 +91,7 @@ export const EXPERIENCES: ExperiencePackage[] = [
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'VIP Grand Celebration Setup 💜',
-    color: '#a855f7',
+    color: '#09090b',
     image: '/themes/theme-purple.jpg',
     details: [
       'Grand Royal Butterfly Setup with Triple Arched Lighted Canopies',

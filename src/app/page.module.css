@@ -267,15 +267,22 @@
 }
 
 .vibeBtnActive {
-  background: #f8fafc;
+  background: #09090b;
+  color: #ffffff;
   border-color: #09090b;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 .colorIndicator {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background-color: #71717a;
+  transition: background-color 0.2s ease;
+}
+
+.vibeBtnActive .colorIndicator {
+  background-color: #ffffff !important;
 }
 
 .heroCtas {

@@ -7,15 +7,15 @@
 }
 
 .triggerBtn {
-  background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+  background: #09090b;
   color: #ffffff;
-  border: none;
+  border: 1px solid #09090b;
   border-radius: 50px;
   padding: 12px 22px;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4), 0 0 20px rgba(37, 211, 102, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   font-weight: 700;
   font-size: 0.92rem;
   cursor: pointer;
@@ -23,16 +23,16 @@
 }
 
 .triggerBtn:hover {
+  background: #27272a;
   transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 14px 35px rgba(37, 211, 102, 0.5), 0 0 25px rgba(37, 211, 102, 0.5);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
 }
 
 .badgeDot {
   width: 10px;
   height: 10px;
-  background-color: #00ff87;
+  background-color: #22c55e;
   border-radius: 50%;
-  box-shadow: 0 0 10px #00ff87;
   animation: pulse 1.8s infinite;
 }
 
@@ -66,7 +66,7 @@
 }
 
 .chatHeader {
-  background: linear-gradient(135deg, #128c7e 0%, #075e54 100%);
+  background: #09090b;
   color: #ffffff;
   padding: 16px;
   display: flex;
@@ -88,7 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #128c7e;
+  color: #09090b;
   font-weight: 800;
   font-size: 1.1rem;
 }
@@ -185,8 +185,9 @@
 }
 
 .optionChip:hover {
-  background: rgba(37, 211, 102, 0.3);
-  color: #047857;
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
   transform: translateY(-1px);
 }
 
@@ -195,7 +196,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 10px;
-  background: #25d366;
+  background: #09090b;
   color: #ffffff;
   text-decoration: none;
   font-weight: 700;
@@ -224,11 +225,11 @@
 }
 
 .inputField:focus {
-  border-color: #25d366;
+  border-color: #09090b;
 }
 
 .sendBtn {
-  background: #25d366;
+  background: #09090b;
   color: #ffffff;
   border: none;
   border-radius: 50%;

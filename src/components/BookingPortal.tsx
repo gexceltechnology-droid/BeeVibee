@@ -412,7 +412,7 @@ export default function BookingPortal({
     };
     window.addEventListener('resize', handleResize);
 
-    const colors = ['#d946ef', '#a855f7', '#ec4899', '#00d4ff', '#ffffff'];
+    const colors = ['#09090b', '#27272a', '#71717a', '#a1a1aa', '#e4e4e7'];
     const particles = Array.from({ length: 120 }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * height - height,

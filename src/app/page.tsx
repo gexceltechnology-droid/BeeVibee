@@ -193,7 +193,7 @@ export default function Home() {
             </Link>
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
-                <li><Link href="/gaming" className={styles.navLink} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
+                <li><Link href="/gaming" className={styles.navLink} style={{ color: '#09090b', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
                 <li><a href="#vibes" className={styles.navLink}>Our 3 Themes</a></li>
                 <li><a href="#gallery" className={styles.navLink}>Gallery 📸</a></li>
                 <li><a href="#features" className={styles.navLink}>Amenities</a></li>
@@ -227,7 +227,7 @@ export default function Home() {
           <div className={styles.mobileMenu + (isMobileMenuOpen ? ' ' + styles.mobileMenuActive : '')}>
             <ul className={styles.mobileNavLinks}>
               <li>
-                <Link href="/gaming" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#00f0ff', fontWeight: 'bold' }}>
+                <Link href="/gaming" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#09090b', fontWeight: 'bold' }}>
                   Gaming World 🎮
                 </Link>
               </li>
@@ -310,7 +310,7 @@ export default function Home() {
 
               <h1 className={styles.heroTitle}>
                 Your Private Cinema.<br />
-                <span className="text-glow" style={{ color: activeExperience.color, transition: 'color 0.4s ease' }}>
+                <span style={{ color: '#09090b' }}>
                   Unforgettable Celebrations.
                 </span>
               </h1>
@@ -328,7 +328,7 @@ export default function Home() {
                     className={styles.vibeBtn + (vibe === 'red' ? ' ' + styles.vibeBtnActive : '')}
                     onClick={() => handleSelectVibe('red')}
                   >
-                    <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
+                    <span className={styles.colorIndicator} />
                     ❤️ Red Velvet Romance
                   </button>
                   <button
@@ -336,7 +336,7 @@ export default function Home() {
                     className={styles.vibeBtn + (vibe === 'pink' ? ' ' + styles.vibeBtnActive : '')}
                     onClick={() => handleSelectVibe('pink')}
                   >
-                    <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
+                    <span className={styles.colorIndicator} />
                     🩷 Angel Wings &amp; Neon
                   </button>
                   <button
@@ -344,7 +344,7 @@ export default function Home() {
                     className={styles.vibeBtn + (vibe === 'purple' ? ' ' + styles.vibeBtnActive : '')}
                     onClick={() => handleSelectVibe('purple')}
                   >
-                    <span className={styles.colorIndicator} style={{ backgroundColor: '#a855f7' }} />
+                    <span className={styles.colorIndicator} />
                     💜 Royal Butterfly
                   </button>
                 </div>
@@ -414,7 +414,7 @@ export default function Home() {
                 >
                   Reserve VIP Suite →
                 </button>
-                <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
+                <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#09090b', color: '#09090b' }}>
                   PS5 Gaming Lounge 🎮
                 </Link>
                 <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 20px', fontSize: '1rem' }}>
@@ -428,8 +428,8 @@ export default function Home() {
               <div
                 className={styles.heroShowcaseStage}
                 style={{
-                  borderColor: activeExperience.color + '66',
-                  boxShadow: `0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px ${activeExperience.color}25`
+                  borderColor: '#e2e8f0',
+                  boxShadow: '0 16px 40px rgba(0, 0, 0, 0.08)'
                 }}
               >
                 {/* 3 Real Room Photos Stacked (Cross-fade smooth transition) */}
@@ -457,7 +457,7 @@ export default function Home() {
                   <span className={styles.heroStageRealBadge}>
                     📸 Authentic BeeVibe Room Setup
                   </span>
-                  <span className={styles.heroStagePriceBadge} style={{ background: activeExperience.color }}>
+                  <span className={styles.heroStagePriceBadge} style={{ background: '#09090b', color: '#ffffff' }}>
                     <strong>✨ 2 Hours VIP Suite</strong>
                   </span>
                 </div>
@@ -473,7 +473,7 @@ export default function Home() {
                   <button
                     type="button"
                     className={styles.heroStageBookBtn}
-                    style={{ background: activeExperience.color, color: '#ffffff' }}
+                    style={{ background: '#09090b', color: '#ffffff' }}
                     onClick={() => handleOpenBooking(vibe)}
                   >
                     Book This Room →
@@ -491,14 +491,14 @@ export default function Home() {
                       type="button"
                       key={exp.id}
                       className={`${styles.heroThumbBtn} ${isActive ? styles.heroThumbBtnActive : ''}`}
-                      style={{ borderColor: isActive ? exp.color : undefined }}
+                      style={{ borderColor: isActive ? '#09090b' : '#e2e8f0' }}
                       onClick={() => handleSelectVibe(expVibe)}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={exp.image} alt={exp.shortName} className={styles.heroThumbImg} />
                       <div className={styles.heroThumbText}>
                         <span className={styles.heroThumbName}>{exp.shortName}</span>
-                        <span className={styles.heroThumbPrice} style={{ color: exp.color, fontWeight: 700 }}>
+                        <span className={styles.heroThumbPrice} style={{ color: '#09090b', fontWeight: 700 }}>
                           2 Hours Suite
                         </span>
                       </div>
@@ -575,10 +575,10 @@ export default function Home() {
                   className={`${styles.showcaseCard} ${isActive ? styles.showcaseCardActive : ''}`}
                   onClick={() => handleSelectVibe(pkgVibe)}
                   style={{
-                    border: isActive ? `2px solid ${pkg.color}` : `1px solid ${pkg.color}33`,
+                    border: isActive ? '2px solid #09090b' : '1px solid #e2e8f0',
                     boxShadow: isActive
-                      ? `0 16px 45px rgba(0, 0, 0, 0.8), 0 0 30px ${pkg.color}35`
-                      : `0 12px 36px rgba(0, 0, 0, 0.6), 0 0 16px ${pkg.color}15`,
+                      ? '0 16px 40px rgba(0, 0, 0, 0.12)'
+                      : '0 8px 24px rgba(0, 0, 0, 0.04)',
                     cursor: 'pointer'
                   }}
                 >
@@ -589,13 +589,13 @@ export default function Home() {
                       position: 'absolute',
                       top: '12px',
                       right: '12px',
-                      background: pkg.color,
+                      background: '#09090b',
                       color: '#ffffff',
                       fontSize: '0.75rem',
                       fontWeight: 700,
                       padding: '5px 12px',
                       borderRadius: '20px',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                     }}>
                       {pkg.badge}
                     </div>
@@ -603,7 +603,7 @@ export default function Home() {
                       position: 'absolute',
                       top: '12px',
                       left: '12px',
-                      background: 'rgba(10, 10, 14, 0.85)',
+                      background: '#09090b',
                       backdropFilter: 'blur(8px)',
                       color: '#ffffff',
                       fontSize: '0.72rem',
@@ -620,12 +620,12 @@ export default function Home() {
                       left: 0,
                       right: 0,
                       height: '60px',
-                      background: 'linear-gradient(to top, rgba(10, 10, 14, 0.95), transparent)'
+                      background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent)'
                     }} />
                   </div>
 
                   <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                    <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
+                    <h3 className={styles.showcaseTitle} style={{ color: '#09090b', fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
                     <div className={styles.showcasePrice} style={{ fontSize: '1.2rem', fontWeight: 800, color: '#09090b', marginBottom: '8px' }}>
                       <span style={{ color: '#09090b' }}>2 Hours Private Suite</span>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}> · All VIP Amenities Included</span>
@@ -654,7 +654,7 @@ export default function Home() {
                     <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
                       {pkg.features.map((f, i) => (
                         <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px', color: '#334155' }}>
-                          <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {f}
+                          <span style={{ color: '#09090b', fontWeight: 'bold' }}>✓</span> {f}
                         </li>
                       ))}
                     </ul>
@@ -668,8 +668,9 @@ export default function Home() {
                       style={{
                         width: '100%',
                         padding: '12px',
-                        background: pkg.color,
-                        borderColor: pkg.color,
+                        background: '#09090b',
+                        borderColor: '#09090b',
+                        color: '#ffffff',
                         fontWeight: 700,
                         fontSize: '0.95rem',
                         cursor: 'pointer'
@@ -690,18 +691,18 @@ export default function Home() {
         <div className="container">
           <div style={{
             background: '#ffffff',
-            border: '1.5px solid #00f0ff',
+            border: '1px solid #e2e8f0',
             borderRadius: '24px',
             padding: '36px',
-            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.05), 0 0 25px rgba(0, 240, 255, 0.12)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '30px',
             alignItems: 'center'
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0891b2', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
-                <Gamepad2 size={24} color="#0891b2" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#09090b', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
+                <Gamepad2 size={24} color="#09090b" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
               </div>
               <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#09090b', fontSize: '2rem' }}>
                 Sony PlayStation 5 Console + 2 Wireless Controllers
@@ -713,16 +714,16 @@ export default function Home() {
                 <Link href="/gaming" className="btn btn-primary" style={{ background: '#09090b', border: '1px solid #09090b', color: '#ffffff', fontWeight: 700 }}>
                   Enter Gaming World 🎮
                 </Link>
-                <Link href="/gaming/book" className="btn btn-secondary" style={{ borderColor: '#cbd5e1', color: '#09090b' }}>
+                <Link href="/gaming/book" className="btn btn-secondary" style={{ borderColor: '#09090b', color: '#09090b' }}>
                   Book PS5 Gaming Slot
                 </Link>
               </div>
             </div>
 
-            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid rgba(0, 240, 255, 0.4)', height: '240px' }}>
+            <div style={{ position: 'relative', borderRadius: '16px', overflow: 'hidden', border: '1px solid #e2e8f0', height: '240px' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/gallery/ps5-gaming.jpg" alt="PS5 Gaming Lounge" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.8)', padding: '6px 12px', borderRadius: '8px', border: '1px solid #00f0ff', color: '#00f0ff', fontSize: '0.85rem', fontWeight: 'bold' }}>
+              <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: '#09090b', padding: '6px 12px', borderRadius: '8px', border: '1px solid #09090b', color: '#ffffff', fontSize: '0.85rem', fontWeight: 'bold' }}>
                 180&quot; 4K Laser Display · DualSense Wireless · Till 12 AM
               </div>
             </div>
@@ -946,7 +947,7 @@ export default function Home() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px', padding: '8px 16px', fontSize: '0.85rem', backgroundColor: '#25D366', borderColor: '#25D366', color: '#ffffff' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '12px', padding: '8px 16px', fontSize: '0.85rem', backgroundColor: '#09090b', borderColor: '#09090b', color: '#ffffff' }}
               >
                 Chat on WhatsApp
               </a>

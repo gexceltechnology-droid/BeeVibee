@@ -34,55 +34,27 @@
   --font-title: var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: var(--font-plus-jakarta), 'Plus Jakarta Sans', -apple-system, sans-serif;
   
-  /* Animated Lights (Vibes) Preset variables */
-  --light-amber: 217, 119, 6;
-  --light-cyan: 8, 145, 178;
-  --light-pink: 219, 39, 119;
-  --light-purple: 147, 51, 234;
-  --light-red: 220, 38, 38;
+  /* Animated Lights (Vibes) Preset variables - Strict Black & White Monochrome */
+  --light-amber: 9, 9, 11;
+  --light-cyan: 9, 9, 11;
+  --light-pink: 9, 9, 11;
+  --light-purple: 9, 9, 11;
+  --light-red: 9, 9, 11;
 
   scroll-behavior: smooth;
 }
 
-/* Vibe Preset Theme Selectors (Room mood lighting controls) */
-[data-vibe="amber"] {
-  --accent-base: var(--light-amber);
-  --accent: rgb(var(--light-amber));
-  --accent-hover: #b45309;
-  --accent-glow: 0 4px 18px rgba(var(--light-amber), 0.25);
-  --accent-border: rgba(var(--light-amber), 0.3);
-}
-
-[data-vibe="cyan"] {
-  --accent-base: var(--light-cyan);
-  --accent: rgb(var(--light-cyan));
-  --accent-hover: #0e7490;
-  --accent-glow: 0 4px 18px rgba(var(--light-cyan), 0.25);
-  --accent-border: rgba(var(--light-cyan), 0.3);
-}
-
-[data-vibe="pink"] {
-  --accent-base: var(--light-pink);
-  --accent: rgb(var(--light-pink));
-  --accent-hover: #be185d;
-  --accent-glow: 0 4px 18px rgba(var(--light-pink), 0.25);
-  --accent-border: rgba(var(--light-pink), 0.3);
-}
-
-[data-vibe="purple"] {
-  --accent-base: var(--light-purple);
-  --accent: rgb(var(--light-purple));
-  --accent-hover: #7e22ce;
-  --accent-glow: 0 4px 18px rgba(var(--light-purple), 0.25);
-  --accent-border: rgba(var(--light-purple), 0.3);
-}
-
+/* Vibe Preset Theme Selectors - Strict Black & White Theme */
+[data-vibe="amber"],
+[data-vibe="cyan"],
+[data-vibe="pink"],
+[data-vibe="purple"],
 [data-vibe="red"] {
-  --accent-base: var(--light-red);
-  --accent: rgb(var(--light-red));
-  --accent-hover: #b91c1c;
-  --accent-glow: 0 4px 18px rgba(var(--light-red), 0.25);
-  --accent-border: rgba(var(--light-red), 0.3);
+  --accent-base: 9, 9, 11;
+  --accent: #09090b;
+  --accent-hover: #1e293b;
+  --accent-glow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  --accent-border: rgba(0, 0, 0, 0.15);
 }
 
 /* Base resets */
