@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   Sparkles,
   ChevronDown,
@@ -15,16 +16,90 @@ import {
 } from 'lucide-react';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import GallerySection from '@/components/GallerySection';
+import QuickBookingModal from '@/components/QuickBookingModal';
+import { EXPERIENCES } from '@/lib/experiences';
 import styles from './page.module.css';
+
+const BookingPortal = dynamic(() => import('@/components/BookingPortal'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0c0' }}>
+      Loading Booking Portal...
+    </div>
+  ),
+});
 
 export default function Home() {
   const [vibe, setVibe] = useState<'pink' | 'purple' | 'red'>('purple');
+  const [isQuickBookingOpen, setIsQuickBookingOpen] = useState(false);
+  const [isFullBookingOpen, setIsFullBookingOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // 1. Scroll listener for sticky header styling & scroll progress
+  // Read saved vibe from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('beevibe_theme') as 'pink' | 'purple' | 'red' | null;
+      if (saved && ['pink', 'purple', 'red'].includes(saved)) {
+        setVibe(saved);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  // Automatically trigger quick booking popup with basic details & phone when customer opens the website
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsQuickBookingOpen(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update vibe and synchronize with storage
+  const handleSelectVibe = (newVibe: 'pink' | 'purple' | 'red') => {
+    setVibe(newVibe);
+    try {
+      localStorage.setItem('beevibe_theme', newVibe);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Open quick booking modal with specific or current theme
+  const handleOpenBooking = (theme?: 'pink' | 'purple' | 'red') => {
+    if (theme) {
+      handleSelectVibe(theme);
+    }
+    setIsQuickBookingOpen(true);
+  };
+
+  // Switch from quick modal to full customization portal if requested
+  const handleSwitchToFullPortal = () => {
+    setIsQuickBookingOpen(false);
+    setIsFullBookingOpen(true);
+  };
+
+  // Lock body scroll and listen for Escape key when full modal is open
+  useEffect(() => {
+    if (isFullBookingOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsFullBookingOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = 'unset';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else if (!isQuickBookingOpen) {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isFullBookingOpen, isQuickBookingOpen]);
+
+  // Scroll listener for sticky header styling & scroll progress
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
@@ -40,7 +115,7 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 2. Intersection Observer for scroll reveal animations
+  // Intersection Observer for scroll reveal animations
   useEffect(() => {
     const observerOptions = {
       root: null,
@@ -65,38 +140,19 @@ export default function Home() {
     };
   }, []);
 
-  const THEMES_PREVIEWS = [
-    {
-      id: 'red',
-      name: 'Red Theme (Red Velvet Romance)',
-      price: '₹1,099',
-      duration: '2 Hours',
-      badge: 'Anniversary & Romantic Dates ❤️',
-      color: '#ef4444',
-      image: '/themes/theme-red.jpg',
-      features: ['Floral Heart & "Happy Anniversary" Neon', 'Red Shimmer Backdrop & Lighted Arch', 'Plush Velvet Seating & Marble Table', '180" 4K Screen & 7.1 Dolby Sound'],
-    },
-    {
-      id: 'pink',
-      name: 'Pink Theme (Angel Wings & Neon)',
-      price: '₹1,299',
-      duration: '2 Hours',
-      badge: 'Birthday & Parties 🩷',
-      color: '#ec4899',
-      image: '/themes/theme-pink.jpg',
-      features: ['Giant Glowing Angel Wings Backdrop', 'Pink Shimmer Arch with "Happy Birthday" Neon', 'Hot Pink Velvet Recliners & Picket Fence', '180" 4K Screen & 7.1 Dolby Sound'],
-    },
-    {
-      id: 'purple',
-      name: 'Purple Theme (Royal Butterfly Grandeur)',
-      price: '₹1,499',
-      duration: '2 Hours',
-      badge: 'VIP Grand Celebration Setup 💜',
-      color: '#a855f7',
-      image: '/themes/theme-purple.jpg',
-      features: ['Grand Triple Arched Decor & Balloon Arches', 'Illuminated Butterfly Wings & Gold Sequin Wall', 'Lighted "HAPPY BIRTHDAY" Marquee Letters', '180" 4K Screen & 7.1 Dolby Sound'],
-    },
-  ];
+  const activeExperience = EXPERIENCES.find((exp) => exp.slug.includes(vibe)) || EXPERIENCES[2];
+
+  const THEMES_PREVIEWS = EXPERIENCES.map((exp) => ({
+    id: exp.slug.replace('-theme', ''),
+    name: exp.name,
+    shortName: exp.shortName,
+    price: `₹${exp.price}`,
+    duration: exp.durationLabel,
+    badge: exp.badge,
+    color: exp.color,
+    image: exp.image,
+    features: exp.details.slice(0, 4),
+  }));
 
   return (
     <div className={styles.main} data-vibe={vibe}>
@@ -135,9 +191,14 @@ export default function Home() {
               </ul>
             </nav>
             <div className={styles.headerActions}>
-              <Link href="/book" className="btn btn-primary btn-nav" style={{ padding: '10px 20px', fontSize: '0.88rem', fontWeight: 'bold' }}>
+              <button
+                type="button"
+                onClick={() => handleOpenBooking()}
+                className="btn btn-primary btn-nav"
+                style={{ padding: '10px 20px', fontSize: '0.88rem', fontWeight: 'bold', cursor: 'pointer' }}
+              >
                 Book Now
-              </Link>
+              </button>
               <button
                 className={styles.hamburger + (isMobileMenuOpen ? ' ' + styles.hamburgerActive : '')}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -189,168 +250,253 @@ export default function Home() {
                 </Link>
               </li>
               <li style={{ width: '100%', marginTop: '12px' }}>
-                <Link href="/book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleOpenBooking();
+                  }}
+                >
                   Book Now
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Section: Interactive Split Spotlight with Real Photography */}
       <section id="hero" className={styles.heroSection}>
         <div className="container">
-          <div className={styles.heroWrapper}>
-            <div className={styles.heroBadge}>
-              <Sparkles size={16} color="var(--accent)" />
-              <span>BANGALORE&apos;S PREMIER PRIVATE CELEBRATION THEATER &amp; LOUNGE</span>
-            </div>
-
-            <h1 className={styles.heroTitle}>
-              Your Private Cinema.<br />
-              <span className="text-glow" style={{ color: 'var(--accent)', transition: 'color 0.5s' }}>
-                Unforgettable Celebrations.
-              </span>
-            </h1>
-
-            <p className={styles.heroSubtitle}>
-              Experience Bangalore&apos;s most luxurious private party hall and celebration theater in Jayanagar 9th Block. Book our 100% private suites with <strong>180-inch 4K screen</strong>, <strong>7.1 Dolby Atmos sound</strong>, custom lighting, and dedicated <strong>PS5 Gaming</strong> for birthdays, anniversaries, and date nights.
-            </p>
-
-            {/* Room Mood Lighting Buttons */}
-            <div className={styles.vibePanel}>
-              <div className={styles.vibeTitle}>Set Room Mood Lighting:</div>
-              <div className={styles.vibeButtons}>
-                <button
-                  className={styles.vibeBtn + (vibe === 'red' ? ' ' + styles.vibeBtnActive : '')}
-                  onClick={() => setVibe('red')}
-                >
-                  <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
-                  ❤️ Red (₹1,099)
-                </button>
-                <button
-                  className={styles.vibeBtn + (vibe === 'pink' ? ' ' + styles.vibeBtnActive : '')}
-                  onClick={() => setVibe('pink')}
-                >
-                  <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
-                  🩷 Pink (₹1,299)
-                </button>
-                <button
-                  className={styles.vibeBtn + (vibe === 'purple' ? ' ' + styles.vibeBtnActive : '')}
-                  onClick={() => setVibe('purple')}
-                >
-                  <span className={styles.colorIndicator} style={{ backgroundColor: '#9333ea' }} />
-                  💜 Purple (₹1,499)
-                </button>
+          <div className={styles.heroSplitGrid}>
+            {/* Left Column: Headline, Controls, CTAs */}
+            <div className={styles.heroContentCol}>
+              <div className={styles.heroBadge}>
+                <Sparkles size={16} color="var(--accent)" />
+                <span>BANGALORE&apos;S PREMIER PRIVATE CELEBRATION THEATER &amp; LOUNGE</span>
               </div>
-            </div>
 
-            {/* Special Flat 999 Coupon Offer Banner */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(242, 169, 0, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
-              border: '1.5px dashed var(--accent)',
-              borderRadius: '14px',
-              padding: '14px 20px',
-              margin: '20px 0 24px 0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontSize: '1.8rem' }}>🎉</span>
-                <div>
-                  <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.98rem' }}>
-                    Special Offer: Any Theme at Flat ₹999 with Coupon!
-                  </div>
-                  <div style={{ color: '#d0d0e0', fontSize: '0.8rem', marginTop: '2px' }}>
-                    Includes <strong>Free Fog Entry</strong> + <strong>LED Name Board</strong> + <strong>Candle Decor</strong> + <strong>All OTT Apps</strong>
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ background: 'var(--accent)', color: '#000', padding: '6px 14px', borderRadius: '8px', fontWeight: 800, fontSize: '0.88rem', letterSpacing: '0.5px' }}>
-                  CODE: BEEVIBE999
+              <h1 className={styles.heroTitle}>
+                Your Private Cinema.<br />
+                <span className="text-glow" style={{ color: activeExperience.color, transition: 'color 0.4s ease' }}>
+                  Unforgettable Celebrations.
                 </span>
-                <Link href="/book" style={{ background: '#ffffff', color: '#000', padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'none' }}>
-                  Claim Offer →
-                </Link>
+              </h1>
+
+              <p className={styles.heroSubtitle}>
+                Experience Bangalore&apos;s most luxurious private party hall and celebration theater in Jayanagar 9th Block. Book our 100% private suites with <strong>180-inch 4K laser projection</strong>, <strong>7.1 Dolby Atmos sound</strong>, custom lighting, and dedicated <strong>PS5 Gaming</strong> for birthdays, anniversaries, and date nights.
+              </p>
+
+              {/* Room Mood Lighting & Theme Switcher */}
+              <div className={styles.vibePanel} style={{ alignItems: 'flex-start', width: '100%' }}>
+                <div className={styles.vibeTitle}>Select Real Room Setup:</div>
+                <div className={styles.vibeButtons} style={{ justifyContent: 'flex-start' }}>
+                  <button
+                    type="button"
+                    className={styles.vibeBtn + (vibe === 'red' ? ' ' + styles.vibeBtnActive : '')}
+                    onClick={() => handleSelectVibe('red')}
+                  >
+                    <span className={styles.colorIndicator} style={{ backgroundColor: '#ef4444' }} />
+                    ❤️ Red Velvet Romance (₹799)
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.vibeBtn + (vibe === 'pink' ? ' ' + styles.vibeBtnActive : '')}
+                    onClick={() => handleSelectVibe('pink')}
+                  >
+                    <span className={styles.colorIndicator} style={{ backgroundColor: '#ec4899' }} />
+                    🩷 Angel Wings &amp; Neon (₹899)
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.vibeBtn + (vibe === 'purple' ? ' ' + styles.vibeBtnActive : '')}
+                    onClick={() => handleSelectVibe('purple')}
+                  >
+                    <span className={styles.colorIndicator} style={{ backgroundColor: '#a855f7' }} />
+                    💜 Royal Butterfly (₹999)
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className={styles.heroCtas}>
-              <Link href="/book" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700 }}>
-                Reserve Your Hall Now →
-              </Link>
-              <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 24px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
-                PS5 Gaming Lounge 🎮
-              </Link>
-              <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 24px', fontSize: '1rem' }}>
-                View 3 Themes ↓
-              </a>
-            </div>
+              {/* Special Flat 999 Coupon Offer Banner */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(242, 169, 0, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%)',
+                border: '1.5px dashed var(--accent)',
+                borderRadius: '14px',
+                padding: '12px 18px',
+                margin: '16px 0 22px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px',
+                width: '100%'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '1.6rem' }}>🎉</span>
+                  <div>
+                    <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.94rem' }}>
+                      Special Offer: Any Theme at Flat ₹999 with Coupon!
+                    </div>
+                    <div style={{ color: '#d0d0e0', fontSize: '0.78rem', marginTop: '2px' }}>
+                      Includes <strong>Free Fog Entry</strong> + <strong>LED Name Board</strong> + <strong>Candle Decor</strong> + <strong>All OTT Apps</strong>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ background: 'var(--accent)', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 800, fontSize: '0.82rem', letterSpacing: '0.5px' }}>
+                    CODE: BEEVIBE999
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenBooking(vibe)}
+                    style={{ background: '#ffffff', color: '#000', padding: '5px 12px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer' }}
+                  >
+                    Claim Offer →
+                  </button>
+                </div>
+              </div>
 
-            {/* Live Visual 3-Theme Preview Banner */}
-            <div className={styles.heroThemesShowcase}>
-              {THEMES_PREVIEWS.map((item) => (
-                <div
-                  key={item.id}
-                  className={styles.heroThemeCard + (vibe === item.id ? ' ' + styles.heroThemeCardActive : '')}
-                  onClick={() => setVibe(item.id as 'pink' | 'purple' | 'red')}
+              {/* Action Buttons */}
+              <div className={styles.heroCtas} style={{ justifyContent: 'flex-start' }}>
+                <button
+                  type="button"
+                  onClick={() => handleOpenBooking(vibe)}
+                  className="btn btn-primary"
+                  style={{ padding: '14px 28px', fontSize: '1rem', fontWeight: 700, cursor: 'pointer' }}
                 >
-                  <div className={styles.heroThemeImgWrapper}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.image} alt={item.name} className={styles.heroThemeImg} />
-                    <span className={styles.heroThemeBadge} style={{ background: item.color }}>
-                      {item.price} / 2 Hrs
-                    </span>
-                  </div>
-                  <div className={styles.heroThemeInfo}>
-                    <h4 style={{ margin: '0 0 4px 0', fontSize: '0.95rem', color: item.color }}>{item.name}</h4>
-                    <p style={{ margin: 0, fontSize: '0.78rem', color: '#a0a0c0' }}>{item.badge}</p>
-                  </div>
-                </div>
-              ))}
+                  Book {activeExperience.shortName} (₹{activeExperience.price}) →
+                </button>
+                <Link href="/gaming" className="btn btn-secondary" style={{ padding: '14px 22px', fontSize: '1rem', borderColor: '#00f0ff', color: '#00f0ff' }}>
+                  PS5 Gaming Lounge 🎮
+                </Link>
+                <a href="#vibes" className="btn btn-secondary" style={{ padding: '14px 20px', fontSize: '1rem' }}>
+                  View 3 Themes ↓
+                </a>
+              </div>
             </div>
 
-            {/* Trust Metrics Bar */}
-            <div className={styles.trustBar}>
-              <div className={styles.trustItem}>
-                <span className={styles.trustIcon}>🎬</span>
-                <div>
-                  <strong>180&quot; 4K Laser Screen</strong>
-                  <span>Cinematic Visuals</span>
+            {/* Right Column: Hero Real Photography Showcase */}
+            <div className={styles.heroVisualCol}>
+              <div
+                className={styles.heroShowcaseStage}
+                style={{
+                  borderColor: activeExperience.color + '66',
+                  boxShadow: `0 20px 60px rgba(0, 0, 0, 0.85), 0 0 35px ${activeExperience.color}25`
+                }}
+              >
+                {/* 3 Real Room Photos Stacked (Cross-fade smooth transition) */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/themes/theme-red.jpg"
+                  alt="Real Red Velvet Romance Private Suite Setup at BeeVibe"
+                  className={`${styles.heroRealRoomImg} ${vibe === 'red' ? styles.heroRealRoomImgActive : ''}`}
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/themes/theme-pink.jpg"
+                  alt="Real Angel Wings & Neon Birthday Private Suite Setup at BeeVibe"
+                  className={`${styles.heroRealRoomImg} ${vibe === 'pink' ? styles.heroRealRoomImgActive : ''}`}
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/themes/theme-purple.jpg"
+                  alt="Real Royal Butterfly VIP Private Suite Setup at BeeVibe"
+                  className={`${styles.heroRealRoomImg} ${vibe === 'purple' ? styles.heroRealRoomImgActive : ''}`}
+                />
+
+                {/* Top Overlay Badges */}
+                <div className={styles.heroStageTopOverlay}>
+                  <span className={styles.heroStageRealBadge}>
+                    📸 Authentic BeeVibe Room Setup
+                  </span>
+                  <span className={styles.heroStagePriceBadge} style={{ background: activeExperience.color }}>
+                    ₹{activeExperience.price} / 2 Hours
+                  </span>
+                </div>
+
+                {/* Bottom Overlay Info & Action */}
+                <div className={styles.heroStageBottomOverlay}>
+                  <div>
+                    <h3 className={styles.heroStageTitle}>{activeExperience.name}</h3>
+                    <p className={styles.heroStageInclusions}>
+                      {activeExperience.badge} · 180&quot; 4K Screen · Dolby 7.1 · Upto 10 Guests
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.heroStageBookBtn}
+                    style={{ background: activeExperience.color, color: '#ffffff' }}
+                    onClick={() => handleOpenBooking(vibe)}
+                  >
+                    Book This Room →
+                  </button>
                 </div>
               </div>
-              <div className={styles.trustItem}>
-                <span className={styles.trustIcon}>🔊</span>
-                <div>
-                  <strong>7.1 Dolby Atmos</strong>
-                  <span>Immersive Surround</span>
-                </div>
+
+              {/* 3 Quick Thumbnails Selector */}
+              <div className={styles.heroThumbnailsRow}>
+                {EXPERIENCES.map((exp) => {
+                  const expVibe = exp.slug.replace('-theme', '') as 'pink' | 'purple' | 'red';
+                  const isActive = vibe === expVibe;
+                  return (
+                    <button
+                      type="button"
+                      key={exp.id}
+                      className={`${styles.heroThumbBtn} ${isActive ? styles.heroThumbBtnActive : ''}`}
+                      style={{ borderColor: isActive ? exp.color : undefined }}
+                      onClick={() => handleSelectVibe(expVibe)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={exp.image} alt={exp.shortName} className={styles.heroThumbImg} />
+                      <div className={styles.heroThumbText}>
+                        <span className={styles.heroThumbName}>{exp.shortName}</span>
+                        <span className={styles.heroThumbPrice} style={{ color: exp.color }}>₹{exp.price} / 2h</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div className={styles.trustItem}>
-                <span className={styles.trustIcon}>🔒</span>
-                <div>
-                  <strong>100% Private Room</strong>
-                  <span>Acoustic Soundproof</span>
-                </div>
+            </div>
+          </div>
+
+          {/* Trust Metrics Bar */}
+          <div className={styles.trustBar}>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🎬</span>
+              <div>
+                <strong>180&quot; 4K Laser Screen</strong>
+                <span>Cinematic Visuals</span>
               </div>
-              <div className={styles.trustItem}>
-                <span className={styles.trustIcon}>🎮</span>
-                <div>
-                  <strong>PS5 Gaming Arena</strong>
-                  <span>2 DualSense Controllers</span>
-                </div>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🔊</span>
+              <div>
+                <strong>7.1 Dolby Atmos</strong>
+                <span>Immersive Surround</span>
               </div>
-              <div className={styles.trustItem}>
-                <span className={styles.trustIcon}>⏰</span>
-                <div>
-                  <strong>10 AM – 12 AM (Midnight)</strong>
-                  <span>Flexible Time Slots</span>
-                </div>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🔒</span>
+              <div>
+                <strong>100% Private Room</strong>
+                <span>Acoustic Soundproof</span>
+              </div>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>🎮</span>
+              <div>
+                <strong>PS5 Gaming Arena</strong>
+                <span>2 DualSense Controllers</span>
+              </div>
+            </div>
+            <div className={styles.trustItem}>
+              <span className={styles.trustIcon}>⏰</span>
+              <div>
+                <strong>10 AM – 12 AM (Midnight)</strong>
+                <span>Flexible Time Slots</span>
               </div>
             </div>
           </div>
@@ -373,86 +519,114 @@ export default function Home() {
           </div>
 
           <div className={styles.vibeShowcaseGrid}>
-            {THEMES_PREVIEWS.map((pkg) => (
-              <div
-                key={'theme-' + pkg.id}
-                className={styles.showcaseCard}
-                style={{
-                  border: '1px solid ' + pkg.color + '44',
-                  boxShadow: '0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px ' + pkg.color + '18'
-                }}
-              >
-                <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={pkg.image} alt={pkg.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{
-                    position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    background: pkg.color,
-                    color: '#ffffff',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-                  }}>
-                    {pkg.badge}
-                  </div>
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '60px',
-                    background: 'linear-gradient(to top, rgba(10, 10, 14, 0.95), transparent)'
-                  }} />
-                </div>
-
-                <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
-                  <div className={styles.showcasePrice} style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
-                    {pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ {pkg.duration} (Base 2 Guests)</span>
-                  </div>
-                  <div style={{
-                    background: 'rgba(242, 169, 0, 0.1)',
-                    border: '1px dashed rgba(242, 169, 0, 0.35)',
-                    borderRadius: '8px',
-                    padding: '6px 10px',
-                    marginBottom: '12px',
-                    fontSize: '0.78rem',
-                    color: 'var(--accent)',
-                    fontWeight: 600
-                  }}>
-                    🎟️ Use code <strong>BEEVIBE999</strong> for flat ₹999 + Free Fog Entry &amp; LED Board
-                  </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                    Extra guests: ₹100/head (Capacity up to 10 guests)
-                  </div>
-                  <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
-                    {pkg.features.map((f, i) => (
-                      <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px' }}>
-                        <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href="/book"
-                    className="btn btn-primary"
-                    style={{
-                      width: '100%',
-                      padding: '12px',
+            {THEMES_PREVIEWS.map((pkg) => {
+              const pkgVibe = pkg.id as 'pink' | 'purple' | 'red';
+              const isActive = vibe === pkgVibe;
+              return (
+                <div
+                  key={'theme-' + pkg.id}
+                  className={`${styles.showcaseCard} ${isActive ? styles.showcaseCardActive : ''}`}
+                  onClick={() => handleSelectVibe(pkgVibe)}
+                  style={{
+                    border: isActive ? `2px solid ${pkg.color}` : `1px solid ${pkg.color}33`,
+                    boxShadow: isActive
+                      ? `0 16px 45px rgba(0, 0, 0, 0.8), 0 0 30px ${pkg.color}35`
+                      : `0 12px 36px rgba(0, 0, 0, 0.6), 0 0 16px ${pkg.color}15`,
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ position: 'relative', height: '220px', overflow: 'hidden' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pkg.image} alt={pkg.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
                       background: pkg.color,
-                      borderColor: pkg.color,
+                      color: '#ffffff',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
-                      fontSize: '0.95rem'
-                    }}
-                  >
-                    Book {pkg.name.split(' ')[0]} Theme →
-                  </Link>
+                      padding: '5px 12px',
+                      borderRadius: '20px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
+                    }}>
+                      {pkg.badge}
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      background: 'rgba(10, 10, 14, 0.85)',
+                      backdropFilter: 'blur(8px)',
+                      color: '#ffffff',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '4px 10px',
+                      borderRadius: '16px',
+                      border: '1px solid rgba(255,255,255,0.15)'
+                    }}>
+                      📸 Real Room Photo
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '60px',
+                      background: 'linear-gradient(to top, rgba(10, 10, 14, 0.95), transparent)'
+                    }} />
+                  </div>
+
+                  <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                    <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
+                    <div className={styles.showcasePrice} style={{ fontSize: '1.6rem', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
+                      {pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>/ {pkg.duration} (Base 2 Guests)</span>
+                    </div>
+                    <div style={{
+                      background: 'rgba(242, 169, 0, 0.1)',
+                      border: '1px dashed rgba(242, 169, 0, 0.35)',
+                      borderRadius: '8px',
+                      padding: '6px 10px',
+                      marginBottom: '12px',
+                      fontSize: '0.78rem',
+                      color: 'var(--accent)',
+                      fontWeight: 600
+                    }}>
+                      🎟️ Use code <strong>BEEVIBE999</strong> for flat ₹999 + Free Fog Entry &amp; LED Board
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                      Extra guests: ₹100/head (Capacity up to 10 guests)
+                    </div>
+                    <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
+                      {pkg.features.map((f, i) => (
+                        <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px' }}>
+                          <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenBooking(pkgVibe);
+                      }}
+                      className="btn btn-primary"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: pkg.color,
+                        borderColor: pkg.color,
+                        fontWeight: 700,
+                        fontSize: '0.95rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Book {pkg.shortName} Theme →
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -552,7 +726,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Section 4: Photo Gallery */}
+      {/* Section 4: Photo Gallery with Authentic BeeVibe Photography */}
       <GallerySection />
 
       {/* Interactive Google Map Location Section */}
@@ -731,6 +905,56 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky Mobile Booking CTA */}
+      <div className={styles.stickyMobileCta}>
+        <div className={styles.stickyMobileCtaText}>
+          <span className={styles.stickyFrom}>{activeExperience.shortName}: <strong>₹{activeExperience.price}</strong> / 2h</span>
+          <span className={styles.stickySub}>100% Private Theater Suite</span>
+        </div>
+        <button
+          type="button"
+          onClick={() => handleOpenBooking(vibe)}
+          className="btn btn-primary"
+          style={{ padding: '10px 20px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
+        >
+          Book Experience →
+        </button>
+      </div>
+
+      {/* Quick Booking Modal with Basic Details & Number */}
+      <QuickBookingModal
+        isOpen={isQuickBookingOpen}
+        onClose={() => setIsQuickBookingOpen(false)}
+        initialTheme={vibe}
+        onSwitchToFullPortal={handleSwitchToFullPortal}
+      />
+
+      {/* Full Customizer Lightbox Modal (only if explicitly requested) */}
+      {isFullBookingOpen && (
+        <div className={styles.bookingModalBackdrop} onClick={() => setIsFullBookingOpen(false)}>
+          <div className={styles.bookingModalContainer} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.bookingModalClose}
+              onClick={() => setIsFullBookingOpen(false)}
+              aria-label="Close booking modal"
+            >
+              ✕
+            </button>
+            <BookingPortal
+              initialTheme={vibe}
+              isModal={true}
+              onClose={() => setIsFullBookingOpen(false)}
+              onPackageSelect={(pkg) => {
+                if (pkg.slug.includes('pink')) handleSelectVibe('pink');
+                else if (pkg.slug.includes('purple')) handleSelectVibe('purple');
+                else if (pkg.slug.includes('red')) handleSelectVibe('red');
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

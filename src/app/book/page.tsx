@@ -89,9 +89,10 @@ export default function BookPage() {
 
           {/* Quick Info Pills */}
           <div className={styles.infoPills}>
-            <span className={styles.pill}>💜 Purple Theme — ₹1,499/2hrs</span>
-            <span className={styles.pill}>🩷 Pink Theme — ₹1,299/2hrs</span>
-            <span className={styles.pill}>❤️ Red Theme — ₹1,099/2hrs</span>
+            <span className={styles.pill}>💜 Purple Theme — ₹999/2hrs</span>
+            <span className={styles.pill}>🩷 Pink Theme — ₹899/2hrs</span>
+            <span className={styles.pill}>❤️ Red Theme — ₹799/2hrs</span>
+            <span className={styles.pill} style={{ borderColor: 'rgba(0, 240, 255, 0.4)', color: '#00f0ff' }}>🎮 PS5 Gaming — ₹399/hr</span>
           </div>
           <div style={{
             margin: '12px auto 8px auto',
@@ -124,7 +125,14 @@ export default function BookPage() {
 
         {/* Booking Portal */}
         <div className={styles.portalWrapper}>
-          <BookingPortal />
+          <BookingPortal
+            initialTheme={vibe}
+            onPackageSelect={(pkg) => {
+              if (pkg.slug.includes('pink')) setVibe('pink');
+              else if (pkg.slug.includes('purple')) setVibe('purple');
+              else if (pkg.slug.includes('red')) setVibe('red');
+            }}
+          />
         </div>
 
         {/* Contact Strip */}

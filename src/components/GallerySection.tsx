@@ -58,69 +58,82 @@ export interface GalleryItem {
 
 const GALLERY_ITEMS: GalleryItem[] = [
   {
-    id: 'theme-red-heart',
-    title: 'Red Velvet Romance & Floral Heart',
-    category: 'romantic',
-    categoryLabel: 'Romantic Dates & Anniversary ❤️',
-    theme: 'Red Theme ❤️ (₹799)',
-    themeColor: '#ef4444',
-    image: '/gallery/theme-red.jpg',
-    description: 'Immersive Red Velvet setup featuring a huge floral heart with "Happy Anniversary" neon light, red shimmer backdrop, lighted arch, plush velvet seating, and 180" 4K theater screen.',
-    tags: ['Floral Red Heart', 'Happy Anniversary Neon', 'Red Shimmer Wall', '180" 4K Screen', '7.1 Dolby Atmos'],
-    highlights: ['₹799 for 2 Hours (Base 2 Guests)', '100% Private & Soundproof Suite', 'Complimentary Rose Petal Setup'],
-    bookingLink: '/book?theme=red'
-  },
-  {
-    id: 'theme-pink-wings',
-    title: 'Pink Angel Wings & Neon Magic',
-    category: 'birthday',
-    categoryLabel: 'Birthday Celebration 🩷',
-    theme: 'Pink Theme 🩷 (₹899)',
-    themeColor: '#ec4899',
-    image: '/gallery/theme-pink.jpg',
-    description: 'Vibrant pink birthday setup with giant illuminated glowing angel wings, balloon cluster, pink sequin shimmer arch with "Happy Birthday" neon, and hot pink velvet recliners.',
-    tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Pink Shimmer Arch', '180" 4K Cinema', 'Picket Fence Decor'],
-    highlights: ['₹899 for 2 Hours (Base 2 Guests)', 'Private Cake Cutting Stage', 'Custom Movie / OTT Screening'],
-    bookingLink: '/book?theme=pink'
-  },
-  {
     id: 'theme-purple-butterfly',
-    title: 'Royal Purple Floral & Butterfly Wings',
+    title: 'Royal Butterfly VIP Celebration Suite',
     category: 'birthday',
     categoryLabel: 'VIP Birthday Celebration 💜',
     theme: 'Purple Theme 💜 (₹999)',
     themeColor: '#a855f7',
     image: '/gallery/theme-purple.jpg',
-    description: 'Grand triple-arched purple celebration suite with lush balloon arches, glowing butterfly wings neon, gold sequin backdrop, marquee lighted "HAPPY BIRTHDAY" letters, and cake table.',
-    tags: ['Triple Arch Setup', 'Butterfly Wings Neon', 'Marquee Lighted Letters', 'Gold Sequin Wall', '180" 4K Screen'],
-    highlights: ['₹999 for 2 Hours (Base 2 Guests)', 'VIP Photo-Op Backdrops', 'Surround Sound Audio'],
+    description: 'Authentic BeeVibe Purple VIP Suite featuring grand balloon arches, illuminated butterfly wings, warm "HAPPY BIRTHDAY" marquee letters, gold shimmer backdrop, and 180" 4K laser projection screen with Dolby Atmos 7.1.',
+    tags: ['Illuminated Butterfly Wings', 'HAPPY BIRTHDAY Marquee', 'Purple Balloon Arches', '180" 4K Screen', 'Dolby Atmos 7.1'],
+    highlights: ['₹999 for 2 Hours (Base 2 Guests)', '100% Private VIP Celebration Hall', 'Cake Cutting Pedestal Stage'],
     bookingLink: '/book?theme=purple'
   },
   {
+    id: 'theme-pink-wings',
+    title: 'Angel Wings & Neon Birthday Celebration',
+    category: 'birthday',
+    categoryLabel: 'Birthday Celebration 🩷',
+    theme: 'Pink Theme 🩷 (₹899)',
+    themeColor: '#ec4899',
+    image: '/gallery/theme-pink.jpg',
+    description: 'Authentic BeeVibe Pink Suite featuring giant glowing illuminated angel wings, pink shimmer sequin wall, "Happy Birthday" & "Let\'s Party" neon lights, hot pink plush recliners, and ground fog effect.',
+    tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Pink Shimmer Wall', 'Ground Fog Effect', 'Hot Pink Seating'],
+    highlights: ['₹899 for 2 Hours (Base 2 Guests)', 'Private Cake Cutting Stage', 'Air Conditioned Suite'],
+    bookingLink: '/book?theme=pink'
+  },
+  {
+    id: 'theme-red-heart',
+    title: 'Red Velvet Romance & Proposal Suite',
+    category: 'romantic',
+    categoryLabel: 'Romantic Dates & Anniversary ❤️',
+    theme: 'Red Theme ❤️ (₹799)',
+    themeColor: '#ef4444',
+    image: '/gallery/theme-red.jpg',
+    description: 'Authentic BeeVibe Red Romance Suite featuring giant red floral heart with "Will You Marry Me?" neon, lighted arch, red shimmer sequin wall, "LOVE" illuminated block boxes, and plush red couch.',
+    tags: ['Floral Red Heart Arch', 'Will You Marry Me Neon', 'LOVE Lighted Boxes', '180" 4K Laser Screen', 'Ground Fog Effect'],
+    highlights: ['₹799 for 2 Hours (Base 2 Guests)', '100% Private & Soundproof Suite', 'Custom Marquee Board'],
+    bookingLink: '/book?theme=red'
+  },
+  {
+    id: 'cinema-screen-purple',
+    title: '180" 4K Laser Cinema & Dolby 7.1 Audio',
+    category: 'cinema',
+    categoryLabel: 'Private Cinema Experience 🎬',
+    theme: 'Cinema Suite 🍿',
+    themeColor: '#f2a900',
+    image: '/gallery/theme-purple.jpg',
+    description: 'Massive 180-inch 4K high-contrast laser projection screen with 7.1 Dolby Atmos sound. Stream your favorite movies from Netflix, Prime Video, Hotstar, YouTube, or play personal celebration videos.',
+    tags: ['180" Laser Projection', 'Dolby Atmos 7.1', 'Netflix & OTT Streaming', 'Soundproof Privacy', 'Acoustic Suite'],
+    highlights: ['Ultra HD Laser Clarity', 'Room-shaking Audio Calibration', 'All OTT Platforms Supported'],
+    bookingLink: '/book'
+  },
+  {
+    id: 'decor-fog-pink',
+    title: 'Cinematic Cold Fog Entry & Stage Decor',
+    category: 'decor',
+    categoryLabel: 'Special Effects & Decor ✨',
+    theme: 'Special Effects 🌫️',
+    themeColor: '#ec4899',
+    image: '/gallery/theme-pink.jpg',
+    description: 'Create unforgettable cinematic memories with ground-hugging cold dry ice fog rolling across the private theater floor during cake cutting, romantic proposals, or surprise grand entries.',
+    tags: ['Cold Fog Machine', 'Surprise Grand Entry', 'Photo & Video Friendly', 'Safe & Odorless'],
+    highlights: ['Complimentary with Coupon BEEVIBE999', 'Ground-Hugging Fog', 'Available on All 3 Themes'],
+    bookingLink: '/book'
+  },
+  {
     id: 'gaming-ps5-lounge',
-    title: 'PS5 Pro Multiplayer Gaming Realm',
+    title: 'PS5 Pro Multiplayer Gaming Arena',
     category: 'gaming',
-    categoryLabel: 'PS5 Gaming Arena 🎮',
+    categoryLabel: 'PS5 Gaming Lounge 🎮',
     theme: 'Cyber Gaming 🎮 (₹399/hr)',
     themeColor: '#00f0ff',
     image: '/gallery/ps5-gaming.jpg',
-    description: 'Private high-octane gaming lounge with Sony PlayStation 5, DualSense wireless controllers, top AAA games (FC 24, Tekken 8, MK1, Spider-Man 2), and 180" 4K display.',
+    description: 'Private high-octane gaming lounge with Sony PlayStation 5 console, DualSense wireless controllers, top AAA games (FC 24, Tekken 8, MK1, Spider-Man 2), and 180" 4K display.',
     tags: ['Sony PlayStation 5', '2x DualSense Controllers', 'EA Sports FC 24', 'Tekken 8', '180" 4K Screen'],
-    highlights: ['₹399 / Hour (Min 1 Hr)', 'No Waiting / Full Room Privacy', 'Instant Snack & Drinks Service'],
+    highlights: ['₹399 / Hour (Min 1 Hr)', 'No Waiting / Full Room Privacy', 'Open Daily Till 12 AM Midnight'],
     bookingLink: '/gaming/book'
-  },
-  {
-    id: 'fog-entry-effect',
-    title: 'Cinematic Special Fog Entry',
-    category: 'decor',
-    categoryLabel: 'Special Effects 🌫️',
-    theme: 'Special Effects (₹300)',
-    themeColor: '#f2a900',
-    image: '/gallery/fog-decor.jpg',
-    description: 'Create unforgettable cinematic memories with ground-hugging cold fog effects across the private theater floor during cake cutting or surprise entry.',
-    tags: ['Cold Fog Machine', 'Surprise Grand Entry', 'Photo & Video Friendly'],
-    highlights: ['Add-on from ₹300', 'Safe & Odorless', 'Available on All Themes'],
-    bookingLink: '/book'
   }
 ];
 
@@ -473,7 +486,7 @@ export default function GallerySection({ initialCategory = 'all', isStandalonePa
                 <h3 className={styles.modalTitle}>{activeItem.title}</h3>
                 <p className={styles.modalDesc}>{activeItem.description}</p>
 
-                <div className={styles.highlightsTitle}>What's Included:</div>
+                <div className={styles.highlightsTitle}>What&apos;s Included:</div>
                 <ul className={styles.highlightsList}>
                   {activeItem.highlights.map((hl, hIdx) => (
                     <li key={hIdx} className={styles.highlightItem}>

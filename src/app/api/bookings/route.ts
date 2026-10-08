@@ -132,13 +132,13 @@ export async function POST(request: NextRequest) {
         pkgBase = Math.round((999 / 2) * durationHours);
       } else {
         const lower = (packageName || '').toLowerCase();
-        let packagePrice = 1499;
+        let packagePrice = 999;
         if (lower.includes('red')) {
-          packagePrice = 1099;
+          packagePrice = 799;
         } else if (lower.includes('pink')) {
-          packagePrice = 1299;
+          packagePrice = 899;
         } else if (lower.includes('purple')) {
-          packagePrice = 1499;
+          packagePrice = 999;
         }
         pkgBase = Math.round((packagePrice / 2) * durationHours);
       }
@@ -193,16 +193,21 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const passedAdvance = typeof body.advancePaid === 'number' ? body.advancePaid : Math.min(500, calculatedTotal);
-    const passedBalance = typeof body.balanceDue === 'number' ? body.balanceDue : Math.max(0, calculatedTotal - passedAdvance);
-    const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : 'advance_paid');
-    const passedMode = body.paymentMode || 'UPI (8123635342@sbi)';
+    const isQuickBooking = Boolean(body.isQuickReservation || body.paymentMode === 'PAY_AT_VENUE' || body.paymentStatus === 'pay_at_venue' || body.paymentStatus === 'pending');
+    const passedAdvance = typeof body.advancePaid === 'number'
+      ? body.advancePaid
+      : (isQuickBooking ? 0 : Math.min(500, calculatedTotal));
+    const passedBalance = typeof body.balanceDue === 'number'
+      ? body.balanceDue
+      : Math.max(0, calculatedTotal - passedAdvance);
+    const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : (isQuickBooking ? 'pending' : 'advance_paid'));
+    const passedMode = body.paymentMode || (isQuickBooking ? 'PAY_AT_VENUE' : 'UPI (8123635342@sbi)');
     const passedUtr = typeof utrNumber === 'string'
       ? utrNumber.replace(/\D/g, '').trim()
       : (typeof body.utrNumber === 'string' ? body.utrNumber.replace(/\D/g, '').trim() : '');
 
-    // Strict 12-digit numeric UTR validation for theater bookings requiring advance payment
-    if (detectedBookingType === 'theater' && passedAdvance > 0) {
+    // Strict 12-digit numeric UTR validation for bookings requiring advance payment
+    if (detectedBookingType === 'theater' && passedAdvance > 0 && !isQuickBooking) {
       if (!passedUtr || passedUtr.length !== 12) {
         return NextResponse.json({
           error: `Invalid UPI Transaction Reference Number (UTR). Must be exactly 12 numeric digits (received ${passedUtr.length}/12).`

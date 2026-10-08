@@ -4,8 +4,8 @@
 
 .page {
   min-height: 100vh;
-  background-color: #0a0a0c;
-  color: #ffffff;
+  background-color: #08080a;
+  color: #f8f6f0;
   position: relative;
   overflow-x: hidden;
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -17,10 +17,10 @@
   top: -100px;
   left: 50%;
   transform: translateX(-50%);
-  width: 700px;
-  height: 400px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(var(--accent-base), 0.14) 0%, rgba(var(--accent-base), 0.03) 55%, transparent 100%);
-  filter: blur(80px);
+  width: 750px;
+  height: 420px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(242, 169, 0, 0.12) 0%, rgba(242, 169, 0, 0.02) 65%, transparent 100%);
+  filter: blur(85px);
   pointer-events: none;
   z-index: 0;
 }
@@ -48,11 +48,11 @@
 }
 
 .headerScrolled {
-  background: rgba(10, 10, 12, 0.9);
+  background: rgba(6, 6, 8, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(242, 169, 0, 0.18);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
 }
 
 .headerInner {

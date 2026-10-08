@@ -10,54 +10,10 @@ import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 
-// Packages Constant
-const PACKAGES = [
-  {
-    id: 'pkg-red',
-    name: 'Red Theme (Red Velvet Romance)',
-    price: 1099,
-    image: '/themes/theme-red.jpg',
-    badge: 'Anniversary & Romantic Dates ❤️',
-    color: '#ef4444',
-    details: [
-      'Full Red Velvet Decor with Floral Heart & "Happy Anniversary" Neon',
-      'Romantic Red Shimmer Backdrop, Lighted Arch & Rose Petals',
-      'Plush Velvet Recliner Seating, Coffee Table & Balloon Decor',
-      '180" 4K Laser Projection Screen & 7.1 Dolby Atmos Sound',
-      '100% Private Air Conditioned (AC) Theater Suite',
-    ]
-  },
-  {
-    id: 'pkg-pink',
-    name: 'Pink Theme (Angel Wings & Neon)',
-    price: 1299,
-    image: '/themes/theme-pink.jpg',
-    badge: 'Trending Birthday & Party Setup 🩷',
-    color: '#ec4899',
-    details: [
-      'Giant Glowing Illuminated Angel Wings & Balloon Backdrop',
-      'Pink Shimmer Sequin Arch with "Happy Birthday" Neon Sign',
-      'Hot Pink Plush Recliners, Picket Fence & "HAPPY" Decor',
-      '180" 4K Screen with Immersive Theater Sound',
-      'Private Air Conditioned (AC) Celebration Hall',
-    ]
-  },
-  {
-    id: 'pkg-purple',
-    name: 'Purple Theme (Royal Butterfly Grandeur)',
-    price: 1499,
-    image: '/themes/theme-purple.jpg',
-    badge: 'VIP Grand Celebration Setup 💜',
-    color: '#a855f7',
-    details: [
-      'Grand Triple Arched Purple Decor with Balloon Arches',
-      'Illuminated Butterfly Wings & Gold Shimmer Sequin Wall',
-      'Lighted "HAPPY BIRTHDAY" Marquee Letters & Cake Table Setup',
-      '180" 4K Screen, Dolby Sound & Complete Privacy',
-      'Luxury Private Air Conditioned (AC) Hall',
-    ]
-  }
-];
+import { EXPERIENCES } from '@/lib/experiences';
+
+// Packages Constant (Canonical source of truth)
+const PACKAGES = EXPERIENCES;
 
 interface Slot {
   id: string;
@@ -95,7 +51,21 @@ interface ActiveBooking {
   status?: string;
 }
 
-export default function BookingPortal() {
+export interface BookingPortalProps {
+  initialTheme?: 'pink' | 'purple' | 'red' | string;
+  initialPackageId?: string;
+  isModal?: boolean;
+  onClose?: () => void;
+  onPackageSelect?: (pkg: typeof PACKAGES[0]) => void;
+}
+
+export default function BookingPortal({
+  initialTheme,
+  initialPackageId,
+  isModal = false,
+  onClose,
+  onPackageSelect,
+}: BookingPortalProps = {}) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -128,7 +98,31 @@ export default function BookingPortal() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState('');
 
-  const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
+  const resolveInitialPackage = () => {
+    if (initialPackageId) {
+      const match = PACKAGES.find((p) => p.id === initialPackageId);
+      if (match) return match;
+    }
+    if (initialTheme) {
+      const cleanTheme = initialTheme.toLowerCase();
+      const match = PACKAGES.find((p) => p.slug.toLowerCase().includes(cleanTheme));
+      if (match) return match;
+    }
+    return PACKAGES[0];
+  };
+
+  const [selectedPackage, setSelectedPackage] = useState(resolveInitialPackage);
+
+  useEffect(() => {
+    if (initialPackageId) {
+      const match = PACKAGES.find((p) => p.id === initialPackageId);
+      if (match) setSelectedPackage(match);
+    } else if (initialTheme) {
+      const cleanTheme = initialTheme.toLowerCase();
+      const match = PACKAGES.find((p) => p.slug.toLowerCase().includes(cleanTheme));
+      if (match) setSelectedPackage(match);
+    }
+  }, [initialPackageId, initialTheme]);
   const [fogOption, setFogOption] = useState<'none' | '1pot' | '2pots'>('none');
   const [customerDetails, setCustomerDetails] = useState({
     name: '',
@@ -689,6 +683,16 @@ export default function BookingPortal() {
   const handleNextStep = () => {
     setError('');
     if (step === 1) {
+      if (!selectedPackage) {
+        setErrorAndScroll('Please select an experience theme to proceed.');
+        return;
+      }
+      if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) {
+        setErrorAndScroll('Guest count must be between 1 and 10.');
+        return;
+      }
+    }
+    if (step === 2) {
       if (bookingMode === 'custom' && customSlotError) {
         setErrorAndScroll(customSlotError);
         return;
@@ -705,10 +709,6 @@ export default function BookingPortal() {
       }
       if (!customerDetails.name || !customerDetails.email) {
         setErrorAndScroll('Please fill in all required fields (Name and Email).');
-        return;
-      }
-      if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) {
-        setErrorAndScroll('Guest count must be between 1 and 10.');
         return;
       }
     }
@@ -1355,6 +1355,17 @@ export default function BookingPortal() {
               Sign In
             </button>
           )}
+          {isModal && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className={styles.modalCloseIconBtn}
+              title="Close modal"
+              aria-label="Close booking modal"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
@@ -1826,26 +1837,163 @@ export default function BookingPortal() {
       {currentView === 'book' ? (
         <>
           {step < 5 && (
-            <div className={styles.wizardHeader}>
+                        <div className={styles.wizardHeader}>
               <div className={`${styles.stepIndicator} ${step === 1 ? styles.stepActive : styles.stepCompleted}`}>
-                1. Date & Slot {step > 1 && '✓'}
+                1. Experience & Guests {step > 1 && '✓'}
               </div>
               <div className={`${styles.stepIndicator} ${step === 2 ? styles.stepActive : step > 2 ? styles.stepCompleted : ''}`}>
-                2. Package {step > 2 && '✓'}
+                2. Date & Slot {step > 2 && '✓'}
               </div>
               <div className={`${styles.stepIndicator} ${step === 3 ? styles.stepActive : step > 3 ? styles.stepCompleted : ''}`}>
                 3. Add-ons {step > 3 && '✓'}
               </div>
               <div className={`${styles.stepIndicator} ${step === 4 ? styles.stepActive : ''}`}>
-                4. Personal Info
+                4. Details & Pay
               </div>
             </div>
           )}
 
           {error && <div className={styles.errorMessage}>{error}</div>}
 
-          {/* STEP 1: Date & Time Slot selection */}
+          {/* STEP 1: Choose Celebration Theme & Guests */}
           {step === 1 && (
+            <div className={styles.stepContainer}>
+              <h3 style={{ marginBottom: '8px', fontFamily: 'var(--font-title)' }}>Select Your Celebration Theme</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                All themes include 180&quot; 4K screen, 7.1 Dolby surround sound, AC, and complete room privacy.
+              </p>
+
+              <div className={styles.packagesGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
+                {PACKAGES.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className={`${styles.packageCard} ${selectedPackage.id === pkg.id ? styles.packageSelected : ''}`}
+                    onClick={() => {
+                      setSelectedPackage(pkg);
+                      if (onPackageSelect) onPackageSelect(pkg);
+                    }}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
+                      borderRadius: '16px',
+                      border: selectedPackage.id === pkg.id ? `2px solid ${pkg.color}` : '1px solid rgba(255, 255, 255, 0.12)',
+                      background: selectedPackage.id === pkg.id ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
+                      padding: 0,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: selectedPackage.id === pkg.id ? `0 8px 30px ${pkg.color}33` : 'none'
+                    }}
+                  >
+                    {/* Real Venue Photo Header */}
+                    <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
+                      />
+                      <div style={{
+                        position: 'absolute',
+                        top: '10px',
+                        right: '10px',
+                        background: pkg.color,
+                        color: '#ffffff',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+                      }}>
+                        {pkg.badge}
+                      </div>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '50px',
+                        background: 'linear-gradient(to top, rgba(12, 10, 9, 0.95), transparent)'
+                      }} />
+                    </div>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                      <h4 className={styles.packageName} style={{ color: pkg.color, fontSize: '1.1rem', marginBottom: '6px' }}>{pkg.name}</h4>
+                      <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '6px' }}>
+                        ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 2 Hours (Base 2 Guests)</span>
+                      </div>
+                      <div style={{
+                        background: 'rgba(242, 169, 0, 0.12)',
+                        border: '1px dashed rgba(242, 169, 0, 0.4)',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                        marginBottom: '10px',
+                        fontSize: '0.76rem',
+                        color: 'var(--accent)',
+                        fontWeight: 600,
+                        lineHeight: 1.3
+                      }}>
+                        🎟️ Use code <strong>BEEVIBE999</strong> at payment for <strong>flat ₹999</strong> + Free Fog Entry, LED Name Board, Candles &amp; OTT!
+                      </div>
+                      <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
+                        {pkg.details.map((detail, idx) => (
+                          <li key={idx} style={{ fontSize: '0.8rem', color: '#d0d0e0', marginBottom: '6px', display: 'flex', gap: '6px' }}>
+                            <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {detail}
+                          </li>
+                        ))}
+                      </ul>
+                      <button
+                        type="button"
+                        style={{
+                          marginTop: '14px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          background: selectedPackage.id === pkg.id ? pkg.color : 'rgba(255, 255, 255, 0.08)',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.85rem',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {selectedPackage.id === pkg.id ? '✓ Selected' : 'Choose This Theme'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            
+              {/* Guest Count Selector */}
+              <div className={styles.guestSelectorCard}>
+                <div className={styles.guestSelectorInfo}>
+                  <label className={styles.guestSelectorLabel}>Number of Guests</label>
+                  <span className={styles.guestSelectorSub}>Base package covers 2 guests. Up to 10 guests (+₹100 per extra guest).</span>
+                </div>
+                <div className={styles.guestCounterControls}>
+                  <button
+                    type="button"
+                    className={styles.guestCounterBtn}
+                    onClick={() => setCustomerDetails(prev => ({ ...prev, guestCount: Math.max(1, prev.guestCount - 1) }))}
+                    disabled={customerDetails.guestCount <= 1}
+                  >
+                    −
+                  </button>
+                  <span className={styles.guestCounterValue}>{customerDetails.guestCount}</span>
+                  <button
+                    type="button"
+                    className={styles.guestCounterBtn}
+                    onClick={() => setCustomerDetails(prev => ({ ...prev, guestCount: Math.min(10, prev.guestCount + 1) }))}
+                    disabled={customerDetails.guestCount >= 10}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+</div>
+          )}
+
+          {/* STEP 2: Date & Time Slot selection */}
+          {step === 2 && (
             <div className={styles.stepContainer}>
               <div className={styles.dateSection}>
                 <label className={styles.dateInputLabel} htmlFor="booking-date">Choose Celebration Date</label>
@@ -2048,113 +2196,6 @@ export default function BookingPortal() {
                   ) : null}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* STEP 2: Choose Celebration Theme / Package */}
-          {step === 2 && (
-            <div className={styles.stepContainer}>
-              <h3 style={{ marginBottom: '8px', fontFamily: 'var(--font-title)' }}>Select Your Celebration Theme</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-                All themes include 180&quot; 4K screen, 7.1 Dolby surround sound, AC, and complete room privacy.
-              </p>
-
-              <div className={styles.packagesGrid} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
-                {PACKAGES.map((pkg) => (
-                  <div
-                    key={pkg.id}
-                    className={`${styles.packageCard} ${selectedPackage.id === pkg.id ? styles.packageSelected : ''}`}
-                    onClick={() => setSelectedPackage(pkg)}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                      borderRadius: '16px',
-                      border: selectedPackage.id === pkg.id ? `2px solid ${pkg.color}` : '1px solid rgba(255, 255, 255, 0.12)',
-                      background: selectedPackage.id === pkg.id ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.02)',
-                      padding: 0,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: selectedPackage.id === pkg.id ? `0 8px 30px ${pkg.color}33` : 'none'
-                    }}
-                  >
-                    {/* Real Venue Photo Header */}
-                    <div style={{ position: 'relative', width: '100%', height: '180px', overflow: 'hidden' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={pkg.image}
-                        alt={pkg.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
-                      />
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        background: pkg.color,
-                        color: '#ffffff',
-                        fontSize: '0.72rem',
-                        fontWeight: 700,
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
-                      }}>
-                        {pkg.badge}
-                      </div>
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: '50px',
-                        background: 'linear-gradient(to top, rgba(12, 10, 9, 0.95), transparent)'
-                      }} />
-                    </div>
-
-                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                      <h4 className={styles.packageName} style={{ color: pkg.color, fontSize: '1.1rem', marginBottom: '6px' }}>{pkg.name}</h4>
-                      <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '6px' }}>
-                        ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 2 Hours (Base 2 Guests)</span>
-                      </div>
-                      <div style={{
-                        background: 'rgba(242, 169, 0, 0.12)',
-                        border: '1px dashed rgba(242, 169, 0, 0.4)',
-                        borderRadius: '6px',
-                        padding: '6px 10px',
-                        marginBottom: '10px',
-                        fontSize: '0.76rem',
-                        color: 'var(--accent)',
-                        fontWeight: 600,
-                        lineHeight: 1.3
-                      }}>
-                        🎟️ Use code <strong>BEEVIBE999</strong> at payment for <strong>flat ₹999</strong> + Free Fog Entry, LED Name Board, Candles &amp; OTT!
-                      </div>
-                      <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
-                        {pkg.details.map((detail, idx) => (
-                          <li key={idx} style={{ fontSize: '0.8rem', color: '#d0d0e0', marginBottom: '6px', display: 'flex', gap: '6px' }}>
-                            <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {detail}
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        type="button"
-                        style={{
-                          marginTop: '14px',
-                          padding: '8px 14px',
-                          borderRadius: '8px',
-                          background: selectedPackage.id === pkg.id ? pkg.color : 'rgba(255, 255, 255, 0.08)',
-                          color: '#ffffff',
-                          fontWeight: 700,
-                          fontSize: '0.85rem',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {selectedPackage.id === pkg.id ? '✓ Selected' : 'Choose This Theme'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
@@ -2848,7 +2889,7 @@ export default function BookingPortal() {
                   onClick={handleNextStep}
                   disabled={loading}
                 >
-                  Continue
+                  {step === 1 ? 'Continue to Date & Slot →' : step === 2 ? 'Continue to Add-ons →' : 'Continue to Review & Pay →'}
                 </button>
               ) : (
                 <button
