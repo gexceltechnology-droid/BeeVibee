@@ -1,0 +1,1297 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(16, 42, 67, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.22s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalCard {
+  position: relative;
+  background: #FFFFFF;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 1080px;
+  max-height: 94vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(16, 42, 67, 0.3);
+  border: 1.5px solid var(--border-blue);
+  animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Modal Top Bar */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  gap: 16px;
+}
+
+.brandTitle {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandName {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--royal);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.brandTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+@media (max-width: 820px) {
+  .stepper {
+    display: none;
+  }
+}
+
+.stepPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  transition: all 0.2s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.stepNum {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #E2E8F0;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.stepActive {
+  background: var(--soft-blue);
+  border-color: var(--royal);
+  color: var(--royal);
+}
+
+.stepActive .stepNum {
+  background: var(--royal);
+  color: #FFFFFF;
+}
+
+.stepCompleted {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+  color: #16A34A;
+}
+
+.stepCompleted .stepNum {
+  background: #16A34A;
+  color: #FFFFFF;
+}
+
+.closeBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: #FEE2E2;
+  color: #EF4444;
+  border-color: #FCA5A5;
+}
+
+/* Modal Body Layout */
+.modalBody {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.contentColumn {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+@media (max-width: 640px) {
+  .contentColumn {
+    padding: 16px;
+  }
+}
+
+.stepContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stepHeader {
+  margin-bottom: 4px;
+}
+
+.stepTitle {
+  font-family: var(--font-title);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.02em;
+}
+
+.stepDesc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ─── Step 1 Styles ─── */
+.occasionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .occasionGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.occCard {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.occCard:hover {
+  background: var(--soft-blue);
+  border-color: var(--border-blue-hover);
+}
+
+.occSelected {
+  background: var(--soft-blue);
+  border-color: var(--royal);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.occIcon {
+  font-size: 1.5rem;
+}
+
+.occText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.occText strong {
+  font-size: 0.9rem;
+  color: var(--navy);
+}
+
+.occText span {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.occCheck {
+  color: var(--royal);
+}
+
+.subSectionTitle {
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.roomsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .roomsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.roomSelectCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.roomSelectCard:hover {
+  border-color: var(--royal);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.08);
+}
+
+.roomSelected {
+  border-color: var(--royal);
+  box-shadow: 0 0 0 2px var(--royal);
+}
+
+.roomSelectImgWrap {
+  position: relative;
+  height: 130px;
+  width: 100%;
+}
+
+.roomSelectImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selectedBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--royal);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+}
+
+.roomSelectBody {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.roomSelectTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.roomSelectName {
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+
+.roomSelectPrice {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--royal);
+}
+
+.roomSelectTheme {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+.roomSelectMeta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.roomSelectMeta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ─── Step 2 Styles ─── */
+.datePickerCard {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dateField {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+  outline: none;
+  cursor: pointer;
+  color-scheme: light;
+}
+
+.dateField:focus {
+  border-color: var(--royal);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.guestCounterCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--soft-blue);
+  border: 1.5px solid var(--border-blue);
+  border-radius: 12px;
+  padding: 14px 16px;
+  gap: 16px;
+}
+
+.guestCounterInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.guestCounterInfo strong {
+  font-size: 0.9rem;
+  color: var(--navy);
+}
+
+.guestCounterInfo span {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.counterControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.counterBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-blue);
+  color: var(--navy);
+  font-size: 1.2rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.counterBtn:hover:not(:disabled) {
+  background: var(--royal);
+  color: #FFFFFF;
+  border-color: var(--royal);
+}
+
+.counterBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.counterNum {
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--navy);
+  min-width: 24px;
+  text-align: center;
+}
+
+.slotsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slotsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--navy);
+}
+
+.loadingSlots {
+  font-size: 0.74rem;
+  color: var(--royal);
+  font-weight: 600;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 580px) {
+  .slotsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.slotCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.slotCard:hover:not(:disabled) {
+  border-color: var(--royal);
+  background: var(--soft-blue);
+  transform: translateY(-2px);
+}
+
+.slotSelected {
+  border-color: var(--royal);
+  background: var(--soft-blue);
+  box-shadow: 0 0 0 2px var(--royal);
+}
+
+.slotBooked {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slotTime {
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.slotLabel {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.slotCheck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  color: var(--royal);
+}
+
+/* ─── Step 3 Add-ons Styles ─── */
+.addonsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .addonsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.addonCard {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addonCard:hover {
+  background: var(--soft-blue);
+  border-color: var(--border-blue);
+}
+
+.addonSelected {
+  background: #FFFFFF;
+  border-color: var(--royal);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+}
+
+.addonCheckCircle {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+  background: #FFFFFF;
+  color: #FFFFFF;
+  transition: all 0.2s;
+}
+
+.addonSelected .addonCheckCircle {
+  background: var(--royal);
+  border-color: var(--royal);
+}
+
+.addonCardIcon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.addonCardInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.addonCardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.addonCardTitleRow strong {
+  font-size: 0.88rem;
+  color: var(--navy);
+}
+
+.addonCardPrice {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--royal);
+}
+
+.addonCardDesc {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.addonInputRow {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.addonSubLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--royal);
+  text-transform: uppercase;
+}
+
+.addonTextInput,
+.addonSelectInput {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy);
+  outline: none;
+}
+
+.addonTextInput:focus,
+.addonSelectInput:focus {
+  border-color: var(--royal);
+}
+
+/* ─── Step 4 Details Styles ─── */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 580px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formFull {
+  grid-column: span 2;
+}
+
+@media (max-width: 580px) {
+  .formFull {
+    grid-column: span 1;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.formInput,
+.formTextarea {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--navy);
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.formInput:focus,
+.formTextarea:focus {
+  border-color: var(--royal);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.phoneInputWrap {
+  display: flex;
+  align-items: center;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.phoneInputWrap:focus-within {
+  border-color: var(--royal);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.phonePrefix {
+  padding: 10px 12px;
+  background: #EEF5FF;
+  border-right: 1px solid #E2E8F0;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--royal);
+}
+
+.phoneInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  outline: none;
+}
+
+/* ─── Step 5 Payment Console ─── */
+.paymentConsole {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 680px) {
+  .paymentConsole {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qrCard {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.qrBadge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--royal);
+  background: var(--soft-blue);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+}
+
+.qrImage {
+  width: 170px;
+  height: 170px;
+  object-fit: contain;
+  background: #FFFFFF;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 12px rgba(16, 42, 67, 0.05);
+  margin-bottom: 12px;
+}
+
+.upiIdRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.upiIdText {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--navy);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.copyBtn {
+  background: var(--soft-blue);
+  border: 1px solid var(--border-blue);
+  border-radius: 4px;
+  padding: 3px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--royal);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+}
+
+.upiAppsRow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.utrFormCard {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.utrStepHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+
+.utrStepNum {
+  background: var(--royal);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.utrStepDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.utrInput {
+  background: #FFFFFF;
+  border: 2px solid var(--royal);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: 0.05em;
+  outline: none;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.12);
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+  color: #DC2626;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.trustBanner {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--soft-blue);
+  border: 1px solid var(--border-blue);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.trustIcon {
+  color: var(--royal);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.trustBanner div {
+  display: flex;
+  flex-direction: column;
+}
+
+.trustBanner strong {
+  font-size: 0.82rem;
+  color: var(--navy);
+}
+
+.trustBanner span {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+/* ─── Step 6 Confirmation Styles ─── */
+.confirmationHero {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.confirmedIconWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #D1FAE5;
+  color: #10B981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.confirmedTitle {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--navy);
+  margin: 0 0 4px 0;
+}
+
+.confirmedSubtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.ticketPass {
+  background: #FFFFFF;
+  border: 2px solid var(--navy);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ticketHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1.5px dashed #CBD5E1;
+  padding-bottom: 12px;
+}
+
+.ticketBrand {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--royal);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ticketRoomTitle {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 2px 0 0 0;
+}
+
+.ticketStatus {
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+}
+
+.ticketDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 580px) {
+  .ticketDetailsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ticketItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.ticketLabel {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ticketVal {
+  font-size: 0.92rem;
+  color: var(--navy);
+  margin-top: 2px;
+}
+
+.ticketAddons {
+  border-top: 1px dashed #E2E8F0;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ticketAddonsPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ticketAddonPill {
+  background: var(--soft-blue);
+  color: var(--navy);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.ticketVenue {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  border-top: 1px solid #E2E8F0;
+  padding-top: 10px;
+}
+
+.confirmationActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ─── Navigation Row ─── */
+.navRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+/* ─── Sticky Summary Sidebar ─── */
+.summarySidebar {
+  width: 320px;
+  background: #F8FAFC;
+  border-left: 1px solid #E2E8F0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .summarySidebar {
+    display: none; /* Hide on small screens to prioritize single-column flow */
+  }
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.summaryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.summaryHeader h4 {
+  font-family: var(--font-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.summarySuiteBadge {
+  background: var(--soft-blue);
+  color: var(--royal);
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-blue);
+}
+
+.summaryRoomPreview {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryRoomImg {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.summaryRoomPreview div {
+  display: flex;
+  flex-direction: column;
+}
+
+.summaryRoomPreview strong {
+  font-size: 0.88rem;
+  color: var(--navy);
+}
+
+.summaryRoomPreview span {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.summarySlotTime {
+  color: var(--royal) !important;
+  font-weight: 700;
+}
+
+.breakdownList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-bottom: 1px dashed #CBD5E1;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+}
+
+.breakdownRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.breakdownRow strong {
+  color: var(--navy);
+}
+
+.totalSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.totalRow span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.totalAmount {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--navy);
+}
+
+.depositRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: #EEF5FF;
+  border: 1px solid var(--border-blue);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.depositRow span {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--royal);
+}
+
+.advanceAmount {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--royal);
+}
+
+.balanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.remainingAmount {
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.summaryGuarantee {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  justify-content: center;
+}

@@ -1,0 +1,980 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  X,
+  Calendar,
+  Clock,
+  Users,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Shield,
+  CreditCard,
+  QrCode,
+  Copy,
+  CheckCircle2,
+  Phone,
+  Mail,
+  User,
+  MessageSquare,
+  Printer,
+  Share2,
+  AlertCircle,
+  HelpCircle,
+  ArrowRight
+} from 'lucide-react';
+import {
+  OCCASIONS,
+  ROOMS,
+  ADD_ONS,
+  OccasionType,
+  RoomExperience,
+  AddOnItem,
+  TimeSlotOption,
+} from '@/types/booking';
+import styles from './BookingFlowModal.module.css';
+
+interface BookingFlowModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialRoomId?: string;
+  initialOccasion?: OccasionType;
+  initialDate?: string;
+  initialGuests?: number;
+}
+
+const DEFAULT_SLOTS: TimeSlotOption[] = [
+  { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
+  { id: 'slot-2', time: '12:30 PM - 02:30 PM', label: 'Matinee Show', basePrice: 999 },
+  { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
+  { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
+  { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
+];
+
+const GAMING_SLOTS: TimeSlotOption[] = [
+  { id: 'g-1', time: '10:00 AM - 11:00 AM', label: 'Slot 1', basePrice: 399 },
+  { id: 'g-2', time: '11:00 AM - 12:00 PM', label: 'Slot 2', basePrice: 399 },
+  { id: 'g-3', time: '12:00 PM - 01:00 PM', label: 'Slot 3', basePrice: 399 },
+  { id: 'g-4', time: '01:00 PM - 02:00 PM', label: 'Slot 4', basePrice: 399 },
+  { id: 'g-5', time: '02:00 PM - 03:00 PM', label: 'Slot 5', basePrice: 399 },
+  { id: 'g-6', time: '03:00 PM - 04:00 PM', label: 'Slot 6', basePrice: 399 },
+  { id: 'g-7', time: '04:00 PM - 05:00 PM', label: 'Slot 7', basePrice: 399 },
+  { id: 'g-8', time: '05:00 PM - 06:00 PM', label: 'Slot 8', basePrice: 399 },
+  { id: 'g-9', time: '06:00 PM - 07:00 PM', label: 'Slot 9', basePrice: 399 },
+  { id: 'g-10', time: '07:00 PM - 08:00 PM', label: 'Slot 10', basePrice: 399 },
+  { id: 'g-11', time: '08:00 PM - 09:00 PM', label: 'Slot 11', basePrice: 399 },
+  { id: 'g-12', time: '09:00 PM - 10:00 PM', label: 'Slot 12', basePrice: 399 },
+  { id: 'g-13', time: '10:00 PM - 11:00 PM', label: 'Slot 13', basePrice: 399 },
+  { id: 'g-14', time: '11:00 PM - 12:00 AM', label: 'Slot 14', basePrice: 399 },
+];
+
+export default function BookingFlowModal({
+  isOpen,
+  onClose,
+  initialRoomId,
+  initialOccasion = 'birthday',
+  initialDate,
+  initialGuests = 2,
+}: BookingFlowModalProps) {
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  // Wizard Step (1: Occasion & Room, 2: Date & Slot, 3: Add-ons, 4: Details, 5: Payment, 6: Confirmation)
+  const [currentStep, setCurrentStep] = useState(1);
+
+  // Form State
+  const [selectedOccasion, setSelectedOccasion] = useState<OccasionType>(initialOccasion);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || 'angel-wings');
+  const [selectedDate, setSelectedDate] = useState<string>(initialDate || todayStr);
+  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [guestCount, setGuestCount] = useState<number>(initialGuests);
+  const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
+  const [cakeFlavor, setCakeFlavor] = useState<string>('Chocolate Truffle');
+  const [ledNameText, setLedNameText] = useState<string>('');
+
+  // Customer Details
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [specialRequests, setSpecialRequests] = useState('');
+
+  // Payment
+  const [utrNumber, setUtrNumber] = useState('');
+  const [isCopiedUPI, setIsCopiedUPI] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [confirmedBookingId, setConfirmedBookingId] = useState('');
+
+  // Live Slots
+  const [availableSlots, setAvailableSlots] = useState<TimeSlotOption[]>(DEFAULT_SLOTS);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+  // Update selection if props change when opening
+  useEffect(() => {
+    if (initialRoomId) setSelectedRoomId(initialRoomId);
+    if (initialOccasion) setSelectedOccasion(initialOccasion);
+    if (initialDate) setSelectedDate(initialDate);
+    if (initialGuests) setGuestCount(initialGuests);
+  }, [initialRoomId, initialOccasion, initialDate, initialGuests]);
+
+  // Find active room object
+  const activeRoom = useMemo(() => {
+    return ROOMS.find((r) => r.id === selectedRoomId) || ROOMS[0];
+  }, [selectedRoomId]);
+
+  // When room changes, clamp guest count to room's max
+  useEffect(() => {
+    if (guestCount > activeRoom.maxGuests) {
+      setGuestCount(activeRoom.maxGuests);
+    }
+  }, [activeRoom, guestCount]);
+
+  // Fetch slots from API when date or room type changes
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchSlots = async () => {
+      setIsLoadingSlots(true);
+      try {
+        const isGaming = activeRoom.occasion === 'gaming';
+        const typeParam = isGaming ? 'gaming' : 'theater';
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=${typeParam}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (!isCancelled && data.slots && Array.isArray(data.slots)) {
+            setAvailableSlots(data.slots);
+            return;
+          }
+        }
+      } catch {
+        // Fallback to local default slots
+      }
+      if (!isCancelled) {
+        setAvailableSlots(activeRoom.occasion === 'gaming' ? GAMING_SLOTS : DEFAULT_SLOTS);
+      }
+      setIsLoadingSlots(false);
+    };
+
+    fetchSlots();
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedDate, activeRoom]);
+
+  // Price Calculations
+  const pricing = useMemo(() => {
+    const baseRoomPrice = activeRoom.price;
+    const extraGuests = Math.max(0, guestCount - activeRoom.includedGuests);
+    const extraGuestCost = extraGuests * activeRoom.extraGuestPrice;
+
+    const addonsCost = selectedAddOns.reduce((sum, addId) => {
+      const item = ADD_ONS.find((a) => a.id === addId);
+      return sum + (item ? item.price : 0);
+    }, 0);
+
+    const total = baseRoomPrice + extraGuestCost + addonsCost;
+    const advance = 500; // Transparent fixed booking deposit
+    const remaining = Math.max(0, total - advance);
+
+    return {
+      baseRoomPrice,
+      extraGuests,
+      extraGuestCost,
+      addonsCost,
+      total,
+      advance,
+      remaining,
+    };
+  }, [activeRoom, guestCount, selectedAddOns]);
+
+  if (!isOpen) return null;
+
+  // Toggle add-on checkbox
+  const toggleAddOn = (addonId: string) => {
+    setSelectedAddOns((prev) =>
+      prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
+    );
+  };
+
+  // Copy UPI Id
+  const handleCopyUPI = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText('9900106474@okbizaxis');
+      setIsCopiedUPI(true);
+      setTimeout(() => setIsCopiedUPI(false), 2000);
+    }
+  };
+
+  // Final submit handler connected to /api/bookings
+  const handleConfirmBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!utrNumber.trim()) {
+      setSubmitError('Please enter your 12-digit UPI Transaction ID / UTR.');
+      return;
+    }
+    if (utrNumber.trim().length < 6) {
+      setSubmitError('Please enter a valid Transaction / UTR number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const addonsPayload = selectedAddOns.map((id) => {
+        const item = ADD_ONS.find((a) => a.id === id);
+        return item ? item.name : id;
+      });
+      if (selectedAddOns.includes('addon-led') && ledNameText.trim()) {
+        addonsPayload.push(`LED Board Name: "${ledNameText.trim()}"`);
+      }
+      if (selectedAddOns.includes('addon-cake') && cakeFlavor) {
+        addonsPayload.push(`Cake Flavor: ${cakeFlavor}`);
+      }
+
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: customerName.trim(),
+          phone: customerPhone.trim(),
+          email: customerEmail.trim() || `${customerPhone.trim()}@beevibe.guest`,
+          date: selectedDate,
+          timeSlot: selectedSlot || availableSlots[0]?.time || '10:00 AM - 12:00 PM',
+          packageName: `${activeRoom.name} (${activeRoom.occasionLabel})`,
+          addOns: addonsPayload,
+          totalPrice: pricing.total,
+          guestCount: guestCount,
+          specialRequests: specialRequests.trim(),
+          utrNumber: utrNumber.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit booking.');
+      }
+
+      const newId = data.bookingId || data.id || `BV-${Math.floor(100000 + Math.random() * 900000)}`;
+      setConfirmedBookingId(newId);
+      setCurrentStep(6); // Step 6: Confirmation Pass
+    } catch (err: any) {
+      setSubmitError(err.message || 'An error occurred while confirming booking. Please retry.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Step Validation Helpers
+  const canGoToStep2 = true;
+  const canGoToStep3 = !!selectedSlot;
+  const canGoToStep4 = true;
+  const canGoToStep5 = !!(customerName.trim() && customerPhone.trim().length >= 10);
+
+  return (
+    <div className={styles.backdrop} onClick={onClose}>
+      <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+        {/* Header Bar */}
+        <div className={styles.modalHeader}>
+          <div className={styles.brandTitle}>
+            <span className={styles.brandName}>BEEVIBE</span>
+            <span className={styles.brandTag}>Private Celebration Theatre</span>
+          </div>
+
+          {/* Progress Indicator (Steps 1 to 5) */}
+          {currentStep < 6 && (
+            <div className={styles.stepper}>
+              {[
+                { num: 1, label: 'Experience' },
+                { num: 2, label: 'Date & Time' },
+                { num: 3, label: 'Add-ons' },
+                { num: 4, label: 'Details' },
+                { num: 5, label: 'Payment' },
+              ].map((s) => (
+                <div
+                  key={s.num}
+                  className={`${styles.stepPill} ${currentStep === s.num ? styles.stepActive : ''} ${
+                    currentStep > s.num ? styles.stepCompleted : ''
+                  }`}
+                  onClick={() => {
+                    // Allow navigating back to completed steps
+                    if (s.num < currentStep) setCurrentStep(s.num);
+                  }}
+                >
+                  <span className={styles.stepNum}>
+                    {currentStep > s.num ? '✓' : `0${s.num}`}
+                  </span>
+                  <span className={styles.stepLabel}>{s.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close booking">
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Modal Main Layout: Split into Step Content + Sticky Live Summary */}
+        <div className={styles.modalBody}>
+          <div className={styles.contentColumn}>
+            {/* ══════════════════════════════════════════════════
+                STEP 1: CHOOSE OCCASION & ROOM
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 1 && (
+              <div className={styles.stepContainer}>
+                <div className={styles.stepHeader}>
+                  <h3 className={styles.stepTitle}>Select Your Occasion &amp; Room</h3>
+                  <p className={styles.stepDesc}>
+                    Choose the celebration mood you are planning in Jayanagar 9th Block
+                  </p>
+                </div>
+
+                {/* Occasion Selection Chips */}
+                <div className={styles.occasionGrid}>
+                  {OCCASIONS.map((occ) => {
+                    const isSelected = selectedOccasion === occ.id;
+                    return (
+                      <button
+                        key={occ.id}
+                        type="button"
+                        className={`${styles.occCard} ${isSelected ? styles.occSelected : ''}`}
+                        onClick={() => {
+                          setSelectedOccasion(occ.id);
+                          setSelectedRoomId(occ.recommendedRoomId);
+                        }}
+                      >
+                        <span className={styles.occIcon}>{occ.icon}</span>
+                        <div className={styles.occText}>
+                          <strong>{occ.label}</strong>
+                          <span>{occ.tagline}</span>
+                        </div>
+                        {isSelected && <Check size={16} className={styles.occCheck} />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Available Rooms for Selected Occasion */}
+                <div className={styles.roomsPicker}>
+                  <div className={styles.subSectionTitle}>Select Private Suite</div>
+                  <div className={styles.roomsGrid}>
+                    {ROOMS.map((room) => {
+                      const isSelected = selectedRoomId === room.id;
+                      return (
+                        <div
+                          key={room.id}
+                          className={`${styles.roomSelectCard} ${isSelected ? styles.roomSelected : ''}`}
+                          onClick={() => setSelectedRoomId(room.id)}
+                        >
+                          <div className={styles.roomSelectImgWrap}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={room.image} alt={room.name} className={styles.roomSelectImg} />
+                            {isSelected && <span className={styles.selectedBadge}>SELECTED</span>}
+                          </div>
+                          <div className={styles.roomSelectBody}>
+                            <div className={styles.roomSelectTop}>
+                              <strong className={styles.roomSelectName}>{room.name}</strong>
+                              <span className={styles.roomSelectPrice}>₹{room.price}</span>
+                            </div>
+                            <span className={styles.roomSelectTheme}>{room.theme}</span>
+                            <div className={styles.roomSelectMeta}>
+                              <span><Users size={12} /> {room.capacity}</span>
+                              <span><Clock size={12} /> {room.duration}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Step 1 Actions */}
+                <div className={styles.navRow}>
+                  <div />
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setCurrentStep(2)}
+                  >
+                    <span>NEXT: DATE &amp; TIME</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                STEP 2: DATE & TIME SLOTS
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 2 && (
+              <div className={styles.stepContainer}>
+                <div className={styles.stepHeader}>
+                  <h3 className={styles.stepTitle}>Choose Date &amp; Available Time Slot</h3>
+                  <p className={styles.stepDesc}>
+                    Live availability for {activeRoom.name} in Jayanagar 9th Block
+                  </p>
+                </div>
+
+                {/* Date Input Box */}
+                <div className={styles.datePickerCard}>
+                  <label htmlFor="slot-date-input" className={styles.inputLabel}>
+                    <Calendar size={16} /> Select Celebration Date:
+                  </label>
+                  <input
+                    id="slot-date-input"
+                    type="date"
+                    min={todayStr}
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setSelectedSlot('');
+                    }}
+                    className={styles.dateField}
+                  />
+                </div>
+
+                {/* Guest Counter */}
+                <div className={styles.guestCounterCard}>
+                  <div className={styles.guestCounterInfo}>
+                    <strong>Number of Guests</strong>
+                    <span>
+                      2 guests included with room. ₹{activeRoom.extraGuestPrice}/extra guest (Max {activeRoom.maxGuests} in this suite).
+                    </span>
+                  </div>
+                  <div className={styles.counterControls}>
+                    <button
+                      type="button"
+                      className={styles.counterBtn}
+                      disabled={guestCount <= 1}
+                      onClick={() => setGuestCount((c) => Math.max(1, c - 1))}
+                    >
+                      -
+                    </button>
+                    <span className={styles.counterNum}>{guestCount}</span>
+                    <button
+                      type="button"
+                      className={styles.counterBtn}
+                      disabled={guestCount >= activeRoom.maxGuests}
+                      onClick={() => setGuestCount((c) => Math.min(activeRoom.maxGuests, c + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Time Slots Grid */}
+                <div className={styles.slotsSection}>
+                  <div className={styles.slotsHeader}>
+                    <strong>Available Time Slots ({selectedDate})</strong>
+                    {isLoadingSlots && <span className={styles.loadingSlots}>Checking live slots...</span>}
+                  </div>
+
+                  <div className={styles.slotsGrid}>
+                    {availableSlots.map((slot) => {
+                      const isSelected = selectedSlot === slot.time;
+                      const isBooked = slot.isBooked;
+
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={isBooked}
+                          className={`${styles.slotCard} ${isSelected ? styles.slotSelected : ''} ${
+                            isBooked ? styles.slotBooked : ''
+                          }`}
+                          onClick={() => setSelectedSlot(slot.time)}
+                        >
+                          <div className={styles.slotTime}>{slot.time}</div>
+                          <div className={styles.slotLabel}>
+                            {isBooked ? '❌ Booked' : slot.label || 'Available'}
+                          </div>
+                          {isSelected && <Check size={14} className={styles.slotCheck} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Step 2 Actions */}
+                <div className={styles.navRow}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrentStep(1)}
+                  >
+                    <ChevronLeft size={16} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!selectedSlot}
+                    onClick={() => setCurrentStep(3)}
+                  >
+                    <span>NEXT: CUSTOMIZE ADD-ONS</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                STEP 3: ADD-ONS (CAKE, FOG, LED BOARD, SNACKS)
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 3 && (
+              <div className={styles.stepContainer}>
+                <div className={styles.stepHeader}>
+                  <h3 className={styles.stepTitle}>Customize Celebration Add-Ons</h3>
+                  <p className={styles.stepDesc}>
+                    Make it unforgettable with custom cakes, cold fog entry, and LED name boards
+                  </p>
+                </div>
+
+                <div className={styles.addonsGrid}>
+                  {ADD_ONS.map((addon) => {
+                    const isChecked = selectedAddOns.includes(addon.id);
+
+                    return (
+                      <div
+                        key={addon.id}
+                        className={`${styles.addonCard} ${isChecked ? styles.addonSelected : ''}`}
+                        onClick={() => toggleAddOn(addon.id)}
+                      >
+                        <div className={styles.addonCheckCircle}>
+                          {isChecked && <Check size={14} />}
+                        </div>
+                        <span className={styles.addonCardIcon}>{addon.icon}</span>
+                        <div className={styles.addonCardInfo}>
+                          <div className={styles.addonCardTitleRow}>
+                            <strong>{addon.name}</strong>
+                            <span className={styles.addonCardPrice}>+₹{addon.price}</span>
+                          </div>
+                          <p className={styles.addonCardDesc}>{addon.description}</p>
+
+                          {/* Extra Inputs if Selected */}
+                          {isChecked && addon.id === 'addon-led' && (
+                            <div className={styles.addonInputRow} onClick={(e) => e.stopPropagation()}>
+                              <label className={styles.addonSubLabel}>Name to spell on LED Board:</label>
+                              <input
+                                type="text"
+                                placeholder="e.g. SNEHA / RAHUL / HAPPY 25TH"
+                                value={ledNameText}
+                                onChange={(e) => setLedNameText(e.target.value.toUpperCase())}
+                                className={styles.addonTextInput}
+                                maxLength={24}
+                              />
+                            </div>
+                          )}
+
+                          {isChecked && addon.id === 'addon-cake' && (
+                            <div className={styles.addonInputRow} onClick={(e) => e.stopPropagation()}>
+                              <label className={styles.addonSubLabel}>Select Cake Flavor:</label>
+                              <select
+                                value={cakeFlavor}
+                                onChange={(e) => setCakeFlavor(e.target.value)}
+                                className={styles.addonSelectInput}
+                              >
+                                <option value="Chocolate Truffle">Chocolate Truffle</option>
+                                <option value="Red Velvet">Red Velvet</option>
+                                <option value="Butterscotch">Butterscotch</option>
+                                <option value="Black Forest">Black Forest</option>
+                                <option value="Pineapple Fresh Cream">Pineapple Fresh Cream</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Step 3 Actions */}
+                <div className={styles.navRow}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrentStep(2)}
+                  >
+                    <ChevronLeft size={16} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setCurrentStep(4)}
+                  >
+                    <span>NEXT: GUEST DETAILS</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                STEP 4: CUSTOMER DETAILS
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 4 && (
+              <div className={styles.stepContainer}>
+                <div className={styles.stepHeader}>
+                  <h3 className={styles.stepTitle}>Enter Contact Information</h3>
+                  <p className={styles.stepDesc}>
+                    Your instant digital pass and WhatsApp confirmation will be sent here
+                  </p>
+                </div>
+
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      <User size={15} /> Your Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="e.g. Rahul Sharma"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>
+                      <Phone size={15} /> WhatsApp Mobile Number *
+                    </label>
+                    <div className={styles.phoneInputWrap}>
+                      <span className={styles.phonePrefix}>+91</span>
+                      <input
+                        type="tel"
+                        className={styles.phoneInput}
+                        placeholder="98765 43210"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.formGroup + ' ' + styles.formFull}>
+                    <label className={styles.formLabel}>
+                      <Mail size={15} /> Email Address (for Ticket Invoice)
+                    </label>
+                    <input
+                      type="email"
+                      className={styles.formInput}
+                      placeholder="rahul@gmail.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                    />
+                  </div>
+
+                  <div className={styles.formGroup + ' ' + styles.formFull}>
+                    <label className={styles.formLabel}>
+                      <MessageSquare size={15} /> Special Occasion Requests / Surprise Notes
+                    </label>
+                    <textarea
+                      rows={2}
+                      className={styles.formTextarea}
+                      placeholder="e.g. Please play our custom birthday video on entry, birthday girl loves purple, etc."
+                      value={specialRequests}
+                      onChange={(e) => setSpecialRequests(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Step 4 Actions */}
+                <div className={styles.navRow}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrentStep(3)}
+                  >
+                    <ChevronLeft size={16} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!canGoToStep5}
+                    onClick={() => setCurrentStep(5)}
+                  >
+                    <span>NEXT: ADVANCE PAYMENT</span>
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                STEP 5: ADVANCE PAYMENT (UPI & CONFIRMATION)
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 5 && (
+              <form onSubmit={handleConfirmBooking} className={styles.stepContainer}>
+                <div className={styles.stepHeader}>
+                  <h3 className={styles.stepTitle}>Pay ₹{pricing.advance} Advance Deposit</h3>
+                  <p className={styles.stepDesc}>
+                    Lock your date and slot. Remaining balance of ₹{pricing.remaining} is paid at check-in.
+                  </p>
+                </div>
+
+                <div className={styles.paymentConsole}>
+                  {/* QR Code and UPI ID */}
+                  <div className={styles.qrCard}>
+                    <div className={styles.qrBadge}>SCAN WITH ANY UPI APP</div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/beevibe-payment-qr.jpg"
+                      alt="BeeVibe UPI QR Code"
+                      className={styles.qrImage}
+                      onError={(e) => {
+                        // Fallback to placeholder qr if missing
+                        (e.target as HTMLImageElement).src = '/qrcode.png';
+                      }}
+                    />
+                    <div className={styles.upiIdRow}>
+                      <span className={styles.upiIdText}>9900106474@okbizaxis</span>
+                      <button
+                        type="button"
+                        className={styles.copyBtn}
+                        onClick={handleCopyUPI}
+                      >
+                        {isCopiedUPI ? <Check size={14} color="#10B981" /> : <Copy size={14} />}
+                        <span>{isCopiedUPI ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                    <div className={styles.upiAppsRow}>
+                      <span>GPay</span> • <span>PhonePe</span> • <span>Paytm</span> • <span>BHIM</span>
+                    </div>
+                  </div>
+
+                  {/* UTR Input Form */}
+                  <div className={styles.utrFormCard}>
+                    <div className={styles.utrStepHeader}>
+                      <div className={styles.utrStepNum}>Step 2</div>
+                      <strong>Enter UPI Transaction Reference (UTR)</strong>
+                    </div>
+                    <p className={styles.utrStepDesc}>
+                      After transferring ₹{pricing.advance} via UPI, paste the 12-digit UTR or Transaction ID below to verify your booking:
+                    </p>
+
+                    <input
+                      type="text"
+                      className={styles.utrInput}
+                      placeholder="e.g. 427812984512"
+                      value={utrNumber}
+                      onChange={(e) => setUtrNumber(e.target.value.trim())}
+                      required
+                    />
+
+                    {submitError && (
+                      <div className={styles.errorMessage}>
+                        <AlertCircle size={15} />
+                        <span>{submitError}</span>
+                      </div>
+                    )}
+
+                    <div className={styles.trustBanner}>
+                      <Shield size={16} className={styles.trustIcon} />
+                      <div>
+                        <strong>100% Slot Lock Guarantee</strong>
+                        <span>Your time slot is instantly reserved upon reference submission.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 5 Actions */}
+                <div className={styles.navRow}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setCurrentStep(4)}
+                    disabled={isSubmitting}
+                  >
+                    <ChevronLeft size={16} /> Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isSubmitting || !utrNumber.trim()}
+                    style={{ minWidth: '220px' }}
+                  >
+                    {isSubmitting ? 'Confirming Booking...' : 'CONFIRM & LOCK SLOT →'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                STEP 6: BOOKING CONFIRMATION DIGITAL PASS
+                ══════════════════════════════════════════════════ */}
+            {currentStep === 6 && (
+              <div className={styles.stepContainer}>
+                <div className={styles.confirmationHero}>
+                  <div className={styles.confirmedIconWrap}>
+                    <CheckCircle2 size={44} className={styles.confirmedIcon} />
+                  </div>
+                  <h3 className={styles.confirmedTitle}>Celebration Slot Confirmed!</h3>
+                  <p className={styles.confirmedSubtitle}>
+                    Booking Reference: <strong>{confirmedBookingId}</strong>
+                  </p>
+                </div>
+
+                {/* Digital Ticket Pass */}
+                <div className={styles.ticketPass}>
+                  <div className={styles.ticketHeader}>
+                    <div>
+                      <span className={styles.ticketBrand}>BEEVIBE THEATRE PASS</span>
+                      <h4 className={styles.ticketRoomTitle}>{activeRoom.name}</h4>
+                    </div>
+                    <span className={styles.ticketStatus}>CONFIRMED</span>
+                  </div>
+
+                  <div className={styles.ticketDetailsGrid}>
+                    <div className={styles.ticketItem}>
+                      <span className={styles.ticketLabel}>DATE</span>
+                      <strong className={styles.ticketVal}>{selectedDate}</strong>
+                    </div>
+                    <div className={styles.ticketItem}>
+                      <span className={styles.ticketLabel}>TIME SLOT</span>
+                      <strong className={styles.ticketVal}>{selectedSlot || '10:00 AM - 12:00 PM'}</strong>
+                    </div>
+                    <div className={styles.ticketItem}>
+                      <span className={styles.ticketLabel}>GUESTS</span>
+                      <strong className={styles.ticketVal}>{guestCount} Guests</strong>
+                    </div>
+                    <div className={styles.ticketItem}>
+                      <span className={styles.ticketLabel}>ADVANCE PAID</span>
+                      <strong className={styles.ticketVal} style={{ color: '#10B981' }}>
+                        ₹{pricing.advance} Paid
+                      </strong>
+                    </div>
+                  </div>
+
+                  {selectedAddOns.length > 0 && (
+                    <div className={styles.ticketAddons}>
+                      <span className={styles.ticketLabel}>INCLUDED ADD-ONS:</span>
+                      <div className={styles.ticketAddonsPills}>
+                        {selectedAddOns.map((id) => {
+                          const item = ADD_ONS.find((a) => a.id === id);
+                          return (
+                            <span key={id} className={styles.ticketAddonPill}>
+                              {item?.icon} {item?.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className={styles.ticketVenue}>
+                    <span>📍 1340, 2nd Floor, 41st Cross Rd, 4th Gate, Jayanagar 9th Block, Bengaluru</span>
+                  </div>
+                </div>
+
+                {/* Post Booking Actions */}
+                <div className={styles.confirmationActions}>
+                  <a
+                    href={`https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20just%20booked%20${encodeURIComponent(
+                      activeRoom.name
+                    )}%20for%20${selectedDate}%20(${selectedSlot}).%20My%20booking%20ID%20is%20${confirmedBookingId}.`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
+                    style={{ background: '#25D366', borderColor: '#25D366' }}
+                  >
+                    <MessageSquare size={16} /> Open WhatsApp for Directions
+                  </a>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => window.print()}
+                  >
+                    <Printer size={16} /> Print / Save Pass
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-soft"
+                    onClick={onClose}
+                  >
+                    Done &amp; Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ══════════════════════════════════════════════════
+              STICKY LIVE PRICE SUMMARY (COLUMN 2)
+              ══════════════════════════════════════════════════ */}
+          {currentStep < 6 && (
+            <aside className={styles.summarySidebar}>
+              <div className={styles.summaryCard}>
+                <div className={styles.summaryHeader}>
+                  <h4>Live Booking Summary</h4>
+                  <span className={styles.summarySuiteBadge}>{activeRoom.occasionLabel}</span>
+                </div>
+
+                {/* Selected Room Preview */}
+                <div className={styles.summaryRoomPreview}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={activeRoom.image} alt={activeRoom.name} className={styles.summaryRoomImg} />
+                  <div>
+                    <strong>{activeRoom.name}</strong>
+                    <span>{selectedDate}</span>
+                    <span className={styles.summarySlotTime}>{selectedSlot || 'Select slot in Step 2'}</span>
+                  </div>
+                </div>
+
+                {/* Price Breakdown */}
+                <div className={styles.breakdownList}>
+                  <div className={styles.breakdownRow}>
+                    <span>Experience Suite ({activeRoom.duration})</span>
+                    <strong>₹{pricing.baseRoomPrice}</strong>
+                  </div>
+
+                  {pricing.extraGuests > 0 && (
+                    <div className={styles.breakdownRow}>
+                      <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
+                      <strong>₹{pricing.extraGuestCost}</strong>
+                    </div>
+                  )}
+
+                  {selectedAddOns.map((id) => {
+                    const item = ADD_ONS.find((a) => a.id === id);
+                    if (!item) return null;
+                    return (
+                      <div key={id} className={styles.breakdownRow}>
+                        <span>{item.icon} {item.name}</span>
+                        <strong>+₹{item.price}</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Total & Deposit Breakdown */}
+                <div className={styles.totalSection}>
+                  <div className={styles.totalRow}>
+                    <span>Total Experience Cost</span>
+                    <span className={styles.totalAmount}>₹{pricing.total}</span>
+                  </div>
+                  <div className={styles.depositRow}>
+                    <span>Advance to Pay Now</span>
+                    <span className={styles.advanceAmount}>₹{pricing.advance}</span>
+                  </div>
+                  <div className={styles.balanceRow}>
+                    <span>Remaining at Venue (Check-in)</span>
+                    <span className={styles.remainingAmount}>₹{pricing.remaining}</span>
+                  </div>
+                </div>
+
+                <div className={styles.summaryGuarantee}>
+                  <Shield size={14} />
+                  <span>100% Private Room • Jayanagar 9th Block</span>
+                </div>
+              </div>
+            </aside>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

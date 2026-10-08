@@ -32,7 +32,7 @@ const vt323 = VT323({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.beevibe.org";
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#102A43",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -41,10 +41,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Bee Vibe Party Hall | Private Party Hall & Celebration Space Bangalore",
-    template: "%s | Bee Vibe Party Hall",
+    default: "BeeVibe | Private Celebration Theatre in Bengaluru (Jayanagar)",
+    template: "%s | BeeVibe Private Theatre",
   },
-  description: "Bee Vibe Party Hall is Bangalore's premier luxury private party hall and celebration space in Jayanagar 9th Block. Book mini party halls for birthdays, anniversaries, couple date nights, private movie screenings, or gaming with 180-inch 4K screen & Dolby Atmos sound.",
+  description: "BeeVibe is Bangalore's premier private celebration theatre and party space in Jayanagar 9th Block. Book 100% private suites for birthdays, romantic dates, anniversaries, and PS5 gaming with 180-inch 4K screen & Dolby Atmos sound.",
   keywords: [
     "beevibe party hall",
     "bee vibe party hall",

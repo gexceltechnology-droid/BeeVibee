@@ -1,0 +1,175 @@
+.finderCard {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-blue);
+  border-radius: 20px;
+  box-shadow: 0 16px 45px rgba(16, 42, 67, 0.12), 0 2px 8px rgba(16, 42, 67, 0.04);
+  padding: 28px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.finderCard:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 20px 55px rgba(16, 42, 67, 0.16);
+}
+
+.finderHeader {
+  margin-bottom: 22px;
+}
+
+.finderBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--soft-blue);
+  color: var(--royal);
+  border: 1px solid var(--border-blue);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 10px;
+}
+
+.finderTitle {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+}
+
+.finderSubtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.finderForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 992px) {
+  .fieldsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .fieldsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.fieldBox {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.fieldBox:focus-within {
+  border-color: var(--royal);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+
+.fieldIcon {
+  color: var(--royal);
+}
+
+.fieldIconEmoji {
+  font-size: 0.85rem;
+}
+
+.fieldInput,
+.fieldSelect {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: var(--navy);
+  width: 100%;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.fieldInput {
+  color-scheme: light;
+}
+
+.fieldSelect option {
+  background: #FFFFFF;
+  color: var(--navy);
+}
+
+.submitContainer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.submitBtn {
+  background: var(--royal);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
+  width: 100%;
+}
+
+.submitBtn:hover {
+  background: var(--royal-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+}
+
+@media (min-width: 640px) {
+  .submitBtn {
+    width: auto;
+    min-width: 260px;
+  }
+}
