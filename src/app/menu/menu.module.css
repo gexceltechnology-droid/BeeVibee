@@ -13,9 +13,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: rgba(10, 10, 12, 0.7);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -31,21 +31,21 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--text-secondary);
+  color: #09090b;
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
-  transition: color 0.2s;
+  transition: all 0.2s;
   padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
 }
 
 .backBtn:hover {
-  color: var(--accent);
-  border-color: var(--accent-border);
-  box-shadow: 0 0 10px rgba(var(--accent-base), 0.1);
+  color: #09090b;
+  border-color: #cbd5e1;
+  background: #f8fafc;
 }
 
 .logoWrapper {
@@ -63,9 +63,7 @@
   font-size: 1.3rem;
   font-weight: 800;
   letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #ffffff 50%, rgba(255,255,255,0.7) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #09090b;
 }
 
 .logoSub {
@@ -80,15 +78,13 @@
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(var(--accent-base), 0.08);
-  border: 1px solid var(--accent-border);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   border-radius: 30px;
   font-family: var(--font-title);
   font-weight: 700;
   font-size: 0.85rem;
-  color: var(--accent);
-  box-shadow: 0 0 15px rgba(var(--accent-base), 0.15);
-  animation: pulseGlow 2s infinite alternate;
+  color: #09090b;
 }
 
 .glowDot {
@@ -109,15 +105,15 @@
 
 /* Intro Card */
 .introCard {
-  background: linear-gradient(135deg, rgba(20, 20, 27, 0.7) 0%, rgba(10, 10, 12, 0.8) 100%);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: var(--radius-md);
   padding: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
   overflow: hidden;
   position: relative;
 }
@@ -129,7 +125,7 @@
   right: -20%;
   width: 250px;
   height: 250px;
-  background: radial-gradient(circle, rgba(var(--accent-base), 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.02) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -138,6 +134,7 @@
   font-size: 1.6rem;
   font-weight: 800;
   margin-bottom: 8px;
+  color: #09090b;
 }
 
 .introContent p {
@@ -168,8 +165,8 @@
 
 .tabBtn {
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 30px;
   color: var(--text-secondary);
   font-family: var(--font-title);
@@ -177,20 +174,21 @@
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.3s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.25s ease;
 }
 
 .tabBtn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #f8fafc;
+  color: #09090b;
+  border-color: #cbd5e1;
 }
 
 .activeTab {
-  background: rgba(var(--accent-base), 0.15);
-  border-color: var(--accent);
-  color: var(--accent);
-  box-shadow: 0 0 15px rgba(var(--accent-base), 0.15);
+  background: #09090b !important;
+  border-color: #09090b !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 }
 
 /* Grid layout */
@@ -202,14 +200,14 @@
 
 /* Card design */
 .menuCard {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: var(--radius-md);
   padding: 20px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
@@ -218,8 +216,8 @@
 
 .menuCard:hover {
   transform: translateY(-5px);
-  border-color: var(--glass-hover-border);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(var(--accent-base), 0.1);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 .cardHeader {
@@ -231,16 +229,16 @@
 
 .itemIcon {
   font-size: 2.2rem;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .priceTag {
   font-family: var(--font-title);
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--accent);
-  background: rgba(var(--accent-base), 0.08);
-  border: 1px solid var(--accent-border);
+  color: #09090b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
   padding: 4px 10px;
   border-radius: 12px;
 }
@@ -254,7 +252,7 @@
   font-family: var(--font-title);
   font-size: 1.1rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #09090b;
   margin-bottom: 8px;
 }
 
@@ -275,8 +273,8 @@
   align-items: center;
   justify-content: center;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #09090b;
+  border: 1px solid #09090b;
   color: #ffffff;
   border-radius: 20px;
   font-family: var(--font-title);

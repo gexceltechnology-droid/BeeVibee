@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   BEEVIBE QUICK BOOKING POPUP (OBSIDIAN & GOLD LUXURY THEME)
+   BEEVIBE QUICK BOOKING POPUP (CLASSIC SIMPLE WHITE LUXURY THEME)
    Compact, friction-free booking modal with basic details & phone
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -7,9 +7,9 @@
   position: fixed;
   inset: 0;
   z-index: 999999;
-  background: rgba(5, 5, 8, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,29 +23,19 @@
   max-width: 520px;
   max-height: 94vh;
   overflow-y: auto;
-  background: #0d0a18;
-  border: 1px solid rgba(217, 70, 239, 0.28);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   box-shadow: 
-    0 25px 80px rgba(0, 0, 0, 0.95),
-    0 0 50px rgba(217, 70, 239, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 25px 80px rgba(0, 0, 0, 0.18),
+    0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 26px 26px 22px 26px;
-  color: #f8f6f0;
+  color: #09090b;
   animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Subtle neon ambient glow at top inside the card */
 .cardGlow {
-  position: absolute;
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 240px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(217, 70, 239, 0.25) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .closeButton {
@@ -55,9 +45,9 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #a0a0b0;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #09090b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,8 +58,8 @@
 }
 
 .closeButton:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: #fee2e2;
+  border-color: #ef4444;
   color: #ef4444;
   transform: scale(1.08);
 }
@@ -86,9 +76,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(217, 70, 239, 0.12);
-  border: 1px solid rgba(217, 70, 239, 0.35);
-  color: var(--accent);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #09090b;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -101,21 +91,19 @@
 .title {
   font-size: 1.45rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #09090b;
   letter-spacing: -0.02em;
   margin: 0 0 6px 0;
   line-height: 1.25;
 }
 
 .titleGold {
-  background: linear-gradient(135deg, #d946ef 0%, #a855f7 50%, #ec4899 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #09090b;
 }
 
 .subtitle {
   font-size: 0.84rem;
-  color: #a0a0b5;
+  color: #475569;
   margin: 0;
   line-height: 1.4;
 }
@@ -129,14 +117,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #d4af37;
+  color: #09090b;
   margin-bottom: 8px;
 }
 
 .sectionLabelSub {
   font-size: 0.7rem;
   font-weight: 500;
-  color: #888899;
+  color: #64748b;
   text-transform: none;
   letter-spacing: normal;
 }
@@ -150,8 +138,8 @@
 
 .roomCard {
   position: relative;
-  background: #14141d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 10px 8px;
   text-align: center;
@@ -163,15 +151,15 @@
 }
 
 .roomCard:hover {
-  border-color: rgba(217, 70, 239, 0.4);
+  border-color: #cbd5e1;
   transform: translateY(-2px);
-  background: #181226;
+  background: #f1f5f9;
 }
 
 .roomCardActive {
-  background: #1c102a;
-  border: 1px solid var(--accent);
-  box-shadow: 0 0 16px rgba(217, 70, 239, 0.3);
+  background: #ffffff;
+  border: 1.5px solid #09090b;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
@@ -202,7 +190,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--accent);
+  background: #09090b;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -214,7 +202,7 @@
 .roomName {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #09090b;
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -225,12 +213,12 @@
 .roomPrice {
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--accent);
+  color: #09090b;
 }
 
 .roomDuration {
   font-size: 0.65rem;
-  color: #888899;
+  color: #64748b;
 }
 
 /* ─── Form Inputs ─── */
@@ -251,58 +239,58 @@
 .inputLabel {
   font-size: 0.76rem;
   font-weight: 600;
-  color: #d0d0dc;
+  color: #09090b;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .inputLabel span {
-  color: var(--accent);
+  color: #09090b;
 }
 
 .textInput {
   width: 100%;
-  background: #14141d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 11px 14px;
   font-size: 0.9rem;
-  color: #ffffff;
+  color: #09090b;
   transition: all 0.2s ease;
   outline: none;
   font-family: inherit;
 }
 
 .textInput:focus {
-  border-color: var(--accent);
-  background: #1a122a;
-  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
+  border-color: #09090b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.08);
 }
 
 .phoneInputWrapper {
   display: flex;
   align-items: center;
-  background: #14141d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   overflow: hidden;
   transition: all 0.2s ease;
 }
 
 .phoneInputWrapper:focus-within {
-  border-color: var(--accent);
-  background: #1a122a;
-  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
+  border-color: #09090b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.08);
 }
 
 .phonePrefix {
-  background: rgba(217, 70, 239, 0.12);
-  color: var(--accent);
+  background: #f1f5f9;
+  color: #09090b;
   font-weight: 700;
   font-size: 0.88rem;
   padding: 11px 12px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -316,14 +304,14 @@
   padding: 11px 12px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #ffffff;
+  color: #09090b;
   letter-spacing: 0.04em;
   outline: none;
   font-family: inherit;
 }
 
 .phoneInput::placeholder {
-  color: #666677;
+  color: #94a3b8;
   font-weight: 400;
   letter-spacing: normal;
 }
@@ -337,12 +325,12 @@
 
 .selectInput {
   width: 100%;
-  background: #14141d;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 11px 12px;
   font-size: 0.84rem;
-  color: #ffffff;
+  color: #09090b;
   outline: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -350,14 +338,14 @@
 }
 
 .selectInput:focus {
-  border-color: var(--accent);
-  background: #1a122a;
-  box-shadow: 0 0 0 3px rgba(217, 70, 239, 0.18);
+  border-color: #09090b;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(9, 9, 11, 0.08);
 }
 
 .selectInput option {
-  background: #14141d;
-  color: #ffffff;
+  background: #ffffff;
+  color: #09090b;
 }
 
 /* Occasion Chips */
@@ -368,35 +356,35 @@
 }
 
 .occasionChip {
-  background: #14141d;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 0.74rem;
   font-weight: 600;
-  color: #b0b0c0;
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 }
 
 .occasionChip:hover {
-  border-color: rgba(217, 70, 239, 0.4);
-  color: #ffffff;
+  border-color: #cbd5e1;
+  color: #09090b;
 }
 
 .occasionChipActive {
-  background: rgba(217, 70, 239, 0.18);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: #09090b;
+  border-color: #09090b;
+  color: #ffffff;
   font-weight: 700;
 }
 
 /* Error message */
 .errorMessage {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
   font-size: 0.8rem;
   padding: 8px 12px;
   border-radius: 8px;
@@ -408,7 +396,7 @@
 .submitBtn {
   width: 100%;
   margin-top: 6px;
-  background: linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%);
+  background: #09090b;
   color: #ffffff;
   font-weight: 800;
   font-size: 0.98rem;
@@ -417,7 +405,7 @@
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(217, 70, 239, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -426,13 +414,13 @@
 }
 
 .submitBtn:hover:not(:disabled) {
+  background: #1e293b;
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(217, 70, 239, 0.65);
-  filter: brightness(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .submitBtn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
@@ -440,7 +428,7 @@
   text-align: center;
   margin-top: 10px;
   font-size: 0.73rem;
-  color: #888899;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -450,14 +438,14 @@
 .switchPortalLink {
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid #f1f5f9;
   text-align: center;
 }
 
 .switchPortalBtn {
   background: none;
   border: none;
-  color: #c0c0d5;
+  color: #64748b;
   font-size: 0.8rem;
   cursor: pointer;
   text-decoration: underline;
@@ -467,7 +455,7 @@
 }
 
 .switchPortalBtn:hover {
-  color: var(--accent);
+  color: #09090b;
 }
 
 /* ─── Success Confirmation Screen ─── */
@@ -481,34 +469,34 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(34, 197, 94, 0.15);
+  background: #dcfce7;
   border: 2px solid #22c55e;
-  color: #22c55e;
+  color: #16a34a;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
   margin: 0 auto 16px auto;
-  box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
 }
 
 .successTitle {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #09090b;
   margin: 0 0 8px 0;
 }
 
 .successSub {
   font-size: 0.88rem;
-  color: #a0a0b5;
+  color: #475569;
   margin: 0 0 20px 0;
   line-height: 1.5;
 }
 
 .summaryBox {
-  background: #140e22;
-  border: 1px solid rgba(217, 70, 239, 0.3);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 16px;
   text-align: left;
@@ -526,16 +514,16 @@
 }
 
 .summaryLabel {
-  color: #888899;
+  color: #64748b;
 }
 
 .summaryValue {
-  color: #ffffff;
+  color: #09090b;
   font-weight: 700;
 }
 
 .summaryValueGold {
-  color: var(--accent);
+  color: #09090b;
   font-weight: 800;
 }
 
@@ -554,22 +542,22 @@
   justify-content: center;
   gap: 8px;
   text-decoration: none;
-  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
   transition: all 0.2s ease;
   margin-bottom: 10px;
 }
 
 .whatsappCtaBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(37, 211, 102, 0.5);
+  box-shadow: 0 8px 20px rgba(37, 211, 102, 0.45);
   filter: brightness(1.06);
 }
 
 .closeSuccessBtn {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #09090b;
   padding: 11px 18px;
   border-radius: 10px;
   font-size: 0.88rem;
@@ -579,7 +567,7 @@
 }
 
 .closeSuccessBtn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: #e2e8f0;
 }
 
 /* ─── Animations ─── */

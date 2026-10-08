@@ -987,12 +987,12 @@ export default function BookingPortal({
           <title>Bee Vibe Ticket - ${id}</title>
           <style>
             :root {
-              --accent: #d946ef;
-              --bg-primary: #0a0614;
-              --bg-card: #140d24;
-              --text-primary: #ffffff;
-              --text-secondary: #c4bcd8;
-              --text-muted: #847a9e;
+              --accent: #09090b;
+              --bg-primary: #f8fafc;
+              --bg-card: #ffffff;
+              --text-primary: #09090b;
+              --text-secondary: #475569;
+              --text-muted: #94a3b8;
             }
 
             * {
@@ -1013,10 +1013,10 @@ export default function BookingPortal({
             }
 
             .ticket-card {
-              background: linear-gradient(135deg, #181822 0%, #0d0d12 100%);
-              border: 1px solid rgba(242, 169, 0, 0.4);
+              background: #ffffff;
+              border: 1.5px solid #09090b;
               border-radius: 16px;
-              box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 25px rgba(242,169,0,0.15);
+              box-shadow: 0 10px 30px rgba(0,0,0,0.08);
               width: 100%;
               max-width: 460px;
               padding: 32px;
@@ -1033,7 +1033,7 @@ export default function BookingPortal({
               height: 24px;
               background-color: var(--bg-primary);
               border-radius: 50%;
-              border: 1px solid rgba(242, 169, 0, 0.4);
+              border: 1.5px solid #09090b;
               z-index: 5;
             }
 
@@ -1698,11 +1698,12 @@ export default function BookingPortal({
                         <title>Bee Vibe Ticket - ${id}</title>
                         <style>
                           :root {
-                            --accent: #d946ef;
-                            --bg-primary: #0a0614;
-                            --text-primary: #ffffff;
-                            --text-secondary: #c4bcd8;
-                            --text-muted: #847a9e;
+                            --accent: #09090b;
+                            --bg-primary: #f8fafc;
+                            --bg-card: #ffffff;
+                            --text-primary: #09090b;
+                            --text-secondary: #475569;
+                            --text-muted: #94a3b8;
                           }
                           * { box-sizing: border-box; margin: 0; padding: 0; }
                           body {
@@ -1716,9 +1717,10 @@ export default function BookingPortal({
                             padding: 20px;
                           }
                           .ticket-card {
-                            background: linear-gradient(135deg, #181822 0%, #0d0d12 100%);
-                            border: 1px solid rgba(242, 169, 0, 0.4);
+                            background: #ffffff;
+                            border: 1.5px solid #09090b;
                             border-radius: 16px;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
                             width: 100%;
                             max-width: 460px;
                             padding: 32px;
@@ -1732,7 +1734,7 @@ export default function BookingPortal({
                             height: 24px;
                             background-color: var(--bg-primary);
                             border-radius: 50%;
-                            border: 1px solid rgba(242, 169, 0, 0.4);
+                            border: 1.5px solid #09090b;
                           }
                           .ticket-card::before { left: -12px; }
                           .ticket-card::after { right: -12px; }
@@ -2522,10 +2524,10 @@ export default function BookingPortal({
                           <div className={styles.paymentCouponInfo}>
                             <span style={{ fontSize: '1.4rem' }}>🎟️</span>
                             <div>
-                              <strong style={{ color: '#ffffff', fontSize: '0.88rem', display: 'block' }}>
+                              <strong style={{ color: '#09090b', fontSize: '0.88rem', display: 'block' }}>
                                 Have a Coupon Code?
                               </strong>
-                              <span style={{ color: 'var(--text-secondary)', fontSize: '0.76rem' }}>
+                              <span style={{ color: '#475569', fontSize: '0.76rem' }}>
                                 Apply here while paying to unlock flat ₹999 on any theme + free fog entry!
                               </span>
                             </div>
@@ -2576,7 +2578,7 @@ export default function BookingPortal({
                               <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.88rem' }}>
                                 Coupon {appliedCoupon} Applied! (Flat ₹999 Theme Rate Unlocked)
                               </div>
-                              <div style={{ color: '#e0e0f0', fontSize: '0.76rem' }}>
+                              <div style={{ color: '#334155', fontSize: '0.76rem' }}>
                                 Complimentary 1-Pot Fog Entry + Floor Balloons + Table Decor + LED Board Included! (Saved ₹{calculateDiscount()})
                               </div>
                             </div>

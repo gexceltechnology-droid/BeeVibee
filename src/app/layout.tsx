@@ -32,7 +32,7 @@ const vt323 = VT323({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.beevibe.org";
 
 export const viewport: Viewport = {
-  themeColor: "#0c0a09",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,

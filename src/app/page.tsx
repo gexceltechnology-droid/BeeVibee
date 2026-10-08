@@ -352,8 +352,8 @@ export default function Home() {
 
               {/* Special Month Coupon Offer Banner */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(217, 70, 239, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%)',
-                border: '1.5px dashed var(--accent)',
+                background: '#f8fafc',
+                border: '1.5px dashed #09090b',
                 borderRadius: '14px',
                 padding: '12px 18px',
                 margin: '16px 0 22px 0',
@@ -367,10 +367,10 @@ export default function Home() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '1.6rem' }}>🎟️</span>
                   <div>
-                    <div style={{ color: '#ffffff', fontWeight: 800, fontSize: '0.94rem' }}>
+                    <div style={{ color: '#09090b', fontWeight: 800, fontSize: '0.94rem' }}>
                       Limited Month Promo: Apply Coupon &quot;BEEVIBE999&quot; at Checkout!
                     </div>
-                    <div style={{ color: '#d8c8e2', fontSize: '0.78rem', marginTop: '2px' }}>
+                    <div style={{ color: '#475569', fontSize: '0.78rem', marginTop: '2px' }}>
                       Includes Complimentary <strong>Fog Entry</strong> + <strong>Floor Balloons</strong> + <strong>Table Decor</strong> + <strong>LED Name Board</strong> + <strong>All OTTs</strong>!
                     </div>
                   </div>
@@ -380,7 +380,7 @@ export default function Home() {
                     type="button"
                     onClick={handleCopyCouponCode}
                     style={{
-                      background: 'linear-gradient(135deg, #d946ef 0%, #8b5cf6 100%)',
+                      background: '#09090b',
                       color: '#ffffff',
                       padding: '6px 14px',
                       borderRadius: '6px',
@@ -389,7 +389,7 @@ export default function Home() {
                       letterSpacing: '0.5px',
                       border: 'none',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 10px rgba(217, 70, 239, 0.4)'
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                     }}
                   >
                     📋 Copy Code BEEVIBE999
@@ -397,7 +397,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => handleOpenBooking(vibe)}
-                    style={{ background: '#ffffff', color: '#000', padding: '6px 14px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', border: 'none', cursor: 'pointer' }}
+                    style={{ background: '#ffffff', color: '#09090b', padding: '6px 14px', borderRadius: '6px', fontWeight: 700, fontSize: '0.82rem', border: '1px solid #e2e8f0', cursor: 'pointer' }}
                   >
                     Book Experience →
                   </button>
@@ -626,24 +626,24 @@ export default function Home() {
 
                   <div className={styles.showcaseContent} style={{ padding: '24px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                     <h3 className={styles.showcaseTitle} style={{ color: pkg.color, fontSize: '1.25rem', marginBottom: '4px' }}>{pkg.name}</h3>
-                    <div className={styles.showcasePrice} style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', marginBottom: '8px' }}>
-                      <span style={{ color: 'var(--accent)' }}>2 Hours Private Suite</span>
+                    <div className={styles.showcasePrice} style={{ fontSize: '1.2rem', fontWeight: 800, color: '#09090b', marginBottom: '8px' }}>
+                      <span style={{ color: '#09090b' }}>2 Hours Private Suite</span>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}> · All VIP Amenities Included</span>
                     </div>
                     <div style={{
-                      background: 'rgba(217, 70, 239, 0.1)',
-                      border: '1px solid rgba(217, 70, 239, 0.3)',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '10px',
                       padding: '10px 12px',
                       marginBottom: '14px',
                       fontSize: '0.82rem',
-                      color: '#f8f6f0',
+                      color: '#09090b',
                       lineHeight: '1.5'
                     }}>
-                      <div style={{ color: 'var(--accent)', fontWeight: 800, marginBottom: '6px' }}>
+                      <div style={{ color: '#09090b', fontWeight: 800, marginBottom: '6px' }}>
                         🎁 Complimentary Inclusions with Coupon Code BEEVIBE999:
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', fontSize: '0.78rem', color: '#e0e0eb' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px', fontSize: '0.78rem', color: '#475569' }}>
                         <span>🌫️ Fog Entry Effect</span>
                         <span>🎈 Floor Balloons Setup</span>
                         <span>🕯️ Candle &amp; Table Decor</span>
@@ -653,7 +653,7 @@ export default function Home() {
                     </div>
                     <ul className={styles.showcaseList} style={{ flexGrow: 1, marginBottom: '20px' }}>
                       {pkg.features.map((f, i) => (
-                        <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px' }}>
+                        <li key={i} style={{ display: 'flex', gap: '8px', fontSize: '0.88rem', marginBottom: '8px', color: '#334155' }}>
                           <span style={{ color: pkg.color, fontWeight: 'bold' }}>✓</span> {f}
                         </li>
                       ))}
@@ -689,31 +689,31 @@ export default function Home() {
       <section id="gaming-banner" className={styles.section + ' ' + styles.reveal} style={{ padding: '40px 0' }}>
         <div className="container">
           <div style={{
-            background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(255, 0, 85, 0.12) 100%)',
-            border: '2px solid #00f0ff',
+            background: '#ffffff',
+            border: '1.5px solid #00f0ff',
             borderRadius: '24px',
             padding: '36px',
-            boxShadow: '0 15px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 240, 255, 0.25)',
+            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.05), 0 0 25px rgba(0, 240, 255, 0.12)',
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '30px',
             alignItems: 'center'
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffe600', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
-                <Gamepad2 size={24} color="#00f0ff" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0891b2', fontFamily: 'var(--font-vt323), monospace', fontSize: '1.4rem', marginBottom: '8px' }}>
+                <Gamepad2 size={24} color="#0891b2" /> NEW: PIXEL EDITION PS5 GAMING LOUNGE
               </div>
-              <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#ffffff', fontSize: '2rem' }}>
+              <h2 className={styles.sectionTitle} style={{ textAlign: 'left', marginBottom: '12px', color: '#09090b', fontSize: '2rem' }}>
                 Sony PlayStation 5 Console + 2 Wireless Controllers
               </h2>
-              <p style={{ color: '#c0c0e0', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '24px' }}>
+              <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '24px' }}>
                 Step into Bangalore&apos;s premier private PS5 gaming lounge. Equipped with <strong>1 Sony PlayStation 5</strong>, <strong>2 DualSense Wireless Controllers</strong>, and top multiplayer games (EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2, Call of Duty, Gran Turismo 7) on our 180&quot; 4K Screen with 7.1 Dolby surround sound!
               </p>
               <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                <Link href="/gaming" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #00f0ff 0%, #7000ff 100%)', border: '1px solid #00f0ff', color: '#ffffff', fontWeight: 700 }}>
+                <Link href="/gaming" className="btn btn-primary" style={{ background: '#09090b', border: '1px solid #09090b', color: '#ffffff', fontWeight: 700 }}>
                   Enter Gaming World 🎮
                 </Link>
-                <Link href="/gaming/book" className="btn btn-secondary" style={{ borderColor: 'rgba(255,255,255,0.3)', color: '#ffffff' }}>
+                <Link href="/gaming/book" className="btn btn-secondary" style={{ borderColor: '#cbd5e1', color: '#09090b' }}>
                   Book PS5 Gaming Slot
                 </Link>
               </div>
@@ -784,11 +784,11 @@ export default function Home() {
       <GallerySection />
 
       {/* Interactive Google Map Location Section */}
-      <section id="location" style={{ padding: '60px 0', borderTop: '1px solid var(--glass-border)', background: 'rgba(10, 10, 12, 0.4)' }}>
+      <section id="location" style={{ padding: '60px 0', borderTop: '1px solid #e2e8f0', background: '#f8fafc' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <div className={styles.heroBadge} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-              <MapPin size={14} color="var(--accent)" /> OUR LOCATION
+              <MapPin size={14} color="#09090b" /> OUR LOCATION
             </div>
             <h2 className={styles.sectionTitle} style={{ marginTop: '8px' }}>
               Visit Bee Vibe Theater
@@ -802,9 +802,9 @@ export default function Home() {
             position: 'relative',
             borderRadius: '20px',
             overflow: 'hidden',
-            border: '1px solid var(--glass-border)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(242, 169, 0, 0.08)',
-            background: 'var(--glass-bg)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)',
+            background: '#ffffff',
             height: '420px',
             width: '100%'
           }}>
@@ -835,8 +835,7 @@ export default function Home() {
                   gap: '8px',
                   padding: '10px 18px',
                   fontSize: '0.85rem',
-                  borderRadius: '30px',
-                  boxShadow: '0 8px 24px rgba(242, 169, 0, 0.4)'
+                  borderRadius: '30px'
                 }}
               >
                 <MapPin size={16} /> Open in Google Maps
@@ -883,11 +882,11 @@ export default function Home() {
                 onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
               >
                 <div className={styles.faqQuestion}>
-                  <span style={{ fontWeight: 600, color: '#ffffff' }}>{faq.q}</span>
+                  <span style={{ fontWeight: 600, color: '#09090b' }}>{faq.q}</span>
                   <ChevronDown size={18} className={styles.faqIcon} />
                 </div>
                 {activeFaq === idx && (
-                  <div className={styles.faqAnswer} style={{ padding: '12px 18px', color: '#c0c0d8', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  <div className={styles.faqAnswer} style={{ padding: '12px 18px', color: '#475569', fontSize: '0.9rem', lineHeight: '1.5' }}>
                     {faq.a}
                   </div>
                 )}
