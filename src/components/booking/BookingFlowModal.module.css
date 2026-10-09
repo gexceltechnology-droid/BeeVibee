@@ -1773,3 +1773,513 @@
   font-weight: 800;
   text-decoration: underline;
 }
+
+/* ══════════════════════════════════════════════════
+   MOBILE LIVE BILL BAR & DRAWER (STEPS 1-4)
+   ══════════════════════════════════════════════════ */
+.mobileBillBar {
+  display: none;
+  background: #F0FDF4;
+  border: 1.5px solid #86EFAC;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .mobileBillBar {
+    display: block;
+  }
+}
+
+.mobileBillHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobileBillInfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #14532D;
+  flex-wrap: wrap;
+}
+
+.mobileBillIcon {
+  color: #16A34A;
+  flex-shrink: 0;
+}
+
+.mobileBillTotal strong {
+  color: #0F172A;
+  font-weight: 900;
+}
+
+.mobileBillDivider {
+  color: #86EFAC;
+}
+
+.mobileBillDeposit strong {
+  color: #15803D;
+  font-weight: 900;
+}
+
+.mobileBillToggleBtn {
+  background: #16A34A;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.mobileBillToggleBtn:hover {
+  background: #15803D;
+}
+
+.mobileBillDrawer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #86EFAC;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobileBillRoom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 0.82rem;
+  color: #0F172A;
+}
+
+.mobileBillDate {
+  display: block;
+  font-size: 0.72rem;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.mobileBillRoomPrice {
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.mobileBillDiscount {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #16A34A;
+  font-weight: 700;
+}
+
+.mobileBillRowItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.mobileBillTotalsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #86EFAC;
+}
+
+.mobileBillTotalBox,
+.mobileBillDepositBox,
+.mobileBillBalanceBox {
+  background: #FFFFFF;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mobileBillTotalBox span,
+.mobileBillDepositBox span,
+.mobileBillBalanceBox span {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+.mobileBillTotalBox strong {
+  font-size: 0.95rem;
+  color: #0F172A;
+}
+
+.mobileBillDepositBox strong {
+  font-size: 0.95rem;
+  color: #16A34A;
+}
+
+.mobileBillBalanceBox strong {
+  font-size: 0.95rem;
+  color: #2563EB;
+}
+
+/* ══════════════════════════════════════════════════
+   OFFICIAL STEP 5 BOOKING BILL & DEPOSIT CARD
+   ══════════════════════════════════════════════════ */
+.billCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.04);
+}
+
+.billCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.billCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.billCardTitle h4 {
+  font-family: var(--font-title);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.billIcon {
+  color: var(--royal);
+  flex-shrink: 0;
+}
+
+.billBadge {
+  background: var(--soft-blue);
+  color: var(--royal);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.billRoomSummaryRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #F8FAFC;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  margin-bottom: 12px;
+}
+
+.billRoomThumb {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.billRoomMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.billRoomMeta strong {
+  font-size: 0.92rem;
+  color: var(--navy);
+}
+
+.billRoomSession {
+  font-size: 0.74rem;
+  color: #475569;
+}
+
+.billRoomDateSlot {
+  font-size: 0.74rem;
+  color: var(--royal);
+  font-weight: 700;
+}
+
+.billRoomBase {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.billBaseLabel {
+  font-size: 0.65rem;
+  color: #64748B;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.billRoomBase strong {
+  font-size: 1rem;
+  color: var(--navy);
+}
+
+.billLineItems {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed #CBD5E1;
+  margin-bottom: 14px;
+}
+
+.billLineItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.billLineDiscount {
+  color: #16A34A;
+  font-weight: 700;
+}
+
+.billLineDiscount strong {
+  color: #16A34A;
+}
+
+.billLineOtt {
+  color: #2563EB;
+}
+
+.billFreeTag {
+  background: #D1FAE5;
+  color: #065F46;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ─── 3-Box Financial Split Grid ─── */
+.billFinancialGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 620px) {
+  .billFinancialGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+.billFinanceBox {
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.billFinanceLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.billFinanceAmount {
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--navy);
+  margin-bottom: 2px;
+}
+
+.billFinanceNote {
+  font-size: 0.66rem;
+  color: #64748B;
+}
+
+.billDepositBox {
+  background: #F0FDF4;
+  border-color: #86EFAC;
+}
+
+.depositPill {
+  background: #16A34A;
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.billDepositLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #15803D;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.billDepositAmount {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #16A34A;
+  margin-bottom: 2px;
+}
+
+.billDepositNote {
+  font-size: 0.66rem;
+  color: #15803D;
+  font-weight: 600;
+}
+
+.billBalanceBox {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.balancePill {
+  background: #2563EB;
+  color: #FFFFFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.billBalanceLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #1E40AF;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+
+.billBalanceAmount {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #2563EB;
+  margin-bottom: 2px;
+}
+
+.billBalanceNote {
+  font-size: 0.66rem;
+  color: #1E40AF;
+  font-weight: 600;
+}
+
+.billDepositExplanation {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.billShieldIcon {
+  color: #16A34A;
+  flex-shrink: 0;
+}
+
+/* ─── Ticket Pass Financial Row (Step 6) ─── */
+.ticketFinancialRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #CBD5E1;
+}
+
+@media (max-width: 600px) {
+  .ticketFinancialRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.ticketFinanceBox {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ticketPaidBox {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.ticketDueBox {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+}
+
+.ticketFinanceLabel {
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ticketFinanceVal {
+  font-size: 0.98rem;
+  font-weight: 900;
+  color: var(--navy);
+}
+

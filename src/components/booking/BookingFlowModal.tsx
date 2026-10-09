@@ -23,7 +23,10 @@ import {
   Share2,
   AlertCircle,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  Receipt,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   OCCASIONS,
@@ -133,6 +136,9 @@ export default function BookingFlowModal({
   // Live Slots
   const [availableSlots, setAvailableSlots] = useState<TimeSlotOption[]>(DEFAULT_SLOTS);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+
+  // Mobile Bill Drawer state
+  const [isMobileBillOpen, setIsMobileBillOpen] = useState(false);
 
   // Update selection if props change when opening
   useEffect(() => {
@@ -443,6 +449,91 @@ export default function BookingFlowModal({
         {/* Modal Main Layout: Split into Step Content + Sticky Live Summary */}
         <div className={styles.modalBody}>
           <div className={styles.contentColumn}>
+            {/* ══════════════════════════════════════════════════
+                MOBILE LIVE BILL & DEPOSIT ACCORDION (STEPS 1-4)
+                ══════════════════════════════════════════════════ */}
+            {currentStep < 5 && (
+              <div className={styles.mobileBillBar}>
+                <div className={styles.mobileBillHeaderRow}>
+                  <div className={styles.mobileBillInfo}>
+                    <Receipt size={15} className={styles.mobileBillIcon} />
+                    <span className={styles.mobileBillTotal}>Total Bill: <strong>₹{pricing.total}</strong></span>
+                    <span className={styles.mobileBillDivider}>•</span>
+                    <span className={styles.mobileBillDeposit}>Advance Deposit: <strong>₹{pricing.advance}</strong></span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.mobileBillToggleBtn}
+                    onClick={() => setIsMobileBillOpen(!isMobileBillOpen)}
+                    aria-label="Toggle bill breakdown"
+                  >
+                    <span>{isMobileBillOpen ? 'Hide Bill' : 'View Bill'}</span>
+                    {isMobileBillOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                </div>
+
+                {isMobileBillOpen && (
+                  <div className={styles.mobileBillDrawer}>
+                    <div className={styles.mobileBillRoom}>
+                      <div>
+                        <strong>{activeRoom.name} ({activeRoom.duration})</strong>
+                        <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}` : ''} • {guestCount} Guests</span>
+                      </div>
+                      <span className={styles.mobileBillRoomPrice}>₹{pricing.baseRoomPrice}</span>
+                    </div>
+
+                    {pricing.roomDiscount > 0 && (
+                      <div className={styles.mobileBillDiscount}>
+                        <span>🎟️ Offer Savings ({appliedCoupon})</span>
+                        <strong>-₹{pricing.roomDiscount}</strong>
+                      </div>
+                    )}
+
+                    {pricing.extraGuests > 0 && (
+                      <div className={styles.mobileBillRowItem}>
+                        <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
+                        <strong>+₹{pricing.extraGuestCost}</strong>
+                      </div>
+                    )}
+
+                    {selectedAddOns.map((id) => {
+                      const item = ADD_ONS.find((a) => a.id === id);
+                      if (!item) return null;
+                      const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
+                      return (
+                        <div key={id} className={styles.mobileBillRowItem}>
+                          <span>{item.icon} {item.name}</span>
+                          <strong className={isWaived ? styles.billFreeTag : ''}>
+                            {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
+                          </strong>
+                        </div>
+                      );
+                    })}
+
+                    <div className={styles.mobileBillRowItem} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
+                      <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
+                      <strong className={styles.billFreeTag}>INCLUDED</strong>
+                    </div>
+
+                    <div className={styles.mobileBillTotalsRow}>
+                      <div className={styles.mobileBillTotalBox}>
+                        <span>Total Bill</span>
+                        <strong>₹{pricing.total}</strong>
+                      </div>
+                      <div className={styles.mobileBillDepositBox}>
+                        <span>Advance Deposit (Pay Now)</span>
+                        <strong style={{ color: '#10B981' }}>₹{pricing.advance}</strong>
+                      </div>
+                      <div className={styles.mobileBillBalanceBox}>
+                        <span>Balance at Check-in</span>
+                        <strong>₹{pricing.remaining}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ══════════════════════════════════════════════════
                 STEP 1: CHOOSE OCCASION & ROOM
                 ══════════════════════════════════════════════════ */}
@@ -981,10 +1072,102 @@ export default function BookingFlowModal({
                   )}
                 </div>
 
+                {/* ══════════════════════════════════════════════════
+                    OFFICIAL BOOKING BILL & DEPOSIT BREAKDOWN (STEP 5)
+                    ══════════════════════════════════════════════════ */}
+                <div className={styles.billCard}>
+                  <div className={styles.billCardHeader}>
+                    <div className={styles.billCardTitle}>
+                      <Receipt size={17} className={styles.billIcon} />
+                      <h4>Official Booking Bill &amp; Deposit Breakdown</h4>
+                    </div>
+                    <span className={styles.billBadge}>Transparent Pricing</span>
+                  </div>
+
+                  <div className={styles.billRoomSummaryRow}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={activeRoom.image} alt={activeRoom.name} className={styles.billRoomThumb} />
+                    <div className={styles.billRoomMeta}>
+                      <strong>{activeRoom.name}</strong>
+                      <span className={styles.billRoomSession}>{activeRoom.duration} Session • Up to {activeRoom.maxGuests} Guests • 180&quot; 4K Cinema</span>
+                      <span className={styles.billRoomDateSlot}>📅 {selectedDate} • ⏰ {selectedSlot || 'Selected Slot'}</span>
+                    </div>
+                    <div className={styles.billRoomBase}>
+                      <span className={styles.billBaseLabel}>Suite Base</span>
+                      <strong>₹{pricing.baseRoomPrice}</strong>
+                    </div>
+                  </div>
+
+                  <div className={styles.billLineItems}>
+                    {pricing.roomDiscount > 0 && (
+                      <div className={`${styles.billLineItem} ${styles.billLineDiscount}`}>
+                        <span>🎟️ Promotional Discount ({appliedCoupon})</span>
+                        <strong>-₹{pricing.roomDiscount}</strong>
+                      </div>
+                    )}
+
+                    {pricing.extraGuests > 0 && (
+                      <div className={styles.billLineItem}>
+                        <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
+                        <strong>+₹{pricing.extraGuestCost}</strong>
+                      </div>
+                    )}
+
+                    {selectedAddOns.map((id) => {
+                      const item = ADD_ONS.find((a) => a.id === id);
+                      if (!item) return null;
+                      const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
+                      return (
+                        <div key={id} className={styles.billLineItem}>
+                          <span>{item.icon} {item.name}</span>
+                          <strong className={isWaived ? styles.billFreeTag : ''}>
+                            {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
+                          </strong>
+                        </div>
+                      );
+                    })}
+
+                    <div className={`${styles.billLineItem} ${styles.billLineOtt}`}>
+                      <span>📺 All OTT Platforms (Netflix, Prime, Hotstar, YouTube)</span>
+                      <strong className={styles.billFreeTag}>INCLUDED</strong>
+                    </div>
+                  </div>
+
+                  {/* 3-Box Clear Split */}
+                  <div className={styles.billFinancialGrid}>
+                    <div className={styles.billFinanceBox}>
+                      <span className={styles.billFinanceLabel}>TOTAL BILL</span>
+                      <strong className={styles.billFinanceAmount}>₹{pricing.total}</strong>
+                      <span className={styles.billFinanceNote}>Total cost of experience</span>
+                    </div>
+
+                    <div className={`${styles.billFinanceBox} ${styles.billDepositBox}`}>
+                      <div className={styles.depositPill}>DUE NOW VIA UPI</div>
+                      <span className={styles.billDepositLabel}>Advance Deposit</span>
+                      <strong className={styles.billDepositAmount}>₹{pricing.advance}</strong>
+                      <span className={styles.billDepositNote}>Locks your slot instantly</span>
+                    </div>
+
+                    <div className={`${styles.billFinanceBox} ${styles.billBalanceBox}`}>
+                      <div className={styles.balancePill}>PAY AT VENUE</div>
+                      <span className={styles.billBalanceLabel}>Remaining Balance</span>
+                      <strong className={styles.billBalanceAmount}>₹{pricing.remaining}</strong>
+                      <span className={styles.billBalanceNote}>Pay at check-in counter</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.billDepositExplanation}>
+                    <Shield size={15} className={styles.billShieldIcon} />
+                    <span>
+                      <strong>Deposit Policy:</strong> Your ₹{pricing.advance} advance deposit is deducted directly from your Total Bill of ₹{pricing.total}. You only pay the balance ₹{pricing.remaining} when you arrive at BeeVibe theatre.
+                    </span>
+                  </div>
+                </div>
+
                 <div className={styles.paymentConsole}>
                   {/* QR Code and UPI ID */}
                   <div className={styles.qrCard}>
-                    <div className={styles.qrBadge}>SCAN WITH ANY UPI APP</div>
+                    <div className={styles.qrBadge}>SCAN TO PAY ₹{pricing.advance} ADVANCE DEPOSIT</div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="/beevibe-payment-qr.jpg"
@@ -1116,9 +1299,29 @@ export default function BookingFlowModal({
                       <strong className={styles.ticketVal}>{guestCount} Guests</strong>
                     </div>
                     <div className={styles.ticketItem}>
-                      <span className={styles.ticketLabel}>ADVANCE PAID</span>
+                      <span className={styles.ticketLabel}>STATUS</span>
                       <strong className={styles.ticketVal} style={{ color: '#10B981' }}>
-                        ₹{pricing.advance} Paid
+                        CONFIRMED
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Financial Bill & Deposit Summary on Pass */}
+                  <div className={styles.ticketFinancialRow}>
+                    <div className={styles.ticketFinanceBox}>
+                      <span className={styles.ticketFinanceLabel}>TOTAL BILL</span>
+                      <strong className={styles.ticketFinanceVal}>₹{pricing.total}</strong>
+                    </div>
+                    <div className={`${styles.ticketFinanceBox} ${styles.ticketPaidBox}`}>
+                      <span className={styles.ticketFinanceLabel}>ADVANCE DEPOSIT PAID</span>
+                      <strong className={styles.ticketFinanceVal} style={{ color: '#10B981' }}>
+                        ₹{pricing.advance} Paid ✓
+                      </strong>
+                    </div>
+                    <div className={`${styles.ticketFinanceBox} ${styles.ticketDueBox}`}>
+                      <span className={styles.ticketFinanceLabel}>BALANCE AT CHECK-IN</span>
+                      <strong className={styles.ticketFinanceVal} style={{ color: '#2563EB' }}>
+                        ₹{pricing.remaining}
                       </strong>
                     </div>
                   </div>
