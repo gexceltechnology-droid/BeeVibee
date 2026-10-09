@@ -73,9 +73,9 @@ export default function RoomDetailsModal({
                 <span className={styles.themeSubtitle}>{room.theme}</span>
                 <h2 className={styles.roomName}>{room.name}</h2>
               </div>
-              <div className={styles.priceBox}>
-                <div className={styles.priceNum}>₹{room.price}</div>
-                <div className={styles.pricePeriod}>for {room.duration}</div>
+              <div className={styles.headerDurationBadge}>
+                <Clock size={14} />
+                <span>{room.duration} Session</span>
               </div>
             </div>
 
@@ -140,7 +140,7 @@ export default function RoomDetailsModal({
                       <strong>{addon.name}</strong>
                       <span>{addon.description}</span>
                     </div>
-                    <span className={styles.addonPrice}>+₹{addon.price}</span>
+                    <span className={styles.addonTag}>Available</span>
                   </div>
                 ))}
               </div>
@@ -150,7 +150,7 @@ export default function RoomDetailsModal({
             <div className={styles.policyNotice}>
               <Shield size={16} className={styles.policyIcon} />
               <span>
-                100% Private &amp; Soundproof Suite in Jayanagar 9th Block. No other guests share your hall. Advance deposit of ₹500 required to lock slot.
+                100% Private &amp; Soundproof Suite in Jayanagar 9th Block. No other guests share your hall. Advance deposit required to lock slot.
               </span>
             </div>
           </div>
@@ -158,10 +158,8 @@ export default function RoomDetailsModal({
 
         {/* Modal Footer CTA */}
         <div className={styles.modalFooter}>
-          <div className={styles.footerPriceInfo}>
-            <span className={styles.footerFrom}>Starts at</span>
-            <span className={styles.footerPrice}>₹{room.price}</span>
-            <span className={styles.footerDuration}>/ {room.duration}</span>
+          <div className={styles.footerPerks}>
+            <span className={styles.footerPerkText}>100% Private Celebration Suite • Jayanagar 9th Block</span>
           </div>
           <button
             type="button"

@@ -107,6 +107,11 @@ export default function BookingFlowModal({
   const [submitError, setSubmitError] = useState('');
   const [confirmedBookingId, setConfirmedBookingId] = useState('');
 
+  // Coupon State
+  const [couponInput, setCouponInput] = useState<string>('');
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string>('');
+
   // Live Slots
   const [availableSlots, setAvailableSlots] = useState<TimeSlotOption[]>(DEFAULT_SLOTS);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -173,7 +178,19 @@ export default function BookingFlowModal({
       return sum + (item ? item.price : 0);
     }, 0);
 
-    const total = baseRoomPrice + extraGuestCost + addonsCost;
+    const subtotal = baseRoomPrice + extraGuestCost + addonsCost;
+
+    let discount = 0;
+    const isCouponValid = appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999';
+    if (isCouponValid) {
+      let freeAddonsVal = 0;
+      if (selectedAddOns.includes('addon-fog')) freeAddonsVal += 199;
+      if (selectedAddOns.includes('addon-led')) freeAddonsVal += 149;
+      if (selectedAddOns.includes('addon-decor')) freeAddonsVal += 200;
+      discount = freeAddonsVal > 0 ? freeAddonsVal : 200;
+    }
+
+    const total = Math.max(500, subtotal - discount);
     const advance = 500; // Transparent fixed booking deposit
     const remaining = Math.max(0, total - advance);
 
@@ -182,11 +199,34 @@ export default function BookingFlowModal({
       extraGuests,
       extraGuestCost,
       addonsCost,
+      subtotal,
+      discount,
       total,
       advance,
       remaining,
     };
-  }, [activeRoom, guestCount, selectedAddOns]);
+  }, [activeRoom, guestCount, selectedAddOns, appliedCoupon]);
+
+  const handleApplyCoupon = (codeToApply?: string) => {
+    const code = (codeToApply || couponInput).trim().toUpperCase();
+    if (!code) {
+      setCouponError('Please enter a coupon code.');
+      return;
+    }
+    if (code === 'BEEVIBE999' || code === 'VIBE999') {
+      setAppliedCoupon(code);
+      setCouponInput(code);
+      setCouponError('');
+    } else {
+      setCouponError('Invalid coupon code. Try "BEEVIBE999"');
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError('');
+  };
 
   if (!isOpen) return null;
 
@@ -248,6 +288,8 @@ export default function BookingFlowModal({
           guestCount: guestCount,
           specialRequests: specialRequests.trim(),
           utrNumber: utrNumber.trim(),
+          couponCode: appliedCoupon || undefined,
+          discountAmount: pricing.discount > 0 ? pricing.discount : undefined,
         }),
       });
 
@@ -715,6 +757,61 @@ export default function BookingFlowModal({
                   </p>
                 </div>
 
+                {/* Coupon Code Section */}
+                <div className={styles.couponCard}>
+                  <div className={styles.couponCardHeader}>
+                    <Sparkles size={16} className={styles.couponIcon} />
+                    <span>Have a Promotional Coupon Code?</span>
+                  </div>
+
+                  {appliedCoupon ? (
+                    <div className={styles.appliedCouponRow}>
+                      <div className={styles.appliedBadgeWrap}>
+                        <span className={styles.appliedCode}>🎟️ {appliedCoupon}</span>
+                        <span className={styles.appliedStatusBadge}>APPLIED</span>
+                      </div>
+                      <span className={styles.discountSavedText}>You saved ₹{pricing.discount}!</span>
+                      <button
+                        type="button"
+                        className={styles.removeCouponBtn}
+                        onClick={handleRemoveCoupon}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className={styles.couponInputGroup}>
+                        <input
+                          type="text"
+                          className={styles.couponInput}
+                          placeholder="Enter coupon code (e.g. BEEVIBE999)"
+                          value={couponInput}
+                          onChange={(e) => {
+                            setCouponInput(e.target.value);
+                            setCouponError('');
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className={styles.applyCouponBtn}
+                          onClick={() => handleApplyCoupon()}
+                        >
+                          APPLY
+                        </button>
+                      </div>
+                      {couponError && <span className={styles.couponErrorText}>{couponError}</span>}
+                      <button
+                        type="button"
+                        className={styles.quickCouponChip}
+                        onClick={() => handleApplyCoupon('BEEVIBE999')}
+                      >
+                        💡 Tap to apply <strong>BEEVIBE999</strong> for special package offer!
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className={styles.paymentConsole}>
                   {/* QR Code and UPI ID */}
                   <div className={styles.qrCard}>
@@ -948,6 +1045,13 @@ export default function BookingFlowModal({
                       </div>
                     );
                   })}
+
+                  {pricing.discount > 0 && appliedCoupon && (
+                    <div className={styles.breakdownRow} style={{ color: '#10B981' }}>
+                      <span>🎟️ Coupon Discount ({appliedCoupon})</span>
+                      <strong>-₹{pricing.discount}</strong>
+                    </div>
+                  )}
                 </div>
 
                 {/* Total & Deposit Breakdown */}

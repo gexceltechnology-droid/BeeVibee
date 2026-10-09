@@ -64,10 +64,9 @@ export default function RoomCard({ room, onViewSlots, onOpenDetails }: RoomCardP
           <h3 className={styles.roomTitle} onClick={() => onOpenDetails(room)}>
             {room.name}
           </h3>
-          <div className={styles.priceContainer}>
-            <span className={styles.priceAmount}>₹{room.price}</span>
-            <span className={styles.priceDuration}>/ {room.duration}</span>
-          </div>
+          <span className={styles.durationBadge}>
+            <Clock size={13} /> {room.duration} Session
+          </span>
         </div>
 
         <p className={styles.description}>{room.description}</p>

@@ -162,6 +162,31 @@ export default function Home() {
           NAVBAR
           ══════════════════════════════════════════════════ */}
       <div className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : ''}`}>
+        {/* Scrolling Announcement Bar */}
+        <div
+          className={styles.tickerBar}
+          onClick={() => {
+            setPreselectedRoomId('angel-wings');
+            setIsBookingModalOpen(true);
+          }}
+        >
+          <div className={styles.tickerWrapper}>
+            <div className={styles.tickerTrack}>
+              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout to unlock Complimentary Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTT Platforms!</span>
+              <span className={styles.tickerDivider}>✦</span>
+              <span>📍 100% Private Celebration Theatre in Jayanagar 9th Block</span>
+              <span className={styles.tickerDivider}>✦</span>
+              <span>✨ Tap to Check Live Availability &amp; Book Your Private Suite →</span>
+              <span className={styles.tickerDivider}>✦</span>
+              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout to unlock Complimentary Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTT Platforms!</span>
+              <span className={styles.tickerDivider}>✦</span>
+              <span>📍 100% Private Celebration Theatre in Jayanagar 9th Block</span>
+              <span className={styles.tickerDivider}>✦</span>
+              <span>✨ Tap to Check Live Availability &amp; Book Your Private Suite →</span>
+            </div>
+          </div>
+        </div>
+
         <div className="container">
           <header className={styles.header}>
             <Link href="/" className={styles.logoWrapper}>
@@ -307,7 +332,7 @@ export default function Home() {
                 <span className={styles.heroMainTag}>BIRTHDAY CELEBRATION THEME</span>
                 <h3 className={styles.heroMainTitle}>Angel Wings &amp; Neon Suite</h3>
                 <div className={styles.heroMainMeta}>
-                  <span>₹899 / 2 Hours</span> • <span>Up to 8 Guests</span> • <span>180&quot; 4K Laser</span>
+                  <span>2 Hours Experience</span> • <span>Up to 8 Guests</span> • <span>180&quot; 4K Laser</span>
                 </div>
               </div>
             </div>
@@ -318,7 +343,7 @@ export default function Home() {
                 <img src="/gallery/theme-red.jpg" alt="Red Velvet Romance Suite" className={styles.heroSideImg} />
                 <div className={styles.heroSideOverlay}>
                   <h4 className={styles.heroSideTitle}>Red Velvet Romance</h4>
-                  <span className={styles.heroSidePrice}>₹799 / 2 Hours • Date Night</span>
+                  <span className={styles.heroSidePrice}>2 Hours Experience • Date Night</span>
                 </div>
               </div>
 
@@ -327,7 +352,7 @@ export default function Home() {
                 <img src="/gallery/theme-purple.jpg" alt="Royal Butterfly VIP Suite" className={styles.heroSideImg} />
                 <div className={styles.heroSideOverlay}>
                   <h4 className={styles.heroSideTitle}>Royal Butterfly VIP</h4>
-                  <span className={styles.heroSidePrice}>₹999 / 2 Hours • Grand Celebration</span>
+                  <span className={styles.heroSidePrice}>2 Hours Experience • Grand Celebration</span>
                 </div>
               </div>
             </div>
@@ -517,7 +542,7 @@ export default function Home() {
               <span className={styles.stepNumber}>05</span>
               <h3 className={styles.stepCardTitle}>Pay &amp; Confirm</h3>
               <p className={styles.stepCardDesc}>
-                Pay a nominal ₹500 advance deposit via UPI to instantly lock your slot.
+                Pay a nominal advance deposit via UPI to instantly lock your slot.
               </p>
             </div>
           </div>
@@ -841,7 +866,7 @@ export default function Home() {
             {[
               {
                 q: 'How does the booking process work?',
-                a: 'Simply choose your preferred occasion and room, pick an available date and time slot, customize any add-ons (cake, fog entry, LED board), and pay a transparent ₹500 advance deposit via UPI. You will instantly receive a digital booking pass with venue directions.',
+                a: 'Simply choose your preferred occasion and room, pick an available date and time slot, customize any add-ons (cake, fog entry, LED board), and pay a nominal advance deposit via UPI. You will instantly receive a digital booking pass with venue directions.',
               },
               {
                 q: 'Is the theatre 100% private to my group?',
@@ -853,7 +878,7 @@ export default function Home() {
               },
               {
                 q: 'What is the advance payment policy?',
-                a: 'A nominal ₹500 advance deposit is paid online to lock your slot on our calendar. The remaining balance is paid conveniently via cash or UPI upon check-in at the venue.',
+                a: 'A nominal advance deposit is paid online to lock your slot on our calendar. The remaining balance is paid conveniently via cash or UPI upon check-in at the venue.',
               },
               {
                 q: 'Can we play our own custom videos or stream OTT?',

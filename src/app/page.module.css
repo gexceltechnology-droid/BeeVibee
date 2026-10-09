@@ -24,6 +24,64 @@
   transform-origin: left;
 }
 
+/* ─── Scrolling Announcement Ticker ─── */
+.tickerBar {
+  background: var(--navy);
+  color: #FFFFFF;
+  padding: 8px 0;
+  overflow: hidden;
+  font-size: 0.76rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  user-select: none;
+}
+
+.tickerWrapper {
+  display: flex;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tickerTrack {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+  white-space: nowrap;
+  animation: tickerScroll 36s linear infinite;
+  will-change: transform;
+}
+
+.tickerBar:hover .tickerTrack {
+  animation-play-state: paused;
+}
+
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.tickerBadge {
+  background: var(--royal);
+  color: #FFFFFF;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin: 0 4px;
+}
+
+.tickerDivider {
+  color: var(--light-blue);
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
 /* ─── Navigation Header ─── */
 .headerContainer {
   position: fixed;
@@ -219,7 +277,7 @@
 
 /* ─── Hero Section ─── */
 .heroSection {
-  padding-top: 130px;
+  padding-top: 155px;
   padding-bottom: 60px;
   position: relative;
   background: linear-gradient(180deg, #EEF5FF 0%, #FFFFFF 100%);
