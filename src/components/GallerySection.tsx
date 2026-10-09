@@ -72,16 +72,42 @@ const GALLERY_ITEMS: GalleryItem[] = [
   },
   {
     id: 'theme-pink-wings',
-    title: 'Angel Wings & Neon Birthday Celebration',
+    title: 'Angel Wings & Neon Birthday Celebration Suite',
     category: 'birthday',
     categoryLabel: 'Birthday Celebration 🩷',
     theme: 'Pink Theme 🩷',
     themeColor: '#09090b',
-    image: '/gallery/theme-pink.jpg',
-    description: 'Authentic BeeVibe Pink Suite featuring giant glowing illuminated angel wings, pink shimmer sequin wall, "Happy Birthday" & "Let\'s Party" neon lights, hot pink plush recliners, and ground fog effect.',
-    tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Pink Shimmer Wall', 'Ground Fog Effect', 'Hot Pink Seating'],
-    highlights: ['2 Hours Private VIP Session', 'Private Cake Cutting Stage', 'Air Conditioned Suite'],
-    bookingLink: '/book?theme=pink'
+    image: '/gallery/theme-pink-wings.jpg',
+    description: 'Authentic BeeVibe Pink Suite featuring giant glowing illuminated angel wings, pink shimmer sequin wall, "Happy Birthday" & "Let\'s Party" neon signs, hot pink plush velvet seating for up to 6 guests, and ground dry-ice fog effect.',
+    tags: ['Giant Glowing Angel Wings', 'Happy Birthday Neon', 'Seats Up to 6', 'Ground Fog Effect', 'Hot Pink Seating'],
+    highlights: ['Seats Up to 6 Guests', 'Private Cake Cutting Stage', '180" 4K Laser Cinema'],
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-pink-arch-stage',
+    title: 'Pink Sequin Arch & Happy Birthday Neon Stage',
+    category: 'decor',
+    categoryLabel: 'Birthday Stage Decor 🩷',
+    theme: 'Pink Birthday Arch',
+    themeColor: '#09090b',
+    image: '/gallery/theme-pink-arch.jpg',
+    description: 'Glamorous pink shimmer sequin archway with glowing "Happy Birthday" neon sign and hot pink plush lounge seating for up to 6 guests.',
+    tags: ['Pink Shimmer Sequin Arch', 'Happy Birthday Neon', 'Seats Up to 6', 'Hot Pink Velvet Couch'],
+    highlights: ['Seats Up to 6 Guests', 'Neon Photo Stage', 'Air Conditioned Privacy'],
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-pink-cinema-screen',
+    title: '180" 4K Cinema Screen in Pink Celebration Suite',
+    category: 'cinema',
+    categoryLabel: 'Private Cinema Experience 🎬',
+    theme: 'Pink Cinema Suite 🍿',
+    themeColor: '#09090b',
+    image: '/gallery/theme-pink-screen.jpg',
+    description: 'Massive 180" 4K laser projection cinema screen with Dolby surround sound in the Angel Wings celebration suite. Seats up to 6 guests with total privacy.',
+    tags: ['180" Laser Cinema Screen', 'Dolby Surround Sound', 'Seats Up to 6', 'Angel Wings Setup'],
+    highlights: ['Seats Up to 6 Guests', '180" Laser Projection', 'Netflix, Prime & Hotstar'],
+    bookingLink: '/themes'
   },
   {
     id: 'theme-red-heart',

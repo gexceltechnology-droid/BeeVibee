@@ -104,7 +104,10 @@ export default function BookingFlowModal({
   const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || 'angel-wings');
   const [selectedDate, setSelectedDate] = useState<string>(initialDate || todayStr);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
-  const [guestCount, setGuestCount] = useState<number>(initialGuests);
+  const [guestCount, setGuestCount] = useState<number>(() => {
+    const room = ROOMS.find((r) => r.id === (initialRoomId || 'angel-wings')) || ROOMS[0];
+    return Math.min(initialGuests, room.maxGuests);
+  });
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [cakeFlavor, setCakeFlavor] = useState<string>('Chocolate Truffle');
   const [ledNameText, setLedNameText] = useState<string>('');
@@ -136,8 +139,11 @@ export default function BookingFlowModal({
     if (initialRoomId) setSelectedRoomId(initialRoomId);
     if (initialOccasion) setSelectedOccasion(initialOccasion);
     if (initialDate) setSelectedDate(initialDate);
-    if (initialGuests) setGuestCount(initialGuests);
-  }, [initialRoomId, initialOccasion, initialDate, initialGuests]);
+    if (initialGuests) {
+      const room = ROOMS.find((r) => r.id === (initialRoomId || selectedRoomId)) || ROOMS[0];
+      setGuestCount(Math.min(initialGuests, room.maxGuests));
+    }
+  }, [initialRoomId, initialOccasion, initialDate, initialGuests, selectedRoomId]);
 
   // Find active room object
   const activeRoom = useMemo(() => {

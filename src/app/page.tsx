@@ -132,14 +132,15 @@ export default function Home() {
 
   // Gallery Data
   const galleryItems = [
-    { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage', image: '/gallery/theme-pink.jpg' },
-    { id: 2, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.jpg' },
-    { id: 3, category: 'vip', title: 'Royal Butterfly Grandeur VIP', image: '/gallery/theme-purple.jpg' },
-    { id: 4, category: 'vip', title: 'Royal Butterfly Illuminated Stage & Arch', image: '/gallery/theme-purple-stage.jpg' },
-    { id: 5, category: 'vip', title: 'VIP Velvet Sectional Lounge (Seats 10)', image: '/gallery/theme-purple-couch.jpg' },
-    { id: 6, category: 'vip', title: '180" 4K Laser Cinema & Dolby Atmos 7.1', image: '/gallery/theme-purple-movie.jpg' },
-    { id: 7, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
-    { id: 8, category: 'romantic', title: 'Candlelight & Floral Heart Setup', image: '/gallery/romantic-date.jpg' },
+    { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage (Seats 6)', image: '/gallery/theme-pink.jpg' },
+    { id: 2, category: 'birthday', title: 'Giant Glowing Angel Wings & Cake Stage', image: '/gallery/theme-pink-wings.jpg' },
+    { id: 3, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.jpg' },
+    { id: 4, category: 'vip', title: 'Royal Butterfly Grandeur VIP (Seats 10)', image: '/gallery/theme-purple.jpg' },
+    { id: 5, category: 'vip', title: 'Royal Butterfly Illuminated Stage & Arch', image: '/gallery/theme-purple-stage.jpg' },
+    { id: 6, category: 'vip', title: 'VIP Velvet Sectional Lounge (Seats 10)', image: '/gallery/theme-purple-couch.jpg' },
+    { id: 7, category: 'cinema', title: '180" 4K Laser Cinema in Pink Suite', image: '/gallery/theme-pink-screen.jpg' },
+    { id: 8, category: 'cinema', title: '180" 4K Laser Cinema in Purple Suite', image: '/gallery/theme-purple-movie.jpg' },
+    { id: 9, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
   ];
 
   const filteredGallery = galleryItems.filter((item) => {

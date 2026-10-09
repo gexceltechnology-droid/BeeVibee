@@ -67,7 +67,7 @@ export const EXPERIENCES: ExperiencePackage[] = [
     details: [
       'Giant Glowing Illuminated Angel Wings & Birthday Stage Setup',
       'Pink Shimmer Sequin Arch with "Happy Birthday" & "Let\'s Party" Neon Signs',
-      'Hot Pink Plush Velvet Seating, White Marble Tables & Picket Fence',
+      'Hot Pink Plush Velvet Seating (Capacity: Up to 6 Members), White Marble Tables & Picket Fence',
       'Cake Cutting Cylindrical Pedestals, Golden Birdcages & Floor Fog',
       '180" 4K Laser Screen & Private Air Conditioned (AC) Suite',
     ],
