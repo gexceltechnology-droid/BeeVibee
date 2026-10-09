@@ -370,9 +370,20 @@ export default function BookingFlowModal({
             </div>
           )}
 
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close booking">
-            <X size={18} />
-          </button>
+          <div className={styles.headerRightGroup}>
+            <a
+              href="tel:+919900106474"
+              className={styles.modalCallHeader}
+              title="Book a Slot on Call (+91 99001 06474)"
+            >
+              <Phone size={13} />
+              <span>Book on Call: 9900106474</span>
+            </a>
+
+            <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close booking">
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Main Layout: Split into Step Content + Sticky Live Summary */}
@@ -559,6 +570,14 @@ export default function BookingFlowModal({
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Option to Book a Slot on Call Notice */}
+                <div className={styles.stepCallHelp}>
+                  <Phone size={14} />
+                  <span>
+                    Need a custom timing or prefer booking over phone? <a href="tel:+919900106474">Book a Slot on Call (+91 99001 06474)</a>
+                  </span>
                 </div>
 
                 {/* Step 2 Actions */}
@@ -929,6 +948,14 @@ export default function BookingFlowModal({
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Option to Book / Confirm on Call in Step 5 */}
+                <div className={styles.stepCallHelp}>
+                  <Phone size={14} />
+                  <span>
+                    Having issues with payment or prefer to confirm directly? <a href="tel:+919900106474">Book / Confirm this Slot on Call (+91 99001 06474)</a>
+                  </span>
                 </div>
 
                 {/* Step 5 Actions */}

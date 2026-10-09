@@ -69,14 +69,25 @@ export default function ThemesPage() {
               <span className={styles.brandSub}>Private Celebration Theatre</span>
             </Link>
 
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => handleQuickBook('angel-wings')}
-            >
-              <span>QUICK BOOK</span>
-              <ArrowRight size={15} />
-            </button>
+            <div className={styles.headerRightActions}>
+              <a
+                href="tel:+919900106474"
+                className={styles.headerCallBtn}
+                title="Book a Slot on Call (+91 99001 06474)"
+              >
+                <Phone size={14} />
+                <span>BOOK ON CALL</span>
+              </a>
+
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => handleQuickBook('angel-wings')}
+              >
+                <span>QUICK BOOK</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -96,6 +107,14 @@ export default function ThemesPage() {
             <p className={styles.heroDescription}>
               Every suite at BeeVibe is designed for specific celebrations — birthdays, anniversaries, proposals, VIP galas, and next-gen PS5 gaming. Step inside to see what each theme includes and book instantly.
             </p>
+
+            {/* Direct Option to Book on Call Callout */}
+            <div className={styles.heroCallBanner}>
+              <Phone size={14} />
+              <span>
+                Prefer instant phone reservation? <strong>Option to Book a Slot on Call:</strong> <a href="tel:+919900106474">+91 99001 06474</a> (10 AM – 12 AM Midnight)
+              </span>
+            </div>
 
             {/* Occasion Filter Tabs */}
             <div className={styles.filterTabs}>
@@ -243,6 +262,15 @@ export default function ThemesPage() {
                       <span>QUICK BOOK THIS THEME</span>
                       <ArrowRight size={16} />
                     </button>
+                    <a
+                      href="tel:+919900106474"
+                      className="btn btn-secondary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                      title="Book this theme directly on call"
+                    >
+                      <Phone size={14} />
+                      <span>BOOK ON CALL</span>
+                    </a>
                     <button
                       type="button"
                       className="btn btn-soft"
@@ -279,6 +307,13 @@ export default function ThemesPage() {
                 <span>OPEN QUICK BOOKING</span>
                 <ArrowRight size={16} />
               </button>
+              <a
+                href="tel:+919900106474"
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Phone size={16} /> Book a Slot on Call (+91 99001 06474)
+              </a>
               <a
                 href="https://wa.me/919900106474?text=Hi%20BeeVibe!%20I%20want%20to%20inquire%20about%20your%20celebration%20themes."
                 target="_blank"

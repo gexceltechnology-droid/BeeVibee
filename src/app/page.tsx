@@ -205,6 +205,15 @@ export default function Home() {
             </nav>
 
             <div className={styles.headerActions}>
+              <a
+                href="tel:+919900106474"
+                className={styles.headerCallBtn}
+                title="Book a Slot on Call (+91 99001 06474)"
+              >
+                <Phone size={14} />
+                <span>BOOK ON CALL</span>
+              </a>
+
               <button
                 type="button"
                 className={styles.headerBookBtn}
@@ -239,7 +248,15 @@ export default function Home() {
               <li><a href="#how-it-works" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>How It Works</a></li>
               <li><a href="#gallery" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Gallery</a></li>
               <li><a href="#location" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Location</a></li>
-              <li style={{ marginTop: '8px' }}>
+              <li style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <a
+                  href="tel:+919900106474"
+                  className="btn btn-navy"
+                  style={{ width: '100%', justifyContent: 'center' }}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Phone size={15} /> BOOK A SLOT ON CALL (9900106474)
+                </a>
                 <button
                   type="button"
                   className="btn btn-primary"
@@ -249,7 +266,7 @@ export default function Home() {
                     setIsBookingModalOpen(true);
                   }}
                 >
-                  QUICK BOOK NOW →
+                  QUICK BOOK ONLINE →
                 </button>
               </li>
             </ul>
@@ -289,6 +306,13 @@ export default function Home() {
                 <Sparkles size={16} /> Quick Booking
               </button>
               <a
+                href="tel:+919900106474"
+                className="btn btn-soft"
+                style={{ background: '#EFF6FF', color: 'var(--royal)', borderColor: '#BFDBFE' }}
+              >
+                <Phone size={15} /> Book on Call
+              </a>
+              <a
                 href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20want%20to%20inquire%20about%20booking%20a%20private%20celebration%20theatre."
                 target="_blank"
                 rel="noopener noreferrer"
@@ -296,6 +320,14 @@ export default function Home() {
               >
                 <MessageSquare size={16} /> WhatsApp Us
               </a>
+            </div>
+
+            {/* Direct Option to Book on Call Callout */}
+            <div className={styles.callBookingNotice}>
+              <Phone size={14} />
+              <span>
+                Prefer instant phone reservation? <strong>Option to Book a Slot on Call:</strong> <a href="tel:+919900106474">+91 99001 06474</a> (10 AM – 12 AM Midnight)
+              </span>
             </div>
 
             {/* Trust Points Bar */}
@@ -587,6 +619,28 @@ export default function Home() {
               <p className={styles.stepCardDesc}>
                 Pay a nominal advance deposit via UPI to instantly lock your slot.
               </p>
+            </div>
+          </div>
+
+          {/* Option to Book on Call Callout */}
+          <div className={styles.bookOnCallBanner}>
+            <div className={styles.bookOnCallLeft}>
+              <div className={styles.bookOnCallIconWrap}>
+                <Phone size={24} />
+              </div>
+              <div>
+                <h3 className={styles.bookOnCallTitle}>Option to Book a Slot on Call</h3>
+                <p className={styles.bookOnCallSubtitle}>
+                  Prefer booking with assistance? Speak directly with our concierge team. We will check live slot availability, answer your questions, and reserve your private suite instantly over the phone.
+                </p>
+              </div>
+            </div>
+            <div className={styles.bookOnCallActions}>
+              <a href="tel:+919900106474" className="btn btn-navy" style={{ background: '#2563EB', borderColor: '#2563EB', color: '#FFFFFF' }}>
+                <Phone size={16} />
+                <span>Call +91 99001 06474</span>
+              </a>
+              <span className={styles.bookOnCallTiming}>Daily 10:00 AM – 12:00 AM Midnight</span>
             </div>
           </div>
         </div>
@@ -973,9 +1027,17 @@ export default function Home() {
                   setIsBookingModalOpen(true);
                 }}
               >
-                <span>QUICK BOOK NOW</span>
+                <span>QUICK BOOK ONLINE</span>
                 <ArrowRight size={18} />
               </button>
+              <a
+                href="tel:+919900106474"
+                className="btn btn-navy"
+                style={{ padding: '14px 28px', fontSize: '1rem', background: '#102A43', borderColor: '#102A43', color: '#FFFFFF' }}
+              >
+                <Phone size={18} />
+                <span>BOOK A SLOT ON CALL</span>
+              </a>
             </div>
           </div>
         </div>
@@ -1019,8 +1081,10 @@ export default function Home() {
 
             <div className={styles.footerCol}>
               <h4 className={styles.footerHeading}>Contact</h4>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 10px 0' }}>
-                📞 +91 9900106474<br />
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 10px 0', lineHeight: '1.6' }}>
+                <a href="tel:+919900106474" style={{ color: 'var(--royal)', fontWeight: 800, textDecoration: 'none' }}>
+                  📞 Call to Book: +91 99001 06474
+                </a><br />
                 ⏰ 10:00 AM – 12:00 AM Daily
               </p>
               <a

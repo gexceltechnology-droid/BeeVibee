@@ -1337,3 +1337,133 @@
   cursor: pointer;
   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
 }
+
+/* ─── Book on Call Buttons & Banners ─── */
+.headerCallBtn {
+  background: #EFF6FF;
+  color: var(--royal);
+  border: 1.5px solid var(--border-blue);
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-family: var(--font-title);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.headerCallBtn:hover {
+  background: var(--royal);
+  color: #FFFFFF;
+  border-color: var(--royal);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+@media (max-width: 520px) {
+  .headerCallBtn span {
+    display: none;
+  }
+  .headerCallBtn {
+    padding: 9px 12px;
+  }
+}
+
+.callBookingNotice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: var(--royal);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.callBookingNotice a {
+  color: var(--navy);
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.bookOnCallBanner {
+  margin-top: 36px;
+  background: linear-gradient(135deg, #102A43 0%, #1E3A8A 100%);
+  border-radius: 16px;
+  padding: 24px 32px;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.15);
+}
+
+@media (max-width: 768px) {
+  .bookOnCallBanner {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+}
+
+.bookOnCallLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .bookOnCallLeft {
+    flex-direction: column;
+  }
+}
+
+.bookOnCallIconWrap {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #93C5FD;
+  flex-shrink: 0;
+}
+
+.bookOnCallTitle {
+  font-family: var(--font-title);
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+}
+
+.bookOnCallSubtitle {
+  font-size: 0.88rem;
+  color: #DBEAFE;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.bookOnCallActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.bookOnCallTiming {
+  font-size: 0.72rem;
+  color: #BFDBFE;
+  font-weight: 600;
+}

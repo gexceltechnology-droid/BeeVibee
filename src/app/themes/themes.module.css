@@ -611,3 +611,57 @@
 .footerLinks a:hover {
   color: #FFFFFF;
 }
+
+/* ─── Book on Call in Themes Page ─── */
+.headerRightActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.headerCallBtn {
+  background: var(--soft-blue);
+  color: var(--royal);
+  border: 1.5px solid var(--border-blue);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.headerCallBtn:hover {
+  background: var(--royal);
+  color: #FFFFFF;
+  border-color: var(--royal);
+}
+
+@media (max-width: 520px) {
+  .headerCallBtn span {
+    display: none;
+  }
+}
+
+.heroCallBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+.heroCallBanner a {
+  color: var(--navy);
+  font-weight: 800;
+  text-decoration: underline;
+}
