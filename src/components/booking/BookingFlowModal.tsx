@@ -45,13 +45,28 @@ interface BookingFlowModalProps {
   initialGuests?: number;
 }
 
+function parseSlotStartMinutes(slotTimeStr: string): number {
+  const match = slotTimeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 0;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3].toUpperCase();
+
+  if (period === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+  return hours * 60 + minutes;
+}
+
 const DEFAULT_SLOTS: TimeSlotOption[] = [
   { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
   { id: 'slot-2', time: '12:30 PM - 02:30 PM', label: 'Matinee Show', basePrice: 999 },
   { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
   { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
   { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:30 PM - 12:30 AM', label: 'Midnight Vibe', basePrice: 999 },
 ];
 
 const GAMING_SLOTS: TimeSlotOption[] = [
@@ -166,6 +181,39 @@ export default function BookingFlowModal({
       isCancelled = true;
     };
   }, [selectedDate, activeRoom]);
+
+  // Visible slots filtered by past time for today, sorted chronologically from morning to night
+  const visibleSlots = useMemo(() => {
+    const todayIST = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const isToday = selectedDate === todayIST;
+
+    const istParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    }).formatToParts(new Date());
+    const currentHour = parseInt(istParts.find((p) => p.type === 'hour')?.value || '0', 10);
+    const currentMin = parseInt(istParts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const currentMinutes = currentHour * 60 + currentMin;
+
+    // Sort chronologically from morning to night
+    const sorted = [...availableSlots].sort((a, b) => {
+      return parseSlotStartMinutes(a.time) - parseSlotStartMinutes(b.time);
+    });
+
+    if (!isToday) return sorted;
+
+    // Filter out slots that have already started or passed
+    return sorted.filter((s) => parseSlotStartMinutes(s.time) > currentMinutes);
+  }, [availableSlots, selectedDate]);
+
+  // If selected slot is no longer in visible eligible slots, reset it
+  useEffect(() => {
+    if (selectedSlot && !visibleSlots.some((s) => s.time === selectedSlot && !s.isBooked)) {
+      setSelectedSlot('');
+    }
+  }, [visibleSlots, selectedSlot]);
 
   // Price Calculations
   const pricing = useMemo(() => {
@@ -542,34 +590,61 @@ export default function BookingFlowModal({
                 {/* Time Slots Grid */}
                 <div className={styles.slotsSection}>
                   <div className={styles.slotsHeader}>
-                    <strong>Available Time Slots ({selectedDate})</strong>
+                    <div className={styles.slotsHeaderTitle}>
+                      <span>Available Slots:</span>{' '}
+                      <strong className={styles.slotsHeaderDate}>{selectedDate}</strong>
+                    </div>
                     {isLoadingSlots && <span className={styles.loadingSlots}>Checking live slots...</span>}
                   </div>
 
-                  <div className={styles.slotsGrid}>
-                    {availableSlots.map((slot) => {
-                      const isSelected = selectedSlot === slot.time;
-                      const isBooked = slot.isBooked;
+                  {visibleSlots.length === 0 ? (
+                    <div className={styles.noSlotsNotice}>
+                      <Clock size={22} className={styles.noSlotsIcon} />
+                      <div className={styles.noSlotsText}>
+                        <strong>All slots for today have concluded</strong>
+                        <p>Please choose tomorrow or an upcoming date to reserve your private theatre.</p>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.nextDayBtn}
+                        onClick={() => {
+                          const nextDay = new Date();
+                          nextDay.setDate(nextDay.getDate() + 1);
+                          const yyyy = nextDay.getFullYear();
+                          const mm = String(nextDay.getMonth() + 1).padStart(2, '0');
+                          const dd = String(nextDay.getDate()).padStart(2, '0');
+                          setSelectedDate(`${yyyy}-${mm}-${dd}`);
+                        }}
+                      >
+                        Switch to Tomorrow
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={styles.slotsGrid}>
+                      {visibleSlots.map((slot) => {
+                        const isSelected = selectedSlot === slot.time;
+                        const isBooked = slot.isBooked;
 
-                      return (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          disabled={isBooked}
-                          className={`${styles.slotCard} ${isSelected ? styles.slotSelected : ''} ${
-                            isBooked ? styles.slotBooked : ''
-                          }`}
-                          onClick={() => setSelectedSlot(slot.time)}
-                        >
-                          <div className={styles.slotTime}>{slot.time}</div>
-                          <div className={styles.slotLabel}>
-                            {isBooked ? '❌ Booked' : slot.label || 'Available'}
-                          </div>
-                          {isSelected && <Check size={14} className={styles.slotCheck} />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            disabled={isBooked}
+                            className={`${styles.slotCard} ${isSelected ? styles.slotSelected : ''} ${
+                              isBooked ? styles.slotBooked : ''
+                            }`}
+                            onClick={() => setSelectedSlot(slot.time)}
+                          >
+                            <div className={styles.slotTime}>{slot.time.replace('-', '–')}</div>
+                            <div className={styles.slotLabel}>
+                              {isBooked ? '❌ Booked' : slot.label || 'Available'}
+                            </div>
+                            {isSelected && <Check size={14} className={styles.slotCheck} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Option to Call Notice */}
@@ -617,10 +692,26 @@ export default function BookingFlowModal({
                 {/* Step 3 Coupon Notice Banner */}
                 {pricing.isCouponValid ? (
                   <div className={styles.couponNoticeActive}>
-                    <CheckCircle2 size={16} />
-                    <span>
-                      🎟️ Coupon <strong>{appliedCoupon}</strong> Applied: Theme is <strong>₹999</strong>! Fog Entry, LED Name Board &amp; Rose Petal Table Decor are <strong>FREE (₹0)</strong>.
-                    </span>
+                    <div className={styles.couponNoticeActiveLeft}>
+                      <CheckCircle2 size={18} className={styles.couponSuccessIcon} />
+                      <div className={styles.couponSuccessText}>
+                        <div className={styles.couponSuccessTitle}>
+                          🎟️ Coupon <strong>{appliedCoupon}</strong> Applied!
+                        </div>
+                        <div className={styles.couponSuccessDesc}>
+                          Theme is <strong>₹999</strong> • Fog Entry, LED Name Board &amp; Rose Petal Table Decor are <strong>FREE (₹0)</strong>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.couponRemoveBtn}
+                      onClick={handleRemoveCoupon}
+                      title="Remove coupon code"
+                    >
+                      <X size={14} />
+                      <span>Remove</span>
+                    </button>
                   </div>
                 ) : activeRoom.occasion !== 'gaming' ? (
                   <div className={styles.couponNoticePrompt}>
@@ -1110,7 +1201,26 @@ export default function BookingFlowModal({
 
                   {pricing.roomDiscount > 0 && (
                     <div className={styles.breakdownRow} style={{ color: '#10B981' }}>
-                      <span>🎟️ Flat ₹999 Theme Offer</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>🎟️ Offer ({appliedCoupon})</span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveCoupon}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#EF4444',
+                            cursor: 'pointer',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            padding: '0 2px',
+                            textDecoration: 'underline'
+                          }}
+                          title="Remove coupon code"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
                       <strong>-₹{pricing.roomDiscount}</strong>
                     </div>
                   )}

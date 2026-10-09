@@ -257,3 +257,30 @@
   align-items: center;
   gap: 6px;
 }
+
+@media (max-width: 768px) {
+  .floatContainer {
+    bottom: 76px;
+    right: 14px;
+    z-index: 10001;
+  }
+
+  .triggerBtn {
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    gap: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .chatWindow {
+    position: fixed;
+    bottom: 74px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+    height: calc(100dvh - 120px);
+    max-height: 540px;
+    border-radius: 18px;
+  }
+}

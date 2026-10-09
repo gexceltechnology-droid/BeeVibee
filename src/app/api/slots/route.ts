@@ -42,8 +42,48 @@ export async function GET(request: NextRequest) {
       return isGaming ? isBookingGaming : !isBookingGaming;
     });
 
+    // Helper to calculate start minutes of a time slot (e.g., "10:00 AM - 12:00 PM" -> 600)
+    const parseSlotStartMinutes = (slotTimeStr: string): number => {
+      const match = slotTimeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!match) return 0;
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const period = match[3].toUpperCase();
+
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      return hours * 60 + minutes;
+    };
+
+    // Sort slots chronologically from morning to night
+    const sortedBaseSlots = [...baseSlots].sort(
+      (a, b) => parseSlotStartMinutes(a.time) - parseSlotStartMinutes(b.time)
+    );
+
+    // Current IST date and time
+    const todayIST = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const isToday = date === todayIST;
+
+    const istParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    }).formatToParts(new Date());
+    const currentHour = parseInt(istParts.find((p) => p.type === 'hour')?.value || '0', 10);
+    const currentMin = parseInt(istParts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const currentMinutes = currentHour * 60 + currentMin;
+
+    // If today, filter out slots that have already started or passed
+    const activeSlots = isToday
+      ? sortedBaseSlots.filter((slot) => parseSlotStartMinutes(slot.time) > currentMinutes)
+      : sortedBaseSlots;
+
     // Map time slots and determine which ones are booked using smart overlap checks
-    const slotsWithAvailability = baseSlots.map((slot) => {
+    const slotsWithAvailability = activeSlots.map((slot) => {
       const isBooked = checkBookingOverlap(date, slot.time, roomBookings);
       return { ...slot, isBooked };
     });
