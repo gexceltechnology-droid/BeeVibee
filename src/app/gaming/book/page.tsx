@@ -160,19 +160,23 @@ export default function GamingBookPage() {
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch(`/api/bookings?date=${selectedDate}&theaterId=gaming-ps5-arena`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=gaming&roomId=ps5-gaming`);
         if (res.ok) {
           const data = await res.json();
-          const bList = data.bookings || [];
+          const bList = data.activeBookings || [];
           setActiveBookings(bList);
 
           // Update predefined slots availability
-          setSlots(
-            PREDEFINED_SLOTS.map((s) => {
-              const isOverlapping = checkBookingOverlap(selectedDate, s.time, bList);
-              return { ...s, isBooked: isOverlapping };
-            })
-          );
+          if (data.slots && Array.isArray(data.slots)) {
+            setSlots(data.slots);
+          } else {
+            setSlots(
+              PREDEFINED_SLOTS.map((s) => {
+                const isOverlapping = checkBookingOverlap(selectedDate, s.time, bList);
+                return { ...s, isBooked: isOverlapping };
+              })
+            );
+          }
         }
       } catch (err) {
         console.error('Error fetching bookings:', err);
@@ -454,6 +458,8 @@ export default function GamingBookPage() {
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,
+      roomId: 'ps5-gaming',
+      theme: 'ps5-gaming',
       bookingType: 'gaming',
       addOns: (() => {
         const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];

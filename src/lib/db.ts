@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { checkBookingOverlap } from './time';
+import { checkBookingOverlap, normalizeRoomId } from './time';
 
 export interface Booking {
   id: string;
@@ -12,6 +12,8 @@ export interface Booking {
   timeSlot: string; // e.g. "10:00 AM - 01:00 PM"
   packageName: string;
   bookingType?: 'gaming' | 'theater';
+  roomId?: string; // Canonical room: 'angel-wings' | 'red-velvet' | 'royal-butterfly' | 'ps5-gaming'
+  theme?: string;
   addOns: string[];
   totalPrice: number;
   advancePaid?: number;
@@ -197,11 +199,17 @@ export function getBookingsByDate(date: string): Booking[] {
 export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>): Booking {
   const db = readDb();
   
-  // Double-booking check using overlap logic
-  const isBooked = checkBookingOverlap(bookingData.date, bookingData.timeSlot, db.bookings);
+  // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
+  const targetRoomId = normalizeRoomId(bookingData);
+  const sameRoomBookings = db.bookings.filter((b) => {
+    if (b.status === 'cancelled') return false;
+    return normalizeRoomId(b) === targetRoomId;
+  });
+
+  const isBooked = checkBookingOverlap(bookingData.date, bookingData.timeSlot, sameRoomBookings);
 
   if (isBooked) {
-    throw new Error('This time slot overlaps with an existing booking.');
+    throw new Error('This time slot overlaps with an existing booking in this room.');
   }
 
   // Generate unique sequential ticket code: BV-YYMMDD-NNNN
@@ -225,6 +233,7 @@ export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'stat
   const newBooking: Booking = {
     ...bookingData,
     id: bookingId,
+    roomId: targetRoomId,
     advancePaid,
     balanceDue,
     paymentStatus,

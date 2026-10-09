@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/auth';
-import { checkBookingOverlap } from '@/lib/time';
+import { checkBookingOverlap, normalizeRoomId } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 import { sendSMS } from '@/lib/sms';
 import { notifyAdminOnWhatsAppAndSMS } from '@/lib/whatsapp';
@@ -202,17 +202,24 @@ export async function POST(request: NextRequest) {
     }
 
     // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
+    const targetRoomId = normalizeRoomId(body.roomId || body.theme || packageName || detectedBookingType);
     const allBookings = await getAllBookings();
     const sameRoomBookings = allBookings.filter((b) => {
       if (b.status === 'cancelled') return false;
-      const isGaming = b.bookingType === 'gaming' || b.packageName?.includes('Gaming') || b.packageName?.includes('Dark');
-      return detectedBookingType === 'gaming' ? isGaming : !isGaming;
+      return normalizeRoomId(b) === targetRoomId;
     });
 
     const isBooked = checkBookingOverlap(date, timeSlot, sameRoomBookings);
     if (isBooked) {
+      const roomLabel = targetRoomId === 'ps5-gaming'
+        ? 'PS5 Gaming Lounge'
+        : targetRoomId === 'red-velvet'
+        ? 'Red Velvet Heart Room'
+        : targetRoomId === 'royal-butterfly'
+        ? 'Royal Butterfly Room'
+        : 'Angel Wings Room';
       return NextResponse.json({ 
-        error: `This time slot overlaps with an existing ${detectedBookingType === 'gaming' ? 'Gaming Room' : 'Party Hall'} booking.` 
+        error: `This time slot overlaps with an existing booking in the ${roomLabel}. Other themes may still be available for this time.` 
       }, { status: 400 });
     }
 
@@ -244,6 +251,8 @@ export async function POST(request: NextRequest) {
       date,
       timeSlot,
       packageName,
+      roomId: targetRoomId,
+      theme: targetRoomId,
       bookingType: detectedBookingType,
       addOns: addOns || [],
       totalPrice: calculatedTotal,

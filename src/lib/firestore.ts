@@ -7,6 +7,7 @@
 import crypto from 'crypto';
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { normalizeRoomId } from './time';
 import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem } from './db';
 import {
   readDb,
@@ -173,9 +174,12 @@ export async function addBookingToFirestore(
     const paymentMode = bookingData.paymentMode || 'UPI (8123635342@sbi)';
     const utrNumber = (bookingData as any).utrNumber || '';
 
+    const targetRoomId = (bookingData as any).roomId || normalizeRoomId(bookingData);
+
     const newBooking: Booking = {
       ...bookingData,
       id: bookingId,
+      roomId: targetRoomId,
       advancePaid,
       balanceDue,
       paymentStatus,

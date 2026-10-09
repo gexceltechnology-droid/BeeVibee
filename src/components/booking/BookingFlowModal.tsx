@@ -174,7 +174,7 @@ export default function BookingFlowModal({
       try {
         const isGaming = activeRoom.occasion === 'gaming';
         const typeParam = isGaming ? 'gaming' : 'theater';
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=${typeParam}`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=${typeParam}&roomId=${encodeURIComponent(activeRoom.id)}`);
         if (res.ok) {
           const data = await res.json();
           if (!isCancelled && data.slots && Array.isArray(data.slots)) {
@@ -385,6 +385,9 @@ export default function BookingFlowModal({
           date: selectedDate,
           timeSlot: selectedSlot || availableSlots[0]?.time || '10:00 AM - 12:00 PM',
           packageName: `${activeRoom.name} (${activeRoom.occasionLabel})`,
+          roomId: activeRoom.id,
+          theme: activeRoom.id,
+          bookingType: activeRoom.occasion === 'gaming' ? 'gaming' : 'theater',
           addOns: addonsPayload,
           totalPrice: pricing.total,
           guestCount: guestCount,

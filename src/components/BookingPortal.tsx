@@ -181,7 +181,7 @@ export default function BookingPortal({
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=theater`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=theater&roomId=${encodeURIComponent(selectedPackage.id)}`);
         if (!active) return;
 
         if (!res.ok) {
@@ -239,7 +239,7 @@ export default function BookingPortal({
     return () => {
       active = false;
     };
-  }, [selectedDate, bookingMode]);
+  }, [selectedDate, bookingMode, selectedPackage.id]);
 
   // Load customer session on mount
   useEffect(() => {
@@ -759,6 +759,9 @@ export default function BookingPortal({
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,
+      roomId: selectedPackage.id,
+      theme: selectedPackage.id,
+      bookingType: 'theater',
       addOns: (() => {
         const list: string[] = [];
         if (isCouponApplied) {

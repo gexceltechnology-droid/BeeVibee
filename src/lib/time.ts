@@ -216,3 +216,63 @@ export function checkBookingOverlap(
   }
   return false;
 }
+
+export type RoomId = 'angel-wings' | 'red-velvet' | 'royal-butterfly' | 'ps5-gaming';
+
+/**
+ * Normalizes any room ID, package ID, slug, or booking object to a canonical RoomId.
+ * Canonical suites:
+ * - 'angel-wings': Pink room / Angel Wings & Birthday Stage (capacity: 6)
+ * - 'red-velvet': Red room / Red Velvet Heart (capacity: 4)
+ * - 'royal-butterfly': Purple room / Royal Butterfly VIP (capacity: 10)
+ * - 'ps5-gaming': PS5 Gaming Lounge (capacity: 4)
+ */
+export function normalizeRoomId(input?: any): RoomId {
+  if (!input) return 'angel-wings';
+
+  if (typeof input === 'string') {
+    const s = input.trim().toLowerCase();
+    if (s === 'angel-wings' || s === 'red-velvet' || s === 'royal-butterfly' || s === 'ps5-gaming') {
+      return s as RoomId;
+    }
+  }
+
+  let rawStr = '';
+  if (typeof input === 'string') {
+    rawStr = input;
+  } else if (typeof input === 'object') {
+    if (input.roomId && (input.roomId === 'angel-wings' || input.roomId === 'red-velvet' || input.roomId === 'royal-butterfly' || input.roomId === 'ps5-gaming')) {
+      return input.roomId as RoomId;
+    }
+    rawStr = `${input.roomId || ''} ${input.packageName || ''} ${input.theme || ''} ${input.bookingType || ''} ${input.occasion || ''} ${input.packageId || ''} ${input.id || ''}`;
+  }
+
+  const str = rawStr.toLowerCase();
+
+  // 1. PS5 Gaming Lounge
+  if (str.includes('ps5') || str.includes('gaming') || str.includes('dark')) {
+    return 'ps5-gaming';
+  }
+
+  // 2. Red Velvet Heart (Red Room)
+  if (str.includes('red') || str.includes('velvet') || str.includes('heart') || str.includes('marry')) {
+    return 'red-velvet';
+  }
+
+  // 3. Royal Butterfly VIP (Purple Room)
+  if (str.includes('purple') || str.includes('butterfly') || str.includes('royal') || str.includes('vip')) {
+    return 'royal-butterfly';
+  }
+
+  // 4. Angel Wings & Birthday Stage (Pink Room)
+  if (str.includes('angel') || str.includes('pink') || str.includes('wing') || str.includes('birthday')) {
+    return 'angel-wings';
+  }
+
+  // 5. Semantic fallbacks
+  if (str.includes('anniversary') || str.includes('romantic') || str.includes('date')) {
+    return 'red-velvet';
+  }
+
+  return 'angel-wings';
+}
