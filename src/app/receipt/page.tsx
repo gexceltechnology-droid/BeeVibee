@@ -107,7 +107,8 @@ function ReceiptContent() {
   const advancePaid = typeof booking.advancePaid === 'number' ? booking.advancePaid : Math.min(500, booking.totalPrice);
   const balanceDue = typeof booking.balanceDue === 'number' ? booking.balanceDue : Math.max(0, booking.totalPrice - advancePaid);
 
-  const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}\n\nVenue Location: https://maps.google.com/?q=BeeVibe+Jayanagar`;
+  const notesSnippet = booking.specialRequests ? `\n📝 Special Request: "${booking.specialRequests}"` : '';
+  const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}${notesSnippet}\n\nVenue Location: https://maps.google.com/?q=BeeVibe+Jayanagar`;
   const whatsappShareUrl = `https://wa.me/${cleanPhoneNumber(booking.phone)}?text=${encodeURIComponent(shareText)}`;
 
   return (
@@ -189,7 +190,7 @@ function ReceiptContent() {
               1340, 2nd floor, 41st Cross road, 4th gate, opposite Jain University, Jayanagar 9th Block, Bengaluru 560041
             </p>
             <p style={{ fontSize: '0.78rem', color: '#4b5563', margin: '2px 0 0 0' }}>
-              📞 Call / WhatsApp: +91 89191 78055
+              📞 Call / WhatsApp: +91 99001 06474
             </p>
           </div>
 
@@ -243,6 +244,18 @@ function ReceiptContent() {
             </div>
           </div>
         </div>
+
+        {/* Customer Special Request Note */}
+        {booking.specialRequests && (
+          <div style={{ marginBottom: '24px', background: '#fef3c7', padding: '14px 18px', borderRadius: '10px', borderLeft: '4px solid #f59e0b', border: '1px solid #fde68a' }}>
+            <div style={{ fontSize: '0.72rem', color: '#92400e', textTransform: 'uppercase', fontWeight: '800', marginBottom: '3px' }}>
+              📝 CUSTOMER SPECIAL OCCASION REQUEST / NOTE
+            </div>
+            <div style={{ fontSize: '0.9rem', color: '#78350f', fontWeight: '600' }}>
+              &ldquo;{booking.specialRequests}&rdquo;
+            </div>
+          </div>
+        )}
 
         {/* Itemized Charges Table */}
         <div style={{ marginBottom: '24px' }}>
@@ -302,9 +315,9 @@ function ReceiptContent() {
             <span>- ₹{advancePaid}</span>
           </div>
 
-          <div style={{ background: 'rgba(242, 169, 0, 0.08)', border: '1px solid rgba(242, 169, 0, 0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '0.82rem', color: '#334155' }}>
-            <div><strong>Paid to:</strong> NALINAKSHI C (8123635342@sbi)</div>
-            <div><strong>Bank:</strong> State Bank of India (6592)</div>
+          <div style={{ background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.2)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', fontSize: '0.82rem', color: '#334155' }}>
+            <div><strong>Paid to:</strong> Bee Vibe Theater (9900106474@okbizaxis)</div>
+            <div><strong>Payment Mode:</strong> {booking.paymentMode || 'UPI (9900106474@okbizaxis)'}</div>
             {booking.utrNumber && (
               <div><strong>UPI Transaction UTR:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#b45309' }}>{booking.utrNumber}</span></div>
             )}

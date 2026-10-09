@@ -17,6 +17,7 @@ export interface FoodOrderData {
   phone?: string;
   items: FoodOrderItem[];
   totalPrice: number;
+  notes?: string;
   createdAt?: string | Date;
 }
 
@@ -67,6 +68,9 @@ export function formatFoodOrderWhatsAppMessage(order: FoodOrderData): string {
 
   const guestInfo = order.customerName ? `${order.customerName}` : 'In-Room Guest';
   const phoneText = order.phone ? `\n📞 Guest Phone: +${cleanPhoneNumber(order.phone)}` : '';
+  const notesText = order.notes && order.notes.trim()
+    ? `----------------------------------------\n📝 CUSTOMER NOTE / INSTRUCTIONS:\n"${order.notes.trim()}"\n`
+    : '';
 
   return (
     `🍿 NEW IN-THEATER FOOD ORDER 🍿\n` +
@@ -77,6 +81,7 @@ export function formatFoodOrderWhatsAppMessage(order: FoodOrderData): string {
     `----------------------------------------\n` +
     `📋 ITEMS ORDERED:\n` +
     `${itemsText}\n` +
+    `${notesText}` +
     `----------------------------------------\n` +
     `💰 TOTAL PRICE: ₹${order.totalPrice}\n` +
     `----------------------------------------\n` +
@@ -92,6 +97,9 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
   const advance = typeof booking.advancePaid === 'number' ? booking.advancePaid : 500;
   const balance = typeof booking.balanceDue === 'number' ? booking.balanceDue : Math.max(0, booking.totalPrice - advance);
   const utrText = booking.utrNumber ? `\n🧾 UPI Ref / UTR: ${booking.utrNumber}` : '';
+  const notesText = booking.specialRequests && booking.specialRequests.trim()
+    ? `----------------------------------------\n📝 CUSTOMER NOTE / SPECIAL REQUEST:\n"${booking.specialRequests.trim()}"\n`
+    : '';
 
   return (
     `🎉 NEW BOOKING ALERT - BEE VIBE 🎉\n` +
@@ -106,6 +114,7 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
     `📅 Date: ${booking.date}\n` +
     `⏰ Time Slot: ${booking.timeSlot}\n` +
     `👥 Guests: ${booking.guestCount} Head(s)${addOnsText}\n` +
+    `${notesText}` +
     `----------------------------------------\n` +
     `💰 Total Price: ₹${booking.totalPrice}\n` +
     `🟢 Advance Received: ₹${advance} (UPI: 9900106474@okbizaxis)\n` +

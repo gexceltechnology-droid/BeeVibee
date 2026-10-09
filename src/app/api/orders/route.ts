@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { theme, themeLabel, customerName, phone, items, totalPrice } = body;
+    const { theme, themeLabel, customerName, phone, items, totalPrice, notes } = body;
 
     if (!theme || !themeLabel || !items || !Array.isArray(items) || items.length === 0 || totalPrice === undefined) {
       return NextResponse.json({ error: 'Missing required order fields.' }, { status: 400 });
@@ -112,6 +112,7 @@ export async function POST(request: NextRequest) {
       phone: phone ? String(phone).trim() : '',
       items: validatedItems,
       totalPrice: calculatedTotal,
+      notes: notes ? String(notes).trim() : undefined,
     });
 
     // Trigger automated server notification to admin phone, WhatsApp & Telegram (+919900106474)

@@ -201,6 +201,14 @@ export async function sendBookingConfirmationEmail(params: SendMailParams) {
                 <div class="val" style="color: #d0d0e0; font-size: 13px; font-weight: 500;">${formattedAddons}</div>
               </td>
             </tr>
+            ${params.specialRequests && params.specialRequests.trim() ? `
+            <tr>
+              <td colspan="2" style="padding-bottom: 16px; background: rgba(242, 169, 0, 0.08); border-left: 3px solid #f2a900; border-radius: 4px; padding: 10px 14px;">
+                <div class="label" style="color: #f2a900; font-weight: bold;">📝 Customer Note / Special Request</div>
+                <div class="val" style="color: #ffffff; font-size: 13px; font-style: italic; white-space: pre-wrap;">&ldquo;${params.specialRequests.trim()}&rdquo;</div>
+              </td>
+            </tr>
+            ` : ''}
           </table>
 
           <div class="qr-section">

@@ -125,7 +125,8 @@ function MenuContent() {
             price: c.item.price,
             quantity: c.quantity
           })),
-          totalPrice: cartTotal
+          totalPrice: cartTotal,
+          notes: notes.trim() || undefined,
         })
       });
 
@@ -137,6 +138,7 @@ function MenuContent() {
       const data = await res.json();
       setOrderSuccess(data.order);
       setCart([]);
+      setNotes('');
       setIsCheckoutOpen(false);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error processing your order. Please try again.';
@@ -465,14 +467,17 @@ function MenuContent() {
               Your order <strong style={{ color: '#fff', fontFamily: 'monospace' }}>{orderSuccess.id}</strong> has been sent to our kitchen. 
               We will serve it directly to the <strong>{activeThemeLabel}</strong> shortly.
             </p>
-            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '16px', fontSize: '0.85rem' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--text-muted)' }}>Items: </span>
               <strong>{orderSuccess.items.map((i: FoodOrderItem) => `${i.name} (x${i.quantity})`).join(', ')}</strong>
             </div>
 
-            <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', borderRadius: '10px', padding: '10px 14px', marginBottom: '16px', fontSize: '0.85rem', fontWeight: 600 }}>
-              ⚡ Order confirmed & sent to kitchen
-            </div>
+            {orderSuccess.notes && (
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', fontSize: '0.82rem', color: '#fbbf24', textAlign: 'left' }}>
+                <strong style={{ display: 'block', marginBottom: '2px' }}>📝 Special Instructions:</strong>
+                &ldquo;{orderSuccess.notes}&rdquo;
+              </div>
+            )}
 
             <a 
               href={getAdminWhatsAppDeepLink('food_order', orderSuccess)}

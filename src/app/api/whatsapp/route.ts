@@ -53,7 +53,19 @@ export async function POST(request: NextRequest) {
 
     // 1. Interactive Bot API test or custom client invocation
     if (body.message && typeof body.message === 'string') {
-      const botRes = processWhatsAppBotMessage(body.message, body.phone || '');
+      const incomingText = body.message.trim();
+      const botRes = processWhatsAppBotMessage(incomingText, body.phone || '');
+
+      // If customer is leaving a custom note or inquiry via widget, alert admin via Telegram
+      const isQuickMenu = ['1', '2', '3', '4', '5', 'hi', 'hello', 'hey', 'start', '0', 'help'].includes(incomingText.toLowerCase());
+      if (!isQuickMenu && incomingText.length > 3) {
+        import('@/lib/telegram').then(({ sendTelegramNotification }) => {
+          sendTelegramNotification(
+            `💬 NEW CUSTOMER CHAT NOTE / INQUIRY\n----------------------------------------\nFrom: ${body.phone ? '+' + body.phone : 'Website Visitor'}\n📝 Note: "${incomingText}"\n----------------------------------------\nCheck live chat or reply on WhatsApp.`
+          ).catch((e) => console.error('Telegram widget note alert error:', e));
+        }).catch(() => {});
+      }
+
       return NextResponse.json({
         success: true,
         response: botRes,
@@ -74,6 +86,16 @@ export async function POST(request: NextRequest) {
 
       // Compute Bot reply
       const botResponse = processWhatsAppBotMessage(incomingText, fromPhone);
+
+      // If customer sent a custom note or request, alert admin on Telegram
+      const isQuickMenu = ['1', '2', '3', '4', '5', 'hi', 'hello', 'hey', 'start', '0', 'help'].includes(incomingText.trim().toLowerCase());
+      if (!isQuickMenu) {
+        import('@/lib/telegram').then(({ sendTelegramNotification }) => {
+          sendTelegramNotification(
+            `💬 INCOMING CUSTOMER NOTE (WhatsApp)\n----------------------------------------\nFrom: +${fromPhone}\n📝 Note: "${incomingText.trim()}"\n----------------------------------------\nReply on WhatsApp: https://wa.me/${fromPhone}`
+          ).catch((e) => console.error('Telegram WA note alert error:', e));
+        }).catch(() => {});
+      }
 
       // Reply via Meta WhatsApp Cloud API
       const metaResult = await sendWhatsAppViaMetaCloudApi(fromPhone, botResponse.replyText);

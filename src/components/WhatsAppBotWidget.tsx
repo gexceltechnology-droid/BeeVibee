@@ -74,6 +74,15 @@ export default function WhatsAppBotWidget({ offsetForBottomBar = false }: WhatsA
 
     setMessages((prev) => [...prev, userMsg, botMsg]);
     setInputVal('');
+
+    // Relay custom message/note to backend to notify admin if applicable
+    try {
+      fetch('/api/whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      }).catch(() => {});
+    } catch {}
   };
 
   return (

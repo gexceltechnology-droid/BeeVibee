@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import {
   X,
   Calendar,
@@ -70,7 +71,7 @@ const DEFAULT_SLOTS: TimeSlotOption[] = [
   { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
   { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
   { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:30 PM - 12:30 AM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
 ];
 
 const GAMING_SLOTS: TimeSlotOption[] = [
@@ -413,7 +414,7 @@ export default function BookingFlowModal({
         throw new Error(data.error || 'Failed to submit booking.');
       }
 
-      const newId = data.bookingId || data.id || `BV-${Math.floor(100000 + Math.random() * 900000)}`;
+      const newId = data.booking?.id || data.bookingId || data.id || `BV-${Math.floor(100000 + Math.random() * 900000)}`;
       setConfirmedBookingId(newId);
       setCurrentStep(6); // Step 6: Confirmation Pass
     } catch (err: any) {
@@ -1230,6 +1231,24 @@ export default function BookingFlowModal({
                       <strong>Deposit Policy:</strong> Your ₹{pricing.advance} advance deposit is deducted directly from your Total Bill of ₹{pricing.total}. You only pay the balance ₹{pricing.remaining} when you arrive at BeeVibe theatre.
                     </span>
                   </div>
+
+                  {specialRequests.trim() && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '10px 14px',
+                      background: 'rgba(242, 169, 0, 0.08)',
+                      borderRadius: '8px',
+                      borderLeft: '3px solid var(--gold)',
+                      fontSize: '0.82rem',
+                      color: '#fef08a',
+                      textAlign: 'left',
+                    }}>
+                      <strong style={{ color: 'var(--gold)', display: 'block', marginBottom: '2px' }}>
+                        📝 Special Occasion Request / Note:
+                      </strong>
+                      &ldquo;{specialRequests.trim()}&rdquo;
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.paymentConsole}>
@@ -1410,6 +1429,22 @@ export default function BookingFlowModal({
                     </div>
                   )}
 
+                  {specialRequests.trim() && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px 12px',
+                      background: 'rgba(242, 169, 0, 0.08)',
+                      borderRadius: '6px',
+                      borderLeft: '3px solid #f2a900',
+                      fontSize: '0.8rem',
+                      color: '#fef08a',
+                      textAlign: 'left',
+                    }}>
+                      <span style={{ fontWeight: 'bold', color: '#f2a900' }}>📝 Special Request: </span>
+                      &ldquo;{specialRequests.trim()}&rdquo;
+                    </div>
+                  )}
+
                   <div className={styles.ticketVenue}>
                     <span>📍 1340, 2nd Floor, 41st Cross Rd, 4th Gate, Jayanagar 9th Block, Bengaluru</span>
                   </div>
@@ -1420,7 +1455,9 @@ export default function BookingFlowModal({
                   <a
                     href={`https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20just%20booked%20${encodeURIComponent(
                       activeRoom?.name || 'Private Suite'
-                    )}%20for%20${selectedDate}%20(${selectedSlot}).%20My%20booking%20ID%20is%20${confirmedBookingId}.`}
+                    )}%20for%20${selectedDate}%20(${selectedSlot}).%20My%20booking%20ID%20is%20${confirmedBookingId}.${
+                      specialRequests.trim() ? `%20Note:%20${encodeURIComponent(specialRequests.trim())}` : ''
+                    }`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-primary"
@@ -1428,6 +1465,13 @@ export default function BookingFlowModal({
                   >
                     <MessageSquare size={16} /> Open WhatsApp for Directions
                   </a>
+                  <Link
+                    href={`/receipt?id=${encodeURIComponent(confirmedBookingId)}`}
+                    className="btn btn-secondary"
+                    style={{ background: '#EEF5FF', color: 'var(--royal)', borderColor: '#BFDBFE' }}
+                  >
+                    <Receipt size={16} /> View Official Receipt
+                  </Link>
                   <button
                     type="button"
                     className="btn btn-secondary"

@@ -58,15 +58,15 @@ export default function GalleryPage() {
 
             <nav className={styles.navLinks}>
               <li><Link href="/" className={styles.navLink}>Home</Link></li>
+              <li><Link href="/themes" className={styles.navLink}>Themes</Link></li>
               <li><Link href="/gaming" className={styles.navLink} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
+              <li><Link href="/menu" className={styles.navLink}>Cafe Menu 🍿</Link></li>
               <li><Link href="/gallery" className={styles.navLink} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Gallery 📸</Link></li>
-              <li><Link href="/#vibes" className={styles.navLink}>Packages</Link></li>
-              <li><Link href="/#features" className={styles.navLink}>Amenities</Link></li>
-              <li><Link href="/book" className={styles.navLink}>Book Now</Link></li>
+              <li><Link href="/#why-beevibe" className={styles.navLink}>Why BeeVibe</Link></li>
             </nav>
 
             <div className={pageStyles.headerActions}>
-              <Link href="/book" className="btn btn-primary" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
+              <Link href="/themes" className="btn btn-primary" style={{ padding: '8px 18px', fontSize: '0.85rem' }}>
                 Book Now
               </Link>
               <button
@@ -85,13 +85,13 @@ export default function GalleryPage() {
           <div className={`${pageStyles.mobileMenu} ${isMobileMenuOpen ? pageStyles.mobileMenuActive : ''}`}>
             <ul className={pageStyles.mobileNavLinks}>
               <li><Link href="/" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link></li>
+              <li><Link href="/themes" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Themes</Link></li>
               <li><Link href="/gaming" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: '#00f0ff', fontWeight: 'bold' }}>Gaming World 🎮</Link></li>
+              <li><Link href="/menu" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Cafe Menu 🍿</Link></li>
               <li><Link href="/gallery" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)} style={{ color: 'var(--accent)', fontWeight: 'bold' }}>Gallery 📸</Link></li>
-              <li><Link href="/#vibes" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Our Vibes</Link></li>
-              <li><Link href="/#features" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Amenities</Link></li>
-              <li><Link href="/book" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Booking Portal</Link></li>
+              <li><Link href="/#why-beevibe" className={pageStyles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Why BeeVibe</Link></li>
               <li style={{ width: '100%', marginTop: '12px' }}>
-                <Link href="/book" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/themes" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setIsMobileMenuOpen(false)}>
                   Book Now
                 </Link>
               </li>

@@ -49,6 +49,7 @@ interface FoodOrder {
   phone?: string;
   items: FoodOrderItem[];
   totalPrice: number;
+  notes?: string;
   status: 'pending' | 'preparing' | 'served' | 'cancelled';
   createdAt: string;
 }
@@ -1237,6 +1238,21 @@ export default function AdminDashboard() {
                         <td>
                           <div className={styles.customerName}>{b.customerName}</div>
                           <div className={styles.customerContact}>📱 {b.phone}</div>
+                          {b.specialRequests && (
+                            <div style={{
+                              marginTop: '4px',
+                              padding: '3px 6px',
+                              background: 'rgba(245, 158, 11, 0.1)',
+                              borderLeft: '2px solid #f59e0b',
+                              borderRadius: '3px',
+                              fontSize: '0.72rem',
+                              color: '#fbbf24',
+                              maxWidth: '180px',
+                              wordBreak: 'break-word',
+                            }}>
+                              📝 {b.specialRequests}
+                            </div>
+                          )}
                         </td>
                         <td>
                           <div style={{ fontWeight: 600 }}>{b.date}</div>
@@ -1568,6 +1584,22 @@ export default function AdminDashboard() {
                       <td>
                         <div className={styles.customerName}>{b.customerName}</div>
                         <div className={styles.customerContact}>📱 {b.phone} <br />👥 {b.guestCount} Guests</div>
+                        {b.specialRequests && (
+                          <div style={{
+                            marginTop: '6px',
+                            padding: '4px 8px',
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            borderLeft: '3px solid #f59e0b',
+                            borderRadius: '4px',
+                            fontSize: '0.74rem',
+                            color: '#fbbf24',
+                            lineHeight: 1.3,
+                            maxWidth: '220px',
+                            wordBreak: 'break-word',
+                          }}>
+                            <span style={{ fontWeight: 700 }}>📝 Note:</span> {b.specialRequests}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <div style={{ fontWeight: 600 }}>{b.date}</div>
@@ -1732,6 +1764,21 @@ export default function AdminDashboard() {
                           {o.themeLabel || o.theme}
                         </span>
                         {o.customerName && <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Guest: {o.customerName}</div>}
+                        {o.notes && (
+                          <div style={{
+                            marginTop: '4px',
+                            padding: '3px 6px',
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            borderLeft: '2px solid #f59e0b',
+                            borderRadius: '3px',
+                            fontSize: '0.74rem',
+                            color: '#fbbf24',
+                            maxWidth: '220px',
+                            wordBreak: 'break-word',
+                          }}>
+                            📝 Note: {o.notes}
+                          </div>
+                        )}
                       </td>
                       <td>{o.items.map(i => `${i.name} x${i.quantity}`).join(', ')}</td>
                       <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>₹{o.totalPrice}</td>
@@ -2075,6 +2122,13 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {selectedBookingForInvoice.specialRequests && (
+                <div style={{ background: '#fef3c7', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px', borderLeft: '3px solid #d97706', fontSize: '0.85rem' }}>
+                  <strong style={{ color: '#92400e', display: 'block', marginBottom: '2px' }}>📝 Customer Note / Special Request:</strong>
+                  <span style={{ color: '#78350f' }}>&ldquo;{selectedBookingForInvoice.specialRequests}&rdquo;</span>
+                </div>
+              )}
+
               {/* Itemized Table */}
               <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '0.9rem' }}>
                 <thead>
@@ -2263,6 +2317,11 @@ export default function AdminDashboard() {
                         {b.addOns && b.addOns.length > 0 && (
                           <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '4px' }}>
                             Add-ons: {b.addOns.join(', ')}
+                          </div>
+                        )}
+                        {b.specialRequests && (
+                          <div style={{ fontSize: '0.75rem', color: '#fbbf24', marginTop: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '4px', borderLeft: '2px solid #f59e0b' }}>
+                            📝 Customer Request: &ldquo;{b.specialRequests}&rdquo;
                           </div>
                         )}
                       </div>

@@ -60,6 +60,7 @@ export interface FoodOrder {
   phone?: string;
   items: FoodOrderItem[];
   totalPrice: number;
+  notes?: string;
   status: 'pending' | 'preparing' | 'served' | 'cancelled';
   createdAt: string;
 }
