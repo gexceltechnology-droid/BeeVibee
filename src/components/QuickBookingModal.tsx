@@ -453,7 +453,7 @@ Please confirm my slot reservation!`;
               className={styles.whatsappCtaBtn}
             >
               <MessageCircle size={18} />
-              <span>Confirm on WhatsApp (+91 9900106474)</span>
+              <span>Confirm on WhatsApp</span>
             </a>
 
             <button

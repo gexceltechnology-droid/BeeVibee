@@ -374,10 +374,10 @@ export default function BookingFlowModal({
             <a
               href="tel:+919900106474"
               className={styles.modalCallHeader}
-              title="Book a Slot on Call (+91 99001 06474)"
+              title="Call"
             >
               <Phone size={13} />
-              <span>Book on Call: 9900106474</span>
+              <span>Call</span>
             </a>
 
             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close booking">
@@ -572,11 +572,11 @@ export default function BookingFlowModal({
                   </div>
                 </div>
 
-                {/* Option to Book a Slot on Call Notice */}
+                {/* Option to Call Notice */}
                 <div className={styles.stepCallHelp}>
                   <Phone size={14} />
                   <span>
-                    Need a custom timing or prefer booking over phone? <a href="tel:+919900106474">Book a Slot on Call (+91 99001 06474)</a>
+                    Need a custom timing or prefer booking over phone? <a href="tel:+919900106474">Call</a>
                   </span>
                 </div>
 
@@ -950,11 +950,11 @@ export default function BookingFlowModal({
                   </div>
                 </div>
 
-                {/* Option to Book / Confirm on Call in Step 5 */}
+                {/* Option to Call in Step 5 */}
                 <div className={styles.stepCallHelp}>
                   <Phone size={14} />
                   <span>
-                    Having issues with payment or prefer to confirm directly? <a href="tel:+919900106474">Book / Confirm this Slot on Call (+91 99001 06474)</a>
+                    Having issues with payment or prefer to confirm directly? <a href="tel:+919900106474">Call</a>
                   </span>
                 </div>
 

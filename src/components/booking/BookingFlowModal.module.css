@@ -1545,11 +1545,9 @@
 }
 
 @media (max-width: 640px) {
-  .modalCallHeader span {
-    display: none;
-  }
   .modalCallHeader {
-    padding: 6px 10px;
+    padding: 5px 9px;
+    font-size: 0.72rem;
   }
 }
 
