@@ -271,12 +271,4 @@ export const ADD_ONS: AddOnItem[] = [
     icon: '🍿',
     description: 'Fresh theater popcorn tub, crispy french fries, and 2 chilled beverages.',
   },
-  {
-    id: 'addon-dslr',
-    name: 'DSLR Pro Photography (30 Mins)',
-    price: 499,
-    category: 'media',
-    icon: '📸',
-    description: 'Dedicated photographer shooting 25+ edited high-resolution celebration photos.',
-  },
 ];

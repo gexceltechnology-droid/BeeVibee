@@ -112,7 +112,6 @@ export default function GamingBookPage() {
 
   // Packages & Addons
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [dslrOption, setDslrOption] = useState<'none' | '30min' | '1hr'>('none');
   const [fogOption] = useState<'none' | '1pot'>('none');
   const [snackOption, setSnackOption] = useState<'none' | 'popcorn_combo' | 'gamer_platter'>('none');
 
@@ -355,10 +354,6 @@ export default function GamingBookPage() {
     const pkgBase = Math.round(99 * Math.max(1, customerDetails.guestCount) * durationHours);
     const extraGuests = 0;
 
-    let dslrPrice = 0;
-    if (dslrOption === '30min') dslrPrice = 300;
-    else if (dslrOption === '1hr') dslrPrice = 500;
-
     let fogPrice = 0;
     if (fogOption === '1pot') fogPrice = 300;
 
@@ -366,7 +361,7 @@ export default function GamingBookPage() {
     if (snackOption === 'popcorn_combo') snackPrice = 250;
     else if (snackOption === 'gamer_platter') snackPrice = 450;
 
-    return pkgBase + extraGuests + dslrPrice + fogPrice + snackPrice;
+    return pkgBase + extraGuests + fogPrice + snackPrice;
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -462,8 +457,6 @@ export default function GamingBookPage() {
       bookingType: 'gaming',
       addOns: (() => {
         const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];
-        if (dslrOption === '30min') list.push('DSLR Photography (30 Mins — ₹300)');
-        else if (dslrOption === '1hr') list.push('DSLR Photography (1 Hour — ₹500)');
         if (fogOption === '1pot') list.push('Fog Entry (1 Pot — ₹300)');
         if (snackOption === 'popcorn_combo') list.push('Popcorn & Cold Mocktail Combo (₹250)');
         else if (snackOption === 'gamer_platter') list.push('VIP Gamer Snack Platter (₹450)');
@@ -473,7 +466,7 @@ export default function GamingBookPage() {
       advancePaid: calculateAdvance(),
       balanceDue: calculateBalance(),
       paymentStatus: calculateBalance() === 0 ? 'fully_paid' : 'advance_paid',
-      paymentMode: 'UPI (8123635342@sbi)',
+      paymentMode: 'UPI (9900106474@okbizaxis)',
       utrNumber: utrNumber.trim(),
       guestCount: customerDetails.guestCount,
       specialRequests: customerDetails.specialRequests + (utrNumber.trim() ? (' | UPI Ref: ' + utrNumber.trim()) : ''),
@@ -764,23 +757,6 @@ export default function GamingBookPage() {
                   <option value="none">No Food (Order later from seat)</option>
                   <option value="popcorn_combo">Popcorn &amp; Cold Mocktail Combo (+₹250)</option>
                   <option value="gamer_platter">VIP Gamer Snack Platter &amp; Drinks (+₹450)</option>
-                </select>
-              </div>
-
-              {/* DSLR Photo Card */}
-              <div className={`${styles.addonCard} ${dslrOption !== 'none' ? styles.addonSelected : ''}`}>
-                <span className={styles.addonName}>📸 DSLR Photo Coverage</span>
-                <span className={styles.addonPrice}>
-                  {dslrOption === 'none' ? 'Optional' : dslrOption === '30min' ? '+₹300' : '+₹500'}
-                </span>
-                <select
-                  className={`${styles.addonSelectDropdown} ${dslrOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
-                  value={dslrOption}
-                  onChange={(e) => setDslrOption(e.target.value as 'none' | '30min' | '1hr')}
-                >
-                  <option value="none">No DSLR Photography (₹0)</option>
-                  <option value="30min">30 Mins DSLR Photography (+₹300)</option>
-                  <option value="1hr">1 Hour DSLR Photography (+₹500)</option>
                 </select>
               </div>
             </div>
