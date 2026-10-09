@@ -108,10 +108,10 @@ export function formatBookingWhatsAppMessage(booking: BookingData): string {
     `👥 Guests: ${booking.guestCount} Head(s)${addOnsText}\n` +
     `----------------------------------------\n` +
     `💰 Total Price: ₹${booking.totalPrice}\n` +
-    `🟢 Advance Received: ₹${advance} (UPI: 8123635342@sbi)\n` +
+    `🟢 Advance Received: ₹${advance} (UPI: 9900106474@okbizaxis)\n` +
     `⏳ Balance Due at Venue: ₹${balance}${utrText}\n` +
     `----------------------------------------\n` +
-    `Reservation confirmed! Staff: please verify UTR against SBI bank statement.`
+    `Reservation confirmed! Staff: please verify UTR against Axis/UPI bank statement.`
   );
 }
 

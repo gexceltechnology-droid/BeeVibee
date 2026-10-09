@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
       ? body.balanceDue
       : Math.max(0, calculatedTotal - passedAdvance);
     const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : (isQuickBooking ? 'pending' : 'advance_paid'));
-    const passedMode = body.paymentMode || (isQuickBooking ? 'PAY_AT_VENUE' : 'UPI (8123635342@sbi)');
+    const passedMode = body.paymentMode || (isQuickBooking ? 'PAY_AT_VENUE' : 'UPI (9900106474@okbizaxis)');
     const passedUtr = typeof utrNumber === 'string'
       ? utrNumber.replace(/\D/g, '').trim()
       : (typeof body.utrNumber === 'string' ? body.utrNumber.replace(/\D/g, '').trim() : '');

@@ -1,5 +1,6 @@
 import { sendSMS } from './sms';
 import { sendAdminNotificationEmail } from './mail';
+import { sendTelegramNotification } from './telegram';
 import {
   FoodOrderItem,
   FoodOrderData,
@@ -18,6 +19,7 @@ export {
   formatFoodOrderWhatsAppMessage,
   formatBookingWhatsAppMessage,
   getAdminWhatsAppDeepLink,
+  sendTelegramNotification,
 };
 
 /**
@@ -265,44 +267,6 @@ export async function sendWhatsAppViaWebhook(
   }
 }
 
-/**
- * Server-side Telegram Bot Notification Sender (100% free, instant push alerts)
- */
-export async function sendTelegramNotification(
-  message: string
-): Promise<{ success: boolean; error?: string }> {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-
-  if (!botToken || !chatId) {
-    console.log('[Telegram Alert] TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured in env.');
-    return { success: false, error: 'Telegram Bot credentials not configured in env.' };
-  }
-
-  try {
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-      }),
-    });
-
-    if (res.ok) {
-      console.log(`[Telegram Alert Success] Instant alert delivered to Telegram Chat ${chatId}`);
-      return { success: true };
-    } else {
-      const errText = await res.text();
-      console.error('[Telegram Alert Error]:', errText);
-      return { success: false, error: errText };
-    }
-  } catch (err: any) {
-    console.error('[Telegram Alert Exception]:', err);
-    return { success: false, error: err.message };
-  }
-}
 
 /**
  * Automatically notifies Admin Phone, WhatsApp, Telegram & Email (+919900106474) on new Food Orders & Bookings
