@@ -163,9 +163,13 @@ export async function addBookingToFirestore(
       .collection('bookings')
       .where('date', '==', bookingData.date)
       .get();
-    const count = existing.size;
-    const sequential = String(count + 1).padStart(4, '0');
-    const bookingId = `${datePrefix}-${sequential}`;
+    const existingIds = new Set(existing.docs.map((doc) => doc.id.toLowerCase()));
+    let seq = existing.size + 1;
+    let bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+    while (existingIds.has(bookingId.toLowerCase())) {
+      seq += 1;
+      bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+    }
 
     const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
     const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);

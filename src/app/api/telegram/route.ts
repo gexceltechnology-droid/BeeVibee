@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAuthorized } from '@/lib/auth';
 import {
   getTelegramBotInfo,
   getRecentTelegramUpdates,
@@ -9,10 +10,14 @@ import {
 
 /**
  * GET /api/telegram
- * Inspects @digmabeevibe_bot status and retrieves incoming chat IDs
+ * Inspects @digmabeevibe_bot status and retrieves incoming chat IDs (Admin only)
  */
 export async function GET(request: NextRequest) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
     const token = getTelegramBotToken();
     const chatId = getTelegramChatId();
 
@@ -61,6 +66,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const targetChat = body.chatId || getTelegramChatId();
 

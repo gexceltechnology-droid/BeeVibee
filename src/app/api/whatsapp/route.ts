@@ -17,13 +17,17 @@ export async function GET(request: NextRequest) {
 
     const expectedToken = process.env.META_WHATSAPP_VERIFY_TOKEN || 'beevibe_bot_secret_2026';
 
-    // Return plain text challenge for Meta Webhook verification
-    if (challenge) {
+    // Verify token strictly for Meta Webhook subscription
+    if (mode === 'subscribe' && token === expectedToken && challenge) {
       console.log(`[WhatsApp Webhook Verified] Mode: ${mode}, Token: ${token}, Challenge: ${challenge}`);
       return new Response(challenge, {
         status: 200,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },
       });
+    }
+
+    if (challenge && token !== expectedToken) {
+      return new Response('Forbidden: Invalid webhook verify token', { status: 403 });
     }
 
     return NextResponse.json(

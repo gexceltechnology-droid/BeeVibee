@@ -218,10 +218,13 @@ export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'stat
   const dd = dateParts[2];
   const datePrefix = `BV-${yy}${mm}${dd}`;
 
-  // Count existing bookings for this date to determine sequence index
-  const count = db.bookings.filter((b) => b.id.startsWith(datePrefix)).length;
-  const sequential = String(count + 1).padStart(4, '0');
-  const bookingId = `${datePrefix}-${sequential}`;
+  // Determine sequence index and guarantee uniqueness
+  let seq = db.bookings.filter((b) => b.id.startsWith(datePrefix)).length + 1;
+  let bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+  while (db.bookings.some((b) => b.id.toLowerCase() === bookingId.toLowerCase())) {
+    seq += 1;
+    bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+  }
 
   const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
   const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);

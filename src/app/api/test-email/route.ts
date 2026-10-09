@@ -24,11 +24,14 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    const testTargetEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'admin@beevibe.org';
+    const testTargetPhone = process.env.ADMIN_PHONE || '9900106474';
+
     await sendBookingConfirmationEmail({
       id: 'BEE-TEST12',
       customerName: 'Test Customer',
-      email: 'malligopaladasu@gmail.com',
-      phone: '8919178055',
+      email: testTargetEmail,
+      phone: testTargetPhone,
       date: '2026-07-14',
       timeSlot: '10:00 AM - 12:00 PM',
       packageName: 'Movie Vibe Pack',

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getBookingById, getAllBookings } from '@/lib/firestore';
-import { readDb } from '@/lib/db';
+import { getBookingById } from '@/lib/firestore';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,24 +15,8 @@ export async function GET(request: Request) {
   try {
     const cleanId = bookingId.trim();
 
-    // 1. Try fetching directly from Firestore by Document ID
-    let booking = await getBookingById(cleanId);
-
-    // 2. Case-insensitive search across Firestore bookings
-    if (!booking) {
-      const allFirestoreBookings = await getAllBookings();
-      booking = allFirestoreBookings.find(
-        (b) => b.id.toLowerCase() === cleanId.toLowerCase()
-      ) || null;
-    }
-
-    // 3. Fallback to local database if not found in Firestore
-    if (!booking) {
-      const db = readDb();
-      booking = db.bookings.find(
-        (b) => b.id.toLowerCase() === cleanId.toLowerCase()
-      ) || null;
-    }
+    // Fetch directly using getBookingById (which includes fallback handling)
+    const booking = await getBookingById(cleanId);
 
     if (!booking) {
       return NextResponse.json(

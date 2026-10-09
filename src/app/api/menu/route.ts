@@ -6,11 +6,7 @@ import {
   deleteMenuItemFromFirestore,
 } from '@/lib/firestore';
 
-function isAuthorized(request: NextRequest): boolean {
-  const passcode = request.headers.get('X-Admin-Passcode');
-  const serverPasscode = process.env.ADMIN_PASSCODE || 'beevibe2026';
-  return passcode === serverPasscode;
-}
+import { isAuthorized } from '@/lib/auth';
 
 // GET all menu items
 export async function GET(request: NextRequest) {
