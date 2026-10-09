@@ -153,7 +153,7 @@ export default function Home() {
       <div className={styles.scrollProgressBar} style={{ transform: `scaleX(${scrollProgress})` }} />
 
       {/* Floating WhatsApp Widget */}
-      <WhatsAppBotWidget />
+      <WhatsAppBotWidget offsetForBottomBar={true} />
 
       {/* ══════════════════════════════════════════════════
           NAVBAR

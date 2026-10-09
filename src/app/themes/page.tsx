@@ -59,7 +59,7 @@ export default function ThemesPage() {
       <header className={styles.header}>
         <div className="container">
           <div className={styles.headerInner}>
-            <Link href="/" className={styles.backHomeBtn}>
+            <Link href="/" className={styles.backHomeBtn} aria-label="Back to Home" title="Back to Home">
               <ChevronLeft size={18} />
               <span>Back to Home</span>
             </Link>

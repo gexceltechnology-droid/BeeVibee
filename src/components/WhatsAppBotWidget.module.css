@@ -260,21 +260,56 @@
 
 @media (max-width: 768px) {
   .floatContainer {
-    bottom: 76px;
-    right: 14px;
+    bottom: 20px;
+    right: 16px;
     z-index: 10001;
   }
 
+  .floatContainer.offsetBottom {
+    bottom: 76px;
+  }
+
   .triggerBtn {
-    padding: 10px 16px;
-    font-size: 0.82rem;
-    gap: 8px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+    background: #25D366;
+    border: 1px solid #22c55e;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+    position: relative;
+  }
+
+  .triggerBtn:hover {
+    background: #1EBE5D;
+    border-color: #1EBE5D;
+    transform: scale(1.05);
+  }
+
+  .triggerBtn span:not(.badgeDot) {
+    display: none;
+  }
+
+  .triggerBtn svg {
+    color: #FFFFFF;
+    width: 25px;
+    height: 25px;
+  }
+
+  .badgeDot {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #FFFFFF;
+    background-color: #FFFFFF;
   }
 
   .chatWindow {
     position: fixed;
-    bottom: 74px;
+    bottom: 80px;
     left: 12px;
     right: 12px;
     width: auto;

@@ -20,9 +20,13 @@ function createMessageId(prefix: string): string {
   return `${prefix}-${messageCounter}`;
 }
 
+interface WhatsAppBotWidgetProps {
+  offsetForBottomBar?: boolean;
+}
+
 const INITIAL_BOT_RESPONSE: BotResponse = processWhatsAppBotMessage('hi');
 
-export default function WhatsAppBotWidget() {
+export default function WhatsAppBotWidget({ offsetForBottomBar = false }: WhatsAppBotWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputVal, setInputVal] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
@@ -73,7 +77,7 @@ export default function WhatsAppBotWidget() {
   };
 
   return (
-    <div className={styles.floatContainer}>
+    <div className={`${styles.floatContainer} ${offsetForBottomBar ? styles.offsetBottom : ''}`}>
       {/* Interactive Chat Window Drawer */}
       {isOpen && (
         <div className={styles.chatWindow}>

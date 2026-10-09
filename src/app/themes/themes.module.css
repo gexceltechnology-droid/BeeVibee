@@ -640,7 +640,54 @@
   border-color: var(--royal);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 680px) {
+  .headerInner {
+    height: 60px;
+    gap: 8px;
+  }
+
+  .backHomeBtn {
+    padding: 8px;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .backHomeBtn span {
+    display: none;
+  }
+
+  .brandLogo {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .brandSub {
+    font-size: 0.56rem;
+    letter-spacing: 0.04em;
+  }
+
+  .headerRightActions {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .headerRightActions button {
+    padding: 7px 12px !important;
+    font-size: 0.78rem !important;
+  }
+
+  .headerCallBtn {
+    padding: 8px;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
   .headerCallBtn span {
     display: none;
   }
