@@ -21,6 +21,7 @@ import {
 import RoomCard from '@/components/booking/RoomCard';
 import RoomDetailsModal from '@/components/booking/RoomDetailsModal';
 import BookingFlowModal from '@/components/booking/BookingFlowModal';
+import TheatresShowcase from '@/components/booking/TheatresShowcase';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import { ROOMS, OCCASIONS, RoomExperience, OccasionType, ADD_ONS } from '@/types/booking';
 import styles from './themes.module.css';
@@ -31,6 +32,7 @@ export default function ThemesPage() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
   const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
+  const [preselectedSlot, setPreselectedSlot] = useState<string>('');
 
   // Filtered rooms
   const filteredRooms = ROOMS.filter((room) => {
@@ -39,16 +41,18 @@ export default function ThemesPage() {
   });
 
   // Open booking modal directly with specific room or unselected
-  const handleQuickBook = (roomId?: string) => {
+  const handleQuickBook = (roomId?: string, slotTime?: string) => {
     if (roomId) {
       const target = ROOMS.find((r) => r.id === roomId);
       setPreselectedRoomId(roomId);
       if (target) {
         setPreselectedOccasion(target.occasion);
       }
+      setPreselectedSlot(slotTime || '');
     } else {
       setPreselectedRoomId('');
       setPreselectedOccasion('');
+      setPreselectedSlot('');
     }
     setInspectingRoom(null);
     setIsBookingModalOpen(true);
@@ -145,6 +149,14 @@ export default function ThemesPage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════════════
+          LIVE THEATRE SLOTS SELECTOR (BINGE TOWN STYLE)
+          ══════════════════════════════════════════════════ */}
+      <TheatresShowcase
+        onBookSlot={(roomId, occasion, slotTime) => handleQuickBook(roomId, slotTime)}
+        onInspectRoom={(roomId) => handleQuickBook(roomId)}
+      />
 
       {/* ══════════════════════════════════════════════════
           DEEP DIVE THEME SHOWCASE CARDS (WHAT'S INSIDE)
@@ -368,6 +380,7 @@ export default function ThemesPage() {
         onClose={() => setIsBookingModalOpen(false)}
         initialRoomId={preselectedRoomId}
         initialOccasion={preselectedOccasion}
+        initialSlot={preselectedSlot}
       />
     </div>
   );

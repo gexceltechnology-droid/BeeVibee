@@ -46,6 +46,7 @@ interface BookingFlowModalProps {
   initialOccasion?: OccasionType | '';
   initialDate?: string;
   initialGuests?: number;
+  initialSlot?: string;
 }
 
 function parseSlotStartMinutes(slotTimeStr: string): number {
@@ -96,6 +97,7 @@ export default function BookingFlowModal({
   initialOccasion = '',
   initialDate,
   initialGuests = 2,
+  initialSlot = '',
 }: BookingFlowModalProps) {
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -106,7 +108,7 @@ export default function BookingFlowModal({
   const [selectedOccasion, setSelectedOccasion] = useState<OccasionType | ''>(initialOccasion || '');
   const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || '');
   const [selectedDate, setSelectedDate] = useState<string>(initialDate || todayStr);
-  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<string>(initialSlot || '');
   const [guestCount, setGuestCount] = useState<number>(() => {
     const room = initialRoomId ? ROOMS.find((r) => r.id === initialRoomId) : null;
     return room ? Math.min(initialGuests, room.maxGuests) : (initialGuests || 2);
@@ -146,12 +148,20 @@ export default function BookingFlowModal({
       setSelectedRoomId(initialRoomId || '');
       setSelectedOccasion(initialOccasion || '');
       if (initialDate) setSelectedDate(initialDate);
+      if (initialSlot) setSelectedSlot(initialSlot);
       if (initialGuests) {
         const room = ROOMS.find((r) => r.id === initialRoomId);
         setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
       }
+      if (initialSlot && initialRoomId) {
+        setCurrentStep(3);
+      } else if (initialRoomId) {
+        setCurrentStep(2);
+      } else {
+        setCurrentStep(1);
+      }
     }
-  }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests]);
+  }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests, initialSlot]);
 
   // Find active room object (null if no room selected yet)
   const activeRoom = useMemo(() => {

@@ -32,6 +32,7 @@ import {
 import BookingFinder from '@/components/booking/BookingFinder';
 import RoomDetailsModal from '@/components/booking/RoomDetailsModal';
 import BookingFlowModal from '@/components/booking/BookingFlowModal';
+import TheatresShowcase from '@/components/booking/TheatresShowcase';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import { ROOMS, OCCASIONS, RoomExperience, OccasionType } from '@/types/booking';
 import styles from './page.module.css';
@@ -50,6 +51,7 @@ export default function Home() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
   const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
+  const [preselectedSlot, setPreselectedSlot] = useState<string>('');
 
   // UI state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -102,7 +104,22 @@ export default function Home() {
     if (targetRoom) {
       setPreselectedOccasion(targetRoom.occasion);
     }
+    setPreselectedSlot('');
     setInspectingRoom(null);
+    setIsBookingModalOpen(true);
+  };
+
+  // Open booking flow from Theatres Showcase with specific room, date, and slot
+  const handleBookSlotFromShowcase = (
+    roomId: string,
+    occasion: OccasionType,
+    slotTime?: string,
+    date?: string
+  ) => {
+    setPreselectedRoomId(roomId);
+    setPreselectedOccasion(occasion);
+    setPreselectedSlot(slotTime || '');
+    if (date) setSelectedDate(date);
     setIsBookingModalOpen(true);
   };
 
@@ -415,7 +432,15 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          2. WHAT IS BEEVIBE? (THE CONCEPT & VENUE INFO)
+          2. LIVE THEATRES & SELECT TIME SLOTS SHOWCASE (BINGE TOWN STYLE)
+          ══════════════════════════════════════════════════ */}
+      <TheatresShowcase
+        onBookSlot={handleBookSlotFromShowcase}
+        onInspectRoom={(roomId) => handleBookRoom(roomId)}
+      />
+
+      {/* ══════════════════════════════════════════════════
+          3. WHAT IS BEEVIBE? (THE CONCEPT & VENUE INFO)
           ══════════════════════════════════════════════════ */}
       <section id="about" className={styles.section}>
         <div className="container">
@@ -1162,6 +1187,7 @@ export default function Home() {
         initialOccasion={preselectedOccasion}
         initialDate={selectedDate}
         initialGuests={guestCount}
+        initialSlot={preselectedSlot}
       />
     </div>
   );
