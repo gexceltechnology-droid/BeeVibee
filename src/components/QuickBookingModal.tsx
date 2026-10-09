@@ -266,7 +266,7 @@ Please confirm my slot reservation!`;
               textAlign: 'center',
               lineHeight: '1.4'
             }}>
-              🎁 <strong>Month Inclusions with Coupon &quot;BEEVIBE999&quot;:</strong> Free Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTTs!
+              🎁 <strong>Coupon &quot;BEEVIBE999&quot; Offer: Flat ₹999 on Any Theme</strong> + Free Fog Entry + LED Name Board + Rose Petal Table Decor + All OTT Platforms!
             </div>
 
             {/* Form */}

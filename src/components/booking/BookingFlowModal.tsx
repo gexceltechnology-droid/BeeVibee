@@ -169,41 +169,56 @@ export default function BookingFlowModal({
 
   // Price Calculations
   const pricing = useMemo(() => {
+    const isCelebrationTheme = activeRoom.occasion !== 'gaming';
+    const isCouponValid = (appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999') && isCelebrationTheme;
+
     const baseRoomPrice = activeRoom.price;
+    const effectiveRoomPrice = isCouponValid ? 999 : baseRoomPrice;
+    const roomDiscount = isCouponValid ? Math.max(0, baseRoomPrice - 999) : 0;
+
     const extraGuests = Math.max(0, guestCount - activeRoom.includedGuests);
     const extraGuestCost = extraGuests * activeRoom.extraGuestPrice;
 
-    const addonsCost = selectedAddOns.reduce((sum, addId) => {
+    // Track free waived add-ons with coupon: Fog Entry (199), LED Name Board (149), Rose Petal Table Decor (499)
+    let regularAddonsCost = 0;
+    let effectiveAddonsCost = 0;
+    let freeAddonsDiscount = 0;
+
+    selectedAddOns.forEach((addId) => {
       const item = ADD_ONS.find((a) => a.id === addId);
-      return sum + (item ? item.price : 0);
-    }, 0);
+      if (!item) return;
+      regularAddonsCost += item.price;
 
-    const subtotal = baseRoomPrice + extraGuestCost + addonsCost;
+      const isWaivedByCoupon = isCouponValid && (addId === 'addon-fog' || addId === 'addon-led' || addId === 'addon-decor');
 
-    let discount = 0;
-    const isCouponValid = appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999';
-    if (isCouponValid) {
-      let freeAddonsVal = 0;
-      if (selectedAddOns.includes('addon-fog')) freeAddonsVal += 199;
-      if (selectedAddOns.includes('addon-led')) freeAddonsVal += 149;
-      if (selectedAddOns.includes('addon-decor')) freeAddonsVal += 200;
-      discount = freeAddonsVal > 0 ? freeAddonsVal : 200;
-    }
+      if (isWaivedByCoupon) {
+        freeAddonsDiscount += item.price;
+      } else {
+        effectiveAddonsCost += item.price;
+      }
+    });
 
-    const total = Math.max(500, subtotal - discount);
+    const subtotal = baseRoomPrice + extraGuestCost + regularAddonsCost;
+    const totalDiscount = roomDiscount + freeAddonsDiscount;
+    const total = Math.max(500, effectiveRoomPrice + extraGuestCost + effectiveAddonsCost);
     const advance = 500; // Transparent fixed booking deposit
     const remaining = Math.max(0, total - advance);
 
     return {
       baseRoomPrice,
+      effectiveRoomPrice,
       extraGuests,
       extraGuestCost,
-      addonsCost,
+      addonsCost: effectiveAddonsCost,
+      regularAddonsCost,
       subtotal,
-      discount,
+      discount: totalDiscount,
+      roomDiscount,
+      freeAddonsDiscount,
       total,
       advance,
       remaining,
+      isCouponValid,
     };
   }, [activeRoom, guestCount, selectedAddOns, appliedCoupon]);
 
@@ -217,6 +232,8 @@ export default function BookingFlowModal({
       setAppliedCoupon(code);
       setCouponInput(code);
       setCouponError('');
+      // Auto-include the 3 promotional add-ons (Fog entry, LED name board, Table decor with rose petals)
+      setSelectedAddOns((prev) => Array.from(new Set([...prev, 'addon-fog', 'addon-led', 'addon-decor'])));
     } else {
       setCouponError('Invalid coupon code. Try "BEEVIBE999"');
     }
@@ -421,6 +438,11 @@ export default function BookingFlowModal({
                               <span className={styles.roomSelectPrice}>₹{room.price}</span>
                             </div>
                             <span className={styles.roomSelectTheme}>{room.theme}</span>
+                            {room.occasion !== 'gaming' && (
+                              <div className={styles.roomCouponOfferTag}>
+                                🎟️ Flat ₹999 with Coupon BEEVIBE999
+                              </div>
+                            )}
                             <div className={styles.roomSelectMeta}>
                               <span><Users size={12} /> {room.capacity}</span>
                               <span><Clock size={12} /> {room.duration}</span>
@@ -573,9 +595,36 @@ export default function BookingFlowModal({
                   </p>
                 </div>
 
+                {/* Step 3 Coupon Notice Banner */}
+                {pricing.isCouponValid ? (
+                  <div className={styles.couponNoticeActive}>
+                    <CheckCircle2 size={16} />
+                    <span>
+                      🎟️ Coupon <strong>{appliedCoupon}</strong> Applied: Theme is <strong>₹999</strong>! Fog Entry, LED Name Board &amp; Rose Petal Table Decor are <strong>FREE (₹0)</strong>.
+                    </span>
+                  </div>
+                ) : activeRoom.occasion !== 'gaming' ? (
+                  <div className={styles.couponNoticePrompt}>
+                    <div className={styles.couponNoticePromptLeft}>
+                      <Sparkles size={16} />
+                      <span>
+                        Apply coupon <strong>BEEVIBE999</strong> for <strong>₹999 Flat Theme</strong> + Free Fog Entry, LED Name Board &amp; Rose Petal Table Decor!
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.couponInlineApplyBtn}
+                      onClick={() => handleApplyCoupon('BEEVIBE999')}
+                    >
+                      Apply BEEVIBE999
+                    </button>
+                  </div>
+                ) : null}
+
                 <div className={styles.addonsGrid}>
                   {ADD_ONS.map((addon) => {
                     const isChecked = selectedAddOns.includes(addon.id);
+                    const isWaivedByCoupon = pricing.isCouponValid && (addon.id === 'addon-fog' || addon.id === 'addon-led' || addon.id === 'addon-decor');
 
                     return (
                       <div
@@ -590,7 +639,11 @@ export default function BookingFlowModal({
                         <div className={styles.addonCardInfo}>
                           <div className={styles.addonCardTitleRow}>
                             <strong>{addon.name}</strong>
-                            <span className={styles.addonCardPrice}>+₹{addon.price}</span>
+                            {isWaivedByCoupon ? (
+                              <span className={styles.addonCardFreeTag}>FREE with Coupon (Was ₹{addon.price})</span>
+                            ) : (
+                              <span className={styles.addonCardPrice}>+₹{addon.price}</span>
+                            )}
                           </div>
                           <p className={styles.addonCardDesc}>{addon.description}</p>
 
@@ -770,7 +823,7 @@ export default function BookingFlowModal({
                         <span className={styles.appliedCode}>🎟️ {appliedCoupon}</span>
                         <span className={styles.appliedStatusBadge}>APPLIED</span>
                       </div>
-                      <span className={styles.discountSavedText}>You saved ₹{pricing.discount}!</span>
+                      <span className={styles.discountSavedText}>You saved ₹{pricing.discount}! (Flat ₹999 Theme + Free Fog, LED Board &amp; Rose Petal Decor)</span>
                       <button
                         type="button"
                         className={styles.removeCouponBtn}
@@ -806,7 +859,7 @@ export default function BookingFlowModal({
                         className={styles.quickCouponChip}
                         onClick={() => handleApplyCoupon('BEEVIBE999')}
                       >
-                        💡 Tap to apply <strong>BEEVIBE999</strong> for special package offer!
+                        💡 Tap to apply <strong>BEEVIBE999</strong>: Any Theme for flat ₹999 + Free Fog Entry, LED Name Board, Rose Petals Table Decor &amp; All OTT Platforms!
                       </button>
                     </div>
                   )}
@@ -1028,6 +1081,13 @@ export default function BookingFlowModal({
                     <strong>₹{pricing.baseRoomPrice}</strong>
                   </div>
 
+                  {pricing.roomDiscount > 0 && (
+                    <div className={styles.breakdownRow} style={{ color: '#10B981' }}>
+                      <span>🎟️ Flat ₹999 Theme Offer</span>
+                      <strong>-₹{pricing.roomDiscount}</strong>
+                    </div>
+                  )}
+
                   {pricing.extraGuests > 0 && (
                     <div className={styles.breakdownRow}>
                       <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
@@ -1038,20 +1098,24 @@ export default function BookingFlowModal({
                   {selectedAddOns.map((id) => {
                     const item = ADD_ONS.find((a) => a.id === id);
                     if (!item) return null;
+                    const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
+
                     return (
                       <div key={id} className={styles.breakdownRow}>
                         <span>{item.icon} {item.name}</span>
-                        <strong>+₹{item.price}</strong>
+                        {isWaived ? (
+                          <strong style={{ color: '#10B981' }}>FREE (-₹{item.price})</strong>
+                        ) : (
+                          <strong>+₹{item.price}</strong>
+                        )}
                       </div>
                     );
                   })}
 
-                  {pricing.discount > 0 && appliedCoupon && (
-                    <div className={styles.breakdownRow} style={{ color: '#10B981' }}>
-                      <span>🎟️ Coupon Discount ({appliedCoupon})</span>
-                      <strong>-₹{pricing.discount}</strong>
-                    </div>
-                  )}
+                  <div className={styles.breakdownRow} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
+                    <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
+                    <strong style={{ color: '#10B981' }}>INCLUDED</strong>
+                  </div>
                 </div>
 
                 {/* Total & Deposit Breakdown */}

@@ -15,13 +15,12 @@ export interface ExperiencePackage {
 }
 
 export const MONTH_OFFER = {
-  title: 'Limited Month Offer: Any Theme at Flat ₹999/-',
+  title: 'Limited Month Offer: Any Theme at Flat ₹999/- with Coupon BEEVIBE999',
   price: 999,
   inclusions: [
-    'Fog Entry Effect',
-    'Floor Balloon Setup',
-    'Table Decor',
+    'Cinematic Cold Fog Entry Effect',
     'Custom LED Name Board',
+    'Table Decor with Rose Petals & Floor Balloons',
     'All OTT Platforms (Netflix, Prime, Hotstar, YouTube, Spotify)',
   ],
 };
@@ -29,11 +28,11 @@ export const MONTH_OFFER = {
 export const EXPERIENCES: ExperiencePackage[] = [
   {
     id: 'pkg-red',
-    name: 'Red Theme (Red Velvet Romance)',
-    shortName: 'Red Velvet Romance',
+    name: 'Red Velvet Heart',
+    shortName: 'Red Velvet Heart',
     slug: 'red-theme',
     originalPrice: 1099,
-    price: 999, // Month offer price
+    price: 1099,
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Anniversary & Romantic Dates ❤️',
@@ -48,19 +47,18 @@ export const EXPERIENCES: ExperiencePackage[] = [
     ],
     offerInclusions: [
       'Complimentary Fog Entry Effect',
-      'Floor Balloon Setup',
-      'Romantic Table Decor',
       'Custom LED Name Board',
+      'Table Decor with Rose Petals',
       'All OTT Platforms Included',
     ],
   },
   {
     id: 'pkg-pink',
-    name: 'Pink Theme (Angel Wings & Neon)',
-    shortName: 'Angel Wings & Neon',
+    name: 'Angel Wings & Birthday Stage',
+    shortName: 'Angel Wings & Birthday Stage',
     slug: 'pink-theme',
     originalPrice: 1299,
-    price: 999, // Month offer price
+    price: 1299,
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'Trending Birthday & Party Setup 🩷',
@@ -75,19 +73,18 @@ export const EXPERIENCES: ExperiencePackage[] = [
     ],
     offerInclusions: [
       'Complimentary Fog Entry Effect',
-      'Floor Balloon Setup',
-      'Celebration Table Decor',
       'Custom LED Name Board',
+      'Table Decor with Rose Petals',
       'All OTT Platforms Included',
     ],
   },
   {
     id: 'pkg-purple',
-    name: 'Purple Theme (Royal Butterfly Grandeur)',
+    name: 'Royal Butterfly',
     shortName: 'Royal Butterfly',
     slug: 'purple-theme',
     originalPrice: 1499,
-    price: 999, // Month offer price
+    price: 1499,
     durationHours: 2,
     durationLabel: '2 Hours',
     badge: 'VIP Grand Celebration Setup 💜',
@@ -102,9 +99,8 @@ export const EXPERIENCES: ExperiencePackage[] = [
     ],
     offerInclusions: [
       'Complimentary Fog Entry Effect',
-      'Floor Balloon Setup',
-      'VIP Table Decor',
       'Custom LED Name Board',
+      'Table Decor with Rose Petals',
       'All OTT Platforms Included',
     ],
   },

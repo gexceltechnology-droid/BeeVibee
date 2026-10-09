@@ -1936,7 +1936,7 @@ export default function BookingPortal({
                         fontWeight: 600,
                         lineHeight: 1.3
                       }}>
-                        🎟️ Use code <strong>BEEVIBE999</strong> for <strong>flat ₹999</strong> + Free Fog Entry, Floor Balloons, Table Decor, LED Name Board &amp; All OTTs!
+                        🎟️ Use code <strong>BEEVIBE999</strong> for <strong>flat ₹999</strong> + Free Fog Entry, LED Name Board, Table Decor with Rose Petals &amp; All OTT Platforms!
                       </div>
                       <ul className={styles.packageDetails} style={{ flexGrow: 1, margin: 0, paddingLeft: 0, listStyle: 'none' }}>
                         {pkg.details.map((detail, idx) => (

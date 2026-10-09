@@ -167,13 +167,13 @@ export default function Home() {
         >
           <div className={styles.tickerWrapper}>
             <div className={styles.tickerTrack}>
-              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout to unlock Complimentary Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTT Platforms!</span>
+              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout — Every Theme for flat ₹999/- with Complimentary Fog Entry, LED Name Board, Rose Petal Table Decor &amp; All OTT Platforms!</span>
               <span className={styles.tickerDivider}>✦</span>
               <span>📍 100% Private Celebration Theatre in Jayanagar 9th Block</span>
               <span className={styles.tickerDivider}>✦</span>
               <span>✨ Tap to Check Live Availability &amp; Book Your Private Suite →</span>
               <span className={styles.tickerDivider}>✦</span>
-              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout to unlock Complimentary Fog Entry + Floor Balloons + Table Decor + LED Name Board + All OTT Platforms!</span>
+              <span>🎉 SPECIAL CELEBRATION OFFER: Apply Coupon Code <strong className={styles.tickerBadge}>BEEVIBE999</strong> at checkout — Every Theme for flat ₹999/- with Complimentary Fog Entry, LED Name Board, Rose Petal Table Decor &amp; All OTT Platforms!</span>
               <span className={styles.tickerDivider}>✦</span>
               <span>📍 100% Private Celebration Theatre in Jayanagar 9th Block</span>
               <span className={styles.tickerDivider}>✦</span>

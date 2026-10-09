@@ -170,6 +170,26 @@ export default function ThemesPage() {
                     </span>
                   </div>
 
+                  {/* Theme Price & Coupon Offer Bar */}
+                  <div className={styles.themePriceBanner}>
+                    <div className={styles.themePriceTag}>
+                      <span className={styles.priceLabel}>Standard Price:</span>
+                      <span className={styles.priceAmount}>₹{room.price}/-</span>
+                    </div>
+                    {room.occasion !== 'gaming' && (
+                      <div className={styles.couponOfferTag}>
+                        <Sparkles size={14} />
+                        <span>With Coupon <strong>BEEVIBE999</strong>: Flat <strong>₹999/-</strong></span>
+                      </div>
+                    )}
+                  </div>
+
+                  {room.occasion !== 'gaming' && (
+                    <div className={styles.couponInclusionsAlert}>
+                      🎟️ <strong>Included with Coupon BEEVIBE999 at ₹999/-:</strong> Cold Fog Entry + Custom LED Name Board + Table Decor with Rose Petals &amp; Floor Balloons + All OTT Platforms!
+                    </div>
+                  )}
+
                   <p className={styles.themeDesc}>{room.description}</p>
 
                   {/* Spec Icons Row */}

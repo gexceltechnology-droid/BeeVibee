@@ -134,11 +134,11 @@ export async function POST(request: NextRequest) {
       } else {
         const lower = (packageName || '').toLowerCase();
         let packagePrice = 1499;
-        if (lower.includes('purple')) {
+        if (lower.includes('purple') || lower.includes('butterfly')) {
           packagePrice = 1499;
-        } else if (lower.includes('pink')) {
+        } else if (lower.includes('pink') || lower.includes('angel')) {
           packagePrice = 1299;
-        } else if (lower.includes('red')) {
+        } else if (lower.includes('red') || lower.includes('velvet')) {
           packagePrice = 1099;
         }
         pkgBase = Math.round((packagePrice / 2) * durationHours);
@@ -152,23 +152,45 @@ export async function POST(request: NextRequest) {
     let addonsTotal = 0;
     for (const addon of (addOns || [])) {
       const nameStr = String(addon);
+      // Skip informational strings or coupon notes
+      if (nameStr.startsWith('LED Board Name:') || nameStr.startsWith('Cake Flavor:') || nameStr.includes('BEEVIBE999 Offer:')) {
+        continue;
+      }
+
       if (nameStr.includes('Upgrade (+1 Extra Pot') || (nameStr.includes('Upgrade') && nameStr.includes('200'))) {
         addonsTotal += 200;
-      } else if (nameStr.startsWith('Special Fog Entry Effect') || nameStr.startsWith('Special Fog') || nameStr.startsWith('Fog Entry') || nameStr.includes('Fog')) {
+      } else if (nameStr.includes('Cold Fog') || nameStr.includes('Fog Entry') || nameStr.includes('Fog') || nameStr.includes('addon-fog')) {
         if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
-          // Fog entry is complimentary with the month offer
-          addonsTotal += 0;
+          addonsTotal += 0; // Complimentary with coupon
         } else if (nameStr.includes('1 Pot') || nameStr.includes('1pot')) {
           addonsTotal += 300;
         } else if (nameStr.includes('2 Pot') || nameStr.includes('2pot') || nameStr.includes('2 Pots')) {
           addonsTotal += 500;
         } else {
-          addonsTotal += 500;
+          addonsTotal += 199;
         }
+      } else if (nameStr.includes('LED Name Board') || nameStr.includes('addon-led') || nameStr.includes('LED')) {
+        if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+          addonsTotal += 0; // Complimentary with coupon
+        } else {
+          addonsTotal += 149;
+        }
+      } else if (nameStr.includes('Table Decor') || nameStr.includes('Rose Petals') || nameStr.includes('addon-decor') || nameStr.includes('Floor Balloon')) {
+        if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+          addonsTotal += 0; // Complimentary with coupon
+        } else {
+          addonsTotal += 499;
+        }
+      } else if (nameStr.includes('Cake') || nameStr.includes('addon-cake')) {
+        addonsTotal += 299;
+      } else if (nameStr.includes('Snack & Beverage') || nameStr.includes('addon-snacks')) {
+        addonsTotal += 199;
       } else if (nameStr.includes('Popcorn & Cold Mocktail Combo') || nameStr.includes('popcorn_combo')) {
         addonsTotal += 250;
       } else if (nameStr.includes('VIP Gamer Snack Platter') || nameStr.includes('gamer_platter')) {
         addonsTotal += 450;
+      } else if (nameStr.includes('DSLR') || nameStr.includes('Photography') || nameStr.includes('addon-dslr')) {
+        addonsTotal += 499;
       }
     }
 

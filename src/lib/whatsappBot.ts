@@ -48,20 +48,22 @@ export function processWhatsAppBotMessage(incomingMessage: string, _phone: strin
       replyText:
         `🎟️ *BEE VIBE PRIVATE THEATER THEMES* 🎟️
 ----------------------------------------
-❤️ *Red Theme (Red Velvet Romance)* — ₹799 / 2 Hours
+❤️ *Red Velvet Heart* — ₹1099 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
 • Floral Heart & "Happy Anniversary" Neon Backdrop
 • 180" 4K Screen & 7.1 Dolby Surround Sound
 
-🩷 *Pink Theme (Angel Wings & Neon)* — ₹899 / 2 Hours
+🩷 *Angel Wings & Birthday Stage* — ₹1299 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
-• Giant Glowing Angel Wings & "Happy Birthday" Arch
-• Hot Pink Plush Recliners & 180" 4K Screen
+• Giant Glowing Angel Wings & Birthday Stage Arch
+• Hot Pink Plush Seating & 180" 4K Screen
 
-💜 *Purple Theme (Royal Butterfly Grandeur)* — ₹999 / 2 Hours
+💜 *Royal Butterfly* — ₹1499 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
 • Grand Triple Arched Decor, Butterfly Wings & Marquee Letters
 • 180" 4K Screen, Dolby Sound & VIP Privacy
+----------------------------------------
+🎉 *SPECIAL OFFER*: Apply coupon *BEEVIBE999* on our website to get *ANY THEME at flat ₹999/-* with Free Fog Entry, LED Name Board, Rose Petals Table Decor & All OTT Platforms!
 ----------------------------------------
 Reply *2* to Check Available Time Slots!`,
       options: [

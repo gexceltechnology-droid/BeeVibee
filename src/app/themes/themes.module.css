@@ -330,6 +330,57 @@
   white-space: nowrap;
 }
 
+.themePriceBanner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.themePriceTag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.priceLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.priceAmount {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--navy);
+}
+
+.couponOfferTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.couponInclusionsAlert {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  color: #166534;
+  line-height: 1.45;
+}
+
 .themeDesc {
   font-size: 0.94rem;
   color: var(--text-secondary);
