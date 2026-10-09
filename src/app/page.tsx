@@ -134,13 +134,16 @@ export default function Home() {
   const galleryItems = [
     { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage (Seats 6)', image: '/gallery/theme-pink.jpg' },
     { id: 2, category: 'birthday', title: 'Giant Glowing Angel Wings & Cake Stage', image: '/gallery/theme-pink-wings.jpg' },
-    { id: 3, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.jpg' },
-    { id: 4, category: 'vip', title: 'Royal Butterfly Grandeur VIP (Seats 10)', image: '/gallery/theme-purple.jpg' },
-    { id: 5, category: 'vip', title: 'Royal Butterfly Illuminated Stage & Arch', image: '/gallery/theme-purple-stage.jpg' },
-    { id: 6, category: 'vip', title: 'VIP Velvet Sectional Lounge (Seats 10)', image: '/gallery/theme-purple-couch.jpg' },
-    { id: 7, category: 'cinema', title: '180" 4K Laser Cinema in Pink Suite', image: '/gallery/theme-pink-screen.jpg' },
-    { id: 8, category: 'cinema', title: '180" 4K Laser Cinema in Purple Suite', image: '/gallery/theme-purple-movie.jpg' },
-    { id: 9, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
+    { id: 3, category: 'romantic', title: 'Red Velvet Heart Romance Suite (Seats 3-4)', image: '/gallery/theme-red.jpg' },
+    { id: 4, category: 'romantic', title: 'Will You Marry Me? Floral Heart Stage', image: '/gallery/theme-red-heart.jpg' },
+    { id: 5, category: 'romantic', title: 'Plush Red Velvet Lounge (Seats 3-4)', image: '/gallery/theme-red-couch.jpg' },
+    { id: 6, category: 'vip', title: 'Royal Butterfly Grandeur VIP (Seats 10)', image: '/gallery/theme-purple.jpg' },
+    { id: 7, category: 'vip', title: 'Royal Butterfly Illuminated Stage & Arch', image: '/gallery/theme-purple-stage.jpg' },
+    { id: 8, category: 'vip', title: 'VIP Velvet Sectional Lounge (Seats 10)', image: '/gallery/theme-purple-couch.jpg' },
+    { id: 9, category: 'cinema', title: '180" 4K Laser Cinema in Pink Suite', image: '/gallery/theme-pink-screen.jpg' },
+    { id: 10, category: 'cinema', title: '180" 4K Laser Cinema in Red Suite', image: '/gallery/theme-red-screen.jpg' },
+    { id: 11, category: 'cinema', title: '180" 4K Laser Cinema in Purple Suite', image: '/gallery/theme-purple-movie.jpg' },
+    { id: 12, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
   ];
 
   const filteredGallery = galleryItems.filter((item) => {

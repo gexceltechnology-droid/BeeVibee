@@ -39,11 +39,11 @@ export const EXPERIENCES: ExperiencePackage[] = [
     color: '#09090b',
     image: '/themes/theme-red.jpg',
     details: [
-      'Authentic Red Velvet Decor with Floral Heart & "Will You Marry Me?" Neon',
+      'Authentic Red Velvet Decor with Floral Heart & "Will You Marry Me?" Neon Sign',
       'Red Shimmer Sequin Wall, "LOVE" Lighted Block Boxes & Lighted Arch',
-      'Plush Red Velvet Couch, Marble Table & Romantic Rose Petal Setup',
-      '180" 4K Laser Projection Screen & 7.1 Dolby Atmos Sound',
-      '100% Private Air Conditioned (AC) Theater Suite',
+      'Plush Red Velvet Couch (Capacity: Up to 3 to 4 People) & Marble Coffee Table',
+      '180" 4K Laser Projection Screen & 7.1 Dolby Atmos Surround Sound',
+      '100% Private Air Conditioned (AC) Theater Suite with OTT Streaming',
     ],
     offerInclusions: [
       'Complimentary Fog Entry Effect',

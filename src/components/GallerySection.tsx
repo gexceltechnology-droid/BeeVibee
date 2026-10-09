@@ -117,10 +117,36 @@ const GALLERY_ITEMS: GalleryItem[] = [
     theme: 'Red Theme ❤️',
     themeColor: '#09090b',
     image: '/gallery/theme-red.jpg',
-    description: 'Authentic BeeVibe Red Romance Suite featuring giant red floral heart with "Will You Marry Me?" neon, lighted arch, red shimmer sequin wall, "LOVE" illuminated block boxes, and plush red couch.',
-    tags: ['Floral Red Heart Arch', 'Will You Marry Me Neon', 'LOVE Lighted Boxes', '180" 4K Laser Screen', 'Ground Fog Effect'],
-    highlights: ['2 Hours Private VIP Session', '100% Private & Soundproof Suite', 'Custom Marquee Board'],
-    bookingLink: '/book?theme=red'
+    description: 'Authentic BeeVibe Red Romance Suite featuring giant red floral heart with "Will You Marry Me?" neon sign, lighted arch, red shimmer sequin wall, "LOVE" illuminated block boxes, and plush red couch (seats 3 to 4 guests).',
+    tags: ['Floral Red Heart Arch', 'Will You Marry Me Neon', 'Seats 3-4 Guests', 'LOVE Lighted Boxes', '180" 4K Laser Screen'],
+    highlights: ['Seats Up to 3-4 Guests', '100% Private & Soundproof Suite', 'Custom Marquee Board'],
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-red-cinema-screen',
+    title: '180" 4K Laser Cinema in Red Romance Suite',
+    category: 'cinema',
+    categoryLabel: 'Private Cinema Experience 🎬',
+    theme: 'Red Cinema Suite 🍿',
+    themeColor: '#09090b',
+    image: '/gallery/theme-red-screen.jpg',
+    description: 'Massive 180" 4K laser projection cinema display in the Red Velvet Suite. Perfect for romantic anniversary movie dates, personal couple video screenings, and proposals. Seats up to 3 to 4 guests.',
+    tags: ['180" Laser Cinema Screen', 'Dolby Surround Sound', 'Seats Up to 3-4 Guests', 'Romantic Cinema'],
+    highlights: ['Seats Up to 3-4 Guests', '180" Laser Projection', 'Netflix, Prime & Hotstar'],
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-red-lounge-couch',
+    title: 'Plush Red Velvet Couch & Intimate Lounge',
+    category: 'romantic',
+    categoryLabel: 'Lounge Comfort & Decor ❤️',
+    theme: 'Red Velvet Lounge',
+    themeColor: '#09090b',
+    image: '/gallery/theme-red-couch.jpg',
+    description: 'Cozy, curved red velvet designer couch with modern artistic throw pillows and marble round coffee table, comfortably seating up to 3 to 4 guests.',
+    tags: ['Red Velvet Couch', 'Seats 3-4 Guests', 'Marble Coffee Table', 'Romantic Suite'],
+    highlights: ['Comfortable Seating for 3-4', 'Intimate Couple & Small Group', 'Air Conditioned Privacy'],
+    bookingLink: '/themes'
   },
   {
     id: 'cinema-screen-purple',
