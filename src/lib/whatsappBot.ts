@@ -120,7 +120,6 @@ Reply *2* to Check Available Time Slots!`,
         `🍿 *Popular Snacks*:\n` +
         `• Butter Cheese Popcorn - ₹120\n` +
         `• Loaded Cheese Nachos - ₹160\n` +
-        `• Peri Peri French Fries - ₹140\n` +
         `• Crispy Veg Nuggets - ₹150\n\n` +
         `🥤 *Cool Beverages*:\n` +
         `• Iced Cold Coffee - ₹130\n` +

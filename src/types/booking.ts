@@ -231,7 +231,7 @@ export const ADD_ONS: AddOnItem[] = [
   {
     id: 'addon-cake',
     name: 'Celebration Cake (500g)',
-    price: 299,
+    price: 499,
     category: 'cakes',
     icon: '🎂',
     description: 'Fresh eggless birthday / anniversary cake with candles and cake cutting set.',
@@ -269,6 +269,6 @@ export const ADD_ONS: AddOnItem[] = [
     price: 199,
     category: 'food',
     icon: '🍿',
-    description: 'Fresh theater popcorn tub, crispy french fries, and 2 chilled beverages.',
+    description: 'Fresh theater popcorn tub, crispy nachos, and 2 chilled beverages.',
   },
 ];

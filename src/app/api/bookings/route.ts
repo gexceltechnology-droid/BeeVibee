@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
           addonsTotal += 499;
         }
       } else if (nameStr.includes('Cake') || nameStr.includes('addon-cake')) {
-        addonsTotal += 299;
+        addonsTotal += 499;
       } else if (nameStr.includes('Snack & Beverage') || nameStr.includes('addon-snacks')) {
         addonsTotal += 199;
       } else if (nameStr.includes('Popcorn & Cold Mocktail Combo') || nameStr.includes('popcorn_combo')) {

@@ -80,15 +80,6 @@
       "icon": "🍿"
     },
     {
-      "id": "menu-4",
-      "name": "French fries",
-      "price": 100,
-      "description": "Golden-fried crispy potato strips.",
-      "category": "snacks",
-      "inStock": true,
-      "icon": "🍟"
-    },
-    {
       "id": "menu-5",
       "name": "Veg nuggets",
       "price": 70,

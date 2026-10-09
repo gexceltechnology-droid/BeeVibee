@@ -100,7 +100,6 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'menu-1', name: 'Maggie', price: 70, description: 'Hot and delicious instant noodles.', category: 'snacks', inStock: true, icon: '🍜' },
   { id: 'menu-2', name: 'Cool drinks', price: 40, description: 'Chilled carbonated beverages (per glass).', category: 'beverages', inStock: true, icon: '🥤' },
   { id: 'menu-3', name: 'Popcorn', price: 100, description: 'Freshly popped warm theater style popcorn.', category: 'snacks', inStock: true, icon: '🍿' },
-  { id: 'menu-4', name: 'French fries', price: 100, description: 'Golden-fried crispy potato strips.', category: 'snacks', inStock: true, icon: '🍟' },
   { id: 'menu-5', name: 'Veg nuggets', price: 70, description: 'Crispy deep-fried vegetables bites.', category: 'snacks', inStock: true, icon: '🧆' },
   { id: 'menu-6', name: 'Chicken nuggets', price: 100, description: 'Crispy fried chicken breast bites.', category: 'snacks', inStock: true, icon: '🍗' },
   { id: 'menu-7', name: 'Nachos', price: 100, description: 'Crunchy tortilla chips with cheese dipping sauce.', category: 'snacks', inStock: true, icon: '🌮' },

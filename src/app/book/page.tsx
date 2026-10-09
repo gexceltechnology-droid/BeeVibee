@@ -89,10 +89,10 @@ export default function BookPage() {
 
           {/* Quick Info Pills */}
           <div className={styles.infoPills}>
-            <span className={styles.pill}>💜 Purple Theme — ₹999/2hrs</span>
-            <span className={styles.pill}>🩷 Pink Theme — ₹899/2hrs</span>
-            <span className={styles.pill}>❤️ Red Theme — ₹799/2hrs</span>
-            <span className={styles.pill} style={{ borderColor: 'rgba(0, 240, 255, 0.4)', color: '#00f0ff' }}>🎮 PS5 Gaming — ₹399/hr</span>
+            <span className={styles.pill}>💜 Royal Butterfly VIP — ₹1499/2hrs</span>
+            <span className={styles.pill}>🩷 Angel Wings Stage — ₹1299/2hrs</span>
+            <span className={styles.pill}>❤️ Red Velvet Heart — ₹1099/2hrs</span>
+            <span className={styles.pill} style={{ borderColor: 'rgba(0, 240, 255, 0.4)', color: '#00f0ff' }}>🎮 PS5 Gaming — ₹99/person/hr</span>
           </div>
           <div style={{
             margin: '12px auto 8px auto',
