@@ -30,7 +30,6 @@ import {
   Zap
 } from 'lucide-react';
 import BookingFinder from '@/components/booking/BookingFinder';
-import RoomCard from '@/components/booking/RoomCard';
 import RoomDetailsModal from '@/components/booking/RoomDetailsModal';
 import BookingFlowModal from '@/components/booking/BookingFlowModal';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
@@ -89,14 +88,10 @@ export default function Home() {
   }) => {
     setSelectedDate(params.date);
     setActiveOccasionFilter(params.occasion);
+    setPreselectedOccasion(params.occasion);
     setGuestCount(params.guestCount);
     setPreferredTime(params.preferredTime);
-
-    // Scroll to available rooms results smoothly
-    const resultsElem = document.getElementById('available-rooms');
-    if (resultsElem) {
-      resultsElem.scrollIntoView({ behavior: 'smooth' });
-    }
+    setIsBookingModalOpen(true);
   };
 
   // Open booking flow directly for a specific room
@@ -201,7 +196,8 @@ export default function Home() {
             <nav className={styles.desktopNav}>
               <ul className={styles.navLinks}>
                 <li><Link href="/" className={styles.navLink}>Home</Link></li>
-                <li><a href="#available-rooms" className={styles.navLink}>Experiences</a></li>
+                <li><Link href="/themes" className={styles.navLink}>Themes</Link></li>
+                <li><a href="#why-beevibe" className={styles.navLink}>Why BeeVibe</a></li>
                 <li><a href="#how-it-works" className={styles.navLink}>How It Works</a></li>
                 <li><a href="#gallery" className={styles.navLink}>Gallery</a></li>
                 <li><a href="#location" className={styles.navLink}>Location</a></li>
@@ -217,7 +213,7 @@ export default function Home() {
                   setIsBookingModalOpen(true);
                 }}
               >
-                <span>BOOK NOW</span>
+                <span>QUICK BOOK</span>
                 <ArrowRight size={14} />
               </button>
 
@@ -238,7 +234,8 @@ export default function Home() {
           <div className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuActive : ''}`}>
             <ul className={styles.mobileNavLinks}>
               <li><Link href="/" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link></li>
-              <li><a href="#available-rooms" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Experiences</a></li>
+              <li><Link href="/themes" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Themes</Link></li>
+              <li><a href="#why-beevibe" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Why BeeVibe</a></li>
               <li><a href="#how-it-works" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>How It Works</a></li>
               <li><a href="#gallery" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Gallery</a></li>
               <li><a href="#location" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Location</a></li>
@@ -252,7 +249,7 @@ export default function Home() {
                     setIsBookingModalOpen(true);
                   }}
                 >
-                  BOOK NOW →
+                  QUICK BOOK NOW →
                 </button>
               </li>
             </ul>
@@ -280,10 +277,17 @@ export default function Home() {
             </p>
 
             <div className={styles.heroCtas}>
-              <a href="#available-rooms" className="btn btn-primary">
-                <span>Book Your Experience</span>
+              <Link href="/themes" className="btn btn-primary">
+                <span>Explore Themes</span>
                 <ArrowRight size={16} />
-              </a>
+              </Link>
+              <button
+                type="button"
+                className="btn btn-navy"
+                onClick={() => setIsBookingModalOpen(true)}
+              >
+                <Sparkles size={16} /> Quick Booking
+              </button>
               <a
                 href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20want%20to%20inquire%20about%20booking%20a%20private%20celebration%20theatre."
                 target="_blank"
@@ -323,36 +327,35 @@ export default function Home() {
             initialGuests={guestCount}
           />
 
-          {/* Real Room Photography Showcase Stage */}
-          <div className={styles.heroShowcaseGrid}>
-            <div className={styles.heroMainImgCard} onClick={() => setInspectingRoom(ROOMS[0])}>
+          {/* Authentic BeeVibe Theatre Venue Ambience */}
+          <div className={styles.venueShowcaseBanner}>
+            <div className={styles.venueShowcaseImgWrap}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/gallery/theme-pink.jpg" alt="Angel Wings & Neon Suite at BeeVibe" className={styles.heroMainImg} />
-              <div className={styles.heroMainImgOverlay}>
-                <span className={styles.heroMainTag}>BIRTHDAY CELEBRATION THEME</span>
-                <h3 className={styles.heroMainTitle}>Angel Wings &amp; Neon Suite</h3>
-                <div className={styles.heroMainMeta}>
-                  <span>2 Hours Experience</span> • <span>Up to 8 Guests</span> • <span>180&quot; 4K Laser</span>
+              <img
+                src="/gallery/birthday-celebration.jpg"
+                alt="BeeVibe Private Celebration Theatre in Jayanagar"
+                className={styles.venueShowcaseImg}
+              />
+              <div className={styles.venueShowcaseOverlay}>
+                <div className={styles.venueBadge}>
+                  <Sparkles size={14} /> JAYANAGAR 9TH BLOCK, BENGALURU
                 </div>
-              </div>
-            </div>
-
-            <div className={styles.heroSideCards}>
-              <div className={styles.heroSideCard} onClick={() => setInspectingRoom(ROOMS[1])}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/gallery/theme-red.jpg" alt="Red Velvet Romance Suite" className={styles.heroSideImg} />
-                <div className={styles.heroSideOverlay}>
-                  <h4 className={styles.heroSideTitle}>Red Velvet Romance</h4>
-                  <span className={styles.heroSidePrice}>2 Hours Experience • Date Night</span>
-                </div>
-              </div>
-
-              <div className={styles.heroSideCard} onClick={() => setInspectingRoom(ROOMS[2])}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/gallery/theme-purple.jpg" alt="Royal Butterfly VIP Suite" className={styles.heroSideImg} />
-                <div className={styles.heroSideOverlay}>
-                  <h4 className={styles.heroSideTitle}>Royal Butterfly VIP</h4>
-                  <span className={styles.heroSidePrice}>2 Hours Experience • Grand Celebration</span>
+                <h3 className={styles.venueBannerTitle}>A Private World For Your Special Moments</h3>
+                <p className={styles.venueBannerText}>
+                  Experience 100% soundproof acoustic privacy with giant 180&quot; 4K laser cinema, Dolby Atmos audio, cozy celebration lounge, and personalized lighting.
+                </p>
+                <div className={styles.venueBannerActions}>
+                  <Link href="/themes" className="btn btn-primary">
+                    <span>View All Themes &amp; Setups</span>
+                    <ArrowRight size={15} />
+                  </Link>
+                  <button
+                    type="button"
+                    className="btn btn-soft"
+                    onClick={() => setIsBookingModalOpen(true)}
+                  >
+                    Quick Book A Slot
+                  </button>
                 </div>
               </div>
             </div>
@@ -361,52 +364,92 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          2. BOOKING RESULTS (DYNAMIC AVAILABLE ROOMS)
+          2. WHAT IS BEEVIBE? (THE CONCEPT & VENUE INFO)
           ══════════════════════════════════════════════════ */}
-      <section id="available-rooms" className={styles.section}>
+      <section id="about" className={styles.section}>
         <div className="container">
           <div className={styles.sectionHeader}>
             <div className={styles.sectionBadge}>
-              <Calendar size={13} /> SHOWING SLOTS FOR {selectedDate}
+              <Sparkles size={13} /> THE BEEVIBE CONCEPT
             </div>
-            <h2 className={styles.sectionTitle}>Available BeeVibe Suites</h2>
+            <h2 className={styles.sectionTitle}>What is a Private Celebration Theatre?</h2>
             <p className={styles.sectionSubtitle}>
-              Select your favorite private celebration hall. All suites include 180&quot; 4K projection, Dolby Atmos 7.1, and 100% room privacy.
+              Tired of noisy restaurants and generic party halls? BeeVibe offers an exclusive, high-tech private sanctuary designed specifically for memorable celebrations.
             </p>
           </div>
 
-          {/* Occasion Filter Chips */}
-          <div className={styles.resultsFilterRow}>
-            <button
-              type="button"
-              className={`${styles.filterChip} ${activeOccasionFilter === 'all' ? styles.filterChipActive : ''}`}
-              onClick={() => setActiveOccasionFilter('all')}
-            >
-              All Suites ({ROOMS.length})
-            </button>
-            {OCCASIONS.map((occ) => (
-              <button
-                key={occ.id}
-                type="button"
-                className={`${styles.filterChip} ${activeOccasionFilter === occ.id ? styles.filterChipActive : ''}`}
-                onClick={() => setActiveOccasionFilter(occ.id)}
-              >
-                <span>{occ.icon}</span>
-                <span>{occ.shortLabel}</span>
-              </button>
-            ))}
+          <div className={styles.conceptGrid}>
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🔒</div>
+              <h3 className={styles.conceptTitle}>100% Dedicated Private Suite</h3>
+              <p className={styles.conceptDesc}>
+                When you book a session at BeeVibe, the entire hall is reserved exclusively for you and your guests. No strangers, no interruptions, and zero outside noise.
+              </p>
+            </div>
+
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🎬</div>
+              <h3 className={styles.conceptTitle}>Giant 180&quot; 4K Laser Cinema</h3>
+              <p className={styles.conceptDesc}>
+                Watch favorite blockbusters on Netflix, Disney+ &amp; Prime, stream YouTube video montages of memories, or hook up laptops and phones on a theater-scale screen.
+              </p>
+            </div>
+
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🔊</div>
+              <h3 className={styles.conceptTitle}>7.1 Dolby Atmos Sound</h3>
+              <p className={styles.conceptDesc}>
+                Immersive surround sound acoustics tuned to fill the room with cinematic punch, crisp dialogues, and bone-rattling bass for movies and music playlists.
+              </p>
+            </div>
+
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🎂</div>
+              <h3 className={styles.conceptTitle}>Curated Thematic Setups</h3>
+              <p className={styles.conceptDesc}>
+                Each suite features handcrafted ambient lighting, glowing neon photo backdrops, cake pedestals, and romantic or party props ready before you arrive.
+              </p>
+            </div>
+
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🎮</div>
+              <h3 className={styles.conceptTitle}>Next-Gen PS5 Gaming</h3>
+              <p className={styles.conceptDesc}>
+                Enjoy private multiplayer gaming tournaments on PlayStation 5 with 4 wireless DualSense controllers and the latest AAA sports and fighting titles.
+              </p>
+            </div>
+
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>✨</div>
+              <h3 className={styles.conceptTitle}>Magical Celebration Effects</h3>
+              <p className={styles.conceptDesc}>
+                Elevate your cake-cutting ceremony with dramatic cold fog smoke entries, personalized glowing LED name boards, and custom floor balloon decor.
+              </p>
+            </div>
           </div>
 
-          {/* Dynamic Room Cards Grid */}
-          <div className={styles.roomsGrid}>
-            {filteredRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                onViewSlots={(roomId) => handleBookRoom(roomId)}
-                onOpenDetails={(roomObj) => setInspectingRoom(roomObj)}
-              />
-            ))}
+          {/* Callout Card to the dedicated Themes Page */}
+          <div className={styles.exploreThemesCallout}>
+            <div className={styles.calloutText}>
+              <span className={styles.calloutTag}>CURATED CELEBRATION SUITES</span>
+              <h3 className={styles.calloutTitle}>Explore Our Unique Celebration Themes</h3>
+              <p className={styles.calloutDesc}>
+                We have distinct rooms designed for Birthdays, Romantic Dates, Grand VIP Galas, and Gaming. Visit our dedicated Themes page to see full setups, photos, and inclusions.
+              </p>
+            </div>
+            <div className={styles.calloutActions}>
+              <Link href="/themes" className="btn btn-primary">
+                <span>View Themes &amp; Setups</span>
+                <ArrowRight size={16} />
+              </Link>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setIsBookingModalOpen(true)}
+              >
+                Quick Book Directly
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -414,7 +457,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════
           3. WHY BEEVIBE (THE CELEBRATION EXPERIENCE)
           ══════════════════════════════════════════════════ */}
-      <section className={`${styles.section} ${styles.sectionAlt}`}>
+      <section id="why-beevibe" className={`${styles.section} ${styles.sectionAlt}`}>
         <div className="container">
           <div className={styles.sectionHeader}>
             <div className={styles.sectionBadge}>
@@ -516,9 +559,9 @@ export default function Home() {
 
             <div className={styles.stepCard}>
               <span className={styles.stepNumber}>02</span>
-              <h3 className={styles.stepCardTitle}>Select Room</h3>
+              <h3 className={styles.stepCardTitle}>Select Your Theme</h3>
               <p className={styles.stepCardDesc}>
-                Pick from Angel Wings, Red Velvet, Royal Butterfly, or Pixel Gaming.
+                Explore our <Link href="/themes" style={{ color: 'var(--royal)', fontWeight: 700, textDecoration: 'underline' }}>Themes Page</Link> for curated birthday, romantic, VIP, or gaming setups.
               </p>
             </div>
 
@@ -915,19 +958,25 @@ export default function Home() {
           <div className={styles.finalCtaBanner}>
             <h2 className={styles.finalCtaTitle}>Ready to Create Unforgettable Memories?</h2>
             <p className={styles.finalCtaSub}>
-              Slots fill up quickly on weekends and evenings. Check live availability and lock your private celebration theatre in Jayanagar today.
+              Slots fill up quickly on weekends and evenings. Explore our themes or use quick booking to lock your private celebration theatre in Jayanagar today.
             </p>
-            <button
-              type="button"
-              className={styles.finalCtaBtn}
-              onClick={() => {
-                setPreselectedRoomId('angel-wings');
-                setIsBookingModalOpen(true);
-              }}
-            >
-              <span>FIND YOUR SLOT NOW</span>
-              <ArrowRight size={18} />
-            </button>
+            <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/themes" className="btn btn-primary" style={{ padding: '14px 28px', fontSize: '1rem' }}>
+                <span>EXPLORE THEMES</span>
+                <ArrowRight size={18} />
+              </Link>
+              <button
+                type="button"
+                className={styles.finalCtaBtn}
+                onClick={() => {
+                  setPreselectedRoomId('angel-wings');
+                  setIsBookingModalOpen(true);
+                }}
+              >
+                <span>QUICK BOOK NOW</span>
+                <ArrowRight size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -948,19 +997,20 @@ export default function Home() {
             </div>
 
             <div className={styles.footerCol}>
-              <h4 className={styles.footerHeading}>Suites</h4>
+              <h4 className={styles.footerHeading}>Themes &amp; Suites</h4>
               <ul className={styles.footerLinks}>
-                <li><a href="#available-rooms">Angel Wings &amp; Neon (₹899)</a></li>
-                <li><a href="#available-rooms">Red Velvet Romance (₹799)</a></li>
-                <li><a href="#available-rooms">Royal Butterfly VIP (₹999)</a></li>
-                <li><a href="#available-rooms">PS5 Gaming Lounge (₹399)</a></li>
+                <li><Link href="/themes">Angel Wings &amp; Neon</Link></li>
+                <li><Link href="/themes">Red Velvet Romance</Link></li>
+                <li><Link href="/themes">Royal Butterfly VIP</Link></li>
+                <li><Link href="/themes">PS5 Gaming Lounge</Link></li>
               </ul>
             </div>
 
             <div className={styles.footerCol}>
               <h4 className={styles.footerHeading}>Quick Links</h4>
               <ul className={styles.footerLinks}>
-                <li><a href="#available-rooms">Check Availability</a></li>
+                <li><Link href="/themes">Celebration Themes</Link></li>
+                <li><a href="#why-beevibe">Why BeeVibe</a></li>
                 <li><a href="#how-it-works">How It Works</a></li>
                 <li><a href="#gallery">Photo Gallery</a></li>
                 <li><a href="#location">Venue Location</a></li>
@@ -993,10 +1043,9 @@ export default function Home() {
 
       {/* ─── Sticky Mobile Booking Bar ─── */}
       <div className={styles.stickyMobileBar}>
-        <div className={styles.stickyText}>
-          <span className={styles.stickyFrom}>Private Suites from</span>
-          <span className={styles.stickyPrice}>₹799 / 2h</span>
-        </div>
+        <Link href="/themes" className={styles.mobileStickyThemeBtn}>
+          Themes
+        </Link>
         <button
           type="button"
           className={styles.stickyBtn}
@@ -1005,7 +1054,7 @@ export default function Home() {
             setIsBookingModalOpen(true);
           }}
         >
-          BOOK NOW →
+          QUICK BOOK →
         </button>
       </div>
 

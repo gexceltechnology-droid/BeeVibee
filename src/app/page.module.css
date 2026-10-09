@@ -366,131 +366,241 @@
   font-size: 1rem;
 }
 
-/* ─── Hero Visual Stage (Real Room Photos) ─── */
-.heroShowcaseGrid {
-  display: grid;
-  grid-template-columns: 1.8fr 1fr;
-  gap: 20px;
+/* ─── Hero Venue Showcase (General Theatre Ambience) ─── */
+.venueShowcaseBanner {
   margin-top: 36px;
   margin-bottom: 24px;
 }
 
-@media (max-width: 860px) {
-  .heroShowcaseGrid {
+.venueShowcaseImgWrap {
+  position: relative;
+  height: 420px;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1.5px solid var(--border-blue);
+  box-shadow: var(--shadow-lg);
+}
+
+@media (max-width: 768px) {
+  .venueShowcaseImgWrap {
+    height: 320px;
+  }
+}
+
+.venueShowcaseImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+.venueShowcaseImgWrap:hover .venueShowcaseImg {
+  transform: scale(1.03);
+}
+
+.venueShowcaseOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(16, 42, 67, 0.2) 0%, rgba(16, 42, 67, 0.88) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 36px;
+  color: #FFFFFF;
+}
+
+@media (max-width: 600px) {
+  .venueShowcaseOverlay {
+    padding: 20px;
+  }
+}
+
+.venueBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(37, 99, 235, 0.9);
+  color: #FFFFFF;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  width: fit-content;
+  backdrop-filter: blur(8px);
+}
+
+.venueBannerTitle {
+  font-family: var(--font-title);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0 0 8px 0;
+  line-height: 1.25;
+}
+
+.venueBannerText {
+  font-size: 0.95rem;
+  color: #E2E8F0;
+  line-height: 1.55;
+  max-width: 640px;
+  margin: 0 0 20px 0;
+}
+
+.venueBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ─── 2. The Concept Grid (What is BeeVibe) ─── */
+.conceptGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 900px) {
+  .conceptGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 580px) {
+  .conceptGrid {
     grid-template-columns: 1fr;
   }
 }
 
-.heroMainImgCard {
-  position: relative;
-  height: 380px;
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1.5px solid var(--border-blue);
-  box-shadow: var(--shadow-md);
-}
-
-@media (max-width: 600px) {
-  .heroMainImgCard {
-    height: 260px;
-  }
-}
-
-.heroMainImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.heroMainImgCard:hover .heroMainImg {
-  transform: scale(1.03);
-}
-
-.heroMainImgOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(16, 42, 67, 0.1) 0%, rgba(16, 42, 67, 0.8) 100%);
+.conceptCard {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-light);
+  border-radius: 18px;
+  padding: 26px 22px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 24px;
-  color: #FFFFFF;
-}
-
-.heroMainTag {
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--light-blue);
-  margin-bottom: 4px;
-}
-
-.heroMainTitle {
-  font-family: var(--font-title);
-  font-size: 1.45rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0 0 6px 0;
-}
-
-.heroMainMeta {
-  font-size: 0.82rem;
-  color: #E2E8F0;
-  display: flex;
   gap: 12px;
-}
-
-.heroSideCards {
-  display: grid;
-  grid-template-rows: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.heroSideCard {
-  position: relative;
-  height: 182px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--border-blue);
+  transition: all 0.25s ease;
   box-shadow: var(--shadow-sm);
 }
 
-.heroSideImg {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
+.conceptCard:hover {
+  border-color: var(--royal);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-.heroSideCard:hover .heroSideImg {
-  transform: scale(1.05);
+.conceptIcon {
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
-.heroSideOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(16, 42, 67, 0.85) 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 14px;
-  color: #FFFFFF;
-}
-
-.heroSideTitle {
+.conceptTitle {
   font-family: var(--font-title);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--navy);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.conceptDesc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
   margin: 0;
 }
 
-.heroSidePrice {
-  font-size: 0.78rem;
+/* ─── Explore Themes Callout Banner ─── */
+.exploreThemesCallout {
+  background: linear-gradient(135deg, var(--navy) 0%, #1A365D 100%);
+  border: 1.5px solid var(--border-blue);
+  border-radius: 20px;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  box-shadow: var(--shadow-lg);
+  color: #FFFFFF;
+}
+
+@media (max-width: 860px) {
+  .exploreThemesCallout {
+    flex-direction: column;
+    text-align: center;
+    padding: 28px 20px;
+  }
+}
+
+.calloutText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 620px;
+}
+
+.calloutTag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--light-blue);
-  font-weight: 700;
+}
+
+.calloutTitle {
+  font-family: var(--font-title);
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: #FFFFFF;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.calloutDesc {
+  font-size: 0.92rem;
+  color: #CBD5E1;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.calloutActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .calloutActions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .calloutActions a,
+  .calloutActions button {
+    width: 100%;
+  }
+}
+
+/* ─── Mobile Sticky Bar Theme Button ─── */
+.mobileStickyThemeBtn {
+  background: #FFFFFF;
+  color: var(--royal);
+  border: 1.5px solid var(--border-blue);
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ─── Generic Section Layout ─── */
