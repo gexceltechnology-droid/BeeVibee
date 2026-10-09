@@ -169,7 +169,13 @@ export const ROOMS: RoomExperience[] = [
     includedGuests: 2,
     extraGuestPrice: 100,
     image: '/gallery/theme-purple.jpg',
-    galleryImages: ['/gallery/theme-purple.jpg', '/gallery/birthday-celebration.jpg', '/gallery/fog-decor.jpg'],
+    galleryImages: [
+      '/gallery/theme-purple.jpg',
+      '/gallery/theme-purple-screen.jpg',
+      '/gallery/theme-purple-movie.jpg',
+      '/gallery/theme-purple-stage.jpg',
+      '/gallery/theme-purple-couch.jpg',
+    ],
     description: 'Our flagship VIP celebration theatre featuring triple lighted balloon canopies, illuminated butterfly wings, warm "HAPPY BIRTHDAY" marquee letters, and gold shimmer wall.',
     features: [
       'Grand Illuminated Butterfly Wings & Canopy',

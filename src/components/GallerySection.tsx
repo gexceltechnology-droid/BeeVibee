@@ -103,11 +103,37 @@ const GALLERY_ITEMS: GalleryItem[] = [
     categoryLabel: 'Private Cinema Experience 🎬',
     theme: 'Cinema Suite 🍿',
     themeColor: '#09090b',
-    image: '/gallery/theme-purple.jpg',
+    image: '/gallery/theme-purple-movie.jpg',
     description: 'Massive 180-inch 4K high-contrast laser projection screen with 7.1 Dolby Atmos sound. Stream your favorite movies from Netflix, Prime Video, Hotstar, YouTube, or play personal celebration videos.',
     tags: ['180" Laser Projection', 'Dolby Atmos 7.1', 'Netflix & OTT Streaming', 'Soundproof Privacy', 'Acoustic Suite'],
     highlights: ['Ultra HD Laser Clarity', 'Room-shaking Audio Calibration', 'All OTT Platforms Supported'],
-    bookingLink: '/book'
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-purple-stage-arch',
+    title: 'Illuminated Butterfly Wings & Neon Arch Stage',
+    category: 'decor',
+    categoryLabel: 'VIP Stage & Backdrop ✨',
+    theme: 'Purple Stage 🦋',
+    themeColor: '#09090b',
+    image: '/gallery/theme-purple-stage.jpg',
+    description: 'Triple illuminated neon archways, gold sequin shimmer backdrop, floral garlands, and glowing butterfly wings designed for glamorous cake cutting and photography.',
+    tags: ['Illuminated Butterfly Wings', 'Triple Neon Arch', 'Gold Shimmer Wall', 'Happy Birthday Neon'],
+    highlights: ['Instagram-Ready Stage', 'Cake Pedestal Included', 'Warm Ambient Glow'],
+    bookingLink: '/themes'
+  },
+  {
+    id: 'theme-purple-vip-couch',
+    title: 'VIP Velvet Sectional Lounge & Floor Balloons',
+    category: 'birthday',
+    categoryLabel: 'VIP Seating 💜',
+    theme: 'Purple VIP Lounge',
+    themeColor: '#09090b',
+    image: '/gallery/theme-purple-couch.jpg',
+    description: 'Ultra-spacious custom purple velvet sectional couch comfortably accommodating up to 10 guests with ambient purple and white floor balloons and marble coffee table.',
+    tags: ['Velvet Sectional Sofa', 'Seats Up to 10 Guests', 'Floor Balloons Decor', 'VIP Luxury'],
+    highlights: ['Extra Spacious VIP Seating', 'Plush Ergonomic Reclining Comfort', 'Private Air Conditioned Hall'],
+    bookingLink: '/themes'
   },
   {
     id: 'decor-fog-pink',

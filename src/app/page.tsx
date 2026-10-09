@@ -135,9 +135,11 @@ export default function Home() {
     { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage', image: '/gallery/theme-pink.jpg' },
     { id: 2, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.jpg' },
     { id: 3, category: 'vip', title: 'Royal Butterfly Grandeur VIP', image: '/gallery/theme-purple.jpg' },
-    { id: 4, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
-    { id: 5, category: 'birthday', title: 'Celebration Stage with Cake Pedestal', image: '/gallery/birthday-celebration.jpg' },
-    { id: 6, category: 'romantic', title: 'Candlelight & Floral Heart Setup', image: '/gallery/romantic-date.jpg' },
+    { id: 4, category: 'vip', title: 'Royal Butterfly Illuminated Stage & Arch', image: '/gallery/theme-purple-stage.jpg' },
+    { id: 5, category: 'vip', title: 'VIP Velvet Sectional Lounge (Seats 10)', image: '/gallery/theme-purple-couch.jpg' },
+    { id: 6, category: 'vip', title: '180" 4K Laser Cinema & Dolby Atmos 7.1', image: '/gallery/theme-purple-movie.jpg' },
+    { id: 7, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
+    { id: 8, category: 'romantic', title: 'Candlelight & Floral Heart Setup', image: '/gallery/romantic-date.jpg' },
   ];
 
   const filteredGallery = galleryItems.filter((item) => {
