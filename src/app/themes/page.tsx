@@ -29,8 +29,8 @@ export default function ThemesPage() {
   const [activeOccasionFilter, setActiveOccasionFilter] = useState<'all' | OccasionType>('all');
   const [inspectingRoom, setInspectingRoom] = useState<RoomExperience | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [preselectedRoomId, setPreselectedRoomId] = useState<string>('angel-wings');
-  const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType>('birthday');
+  const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
+  const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
 
   // Filtered rooms
   const filteredRooms = ROOMS.filter((room) => {
@@ -38,12 +38,17 @@ export default function ThemesPage() {
     return room.occasion === activeOccasionFilter;
   });
 
-  // Open booking modal directly with specific room
-  const handleQuickBook = (roomId: string) => {
-    const target = ROOMS.find((r) => r.id === roomId);
-    setPreselectedRoomId(roomId);
-    if (target) {
-      setPreselectedOccasion(target.occasion);
+  // Open booking modal directly with specific room or unselected
+  const handleQuickBook = (roomId?: string) => {
+    if (roomId) {
+      const target = ROOMS.find((r) => r.id === roomId);
+      setPreselectedRoomId(roomId);
+      if (target) {
+        setPreselectedOccasion(target.occasion);
+      }
+    } else {
+      setPreselectedRoomId('');
+      setPreselectedOccasion('');
     }
     setInspectingRoom(null);
     setIsBookingModalOpen(true);
@@ -82,7 +87,7 @@ export default function ThemesPage() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => handleQuickBook('angel-wings')}
+                onClick={() => handleQuickBook()}
               >
                 <span>QUICK BOOK</span>
                 <ArrowRight size={15} />
@@ -302,7 +307,7 @@ export default function ThemesPage() {
               <button
                 type="button"
                 className="btn btn-navy"
-                onClick={() => handleQuickBook('angel-wings')}
+                onClick={() => handleQuickBook()}
               >
                 <span>OPEN QUICK BOOKING</span>
                 <ArrowRight size={16} />

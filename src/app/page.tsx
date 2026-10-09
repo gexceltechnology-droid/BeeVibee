@@ -48,8 +48,8 @@ export default function Home() {
   // Modal States
   const [inspectingRoom, setInspectingRoom] = useState<RoomExperience | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [preselectedRoomId, setPreselectedRoomId] = useState<string>('angel-wings');
-  const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType>('birthday');
+  const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
+  const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
 
   // UI state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -89,6 +89,7 @@ export default function Home() {
     setSelectedDate(params.date);
     setActiveOccasionFilter(params.occasion);
     setPreselectedOccasion(params.occasion);
+    setPreselectedRoomId('');
     setGuestCount(params.guestCount);
     setPreferredTime(params.preferredTime);
     setIsBookingModalOpen(true);
@@ -167,7 +168,8 @@ export default function Home() {
         <div
           className={styles.tickerBar}
           onClick={() => {
-            setPreselectedRoomId('angel-wings');
+            setPreselectedRoomId('');
+            setPreselectedOccasion('');
             setIsBookingModalOpen(true);
           }}
         >
@@ -224,7 +226,8 @@ export default function Home() {
                 type="button"
                 className={styles.headerBookBtn}
                 onClick={() => {
-                  setPreselectedRoomId('angel-wings');
+                  setPreselectedRoomId('');
+                  setPreselectedOccasion('');
                   setIsBookingModalOpen(true);
                 }}
               >
@@ -269,6 +272,8 @@ export default function Home() {
                   style={{ width: '100%' }}
                   onClick={() => {
                     setIsMobileMenuOpen(false);
+                    setPreselectedRoomId('');
+                    setPreselectedOccasion('');
                     setIsBookingModalOpen(true);
                   }}
                 >
@@ -307,7 +312,11 @@ export default function Home() {
               <button
                 type="button"
                 className="btn btn-navy"
-                onClick={() => setIsBookingModalOpen(true)}
+                onClick={() => {
+                  setPreselectedRoomId('');
+                  setPreselectedOccasion('');
+                  setIsBookingModalOpen(true);
+                }}
               >
                 <Sparkles size={16} /> Quick Booking
               </button>
@@ -390,7 +399,11 @@ export default function Home() {
                   <button
                     type="button"
                     className="btn btn-soft"
-                    onClick={() => setIsBookingModalOpen(true)}
+                    onClick={() => {
+                      setPreselectedRoomId('');
+                      setPreselectedOccasion('');
+                      setIsBookingModalOpen(true);
+                    }}
                   >
                     Quick Book A Slot
                   </button>
@@ -483,7 +496,11 @@ export default function Home() {
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setIsBookingModalOpen(true)}
+                onClick={() => {
+                  setPreselectedRoomId('');
+                  setPreselectedOccasion('');
+                  setIsBookingModalOpen(true);
+                }}
               >
                 Quick Book Directly
               </button>
@@ -1029,7 +1046,8 @@ export default function Home() {
                 type="button"
                 className={styles.finalCtaBtn}
                 onClick={() => {
-                  setPreselectedRoomId('angel-wings');
+                  setPreselectedRoomId('');
+                  setPreselectedOccasion('');
                   setIsBookingModalOpen(true);
                 }}
               >
@@ -1120,7 +1138,8 @@ export default function Home() {
           type="button"
           className={styles.stickyBtn}
           onClick={() => {
-            setPreselectedRoomId('angel-wings');
+            setPreselectedRoomId('');
+            setPreselectedOccasion('');
             setIsBookingModalOpen(true);
           }}
         >

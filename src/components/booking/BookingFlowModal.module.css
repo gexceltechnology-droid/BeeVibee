@@ -270,6 +270,26 @@
   letter-spacing: 0.05em;
   color: var(--navy);
   margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.clearFilterBtn {
+  background: none;
+  border: none;
+  color: var(--royal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.clearFilterBtn:hover {
+  color: #1D4ED8;
 }
 
 .roomsGrid {
@@ -329,6 +349,21 @@
   letter-spacing: 0.05em;
   padding: 3px 8px;
   border-radius: 9999px;
+}
+
+.tapToSelectBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .roomSelectBody {
@@ -1402,6 +1437,37 @@
 .summarySlotTime {
   color: var(--royal) !important;
   font-weight: 700;
+}
+
+.summaryEmptyCard {
+  background: #F8FAFC;
+  border: 1.5px dashed #CBD5E1;
+  border-radius: 12px;
+  padding: 18px 14px;
+  margin-bottom: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.summaryEmptyIcon {
+  color: var(--royal);
+  margin-bottom: 2px;
+}
+
+.summaryEmptyCard strong {
+  font-size: 0.88rem;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.summaryEmptyCard p {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
 }
 
 .breakdownList {

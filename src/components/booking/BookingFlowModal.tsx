@@ -43,7 +43,7 @@ interface BookingFlowModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialRoomId?: string;
-  initialOccasion?: OccasionType;
+  initialOccasion?: OccasionType | '';
   initialDate?: string;
   initialGuests?: number;
 }
@@ -92,8 +92,8 @@ const GAMING_SLOTS: TimeSlotOption[] = [
 export default function BookingFlowModal({
   isOpen,
   onClose,
-  initialRoomId,
-  initialOccasion = 'birthday',
+  initialRoomId = '',
+  initialOccasion = '',
   initialDate,
   initialGuests = 2,
 }: BookingFlowModalProps) {
@@ -102,14 +102,14 @@ export default function BookingFlowModal({
   // Wizard Step (1: Occasion & Room, 2: Date & Slot, 3: Add-ons, 4: Details, 5: Payment, 6: Confirmation)
   const [currentStep, setCurrentStep] = useState(1);
 
-  // Form State
-  const [selectedOccasion, setSelectedOccasion] = useState<OccasionType>(initialOccasion);
-  const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || 'angel-wings');
+  // Form State - Nothing selected by default unless explicitly passed
+  const [selectedOccasion, setSelectedOccasion] = useState<OccasionType | ''>(initialOccasion || '');
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || '');
   const [selectedDate, setSelectedDate] = useState<string>(initialDate || todayStr);
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [guestCount, setGuestCount] = useState<number>(() => {
-    const room = ROOMS.find((r) => r.id === (initialRoomId || 'angel-wings')) || ROOMS[0];
-    return Math.min(initialGuests, room.maxGuests);
+    const room = initialRoomId ? ROOMS.find((r) => r.id === initialRoomId) : null;
+    return room ? Math.min(initialGuests, room.maxGuests) : (initialGuests || 2);
   });
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [cakeFlavor, setCakeFlavor] = useState<string>('Chocolate Truffle');
@@ -142,29 +142,32 @@ export default function BookingFlowModal({
 
   // Update selection if props change when opening
   useEffect(() => {
-    if (initialRoomId) setSelectedRoomId(initialRoomId);
-    if (initialOccasion) setSelectedOccasion(initialOccasion);
-    if (initialDate) setSelectedDate(initialDate);
-    if (initialGuests) {
-      const room = ROOMS.find((r) => r.id === (initialRoomId || selectedRoomId)) || ROOMS[0];
-      setGuestCount(Math.min(initialGuests, room.maxGuests));
+    if (isOpen) {
+      setSelectedRoomId(initialRoomId || '');
+      setSelectedOccasion(initialOccasion || '');
+      if (initialDate) setSelectedDate(initialDate);
+      if (initialGuests) {
+        const room = ROOMS.find((r) => r.id === initialRoomId);
+        setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
+      }
     }
-  }, [initialRoomId, initialOccasion, initialDate, initialGuests, selectedRoomId]);
+  }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests]);
 
-  // Find active room object
+  // Find active room object (null if no room selected yet)
   const activeRoom = useMemo(() => {
-    return ROOMS.find((r) => r.id === selectedRoomId) || ROOMS[0];
+    return selectedRoomId ? ROOMS.find((r) => r.id === selectedRoomId) || null : null;
   }, [selectedRoomId]);
 
   // When room changes, clamp guest count to room's max
   useEffect(() => {
-    if (guestCount > activeRoom.maxGuests) {
+    if (activeRoom && guestCount > activeRoom.maxGuests) {
       setGuestCount(activeRoom.maxGuests);
     }
   }, [activeRoom, guestCount]);
 
   // Fetch slots from API when date or room type changes
   useEffect(() => {
+    if (!activeRoom) return;
     let isCancelled = false;
     const fetchSlots = async () => {
       setIsLoadingSlots(true);
@@ -229,6 +232,24 @@ export default function BookingFlowModal({
 
   // Price Calculations
   const pricing = useMemo(() => {
+    if (!activeRoom) {
+      return {
+        baseRoomPrice: 0,
+        effectiveRoomPrice: 0,
+        extraGuests: 0,
+        extraGuestCost: 0,
+        addonsCost: 0,
+        regularAddonsCost: 0,
+        subtotal: 0,
+        discount: 0,
+        roomDiscount: 0,
+        freeAddonsDiscount: 0,
+        total: 0,
+        advance: 500,
+        remaining: 0,
+        isCouponValid: false,
+      };
+    }
     const isCelebrationTheme = activeRoom.occasion !== 'gaming';
     const isCouponValid = (appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999') && isCelebrationTheme;
 
@@ -326,6 +347,10 @@ export default function BookingFlowModal({
   // Final submit handler connected to /api/bookings
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeRoom) {
+      setSubmitError('Please select a private suite to complete your booking.');
+      return;
+    }
     if (!utrNumber.trim()) {
       setSubmitError('Please enter your 12-digit UPI Transaction ID / UTR.');
       return;
@@ -386,7 +411,7 @@ export default function BookingFlowModal({
   };
 
   // Step Validation Helpers
-  const canGoToStep2 = true;
+  const canGoToStep2 = !!activeRoom;
   const canGoToStep3 = !!selectedSlot;
   const canGoToStep4 = true;
   const canGoToStep5 = !!(customerName.trim() && customerPhone.trim().length >= 10);
@@ -457,9 +482,9 @@ export default function BookingFlowModal({
                 <div className={styles.mobileBillHeaderRow}>
                   <div className={styles.mobileBillInfo}>
                     <Receipt size={15} className={styles.mobileBillIcon} />
-                    <span className={styles.mobileBillTotal}>Total Bill: <strong>₹{pricing.total}</strong></span>
+                    <span className={styles.mobileBillTotal}>Total Bill: <strong>{activeRoom ? `₹${pricing.total}` : '—'}</strong></span>
                     <span className={styles.mobileBillDivider}>•</span>
-                    <span className={styles.mobileBillDeposit}>Advance Deposit: <strong>₹{pricing.advance}</strong></span>
+                    <span className={styles.mobileBillDeposit}>Advance Deposit: <strong>{activeRoom ? `₹${pricing.advance}` : '₹500'}</strong></span>
                   </div>
                   <button
                     type="button"
@@ -474,61 +499,69 @@ export default function BookingFlowModal({
 
                 {isMobileBillOpen && (
                   <div className={styles.mobileBillDrawer}>
-                    <div className={styles.mobileBillRoom}>
-                      <div>
-                        <strong>{activeRoom.name} ({activeRoom.duration})</strong>
-                        <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}` : ''} • {guestCount} Guests</span>
-                      </div>
-                      <span className={styles.mobileBillRoomPrice}>₹{pricing.baseRoomPrice}</span>
-                    </div>
-
-                    {pricing.roomDiscount > 0 && (
-                      <div className={styles.mobileBillDiscount}>
-                        <span>🎟️ Offer Savings ({appliedCoupon})</span>
-                        <strong>-₹{pricing.roomDiscount}</strong>
-                      </div>
-                    )}
-
-                    {pricing.extraGuests > 0 && (
-                      <div className={styles.mobileBillRowItem}>
-                        <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
-                        <strong>+₹{pricing.extraGuestCost}</strong>
-                      </div>
-                    )}
-
-                    {selectedAddOns.map((id) => {
-                      const item = ADD_ONS.find((a) => a.id === id);
-                      if (!item) return null;
-                      const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
-                      return (
-                        <div key={id} className={styles.mobileBillRowItem}>
-                          <span>{item.icon} {item.name}</span>
-                          <strong className={isWaived ? styles.billFreeTag : ''}>
-                            {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
-                          </strong>
+                    {activeRoom ? (
+                      <>
+                        <div className={styles.mobileBillRoom}>
+                          <div>
+                            <strong>{activeRoom.name} ({activeRoom.duration})</strong>
+                            <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}` : ''} • {guestCount} Guests</span>
+                          </div>
+                          <span className={styles.mobileBillRoomPrice}>₹{pricing.baseRoomPrice}</span>
                         </div>
-                      );
-                    })}
 
-                    <div className={styles.mobileBillRowItem} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
-                      <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
-                      <strong className={styles.billFreeTag}>INCLUDED</strong>
-                    </div>
+                        {pricing.roomDiscount > 0 && (
+                          <div className={styles.mobileBillDiscount}>
+                            <span>🎟️ Offer Savings ({appliedCoupon})</span>
+                            <strong>-₹{pricing.roomDiscount}</strong>
+                          </div>
+                        )}
 
-                    <div className={styles.mobileBillTotalsRow}>
-                      <div className={styles.mobileBillTotalBox}>
-                        <span>Total Bill</span>
-                        <strong>₹{pricing.total}</strong>
+                        {pricing.extraGuests > 0 && (
+                          <div className={styles.mobileBillRowItem}>
+                            <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
+                            <strong>+₹{pricing.extraGuestCost}</strong>
+                          </div>
+                        )}
+
+                        {selectedAddOns.map((id) => {
+                          const item = ADD_ONS.find((a) => a.id === id);
+                          if (!item) return null;
+                          const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
+                          return (
+                            <div key={id} className={styles.mobileBillRowItem}>
+                              <span>{item.icon} {item.name}</span>
+                              <strong className={isWaived ? styles.billFreeTag : ''}>
+                                {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
+                              </strong>
+                            </div>
+                          );
+                        })}
+
+                        <div className={styles.mobileBillRowItem} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
+                          <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
+                          <strong className={styles.billFreeTag}>INCLUDED</strong>
+                        </div>
+
+                        <div className={styles.mobileBillTotalsRow}>
+                          <div className={styles.mobileBillTotalBox}>
+                            <span>Total Bill</span>
+                            <strong>₹{pricing.total}</strong>
+                          </div>
+                          <div className={styles.mobileBillDepositBox}>
+                            <span>Advance Deposit (Pay Now)</span>
+                            <strong style={{ color: '#10B981' }}>₹{pricing.advance}</strong>
+                          </div>
+                          <div className={styles.mobileBillBalanceBox}>
+                            <span>Balance at Check-in</span>
+                            <strong>₹{pricing.remaining}</strong>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div style={{ padding: '12px', textAlign: 'center', color: '#64748B', fontSize: '0.85rem' }}>
+                        Please select an occasion and private suite in Step 1 to calculate your bill.
                       </div>
-                      <div className={styles.mobileBillDepositBox}>
-                        <span>Advance Deposit (Pay Now)</span>
-                        <strong style={{ color: '#10B981' }}>₹{pricing.advance}</strong>
-                      </div>
-                      <div className={styles.mobileBillBalanceBox}>
-                        <span>Balance at Check-in</span>
-                        <strong>₹{pricing.remaining}</strong>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -556,8 +589,11 @@ export default function BookingFlowModal({
                         type="button"
                         className={`${styles.occCard} ${isSelected ? styles.occSelected : ''}`}
                         onClick={() => {
-                          setSelectedOccasion(occ.id);
-                          setSelectedRoomId(occ.recommendedRoomId);
+                          if (selectedOccasion === occ.id) {
+                            setSelectedOccasion('');
+                          } else {
+                            setSelectedOccasion(occ.id);
+                          }
                         }}
                       >
                         <span className={styles.occIcon}>{occ.icon}</span>
@@ -573,20 +609,38 @@ export default function BookingFlowModal({
 
                 {/* Available Rooms for Selected Occasion */}
                 <div className={styles.roomsPicker}>
-                  <div className={styles.subSectionTitle}>Select Private Suite</div>
+                  <div className={styles.subSectionTitle}>
+                    <span>Select Private Suite</span>
+                    {selectedOccasion && (
+                      <button
+                        type="button"
+                        className={styles.clearFilterBtn}
+                        onClick={() => setSelectedOccasion('')}
+                      >
+                        Show All Suites
+                      </button>
+                    )}
+                  </div>
                   <div className={styles.roomsGrid}>
-                    {ROOMS.map((room) => {
+                    {ROOMS.filter((room) => !selectedOccasion || room.occasion === selectedOccasion).map((room) => {
                       const isSelected = selectedRoomId === room.id;
                       return (
                         <div
                           key={room.id}
                           className={`${styles.roomSelectCard} ${isSelected ? styles.roomSelected : ''}`}
-                          onClick={() => setSelectedRoomId(room.id)}
+                          onClick={() => {
+                            setSelectedRoomId(room.id);
+                            setSelectedOccasion(room.occasion);
+                          }}
                         >
                           <div className={styles.roomSelectImgWrap}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={room.image} alt={room.name} className={styles.roomSelectImg} />
-                            {isSelected && <span className={styles.selectedBadge}>SELECTED</span>}
+                            {isSelected ? (
+                              <span className={styles.selectedBadge}>SELECTED ✓</span>
+                            ) : (
+                              <span className={styles.tapToSelectBadge}>TAP TO SELECT</span>
+                            )}
                           </div>
                           <div className={styles.roomSelectBody}>
                             <div className={styles.roomSelectTop}>
@@ -616,9 +670,10 @@ export default function BookingFlowModal({
                   <button
                     type="button"
                     className="btn btn-primary"
+                    disabled={!activeRoom}
                     onClick={() => setCurrentStep(2)}
                   >
-                    <span>NEXT: DATE &amp; TIME</span>
+                    <span>{activeRoom ? 'NEXT: DATE & TIME' : 'PLEASE SELECT A SUITE TO CONTINUE'}</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -633,7 +688,7 @@ export default function BookingFlowModal({
                 <div className={styles.stepHeader}>
                   <h3 className={styles.stepTitle}>Choose Date &amp; Available Time Slot</h3>
                   <p className={styles.stepDesc}>
-                    Live availability for {activeRoom.name} in Jayanagar 9th Block
+                    Live availability for {activeRoom?.name || 'Private Suite'} in Jayanagar 9th Block
                   </p>
                 </div>
 
@@ -660,7 +715,7 @@ export default function BookingFlowModal({
                   <div className={styles.guestCounterInfo}>
                     <strong>Number of Guests</strong>
                     <span>
-                      2 guests included with room. ₹{activeRoom.extraGuestPrice}/extra guest (Max {activeRoom.maxGuests} in this suite).
+                      2 guests included with room. ₹{activeRoom?.extraGuestPrice || 199}/extra guest (Max {activeRoom?.maxGuests || 6} in this suite).
                     </span>
                   </div>
                   <div className={styles.counterControls}>
@@ -676,8 +731,8 @@ export default function BookingFlowModal({
                     <button
                       type="button"
                       className={styles.counterBtn}
-                      disabled={guestCount >= activeRoom.maxGuests}
-                      onClick={() => setGuestCount((c) => Math.min(activeRoom.maxGuests, c + 1))}
+                      disabled={guestCount >= (activeRoom?.maxGuests || 6)}
+                      onClick={() => setGuestCount((c) => Math.min(activeRoom?.maxGuests || 6, c + 1))}
                     >
                       +
                     </button>
@@ -810,7 +865,7 @@ export default function BookingFlowModal({
                       <span>Remove</span>
                     </button>
                   </div>
-                ) : activeRoom.occasion !== 'gaming' ? (
+                ) : activeRoom?.occasion !== 'gaming' ? (
                   <div className={styles.couponNoticePrompt}>
                     <div className={styles.couponNoticePromptLeft}>
                       <Sparkles size={16} />
@@ -1086,10 +1141,10 @@ export default function BookingFlowModal({
 
                   <div className={styles.billRoomSummaryRow}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={activeRoom.image} alt={activeRoom.name} className={styles.billRoomThumb} />
+                    <img src={activeRoom?.image || ''} alt={activeRoom?.name || 'Private Suite'} className={styles.billRoomThumb} />
                     <div className={styles.billRoomMeta}>
-                      <strong>{activeRoom.name}</strong>
-                      <span className={styles.billRoomSession}>{activeRoom.duration} Session • Up to {activeRoom.maxGuests} Guests • 180&quot; 4K Cinema</span>
+                      <strong>{activeRoom?.name || 'Private Suite'}</strong>
+                      <span className={styles.billRoomSession}>{activeRoom?.duration || '2 Hours'} Session • Up to {activeRoom?.maxGuests || 6} Guests • 180&quot; 4K Cinema</span>
                       <span className={styles.billRoomDateSlot}>📅 {selectedDate} • ⏰ {selectedSlot || 'Selected Slot'}</span>
                     </div>
                     <div className={styles.billRoomBase}>
@@ -1106,7 +1161,7 @@ export default function BookingFlowModal({
                       </div>
                     )}
 
-                    {pricing.extraGuests > 0 && (
+                    {pricing.extraGuests > 0 && activeRoom && (
                       <div className={styles.billLineItem}>
                         <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
                         <strong>+₹{pricing.extraGuestCost}</strong>
@@ -1280,7 +1335,7 @@ export default function BookingFlowModal({
                   <div className={styles.ticketHeader}>
                     <div>
                       <span className={styles.ticketBrand}>BEEVIBE THEATRE PASS</span>
-                      <h4 className={styles.ticketRoomTitle}>{activeRoom.name}</h4>
+                      <h4 className={styles.ticketRoomTitle}>{activeRoom?.name || 'Private Suite'}</h4>
                     </div>
                     <span className={styles.ticketStatus}>CONFIRMED</span>
                   </div>
@@ -1351,7 +1406,7 @@ export default function BookingFlowModal({
                 <div className={styles.confirmationActions}>
                   <a
                     href={`https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20just%20booked%20${encodeURIComponent(
-                      activeRoom.name
+                      activeRoom?.name || 'Private Suite'
                     )}%20for%20${selectedDate}%20(${selectedSlot}).%20My%20booking%20ID%20is%20${confirmedBookingId}.`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1387,25 +1442,35 @@ export default function BookingFlowModal({
               <div className={styles.summaryCard}>
                 <div className={styles.summaryHeader}>
                   <h4>Live Booking Summary</h4>
-                  <span className={styles.summarySuiteBadge}>{activeRoom.occasionLabel}</span>
+                  {activeRoom && (
+                    <span className={styles.summarySuiteBadge}>{activeRoom.occasionLabel}</span>
+                  )}
                 </div>
 
-                {/* Selected Room Preview */}
-                <div className={styles.summaryRoomPreview}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={activeRoom.image} alt={activeRoom.name} className={styles.summaryRoomImg} />
-                  <div>
-                    <strong>{activeRoom.name}</strong>
-                    <span>{selectedDate}</span>
-                    <span className={styles.summarySlotTime}>{selectedSlot || 'Select slot in Step 2'}</span>
+                {/* Selected Room Preview or Empty Prompt */}
+                {activeRoom ? (
+                  <div className={styles.summaryRoomPreview}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={activeRoom.image} alt={activeRoom.name} className={styles.summaryRoomImg} />
+                    <div>
+                      <strong>{activeRoom.name}</strong>
+                      <span>{selectedDate}</span>
+                      <span className={styles.summarySlotTime}>{selectedSlot || 'Select slot in Step 2'}</span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className={styles.summaryEmptyCard}>
+                    <Sparkles size={20} className={styles.summaryEmptyIcon} />
+                    <strong>No Suite Selected</strong>
+                    <p>Select your occasion and private suite in Step 1 to calculate your live bill.</p>
+                  </div>
+                )}
 
                 {/* Price Breakdown */}
                 <div className={styles.breakdownList}>
                   <div className={styles.breakdownRow}>
-                    <span>Experience Suite ({activeRoom.duration})</span>
-                    <strong>₹{pricing.baseRoomPrice}</strong>
+                    <span>Experience Suite {activeRoom ? `(${activeRoom.duration})` : ''}</span>
+                    <strong>{activeRoom ? `₹${pricing.baseRoomPrice}` : '—'}</strong>
                   </div>
 
                   {pricing.roomDiscount > 0 && (
@@ -1434,7 +1499,7 @@ export default function BookingFlowModal({
                     </div>
                   )}
 
-                  {pricing.extraGuests > 0 && (
+                  {activeRoom && pricing.extraGuests > 0 && (
                     <div className={styles.breakdownRow}>
                       <span>Extra Guests ({pricing.extraGuests} × ₹{activeRoom.extraGuestPrice})</span>
                       <strong>₹{pricing.extraGuestCost}</strong>
@@ -1450,7 +1515,7 @@ export default function BookingFlowModal({
                       <div key={id} className={styles.breakdownRow}>
                         <span>{item.icon} {item.name}</span>
                         {isWaived ? (
-                          <strong style={{ color: '#10B981' }}>FREE (-₹{item.price})</strong>
+                          <strong style={{ color: '#10B981' }}>FREE (-₹${item.price})</strong>
                         ) : (
                           <strong>+₹{item.price}</strong>
                         )}
@@ -1468,15 +1533,15 @@ export default function BookingFlowModal({
                 <div className={styles.totalSection}>
                   <div className={styles.totalRow}>
                     <span>Total Experience Cost</span>
-                    <span className={styles.totalAmount}>₹{pricing.total}</span>
+                    <span className={styles.totalAmount}>{activeRoom ? `₹${pricing.total}` : '—'}</span>
                   </div>
                   <div className={styles.depositRow}>
                     <span>Advance to Pay Now</span>
-                    <span className={styles.advanceAmount}>₹{pricing.advance}</span>
+                    <span className={styles.advanceAmount}>{activeRoom ? `₹${pricing.advance}` : '₹500'}</span>
                   </div>
                   <div className={styles.balanceRow}>
                     <span>Remaining at Venue (Check-in)</span>
-                    <span className={styles.remainingAmount}>₹{pricing.remaining}</span>
+                    <span className={styles.remainingAmount}>{activeRoom ? `₹${pricing.remaining}` : '—'}</span>
                   </div>
                 </div>
 
@@ -1492,3 +1557,6 @@ export default function BookingFlowModal({
     </div>
   );
 }
+
+
+
