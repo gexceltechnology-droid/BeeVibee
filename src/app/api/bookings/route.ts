@@ -12,6 +12,9 @@ import {
   getAllMenuItems,
   DEFAULT_MENU_ITEMS,
 } from '@/lib/firestore';
+import { verifyCustomerPhone } from '@/lib/phoneVerification';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
 // GET all bookings (Admin endpoint)
 export async function GET(request: NextRequest) {
@@ -34,6 +37,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { customerName, email, phone, date, timeSlot, packageName, addOns, totalPrice, guestCount, specialRequests, utrNumber } = body;
 
+    // Anti-bot honeypot protection: Reject automated bot spam
+    if (body.b_company_ref || body.botTrap || body.hp_website) {
+      console.warn('[Anti-Bot] Automated bot submission blocked via honeypot field.');
+      return NextResponse.json({ error: 'Automated submission rejected.' }, { status: 400 });
+    }
+
     // Basic validation
     if (!customerName || !email || !phone || !date || !timeSlot || !packageName || totalPrice === undefined || !guestCount) {
       return NextResponse.json({ error: 'Missing required booking fields.' }, { status: 400 });
@@ -45,6 +54,42 @@ export async function POST(request: NextRequest) {
 
     if (!trimmedName || !trimmedEmail || !trimmedPhone) {
       return NextResponse.json({ error: 'Name, email, and phone cannot be empty.' }, { status: 400 });
+    }
+
+    // Rate Limiting by IP and Phone: max 5 bookings per IP and 3 per phone per 10 minutes
+    const clientIp = getClientIp(request);
+    const isAdmin = isAuthorized(request);
+    if (!isAdmin) {
+      const ipLimit = checkRateLimit(`booking_ip_${clientIp}`, 5, 600);
+      if (!ipLimit.allowed) {
+        return NextResponse.json(
+          { error: `Too many booking attempts from your network. Please wait ${ipLimit.retryAfterSeconds}s before trying again.` },
+          { status: 429 }
+        );
+      }
+
+      const phoneLimit = checkRateLimit(`booking_phone_${cleanPhoneNumber(trimmedPhone)}`, 3, 600);
+      if (!phoneLimit.allowed) {
+        return NextResponse.json(
+          { error: `Too many booking attempts for this phone number. Please wait ${phoneLimit.retryAfterSeconds}s before trying again.` },
+          { status: 429 }
+        );
+      }
+
+      // Mandatory Server-Side Phone Verification
+      const tokenToVerify = body.phoneVerificationToken || body.firebaseIdToken || body.idToken;
+      if (!tokenToVerify) {
+        return NextResponse.json({
+          error: 'Phone number verification is required. Please verify your mobile number with OTP before booking.'
+        }, { status: 403 });
+      }
+
+      const verificationResult = await verifyCustomerPhone(trimmedPhone, tokenToVerify);
+      if (!verificationResult.valid) {
+        return NextResponse.json({
+          error: verificationResult.reason || 'Phone verification failed or expired. Please re-verify your phone number via OTP.'
+        }, { status: 403 });
+      }
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -240,6 +285,31 @@ export async function POST(request: NextRequest) {
       if (!passedUtr || passedUtr.length !== 12) {
         return NextResponse.json({
           error: `Invalid UPI Transaction Reference Number (UTR). Must be exactly 12 numeric digits (received ${passedUtr.length}/12).`
+        }, { status: 400 });
+      }
+
+      // Reject obvious dummy repeating patterns (e.g. 000000000000, 111111111111, 999999999999)
+      if (/^(\d)\1{11}$/.test(passedUtr)) {
+        return NextResponse.json({
+          error: 'Invalid UPI Transaction Reference Number (UTR). Repeated dummy numbers are not permitted.'
+        }, { status: 400 });
+      }
+
+      // Reject obvious sequential dummy patterns
+      const dummySequences = ['012345678901', '123456789012', '234567890123', '987654321098'];
+      if (dummySequences.includes(passedUtr)) {
+        return NextResponse.json({
+          error: 'Invalid UPI Transaction Reference Number (UTR). Please enter your genuine transaction reference number from your payment receipt.'
+        }, { status: 400 });
+      }
+
+      // Reject duplicate UTR numbers already used in existing non-cancelled bookings
+      const existingWithUtr = allBookings.find(
+        (b) => b.status !== 'cancelled' && b.utrNumber && b.utrNumber.replace(/\D/g, '') === passedUtr
+      );
+      if (existingWithUtr) {
+        return NextResponse.json({
+          error: 'This UPI Transaction Reference Number (UTR) has already been submitted for another booking. Please check your transaction receipt or contact support.'
         }, { status: 400 });
       }
     }

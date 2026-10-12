@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendSMS } from '@/lib/sms';
 import { saveOtpToFirestore } from '@/lib/firestore';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +12,29 @@ export async function POST(request: NextRequest) {
     }
 
     const trimmedPhone = String(phone).trim();
+    const cleaned = cleanPhoneNumber(trimmedPhone);
+
+    if (!cleaned || cleaned.length < 10) {
+      return NextResponse.json({ error: 'Please enter a valid 10-digit mobile number.' }, { status: 400 });
+    }
+
+    // Rate Limiting by IP and Phone: max 3 attempts per 10 minutes (600s)
+    const clientIp = getClientIp(request);
+    const ipLimit = checkRateLimit(`otp_send_ip_${clientIp}`, 5, 600);
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: `Too many OTP requests from your network. Please wait ${ipLimit.retryAfterSeconds}s before trying again.` },
+        { status: 429 }
+      );
+    }
+
+    const phoneLimit = checkRateLimit(`otp_send_phone_${cleaned}`, 3, 600);
+    if (!phoneLimit.allowed) {
+      return NextResponse.json(
+        { error: `Too many OTP requests for this mobile number. Please wait ${phoneLimit.retryAfterSeconds}s before trying again.` },
+        { status: 429 }
+      );
+    }
     
     // Generate a 6-digit OTP code
     const code = Math.floor(100000 + Math.random() * 900000).toString();

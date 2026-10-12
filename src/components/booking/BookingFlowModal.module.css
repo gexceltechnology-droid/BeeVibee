@@ -1024,6 +1024,165 @@
   outline: none;
 }
 
+/* ─── Step 4 Phone OTP Verification ─── */
+.otpActionBtn {
+  background: var(--royal);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.otpActionBtn:hover:not(:disabled) {
+  background: #1D4ED8;
+  transform: translateY(-1px);
+}
+
+.otpActionBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.otpVerificationCard {
+  background: #F8FAFC;
+  border: 1.5px solid var(--border-blue);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.otpVerificationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.otpVerificationTitle {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.otpInputRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.otpCodeInput {
+  flex: 1;
+  min-width: 140px;
+  max-width: 180px;
+  background: #FFFFFF;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-align: center;
+  color: var(--navy);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.otpCodeInput:focus {
+  border-color: var(--royal);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.verifyOtpBtn {
+  background: #10B981;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.verifyOtpBtn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.verifyOtpBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.resendBtn {
+  background: transparent;
+  border: none;
+  color: var(--royal);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  transition: opacity 0.2s;
+}
+
+.resendBtn:disabled {
+  color: #94A3B8;
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.verifiedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #065F46;
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.verifiedChangeBtn {
+  background: transparent;
+  border: none;
+  color: #047857;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.otpErrorMsg {
+  color: #DC2626;
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* ─── Step 5 Payment Console ─── */
 .paymentConsole {
   display: grid;

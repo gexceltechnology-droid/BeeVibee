@@ -141,6 +141,9 @@ export default function BookingPortal({
 
   // Customer Auth & Orders States
   const [customerPhone, setCustomerPhone] = useState('');
+  const [phoneVerificationToken, setPhoneVerificationToken] = useState(() =>
+    typeof window !== 'undefined' ? sessionStorage.getItem('bee_vibe_phone_token') || '' : ''
+  );
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
   const [currentView, setCurrentView] = useState<'book' | 'orders'>('book');
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -347,11 +350,13 @@ export default function BookingPortal({
     }
 
     try {
+      let token = '';
       if (isFirebaseConfigured() && firebaseConfirmation) {
         const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, trimmedCode);
-        if (!fbVerify.success) {
+        if (!fbVerify.success || !fbVerify.idToken) {
           throw new Error(fbVerify.error || 'Invalid OTP code.');
         }
+        token = fbVerify.idToken;
       } else {
         const res = await fetch('/api/otp/verify', {
           method: 'POST',
@@ -360,10 +365,13 @@ export default function BookingPortal({
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
+        token = data.verificationToken;
       }
 
       // Login successful
       sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', token);
+      setPhoneVerificationToken(token);
       setCustomerPhone(finalPhone);
       setIsCustomerLoggedIn(true);
       setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
@@ -756,6 +764,8 @@ export default function BookingPortal({
       customerName: customerDetails.name,
       email: customerDetails.email,
       phone: customerPhone,
+      phoneVerificationToken,
+      b_company_ref: '', // Anti-bot honeypot
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,

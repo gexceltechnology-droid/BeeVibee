@@ -50,7 +50,7 @@ export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 let adminApp: App | null = null;
 let db: Firestore | null = null;
 
-function getAdminApp(): App {
+export function getAdminApp(): App {
   if (adminApp) return adminApp;
 
   const existingApps = getApps();

@@ -130,6 +130,9 @@ export default function GamingBookPage() {
   // Auth / OTP
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
   const [customerPhone, setCustomerPhone] = useState('');
+  const [phoneVerificationToken, setPhoneVerificationToken] = useState(() =>
+    typeof window !== 'undefined' ? sessionStorage.getItem('bee_vibe_phone_token') || '' : ''
+  );
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginPhone, setLoginPhone] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -407,19 +410,25 @@ export default function GamingBookPage() {
     const finalPhone = loginPhone.trim().startsWith('+') ? loginPhone.trim() : `+91${loginPhone.trim().replace(/^0+/, '')}`;
 
     try {
+      let token = '';
       if (isFirebaseConfigured() && firebaseConfirmation) {
         const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, otpCode.trim());
-        if (!fbVerify.success) throw new Error(fbVerify.error || 'Invalid OTP.');
+        if (!fbVerify.success || !fbVerify.idToken) throw new Error(fbVerify.error || 'Invalid OTP.');
+        token = fbVerify.idToken;
       } else {
         const res = await fetch('/api/otp/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone: finalPhone, code: otpCode.trim() }),
         });
-        if (!res.ok) throw new Error('Invalid OTP.');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invalid OTP.');
+        token = data.verificationToken;
       }
 
       sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', token);
+      setPhoneVerificationToken(token);
       setCustomerPhone(finalPhone);
       setIsCustomerLoggedIn(true);
       setShowLoginModal(false);
@@ -455,6 +464,8 @@ export default function GamingBookPage() {
       customerName: customerDetails.name,
       email: customerDetails.email,
       phone: customerPhone,
+      phoneVerificationToken,
+      b_company_ref: '', // Anti-bot honeypot
       date: selectedDate,
       timeSlot: selectedSlot?.time,
       packageName: selectedPackage.name,

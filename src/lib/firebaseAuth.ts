@@ -119,10 +119,15 @@ export async function sendFirebaseOtp(
 export async function verifyFirebaseOtpCode(
   confirmationResult: ConfirmationResult,
   code: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; idToken?: string; phoneNumber?: string; error?: string }> {
   try {
-    await confirmationResult.confirm(code);
-    return { success: true };
+    const userCredential = await confirmationResult.confirm(code);
+    const idToken = await userCredential.user.getIdToken();
+    return {
+      success: true,
+      idToken,
+      phoneNumber: userCredential.user.phoneNumber || undefined,
+    };
   } catch (error: any) {
     console.error('Firebase OTP verification error:', error);
     let userMsg = 'Invalid OTP code. Please check and try again.';
