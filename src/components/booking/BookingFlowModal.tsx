@@ -354,8 +354,6 @@ export default function BookingFlowModal({
     setCouponError('');
   };
 
-  if (!isOpen) return null;
-
   // Toggle add-on checkbox
   const toggleAddOn = (addonId: string) => {
     setSelectedAddOns((prev) =>
@@ -545,6 +543,8 @@ export default function BookingFlowModal({
   const canGoToStep3 = !!selectedSlot;
   const canGoToStep4 = true;
   const canGoToStep5 = !!(customerName.trim() && customerPhone.trim().length === 10 && isPhoneVerified && phoneVerificationToken);
+
+  if (!isOpen) return null;
 
   return (
     <div className={styles.backdrop} onClick={onClose}>
