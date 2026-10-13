@@ -50,6 +50,14 @@ export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
 let adminApp: App | null = null;
 let db: Firestore | null = null;
 
+export function isFirestoreConfigured(): boolean {
+  const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+  const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  const isGcp = !!(process.env.K_SERVICE || process.env.FUNCTION_NAME || process.env.GOOGLE_APPLICATION_CREDENTIALS);
+  return Boolean(projectId && (isGcp || (clientEmail && rawKey)));
+}
+
 export function getAdminApp(): App {
   if (adminApp) return adminApp;
 
@@ -64,8 +72,8 @@ export function getAdminApp(): App {
   const rawKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
   const privateKey = rawKey?.replace(/\\n/g, '\n');
 
-  if (!projectId) {
-    throw new Error('FIREBASE_ADMIN_PROJECT_ID is not set in environment variables.');
+  if (!projectId || !isFirestoreConfigured()) {
+    throw new Error('FIREBASE_ADMIN service credentials not configured. Resiliently using local JSON database.');
   }
 
   if (clientEmail && privateKey) {
@@ -82,6 +90,7 @@ export function getAdminApp(): App {
 
   return adminApp;
 }
+
 
 export function getDb(): Firestore {
   if (db) return db;
