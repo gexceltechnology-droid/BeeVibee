@@ -110,10 +110,8 @@ export default function GamingBookPage() {
   const [customEndAmPm, setCustomEndAmPm] = useState<'AM' | 'PM'>('AM');
   const [customSlotError, setCustomSlotError] = useState('');
 
-  // Packages & Addons
+  // Packages (No Add-ons for Gaming Room)
   const [selectedPackage, setSelectedPackage] = useState(PACKAGES[0]);
-  const [fogOption] = useState<'none' | '1pot'>('none');
-  const [snackOption, setSnackOption] = useState<'none' | 'popcorn_combo' | 'gamer_platter'>('none');
 
   // Customer Details
   const [customerDetails, setCustomerDetails] = useState({
@@ -355,20 +353,11 @@ export default function GamingBookPage() {
     }
   };
 
-  // Calculate pricing
+  // Calculate pricing (Zero add-ons for gaming room)
   const calculateTotal = () => {
     const durationHours = getSlotDurationHours();
     const pkgBase = Math.round(99 * Math.max(1, customerDetails.guestCount) * durationHours);
-    const extraGuests = 0;
-
-    let fogPrice = 0;
-    if (fogOption === '1pot') fogPrice = 300;
-
-    let snackPrice = 0;
-    if (snackOption === 'popcorn_combo') snackPrice = 250;
-    else if (snackOption === 'gamer_platter') snackPrice = 450;
-
-    return pkgBase + extraGuests + fogPrice + snackPrice;
+    return pkgBase;
   };
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -472,13 +461,7 @@ export default function GamingBookPage() {
       roomId: 'ps5-gaming',
       theme: 'ps5-gaming',
       bookingType: 'gaming',
-      addOns: (() => {
-        const list: string[] = ['1x PS5 Console + 2 DualSense Controllers (Included ✓)'];
-        if (fogOption === '1pot') list.push('Fog Entry (1 Pot — ₹300)');
-        if (snackOption === 'popcorn_combo') list.push('Popcorn & Cold Mocktail Combo (₹250)');
-        else if (snackOption === 'gamer_platter') list.push('VIP Gamer Snack Platter (₹450)');
-        return list;
-      })(),
+      addOns: [],
       totalPrice: calculateTotal(),
       advancePaid: calculateAdvance(),
       balanceDue: calculateBalance(),
@@ -498,7 +481,7 @@ export default function GamingBookPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to complete transaction.');
       setConfirmedBooking(data.booking);
-      setStep(5);
+      setStep(4);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed.';
       setError(msg);
@@ -535,7 +518,7 @@ export default function GamingBookPage() {
 
       {/* Main Portal Card */}
       <div className={styles.portalCard}>
-        {step < 5 && (
+        {step < 4 && (
           <div className={styles.wizardHeader}>
             <div className={`${styles.stepIndicator} ${step === 1 ? styles.stepActive : styles.stepCompleted}`}>
               1. GAMING SLOT {step > 1 && '✓'}
@@ -543,11 +526,8 @@ export default function GamingBookPage() {
             <div className={`${styles.stepIndicator} ${step === 2 ? styles.stepActive : step > 2 ? styles.stepCompleted : ''}`}>
               2. VIBE THEME {step > 2 && '✓'}
             </div>
-            <div className={`${styles.stepIndicator} ${step === 3 ? styles.stepActive : step > 3 ? styles.stepCompleted : ''}`}>
-              3. ADD-ONS {step > 3 && '✓'}
-            </div>
-            <div className={`${styles.stepIndicator} ${step === 4 ? styles.stepActive : ''}`}>
-              4. GAMER INFO & ADVANCE
+            <div className={`${styles.stepIndicator} ${step === 3 ? styles.stepActive : ''}`}>
+              3. GAMER INFO & ADVANCE
             </div>
           </div>
         )}
@@ -737,60 +717,14 @@ export default function GamingBookPage() {
                 ← BACK
               </button>
               <button type="button" className={styles.btnNavNext} onClick={() => setStep(3)}>
-                NEXT: ADD-ONS →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: Add-ons */}
-        {step === 3 && (
-          <div>
-            <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '16px' }}>
-              Gamer Add-ons & Snack Extras (Optional)
-            </h3>
-
-            <div className={styles.addonsGrid}>
-              {/* Controllers Included Card */}
-              <div className={`${styles.addonCard} ${styles.addonSelected}`}>
-                <span className={styles.addonName}>🎮 PS5 + 2 DualSense Controllers</span>
-                <span className={styles.addonPrice}>Included ✓</span>
-                <div style={{ fontSize: '0.8rem', color: '#a0a0c0' }}>
-                  2 Wireless Controllers & Top Games (FC 24, Tekken 8, MK1, Spider-Man 2) included with your slot.
-                </div>
-              </div>
-
-              {/* Snacks Card */}
-              <div className={`${styles.addonCard} ${snackOption !== 'none' ? styles.addonSelected : ''}`}>
-                <span className={styles.addonName}>🍿 Gourmet Gamer Snacks</span>
-                <span className={styles.addonPrice}>
-                  {snackOption === 'none' ? 'Optional' : snackOption === 'popcorn_combo' ? '+₹250' : '+₹450'}
-                </span>
-                <select
-                  className={`${styles.addonSelectDropdown} ${snackOption !== 'none' ? styles.addonSelectDropdownActive : ''}`}
-                  value={snackOption}
-                  onChange={(e) => setSnackOption(e.target.value as 'none' | 'popcorn_combo' | 'gamer_platter')}
-                >
-                  <option value="none">No Food (Order later from seat)</option>
-                  <option value="popcorn_combo">Popcorn &amp; Cold Mocktail Combo (+₹250)</option>
-                  <option value="gamer_platter">VIP Gamer Snack Platter &amp; Drinks (+₹450)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className={styles.wizardNav}>
-              <button type="button" className={styles.btnNavPrev} onClick={() => setStep(2)}>
-                ← BACK
-              </button>
-              <button type="button" className={styles.btnNavNext} onClick={() => setStep(4)}>
                 NEXT: GAMER INFO & ADVANCE →
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4: Gamer Info & Advance Payment */}
-        {step === 4 && (
+        {/* STEP 3: Gamer Info & Advance Payment */}
+        {step === 3 && (
           <div>
             <h3 style={{ fontFamily: 'var(--font-pixel)', fontSize: '1rem', color: '#ffe600', marginBottom: '16px' }}>
               Confirm Gamer Details & Pay Advance
@@ -962,7 +896,7 @@ export default function GamingBookPage() {
             )}
 
             <div className={styles.wizardNav}>
-              <button type="button" className={styles.btnNavPrev} onClick={() => setStep(3)}>
+              <button type="button" className={styles.btnNavPrev} onClick={() => setStep(2)}>
                 ← BACK
               </button>
               <button
@@ -977,8 +911,8 @@ export default function GamingBookPage() {
           </div>
         )}
 
-        {/* STEP 5: Ticket Digital Pass */}
-        {step === 5 && confirmedBooking && (
+        {/* STEP 4: Ticket Digital Pass */}
+        {step === 4 && confirmedBooking && (
           <div className={styles.ticketWrapper}>
             <div style={{ color: '#00ff66', marginBottom: '12px' }}>
               <CheckCircle2 size={54} />

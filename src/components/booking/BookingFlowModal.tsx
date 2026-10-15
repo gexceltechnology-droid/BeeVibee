@@ -42,6 +42,11 @@ import {
   TimeSlotOption,
 } from '@/types/booking';
 import styles from './BookingFlowModal.module.css';
+import {
+  parseTimeToMinutes,
+  formatMinutesToTimeStr,
+  formatCustomTimeRange,
+} from '@/lib/time';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 import type { ConfirmationResult } from 'firebase/auth';
@@ -116,6 +121,8 @@ export default function BookingFlowModal({
   const [selectedRoomId, setSelectedRoomId] = useState<string>(initialRoomId || '');
   const [selectedDate, setSelectedDate] = useState<string>(initialDate || todayStr);
   const [selectedSlot, setSelectedSlot] = useState<string>(initialSlot || '');
+  const [isCustomSlot, setIsCustomSlot] = useState(false);
+  const [customStartTime, setCustomStartTime] = useState('04:30 PM');
   const [guestCount, setGuestCount] = useState<number>(() => {
     const room = initialRoomId ? ROOMS.find((r) => r.id === initialRoomId) : null;
     return room ? Math.min(initialGuests, room.maxGuests) : (initialGuests || 2);
@@ -172,7 +179,7 @@ export default function BookingFlowModal({
         setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
       }
       if (initialSlot && initialRoomId) {
-        setCurrentStep(3);
+        setCurrentStep(initialRoomId === 'ps5-gaming' ? 4 : 3);
       } else if (initialRoomId) {
         setCurrentStep(2);
       } else {
@@ -185,6 +192,16 @@ export default function BookingFlowModal({
   const activeRoom = useMemo(() => {
     return selectedRoomId ? ROOMS.find((r) => r.id === selectedRoomId) || null : null;
   }, [selectedRoomId]);
+
+  const isGamingRoom = Boolean(activeRoom && (activeRoom.id === 'ps5-gaming' || activeRoom.occasion === 'gaming'));
+
+  // Gaming Room has zero add-ons: auto clear and bypass Step 3
+  useEffect(() => {
+    if (isGamingRoom) {
+      if (selectedAddOns.length > 0) setSelectedAddOns([]);
+      if (currentStep === 3) setCurrentStep(4);
+    }
+  }, [isGamingRoom, currentStep, selectedAddOns.length]);
 
   // When room changes, clamp guest count to room's max
   useEffect(() => {
@@ -251,12 +268,93 @@ export default function BookingFlowModal({
     return sorted.filter((s) => parseSlotStartMinutes(s.time) > currentMinutes);
   }, [availableSlots, selectedDate]);
 
-  // If selected slot is no longer in visible eligible slots, reset it
+  // List of available 30-min start times within operating hours (10:00 AM to 12:00 AM Midnight)
+  const availableCustomStartTimes = useMemo(() => {
+    const durationH = activeRoom?.durationHours || 2;
+    const maxStartMins = 1440 - durationH * 60; // 10:00 PM for 2hr, 11:00 PM for 1hr
+
+    const times: { label: string; mins: number }[] = [];
+    for (let m = 600; m <= maxStartMins; m += 30) {
+      times.push({ label: formatMinutesToTimeStr(m), mins: m });
+    }
+
+    const todayIST = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const isToday = selectedDate === todayIST;
+
+    if (!isToday) return times.map((t) => t.label);
+
+    const istParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Kolkata',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: false,
+    }).formatToParts(new Date());
+    const currentHour = parseInt(istParts.find((p) => p.type === 'hour')?.value || '0', 10);
+    const currentMin = parseInt(istParts.find((p) => p.type === 'minute')?.value || '0', 10);
+    const currentMinutes = currentHour * 60 + currentMin;
+
+    const futureTimes = times.filter((t) => t.mins > currentMinutes);
+    return futureTimes.map((t) => t.label);
+  }, [activeRoom?.durationHours, selectedDate]);
+
+  // Helper to build formatted custom time range string
+  const getCustomSlotString = (startTime: string) => {
+    if (!startTime) return '';
+    const durationH = activeRoom?.durationHours || 2;
+    try {
+      const startMins = parseTimeToMinutes(startTime);
+      const endMins = startMins + durationH * 60;
+      return formatCustomTimeRange(startMins, endMins);
+    } catch {
+      return '';
+    }
+  };
+
+  const calculatedCustomSlot = useMemo(() => {
+    return getCustomSlotString(customStartTime);
+  }, [customStartTime, activeRoom?.durationHours]);
+
+  // Keep customStartTime valid when date or suite duration changes
   useEffect(() => {
-    if (selectedSlot && !visibleSlots.some((s) => s.time === selectedSlot && !s.isBooked)) {
+    if (isCustomSlot && availableCustomStartTimes.length > 0 && !availableCustomStartTimes.includes(customStartTime)) {
+      const nextTime = availableCustomStartTimes[0];
+      setCustomStartTime(nextTime);
+      setSelectedSlot(getCustomSlotString(nextTime));
+    }
+  }, [selectedDate, isCustomSlot, availableCustomStartTimes, customStartTime]);
+
+  const handleSelectCustomSlot = () => {
+    setIsCustomSlot(true);
+    let chosen = customStartTime;
+    if (availableCustomStartTimes.length > 0 && !availableCustomStartTimes.includes(chosen)) {
+      chosen = availableCustomStartTimes[0];
+      setCustomStartTime(chosen);
+    }
+    const slotStr = getCustomSlotString(chosen);
+    if (slotStr) {
+      setSelectedSlot(slotStr);
+    }
+  };
+
+  const handleCustomStartTimeChange = (newStartTime: string) => {
+    setCustomStartTime(newStartTime);
+    const slotStr = getCustomSlotString(newStartTime);
+    if (slotStr) {
+      setSelectedSlot(slotStr);
+    }
+  };
+
+  const handleSelectStandardSlot = (slotTime: string) => {
+    setIsCustomSlot(false);
+    setSelectedSlot(slotTime);
+  };
+
+  // If selected slot is no longer in visible eligible slots, reset it (unless custom slot is active)
+  useEffect(() => {
+    if (selectedSlot && !isCustomSlot && !visibleSlots.some((s) => s.time === selectedSlot && !s.isBooked)) {
       setSelectedSlot('');
     }
-  }, [visibleSlots, selectedSlot]);
+  }, [visibleSlots, selectedSlot, isCustomSlot]);
 
   // Price Calculations
   const pricing = useMemo(() => {
@@ -556,16 +654,24 @@ export default function BookingFlowModal({
             <span className={styles.brandTag}>Private Celebration Theatre</span>
           </div>
 
-          {/* Progress Indicator (Steps 1 to 5) */}
+          {/* Progress Indicator (Steps 1 to 5) - Omit Add-ons for Gaming Room */}
           {currentStep < 6 && (
             <div className={styles.stepper}>
-              {[
-                { num: 1, label: 'Experience' },
-                { num: 2, label: 'Date & Time' },
-                { num: 3, label: 'Add-ons' },
-                { num: 4, label: 'Details' },
-                { num: 5, label: 'Payment' },
-              ].map((s) => (
+              {(isGamingRoom
+                ? [
+                    { num: 1, displayNum: 1, label: 'Experience' },
+                    { num: 2, displayNum: 2, label: 'Date & Time' },
+                    { num: 4, displayNum: 3, label: 'Details' },
+                    { num: 5, displayNum: 4, label: 'Payment' },
+                  ]
+                : [
+                    { num: 1, displayNum: 1, label: 'Experience' },
+                    { num: 2, displayNum: 2, label: 'Date & Time' },
+                    { num: 3, displayNum: 3, label: 'Add-ons' },
+                    { num: 4, displayNum: 4, label: 'Details' },
+                    { num: 5, displayNum: 5, label: 'Payment' },
+                  ]
+              ).map((s) => (
                 <div
                   key={s.num}
                   className={`${styles.stepPill} ${currentStep === s.num ? styles.stepActive : ''} ${
@@ -577,7 +683,7 @@ export default function BookingFlowModal({
                   }}
                 >
                   <span className={styles.stepNum}>
-                    {currentStep > s.num ? '✓' : `0${s.num}`}
+                    {currentStep > s.num ? '✓' : `0${s.displayNum}`}
                   </span>
                   <span className={styles.stepLabel}>{s.label}</span>
                 </div>
@@ -634,7 +740,7 @@ export default function BookingFlowModal({
                         <div className={styles.mobileBillRoom}>
                           <div>
                             <strong>{activeRoom.name} ({activeRoom.duration})</strong>
-                            <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}` : ''} • {guestCount} Guests</span>
+                            <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}${isCustomSlot ? ' (Custom)' : ''}` : ''} • {guestCount} Guests</span>
                           </div>
                           <span className={styles.mobileBillRoomPrice}>₹{pricing.baseRoomPrice}</span>
                         </div>
@@ -741,31 +847,44 @@ export default function BookingFlowModal({
                 <div className={styles.roomsPicker}>
                   <div className={styles.subSectionTitle}>
                     <span>Select Private Suite</span>
-                    {selectedOccasion && (
-                      <button
-                        type="button"
-                        className={styles.clearFilterBtn}
-                        onClick={() => setSelectedOccasion('')}
-                      >
-                        Show All Suites
-                      </button>
-                    )}
+                    {selectedOccasion === 'birthday' ? (
+                      <span className={styles.suiteSubHint}>
+                        ✨ Pink theme recommended for birthdays
+                      </span>
+                    ) : selectedOccasion ? (
+                      <span className={styles.suiteSubHint}>
+                        ✨ All suites available for your celebration
+                      </span>
+                    ) : null}
                   </div>
                   <div className={styles.roomsGrid}>
-                    {ROOMS.filter((room) => !selectedOccasion || room.occasion === selectedOccasion).map((room) => {
+                    {ROOMS.map((room) => {
                       const isSelected = selectedRoomId === room.id;
+                      const isRecommended = selectedOccasion
+                        ? (selectedOccasion === 'birthday'
+                            ? room.id === 'angel-wings'
+                            : OCCASIONS.find((o) => o.id === selectedOccasion)?.recommendedRoomId === room.id)
+                        : room.id === 'angel-wings';
+
                       return (
                         <div
                           key={room.id}
                           className={`${styles.roomSelectCard} ${isSelected ? styles.roomSelected : ''}`}
                           onClick={() => {
                             setSelectedRoomId(room.id);
-                            setSelectedOccasion(room.occasion);
+                            if (!selectedOccasion) {
+                              setSelectedOccasion(room.occasion);
+                            }
                           }}
                         >
                           <div className={styles.roomSelectImgWrap}>
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={room.image} alt={room.name} className={styles.roomSelectImg} />
+                            {isRecommended && (
+                              <span className={styles.recommendedBadge}>
+                                <Sparkles size={11} /> RECOMMENDED
+                              </span>
+                            )}
                             {isSelected ? (
                               <span className={styles.selectedBadge}>SELECTED ✓</span>
                             ) : (
@@ -778,6 +897,11 @@ export default function BookingFlowModal({
                               <span className={styles.roomSelectPrice}>₹{room.price}</span>
                             </div>
                             <span className={styles.roomSelectTheme}>{room.theme}</span>
+                            {isRecommended && (
+                              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#DB2777', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                ⭐ Recommended {selectedOccasion === 'birthday' ? 'for Birthdays' : selectedOccasion ? `for ${OCCASIONS.find(o => o.id === selectedOccasion)?.shortLabel || 'Event'}` : 'Theme'}
+                              </div>
+                            )}
                             {room.occasion !== 'gaming' && (
                               <div className={styles.roomCouponOfferTag}>
                                 🎟️ Flat ₹999 with Coupon BEEVIBE999
@@ -879,7 +1003,7 @@ export default function BookingFlowModal({
                     {isLoadingSlots && <span className={styles.loadingSlots}>Checking live slots...</span>}
                   </div>
 
-                  {visibleSlots.length === 0 ? (
+                  {visibleSlots.length === 0 && availableCustomStartTimes.length === 0 ? (
                     <div className={styles.noSlotsNotice}>
                       <Clock size={22} className={styles.noSlotsIcon} />
                       <div className={styles.noSlotsText}>
@@ -902,30 +1026,94 @@ export default function BookingFlowModal({
                       </button>
                     </div>
                   ) : (
-                    <div className={styles.slotsGrid}>
-                      {visibleSlots.map((slot) => {
-                        const isSelected = selectedSlot === slot.time;
-                        const isBooked = slot.isBooked;
+                    <>
+                      <div className={styles.slotsGrid}>
+                        {visibleSlots.map((slot) => {
+                          const isSelected = !isCustomSlot && selectedSlot === slot.time;
+                          const isBooked = slot.isBooked;
 
-                        return (
-                          <button
-                            key={slot.id}
-                            type="button"
-                            disabled={isBooked}
-                            className={`${styles.slotCard} ${isSelected ? styles.slotSelected : ''} ${
-                              isBooked ? styles.slotBooked : ''
-                            }`}
-                            onClick={() => setSelectedSlot(slot.time)}
-                          >
-                            <div className={styles.slotTime}>{slot.time.replace('-', '–')}</div>
-                            <div className={styles.slotLabel}>
-                              {isBooked ? '❌ Booked' : slot.label || 'Available'}
+                          return (
+                            <button
+                              key={slot.id}
+                              type="button"
+                              disabled={isBooked}
+                              className={`${styles.slotCard} ${isSelected ? styles.slotSelected : ''} ${
+                                isBooked ? styles.slotBooked : ''
+                              }`}
+                              onClick={() => handleSelectStandardSlot(slot.time)}
+                            >
+                              <div className={styles.slotTime}>{slot.time.replace('-', '–')}</div>
+                              <div className={styles.slotLabel}>
+                                {isBooked ? '❌ Booked' : slot.label || 'Available'}
+                              </div>
+                              {isSelected && <Check size={14} className={styles.slotCheck} />}
+                            </button>
+                          );
+                        })}
+
+                        {/* Custom Time Slot Option Card */}
+                        <button
+                          type="button"
+                          className={`${styles.slotCard} ${styles.customSlotCard} ${isCustomSlot ? styles.slotSelected : ''}`}
+                          onClick={handleSelectCustomSlot}
+                        >
+                          <span className={styles.customSlotBadge}>Flexible</span>
+                          <div className={styles.slotTime}>🕒 Custom Timing</div>
+                          <div className={styles.slotLabel}>
+                            {isCustomSlot ? 'Custom Timing Set' : 'Choose Your Timing'}
+                          </div>
+                          {isCustomSlot && <Check size={14} className={styles.slotCheck} />}
+                        </button>
+                      </div>
+
+                      {/* Custom Time Slot Configuration Panel */}
+                      {isCustomSlot && (
+                        <div className={styles.customSlotPanel}>
+                          <div className={styles.customSlotHeader}>
+                            <div className={styles.customSlotTitleRow}>
+                              <Clock size={16} className={styles.customSlotIcon} />
+                              <strong>Configure Custom Slot Timing</strong>
                             </div>
-                            {isSelected && <Check size={14} className={styles.slotCheck} />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                            <span className={styles.customSlotNotice}>Operating: 10:00 AM – 12:00 AM Midnight</span>
+                          </div>
+
+                          <div className={styles.customSlotControls}>
+                            <div className={styles.customSlotField}>
+                              <label htmlFor="custom-slot-start-select" className={styles.customSlotLabel}>
+                                Select Preferred Start Time:
+                              </label>
+                              <select
+                                id="custom-slot-start-select"
+                                value={customStartTime}
+                                onChange={(e) => handleCustomStartTimeChange(e.target.value)}
+                                className={styles.customSlotSelect}
+                              >
+                                {availableCustomStartTimes.map((timeStr) => (
+                                  <option key={timeStr} value={timeStr}>
+                                    {timeStr}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className={styles.customSlotField}>
+                              <label className={styles.customSlotLabel}>Session Duration:</label>
+                              <div className={styles.customSlotDurationPill}>
+                                ⏱️ {activeRoom?.duration || '2 Hours'} Session
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.customSlotSummaryBox}>
+                            <span className={styles.customSlotSummaryLabel}>Your Selected Custom Slot:</span>
+                            <strong className={styles.customSlotSummaryTime}>
+                              {calculatedCustomSlot.replace('-', '–')}
+                            </strong>
+                            <span className={styles.customSlotSummaryBadge}>Custom Slot</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -933,7 +1121,7 @@ export default function BookingFlowModal({
                 <div className={styles.stepCallHelp}>
                   <Phone size={14} />
                   <span>
-                    Need a custom timing or prefer booking over phone? <a href="tel:+919900106474">Call</a>
+                    Need help with timings or prefer booking over phone? <a href="tel:+919900106474">Call</a>
                   </span>
                 </div>
 
@@ -950,9 +1138,16 @@ export default function BookingFlowModal({
                     type="button"
                     className="btn btn-primary"
                     disabled={!selectedSlot}
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => {
+                      if (isGamingRoom) {
+                        setSelectedAddOns([]);
+                        setCurrentStep(4);
+                      } else {
+                        setCurrentStep(3);
+                      }
+                    }}
                   >
-                    <span>NEXT: CUSTOMIZE ADD-ONS</span>
+                    <span>{isGamingRoom ? 'NEXT: GAMER DETAILS' : 'NEXT: CUSTOMIZE ADD-ONS'}</span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -1279,7 +1474,7 @@ export default function BookingFlowModal({
                   <button
                     type="button"
                     className="btn btn-secondary"
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => setCurrentStep(isGamingRoom ? 2 : 3)}
                   >
                     <ChevronLeft size={16} /> Back
                   </button>
@@ -1734,7 +1929,7 @@ export default function BookingFlowModal({
                     <div>
                       <strong>{activeRoom.name}</strong>
                       <span>{selectedDate}</span>
-                      <span className={styles.summarySlotTime}>{selectedSlot || 'Select slot in Step 2'}</span>
+                      <span className={styles.summarySlotTime}>{selectedSlot ? `${selectedSlot}${isCustomSlot ? ' (Custom Slot)' : ''}` : 'Select slot in Step 2'}</span>
                     </div>
                   </div>
                 ) : (

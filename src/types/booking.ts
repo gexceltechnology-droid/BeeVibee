@@ -269,6 +269,6 @@ export const ADD_ONS: AddOnItem[] = [
     price: 199,
     category: 'food',
     icon: '🍿',
-    description: 'Fresh theater popcorn tub, crispy nachos, and 2 chilled beverages.',
+    description: '1 medium cup of popcorn and coke.',
   },
 ];

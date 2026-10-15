@@ -128,23 +128,25 @@ export default function RoomDetailsModal({
               </div>
             </div>
 
-            {/* Available Add-Ons Highlights */}
-            <div className={styles.sectionBlock}>
-              <h4 className={styles.sectionTitle}>Customizable Add-Ons Available</h4>
-              <p className={styles.sectionSubtitle}>You can add any of these during your booking step:</p>
-              <div className={styles.addonsList}>
-                {ADD_ONS.slice(0, 4).map((addon) => (
-                  <div key={addon.id} className={styles.addonItem}>
-                    <span className={styles.addonIcon}>{addon.icon}</span>
-                    <div className={styles.addonInfo}>
-                      <strong>{addon.name}</strong>
-                      <span>{addon.description}</span>
+            {/* Available Add-Ons Highlights - Omitted for Gaming Room */}
+            {room.id !== 'ps5-gaming' && room.occasion !== 'gaming' && (
+              <div className={styles.sectionBlock}>
+                <h4 className={styles.sectionTitle}>Customizable Add-Ons Available</h4>
+                <p className={styles.sectionSubtitle}>You can add any of these during your booking step:</p>
+                <div className={styles.addonsList}>
+                  {ADD_ONS.slice(0, 4).map((addon) => (
+                    <div key={addon.id} className={styles.addonItem}>
+                      <span className={styles.addonIcon}>{addon.icon}</span>
+                      <div className={styles.addonInfo}>
+                        <strong>{addon.name}</strong>
+                        <span>{addon.description}</span>
+                      </div>
+                      <span className={styles.addonTag}>Available</span>
                     </div>
-                    <span className={styles.addonTag}>Available</span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Location & Policies reminder */}
             <div className={styles.policyNotice}>

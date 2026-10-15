@@ -366,6 +366,33 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.recommendedBadge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #EC4899, #DB2777);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 2;
+  text-transform: uppercase;
+}
+
+.suiteSubHint {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #DB2777;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .roomSelectBody {
   padding: 12px 14px;
   display: flex;
@@ -676,6 +703,167 @@
   top: 6px;
   right: 6px;
   color: var(--royal);
+}
+
+.customSlotCard {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+}
+
+.customSlotCard:hover:not(:disabled) {
+  background: #FFEDD5;
+  border-color: #F97316;
+}
+
+.customSlotCard.slotSelected {
+  background: #FFEDD5;
+  border-color: #EA580C;
+  box-shadow: 0 0 0 2px #EA580C;
+}
+
+.customSlotBadge {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  color: #C2410C;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.customSlotPanel {
+  background: #FFFFFF;
+  border: 1.5px solid #FDBA74;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(234, 88, 12, 0.08);
+}
+
+.customSlotHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.customSlotTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #9A3412;
+}
+
+.customSlotIcon {
+  color: #EA580C;
+}
+
+.customSlotNotice {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #9A3412;
+  background: #FFEDD5;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.customSlotControls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 500px) {
+  .customSlotControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.customSlotField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.customSlotLabel {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.customSlotSelect {
+  background: #FFF7ED;
+  border: 1.5px solid #FDBA74;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #9A3412;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.customSlotSelect:focus {
+  border-color: #EA580C;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2);
+}
+
+.customSlotDurationPill {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.customSlotSummaryBox {
+  background: #FFFBEB;
+  border: 1px dashed #F59E0B;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.customSlotSummaryLabel {
+  font-size: 0.78rem;
+  color: #92400E;
+  font-weight: 600;
+}
+
+.customSlotSummaryTime {
+  font-family: var(--font-title);
+  font-size: 0.98rem;
+  color: #B45309;
+  font-weight: 800;
+}
+
+.customSlotSummaryBadge {
+  background: #F59E0B;
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  text-transform: uppercase;
 }
 
 @media (max-width: 580px) {
