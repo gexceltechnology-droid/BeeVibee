@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const clientIp = getClientIp(request);
     const isAdmin = isAuthorized(request);
     if (!isAdmin) {
-      const ipLimit = checkRateLimit(`booking_ip_${clientIp}`, 5, 600);
+      const ipLimit = checkRateLimit(`booking_ip_${clientIp}`, 15, 600);
       if (!ipLimit.allowed) {
         return NextResponse.json(
           { error: `Too many booking attempts from your network. Please wait ${ipLimit.retryAfterSeconds}s before trying again.` },
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const phoneLimit = checkRateLimit(`booking_phone_${cleanPhoneNumber(trimmedPhone)}`, 3, 600);
+      const phoneLimit = checkRateLimit(`booking_phone_${cleanPhoneNumber(trimmedPhone)}`, 10, 600);
       if (!phoneLimit.allowed) {
         return NextResponse.json(
           { error: `Too many booking attempts for this phone number. Please wait ${phoneLimit.retryAfterSeconds}s before trying again.` },
@@ -156,7 +156,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'The selected time slot is invalid.' }, { status: 400 });
     }
 
-    const detectedBookingType: 'gaming' | 'theater' = body.bookingType || (packageName.includes('Gaming') || packageName.includes('Dark') ? 'gaming' : 'theater');
+    // Resolve target suite / room ID accurately
+    const targetRoomId = normalizeRoomId(body.roomId || body.theme || packageName || body.bookingType);
+    const isGaming = targetRoomId === 'ps5-gaming' || body.bookingType === 'gaming' || (packageName || '').includes('Gaming') || (packageName || '').includes('Dark');
+    const detectedBookingType: 'gaming' | 'theater' = isGaming ? 'gaming' : 'theater';
 
     // Enforce minimum 1 hour (60 minutes) for Gaming Lounge
     if (detectedBookingType === 'gaming' && durationMinutes < 55) {
@@ -164,34 +167,11 @@ export async function POST(request: NextRequest) {
     }
 
     const rawCoupon = String(body.couponCode || '').trim().toUpperCase();
-    const isSpecialOfferCoupon = rawCoupon === 'BEEVIBE999' || rawCoupon === 'VIBE999';
+    const isSpecialOfferCoupon = (rawCoupon === 'BEEVIBE999' || rawCoupon === 'VIBE999') && !isGaming;
     const isQuickBooking = Boolean(body.isQuickReservation || body.paymentMode === 'PAY_AT_VENUE' || body.paymentStatus === 'pay_at_venue' || body.paymentStatus === 'pending');
 
-    // Dynamic theme package pricing
-    let pkgBase = 0;
-    if (detectedBookingType === 'gaming') {
-      // PS5 Gaming Lounge is ₹99 per person / hour
-      pkgBase = Math.round(99 * numericGuestCount * durationHours);
-    } else {
-      if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
-        // Month Offer: Any theme at flat ₹999 / 2 hours promo!
-        pkgBase = Math.round((999 / 2) * durationHours);
-      } else {
-        const lower = (packageName || '').toLowerCase();
-        let packagePrice = 1499;
-        if (lower.includes('purple') || lower.includes('butterfly')) {
-          packagePrice = 1499;
-        } else if (lower.includes('pink') || lower.includes('angel')) {
-          packagePrice = 1299;
-        } else if (lower.includes('red') || lower.includes('velvet')) {
-          packagePrice = 1099;
-        }
-        pkgBase = Math.round((packagePrice / 2) * durationHours);
-      }
-    }
-
     // Extra guest pricing (base includes 2 guests, extra guests are ₹100/head)
-    const extraGuests = numericGuestCount > 2 ? (numericGuestCount - 2) * 100 : 0;
+    let extraGuests = numericGuestCount > 2 ? (numericGuestCount - 2) * 100 : 0;
 
     // Addons pricing
     let addonsTotal = 0;
@@ -239,6 +219,45 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Dynamic theme package pricing
+    let pkgBase = 0;
+    if (isGaming) {
+      // Support both modern suite pricing (₹399 base covers 2 guests + extraGuests)
+      // and legacy per-person pricing (₹99 * numericGuestCount * durationHours)
+      const suiteBase = Math.round(399 * durationHours);
+      const perHeadTotal = Math.round(99 * numericGuestCount * durationHours) + addonsTotal;
+      if (Number(totalPrice) === perHeadTotal) {
+        pkgBase = Math.round(99 * numericGuestCount * durationHours);
+        extraGuests = 0;
+      } else {
+        pkgBase = suiteBase;
+      }
+    } else {
+      if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+        // Month Offer: Any theme at flat ₹999 / 2 hours promo!
+        pkgBase = Math.round((999 / 2) * durationHours);
+      } else {
+        let packagePrice = 1499;
+        if (targetRoomId === 'royal-butterfly') {
+          packagePrice = 1499;
+        } else if (targetRoomId === 'angel-wings') {
+          packagePrice = 1299;
+        } else if (targetRoomId === 'red-velvet') {
+          packagePrice = 1099;
+        } else {
+          const lower = (packageName || '').toLowerCase();
+          if (lower.includes('purple') || lower.includes('butterfly')) {
+            packagePrice = 1499;
+          } else if (lower.includes('pink') || lower.includes('angel')) {
+            packagePrice = 1299;
+          } else if (lower.includes('red') || lower.includes('velvet')) {
+            packagePrice = 1099;
+          }
+        }
+        pkgBase = Math.round((packagePrice / 2) * durationHours);
+      }
+    }
+
     const calculatedTotal = pkgBase + extraGuests + addonsTotal;
     if (Number(totalPrice) !== calculatedTotal) {
       return NextResponse.json({
@@ -247,7 +266,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
-    const targetRoomId = normalizeRoomId(body.roomId || body.theme || packageName || detectedBookingType);
     const allBookings = await getAllBookings();
     const sameRoomBookings = allBookings.filter((b) => {
       if (b.status === 'cancelled') return false;

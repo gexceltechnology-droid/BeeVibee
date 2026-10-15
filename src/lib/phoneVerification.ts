@@ -90,54 +90,65 @@ export async function verifyFirebaseIdToken(
 
   const cleanedPhone = cleanPhoneNumber(phone);
 
-  try {
-    // 1. Attempt verification via firebase-admin Auth
-    const { getAuth } = await import('firebase-admin/auth');
-    const { getAdminApp } = await import('./firestore');
+  const { isFirestoreConfigured } = await import('./firestore');
 
-    const app = getAdminApp();
-    const auth = getAuth(app);
-    const decoded = await auth.verifyIdToken(idToken);
-
-    const tokenPhone = decoded.phone_number ? cleanPhoneNumber(decoded.phone_number) : '';
-    if (!tokenPhone) {
-      return { valid: false, reason: 'Firebase account does not contain a verified phone number.' };
-    }
-
-    if (tokenPhone !== cleanedPhone) {
-      return {
-        valid: false,
-        reason: `Verified Firebase phone (+${tokenPhone}) does not match booking phone (+${cleanedPhone}).`,
-      };
-    }
-
-    return { valid: true };
-  } catch (err: any) {
-    console.warn('[Firebase Auth Verification Warning]:', err?.message || err);
-
-    // 2. Fallback: Parse unencrypted JWT payload safely if firebase-admin network verification is unavailable in dev
+  // 1. Attempt verification via firebase-admin Auth ONLY if service credentials are configured
+  if (isFirestoreConfigured()) {
     try {
-      const parts = idToken.split('.');
-      if (parts.length === 3) {
-        const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8');
-        const payload = JSON.parse(payloadJson);
+      const { getAuth } = await import('firebase-admin/auth');
+      const { getAdminApp } = await import('./firestore');
 
-        const exp = payload.exp ? payload.exp * 1000 : 0;
-        if (exp && Date.now() > exp) {
-          return { valid: false, reason: 'Firebase token expired. Please re-verify phone.' };
-        }
+      const app = getAdminApp();
+      const auth = getAuth(app);
+      const decoded = await auth.verifyIdToken(idToken);
 
-        const tokenPhone = payload.phone_number ? cleanPhoneNumber(payload.phone_number) : '';
-        if (tokenPhone && tokenPhone === cleanedPhone) {
-          return { valid: true };
-        }
+      const rawPhone = decoded.phone_number || (decoded as any).phone || '';
+      const tokenPhone = rawPhone ? cleanPhoneNumber(rawPhone) : '';
+      if (!tokenPhone) {
+        return { valid: false, reason: 'Firebase account does not contain a verified phone number.' };
       }
-    } catch {
-      // Ignore fallback error
-    }
 
-    return { valid: false, reason: `Firebase authentication verification failed: ${err?.message || 'Invalid token'}` };
+      if (tokenPhone !== cleanedPhone) {
+        return {
+          valid: false,
+          reason: `Verified Firebase phone (+${tokenPhone}) does not match booking phone (+${cleanedPhone}).`,
+        };
+      }
+
+      return { valid: true };
+    } catch (err: any) {
+      console.warn('[Firebase Auth Verification Warning]:', err?.message || err);
+    }
   }
+
+  // 2. Fallback: Parse JWT payload safely if firebase-admin network verification is not configured in environment
+  try {
+    const parts = idToken.split('.');
+    if (parts.length === 3) {
+      // Decode JWT payload using base64url (handles URL-safe characters '-' and '_')
+      const payloadJson = Buffer.from(parts[1], 'base64url').toString('utf8');
+      const payload = JSON.parse(payloadJson);
+
+      const exp = payload.exp ? payload.exp * 1000 : 0;
+      if (exp && Date.now() > exp) {
+        return { valid: false, reason: 'Firebase token expired. Please re-verify phone.' };
+      }
+
+      const rawPhone =
+        payload.phone_number ||
+        payload.phone ||
+        payload.firebase?.identities?.phone?.[0] ||
+        '';
+      const tokenPhone = rawPhone ? cleanPhoneNumber(rawPhone) : '';
+      if (tokenPhone && tokenPhone === cleanedPhone) {
+        return { valid: true };
+      }
+    }
+  } catch (parseErr: any) {
+    console.warn('[JWT Fallback Parse Warning]:', parseErr?.message || parseErr);
+  }
+
+  return { valid: false, reason: 'Firebase phone verification could not be validated. Please verify your phone number via OTP.' };
 }
 
 /**

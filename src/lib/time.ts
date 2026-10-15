@@ -62,12 +62,12 @@ export function validateSlotOperatingHours(startMinutes: number, endMinutes: num
 export function parseTimeToMinutes(timeStr: string): number {
   const cleanStr = timeStr.trim().toUpperCase();
 
-  // Format check for AM/PM (e.g. 10:00 AM or 02:30 PM)
-  const ampmMatch = cleanStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  // Format check for AM/PM (e.g. 10:00 AM, 02:30 PM, or with annotations)
+  const ampmMatch = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
   if (ampmMatch) {
     let hours = parseInt(ampmMatch[1], 10);
     const minutes = parseInt(ampmMatch[2], 10);
-    const ampm = ampmMatch[3];
+    const ampm = ampmMatch[3].toUpperCase();
 
     if (ampm === 'PM' && hours !== 12) {
       hours += 12;
@@ -78,7 +78,7 @@ export function parseTimeToMinutes(timeStr: string): number {
   }
 
   // Format check for 24h military time (e.g. 14:30)
-  const militaryMatch = cleanStr.match(/^(\d{1,2}):(\d{2})$/);
+  const militaryMatch = cleanStr.match(/\b(\d{1,2}):(\d{2})\b/);
   if (militaryMatch) {
     const hours = parseInt(militaryMatch[1], 10);
     const minutes = parseInt(militaryMatch[2], 10);
@@ -93,8 +93,10 @@ export function parseTimeToMinutes(timeStr: string): number {
  * Handles crossing midnight by adding 1440 minutes (24 hours) to endMinutes if it falls before startMinutes.
  */
 export function parseTimeRange(timeRangeStr: string): { startMinutes: number; endMinutes: number } {
-  const parts = timeRangeStr.split(/[-–—]/);
-  if (parts.length !== 2) {
+  // Strip any parenthetical annotations e.g. "(Custom Slot)"
+  const sanitized = timeRangeStr.replace(/\(.*?\)/g, '').trim();
+  const parts = sanitized.split(/[-–—]/);
+  if (parts.length < 2) {
     throw new Error('Invalid time range format: ' + timeRangeStr);
   }
 
