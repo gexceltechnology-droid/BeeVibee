@@ -377,29 +377,24 @@ export async function POST(request: NextRequest) {
       console.error('Failed sending Admin booking notification:', notifErr);
     }
 
-    // Send inquiry directly into BeeVibe Lead Manager CRM
+    // Forward booking inquiry to BeeVibe Lead Manager CRM
     try {
-      const crmEndpoint = process.env.LEAD_MANAGER_CRM_URL || 'https://rental-license-ment-consideration.trycloudflare.com/api/leads';
-      const crmInterest = body.interest || (detectedBookingType === 'gaming' ? 'Gaming' : 'Party Hall');
-      const crmOccasion = body.occasion || (targetRoomId === 'ps5-gaming' ? 'Gaming' : (targetRoomId === 'angel-wings' ? 'Birthday Party' : (targetRoomId === 'red-velvet' ? 'Anniversary' : (targetRoomId === 'royal-butterfly' ? 'VIP Celebration' : 'Event'))));
-
-      await fetch(crmEndpoint, {
+      await fetch('https://rental-license-ment-consideration.trycloudflare.com/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_name: customerName || trimmedName,
-          phone: phone || trimmedPhone,
-          interest: crmInterest,
-          occasion: crmOccasion || 'Event',
-          event_date: date,
-          guest_count: numericGuestCount || guestCount,
+          customer_name: body.name || body.customer_name || body.customerName || trimmedName,
+          phone: body.phone || trimmedPhone,
+          interest: 'Party Hall',
+          occasion: body.occasion || 'Event',
+          event_date: body.eventDate || body.date || date,
+          guest_count: body.guests || body.guest_count || body.guestCount || numericGuestCount,
           source: 'Website',
-          notes: specialRequests || `Booking inquiry from beevibe.org (${packageName}, ${timeSlot}) - Ticket #${newBooking.id}`,
+          notes: body.notes || body.specialRequests || specialRequests || 'Inquiry from beevibe.org website',
         }),
-        signal: AbortSignal.timeout(5000),
       });
-    } catch (err) {
-      console.error('Failed to sync to Lead Manager CRM:', err);
+    } catch (crmError) {
+      console.error('Lead Manager CRM sync error:', crmError);
     }
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
