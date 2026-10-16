@@ -377,6 +377,31 @@ export async function POST(request: NextRequest) {
       console.error('Failed sending Admin booking notification:', notifErr);
     }
 
+    // Send inquiry directly into BeeVibe Lead Manager CRM
+    try {
+      const crmEndpoint = process.env.LEAD_MANAGER_CRM_URL || 'https://rental-license-ment-consideration.trycloudflare.com/api/leads';
+      const crmInterest = body.interest || (detectedBookingType === 'gaming' ? 'Gaming' : 'Party Hall');
+      const crmOccasion = body.occasion || (targetRoomId === 'ps5-gaming' ? 'Gaming' : (targetRoomId === 'angel-wings' ? 'Birthday Party' : (targetRoomId === 'red-velvet' ? 'Anniversary' : (targetRoomId === 'royal-butterfly' ? 'VIP Celebration' : 'Event'))));
+
+      await fetch(crmEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: customerName || trimmedName,
+          phone: phone || trimmedPhone,
+          interest: crmInterest,
+          occasion: crmOccasion || 'Event',
+          event_date: date,
+          guest_count: numericGuestCount || guestCount,
+          source: 'Website',
+          notes: specialRequests || `Booking inquiry from beevibe.org (${packageName}, ${timeSlot}) - Ticket #${newBooking.id}`,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch (err) {
+      console.error('Failed to sync to Lead Manager CRM:', err);
+    }
+
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {
     console.error('Error creating booking:', error);

@@ -610,6 +610,8 @@ export default function BookingFlowModal({
           packageName: `${activeRoom.name} (${activeRoom.occasionLabel})`,
           roomId: activeRoom.id,
           theme: activeRoom.id,
+          occasion: activeRoom.occasionLabel,
+          interest: activeRoom.occasion === 'gaming' ? 'Gaming' : 'Party Hall',
           bookingType: activeRoom.occasion === 'gaming' ? 'gaming' : 'theater',
           addOns: addonsPayload,
           totalPrice: pricing.total,
