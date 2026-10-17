@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, Users, Clock, Sparkles, Search, ArrowRight } from 'lucide-react';
+import { Calendar, Users, Clock, Sparkles, Search, ArrowRight, Phone } from 'lucide-react';
 import { OCCASIONS, OccasionType } from '@/types/booking';
 import styles from './BookingFinder.module.css';
 
@@ -11,10 +11,12 @@ interface BookingFinderProps {
     occasion: OccasionType;
     guestCount: number;
     preferredTime: string;
+    phone?: string;
   }) => void;
   initialDate?: string;
   initialOccasion?: OccasionType;
   initialGuests?: number;
+  initialPhone?: string;
 }
 
 export default function BookingFinder({
@@ -22,6 +24,7 @@ export default function BookingFinder({
   initialDate,
   initialOccasion = 'birthday',
   initialGuests = 2,
+  initialPhone = '',
 }: BookingFinderProps) {
   // Default to today in YYYY-MM-DD
   const todayStr = new Date().toISOString().split('T')[0];
@@ -29,14 +32,60 @@ export default function BookingFinder({
   const [occasion, setOccasion] = useState<OccasionType>(initialOccasion);
   const [guestCount, setGuestCount] = useState<number>(initialGuests);
   const [preferredTime, setPreferredTime] = useState<string>('any');
+  const [phone, setPhone] = useState<string>(initialPhone);
+  const [phoneError, setPhoneError] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanPhone = phone.trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      setPhoneError('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    setPhoneError('');
+
+    // Directly capture the LEAD to BeeVibe CRM tool
+    const occLabel = OCCASIONS.find((o) => o.id === occasion)?.label || 'Birthday Celebration';
+    const isGaming = occasion === 'gaming';
+    const leadPayload = {
+      customer_name: 'Website Lead',
+      phone: cleanPhone,
+      interest: isGaming ? 'Gaming' : 'Party Hall',
+      occasion: occLabel,
+      event_date: date,
+      guest_count: guestCount,
+      source: 'Website',
+      notes: `Availability search on homepage (Preferred Time: ${preferredTime}, Guests: ${guestCount})`,
+    };
+
+    // 1. Forward through server-side /api/leads
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(leadPayload),
+    }).catch((err) => {
+      console.error('Failed to sync lead via /api/leads:', err);
+    });
+
+    // 2. Direct forward to Cloudflare Lead Manager CRM endpoint
+    try {
+      fetch('https://rental-license-ment-consideration.trycloudflare.com/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(leadPayload),
+      }).catch((crmError) => {
+        console.error('Lead Manager CRM direct sync error:', crmError);
+      });
+    } catch (crmErr) {
+      console.error('Lead Manager CRM sync error:', crmErr);
+    }
+
     onSearch({
       date,
       occasion,
       guestCount,
       preferredTime,
+      phone: cleanPhone,
     });
   };
 
@@ -133,6 +182,29 @@ export default function BookingFinder({
               <option value="night">Night (8 PM - 10 PM)</option>
               <option value="midnight">Midnight (10 PM - 12 AM)</option>
             </select>
+          </div>
+
+          {/* Field 5: Phone Number */}
+          <div className={`${styles.fieldBox} ${phoneError ? styles.fieldBoxError : ''}`}>
+            <label className={styles.fieldLabel} htmlFor="finder-phone">
+              <Phone size={15} className={styles.fieldIcon} />
+              <span>Phone Number</span>
+            </label>
+            <input
+              id="finder-phone"
+              type="tel"
+              className={styles.fieldInput}
+              placeholder="10-digit mobile"
+              value={phone}
+              maxLength={10}
+              onChange={(e) => {
+                const clean = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setPhone(clean);
+                if (phoneError) setPhoneError('');
+              }}
+              required
+            />
+            {phoneError && <span className={styles.errorText}>{phoneError}</span>}
           </div>
         </div>
 

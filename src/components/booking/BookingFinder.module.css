@@ -59,11 +59,17 @@
 
 .fieldsGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
+  .fieldsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
   .fieldsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -90,6 +96,18 @@
   border-color: var(--royal);
   background: #FFFFFF;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.fieldBoxError {
+  border-color: #EF4444 !important;
+  background: #FEF2F2 !important;
+}
+
+.errorText {
+  color: #DC2626;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 4px;
 }
 
 .fieldLabel {
@@ -125,6 +143,12 @@
   width: 100%;
   cursor: pointer;
   padding: 2px 0;
+}
+
+.fieldInput::placeholder {
+  color: #94A3B8;
+  font-weight: 500;
+  font-size: 0.88rem;
 }
 
 .fieldInput {

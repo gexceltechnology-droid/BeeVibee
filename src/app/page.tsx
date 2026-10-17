@@ -52,6 +52,7 @@ export default function Home() {
   const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
   const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
   const [preselectedSlot, setPreselectedSlot] = useState<string>('');
+  const [preselectedPhone, setPreselectedPhone] = useState<string>('');
 
   // UI state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -87,6 +88,7 @@ export default function Home() {
     occasion: OccasionType;
     guestCount: number;
     preferredTime: string;
+    phone?: string;
   }) => {
     setSelectedDate(params.date);
     setActiveOccasionFilter(params.occasion);
@@ -94,6 +96,9 @@ export default function Home() {
     setPreselectedRoomId('');
     setGuestCount(params.guestCount);
     setPreferredTime(params.preferredTime);
+    if (params.phone) {
+      setPreselectedPhone(params.phone);
+    }
     setIsBookingModalOpen(true);
   };
 
@@ -389,6 +394,7 @@ export default function Home() {
             initialDate={selectedDate}
             initialOccasion={activeOccasionFilter === 'all' ? 'birthday' : activeOccasionFilter}
             initialGuests={guestCount}
+            initialPhone={preselectedPhone}
           />
 
           {/* Authentic BeeVibe Theatre Venue Ambience */}
@@ -1188,6 +1194,7 @@ export default function Home() {
         initialDate={selectedDate}
         initialGuests={guestCount}
         initialSlot={preselectedSlot}
+        initialPhone={preselectedPhone}
       />
     </div>
   );

@@ -59,6 +59,7 @@ interface BookingFlowModalProps {
   initialDate?: string;
   initialGuests?: number;
   initialSlot?: string;
+  initialPhone?: string;
 }
 
 function parseSlotStartMinutes(slotTimeStr: string): number {
@@ -110,6 +111,7 @@ export default function BookingFlowModal({
   initialDate,
   initialGuests = 2,
   initialSlot = '',
+  initialPhone = '',
 }: BookingFlowModalProps) {
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
@@ -133,9 +135,16 @@ export default function BookingFlowModal({
 
   // Customer Details
   const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerPhone, setCustomerPhone] = useState(initialPhone || '');
   const [customerEmail, setCustomerEmail] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
+
+  // Sync initialPhone whenever it changes and customerPhone hasn't been modified yet
+  useEffect(() => {
+    if (initialPhone && !customerPhone) {
+      setCustomerPhone(initialPhone);
+    }
+  }, [initialPhone, customerPhone]);
 
   // Phone OTP Verification States
   const [isPhoneVerified, setIsPhoneVerified] = useState(false);
