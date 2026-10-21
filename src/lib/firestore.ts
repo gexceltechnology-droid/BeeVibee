@@ -45,6 +45,7 @@ export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
   { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
   { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-7', time: '11:00 PM - 01:00 AM', label: 'Late Night Bash', basePrice: 999 },
 ];
 
 let adminApp: App | null = null;

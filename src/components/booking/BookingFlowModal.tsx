@@ -46,6 +46,8 @@ import {
   parseTimeToMinutes,
   formatMinutesToTimeStr,
   formatCustomTimeRange,
+  isLateNightSlot,
+  VENUE_CLOSE_MINUTES,
 } from '@/lib/time';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
@@ -83,7 +85,8 @@ const DEFAULT_SLOTS: TimeSlotOption[] = [
   { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
   { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
   { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999, isLateNight: true, lateNightFee: 500 },
+  { id: 'slot-7', time: '11:00 PM - 01:00 AM', label: 'Late Night Bash', basePrice: 999, isLateNight: true, lateNightFee: 500 },
 ];
 
 const GAMING_SLOTS: TimeSlotOption[] = [
@@ -277,10 +280,10 @@ export default function BookingFlowModal({
     return sorted.filter((s) => parseSlotStartMinutes(s.time) > currentMinutes);
   }, [availableSlots, selectedDate]);
 
-  // List of available 30-min start times within operating hours (10:00 AM to 12:00 AM Midnight)
+  // List of available 30-min start times within operating hours (10:00 AM to 01:30 AM Late Night)
   const availableCustomStartTimes = useMemo(() => {
     const durationH = activeRoom?.durationHours || 2;
-    const maxStartMins = 1440 - durationH * 60; // 10:00 PM for 2hr, 11:00 PM for 1hr
+    const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60; // 11:30 PM for 2hr, 12:30 AM for 1hr
 
     const times: { label: string; mins: number }[] = [];
     for (let m = 600; m <= maxStartMins; m += 30) {
@@ -379,6 +382,8 @@ export default function BookingFlowModal({
         discount: 0,
         roomDiscount: 0,
         freeAddonsDiscount: 0,
+        isLateNight: false,
+        lateNightFee: 0,
         total: 0,
         advance: 500,
         remaining: 0,
@@ -414,10 +419,14 @@ export default function BookingFlowModal({
       }
     });
 
-    const subtotal = baseRoomPrice + extraGuestCost + regularAddonsCost;
+    // Late-night surcharge (+₹500) for party hall slots concluding after 11 PM
+    const isLateNight = isCelebrationTheme && isLateNightSlot(selectedSlot);
+    const lateNightFee = isLateNight ? 500 : 0;
+
+    const subtotal = baseRoomPrice + extraGuestCost + regularAddonsCost + lateNightFee;
     const totalDiscount = roomDiscount + freeAddonsDiscount;
-    const total = Math.max(500, effectiveRoomPrice + extraGuestCost + effectiveAddonsCost);
-    const advance = 500; // Transparent fixed booking deposit
+    const total = Math.max(0, effectiveRoomPrice + extraGuestCost + effectiveAddonsCost + lateNightFee);
+    const advance = Math.min(500, total); // Booking deposit capped at total bill
     const remaining = Math.max(0, total - advance);
 
     return {
@@ -431,12 +440,14 @@ export default function BookingFlowModal({
       discount: totalDiscount,
       roomDiscount,
       freeAddonsDiscount,
+      isLateNight,
+      lateNightFee,
       total,
       advance,
       remaining,
       isCouponValid,
     };
-  }, [activeRoom, guestCount, selectedAddOns, appliedCoupon]);
+  }, [activeRoom, guestCount, selectedAddOns, appliedCoupon, selectedSlot]);
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
@@ -790,6 +801,13 @@ export default function BookingFlowModal({
                           );
                         })}
 
+                        {pricing.lateNightFee > 0 && (
+                          <div className={styles.mobileBillRowItem}>
+                            <span>🌙 Late Night Slot Surcharge (After 11 PM)</span>
+                            <strong style={{ color: '#F59E0B' }}>+₹{pricing.lateNightFee}</strong>
+                          </div>
+                        )}
+
                         <div className={styles.mobileBillRowItem} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
                           <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
                           <strong className={styles.billFreeTag}>INCLUDED</strong>
@@ -1048,6 +1066,7 @@ export default function BookingFlowModal({
                         {visibleSlots.map((slot) => {
                           const isSelected = !isCustomSlot && selectedSlot === slot.time;
                           const isBooked = slot.isBooked;
+                          const isSlotLateNight = activeRoom?.occasion !== 'gaming' && isLateNightSlot(slot.time);
 
                           return (
                             <button
@@ -1061,7 +1080,13 @@ export default function BookingFlowModal({
                             >
                               <div className={styles.slotTime}>{slot.time.replace('-', '–')}</div>
                               <div className={styles.slotLabel}>
-                                {isBooked ? '❌ Booked' : slot.label || 'Available'}
+                                {isBooked ? (
+                                  '❌ Booked'
+                                ) : isSlotLateNight ? (
+                                  <span style={{ color: '#F59E0B', fontWeight: 600 }}>🌙 Late Night (+₹500)</span>
+                                ) : (
+                                  slot.label || 'Available'
+                                )}
                               </div>
                               {isSelected && <Check size={14} className={styles.slotCheck} />}
                             </button>
@@ -1091,8 +1116,14 @@ export default function BookingFlowModal({
                               <Clock size={16} className={styles.customSlotIcon} />
                               <strong>Configure Custom Slot Timing</strong>
                             </div>
-                            <span className={styles.customSlotNotice}>Operating: 10:00 AM – 12:00 AM Midnight</span>
+                            <span className={styles.customSlotNotice}>Operating: 10:00 AM – 01:30 AM Late Night</span>
                           </div>
+
+                          {activeRoom?.occasion !== 'gaming' && isLateNightSlot(calculatedCustomSlot) && (
+                            <div style={{ margin: '8px 0 12px 0', fontSize: '0.8rem', color: '#F59E0B', background: 'rgba(245, 158, 11, 0.12)', padding: '6px 12px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                              🌙 <strong>Late Night Surcharge (+₹500):</strong> Slots concluding after 11:00 PM include a ₹500 late-night charge.
+                            </div>
+                          )}
 
                           <div className={styles.customSlotControls}>
                             <div className={styles.customSlotField}>
@@ -1630,6 +1661,13 @@ export default function BookingFlowModal({
                       );
                     })}
 
+                    {pricing.lateNightFee > 0 && (
+                      <div className={styles.billLineItem}>
+                        <span>🌙 Late Night Slot Surcharge (After 11 PM)</span>
+                        <strong style={{ color: '#F59E0B' }}>+₹{pricing.lateNightFee}</strong>
+                      </div>
+                    )}
+
                     <div className={`${styles.billLineItem} ${styles.billLineOtt}`}>
                       <span>📺 All OTT Platforms (Netflix, Prime, Hotstar, YouTube)</span>
                       <strong className={styles.billFreeTag}>INCLUDED</strong>
@@ -2014,6 +2052,13 @@ export default function BookingFlowModal({
                     );
                   })}
 
+                  {pricing.lateNightFee > 0 && (
+                    <div className={styles.breakdownRow}>
+                      <span>🌙 Late Night Surcharge (After 11 PM)</span>
+                      <strong style={{ color: '#F59E0B' }}>+₹{pricing.lateNightFee}</strong>
+                    </div>
+                  )}
+
                   <div className={styles.breakdownRow} style={{ color: '#2563EB', fontSize: '0.74rem' }}>
                     <span>📺 All OTT Platforms (Netflix, Prime, Hotstar)</span>
                     <strong style={{ color: '#10B981' }}>INCLUDED</strong>
@@ -2028,7 +2073,7 @@ export default function BookingFlowModal({
                   </div>
                   <div className={styles.depositRow}>
                     <span>Advance to Pay Now</span>
-                    <span className={styles.advanceAmount}>{activeRoom ? `₹${pricing.advance}` : '₹500'}</span>
+                    <span className={styles.advanceAmount}>{activeRoom ? `₹${pricing.advance}` : '—'}</span>
                   </div>
                   <div className={styles.balanceRow}>
                     <span>Remaining at Venue (Check-in)</span>

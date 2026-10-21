@@ -180,7 +180,8 @@ export default function BookingFinder({
               <option value="afternoon">Afternoon (3 PM - 5 PM)</option>
               <option value="evening">Sunset (5:30 PM - 7:30 PM)</option>
               <option value="night">Night (8 PM - 10 PM)</option>
-              <option value="midnight">Midnight (10 PM - 12 AM)</option>
+              <option value="midnight">Midnight (10 PM - 12 AM) (+₹500)</option>
+              <option value="latenight">Late Night (11 PM - 1 AM) (+₹500)</option>
             </select>
           </div>
 

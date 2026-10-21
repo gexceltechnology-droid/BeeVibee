@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './BookingPortal.module.css';
 
-import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_CLOSE_MINUTES } from '@/lib/time';
+import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_CLOSE_MINUTES, isLateNightSlot } from '@/lib/time';
 import { Download, Printer, FileText } from 'lucide-react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { isFirebaseConfigured } from '@/lib/firebase';
@@ -520,9 +520,9 @@ export default function BookingPortal({
         const startMinutes = convert12HourToMinutes(startH, startM, customStartAmPm);
         let endMinutes = convert12HourToMinutes(endH, endM, customEndAmPm);
 
-        // 12:00 AM at end of night represents closing midnight (1440 mins)
-        if (endH === 12 && endM === 0 && customEndAmPm === 'AM' && startMinutes > 0) {
-          endMinutes = 1440;
+        // When end time is AM and start time is PM or later, it crosses midnight into the next day
+        if (endMinutes <= startMinutes) {
+          endMinutes += 1440;
         }
 
         // Enforce 10:00 AM to 12:00 AM Midnight operating limit
@@ -645,8 +645,10 @@ export default function BookingPortal({
     const pkgBase = getEffectivePackagePrice();
     const extraGuests = customerDetails.guestCount > 2 ? (customerDetails.guestCount - 2) * 100 : 0;
     const fogPrice = getEffectiveFogPrice();
+    const isLateNight = selectedSlot ? isLateNightSlot(selectedSlot.time) : false;
+    const lateNightFee = isLateNight ? 500 : 0;
 
-    return pkgBase + extraGuests + fogPrice;
+    return pkgBase + extraGuests + fogPrice + lateNightFee;
   };
 
   const calculateAdvance = () => Math.min(500, calculateTotal());
@@ -2059,21 +2061,31 @@ export default function BookingPortal({
                     </div>
                   ) : (
                     <div className={styles.slotsGrid}>
-                      {slots.map((slot) => (
-                        <div
-                          key={slot.id}
-                          className={`${styles.slotCard} ${slot.isBooked ? styles.slotBooked : ''} ${
-                            selectedSlot?.id === slot.id ? styles.slotSelected : ''
-                          }`}
-                          onClick={() => !slot.isBooked && setSelectedSlot(slot)}
-                        >
-                          <div className={styles.slotLabel}>{slot.label}</div>
-                          <div className={styles.slotTime}>{slot.time}</div>
-                          <div className={styles.slotPrice}>
-                            {slot.isBooked ? 'Unavailable' : 'Available'}
+                      {slots.map((slot) => {
+                        const isLate = isLateNightSlot(slot.time);
+                        return (
+                          <div
+                            key={slot.id}
+                            className={`${styles.slotCard} ${slot.isBooked ? styles.slotBooked : ''} ${
+                              selectedSlot?.id === slot.id ? styles.slotSelected : ''
+                            }`}
+                            onClick={() => !slot.isBooked && setSelectedSlot(slot)}
+                          >
+                            <div className={styles.slotLabel}>
+                              {slot.label}
+                              {isLate && !slot.isBooked && (
+                                <span style={{ display: 'block', fontSize: '0.72rem', color: '#f59e0b', fontWeight: 600, marginTop: '2px' }}>
+                                  🌙 Late Night (+₹500)
+                                </span>
+                              )}
+                            </div>
+                            <div className={styles.slotTime}>{slot.time}</div>
+                            <div className={styles.slotPrice}>
+                              {slot.isBooked ? 'Unavailable' : isLate ? '+₹500 Surcharge' : 'Available'}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </>
@@ -2082,11 +2094,11 @@ export default function BookingPortal({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', margin: '16px 0 8px 0' }}>
                     <h3 style={{ margin: 0, fontFamily: 'var(--font-title)' }}>Customize Your Show Time</h3>
                     <span style={{ fontSize: '0.78rem', background: 'rgba(242, 169, 0, 0.12)', border: '1px solid rgba(242, 169, 0, 0.3)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
-                      ⏰ Open 10:00 AM – 12:00 AM (Midnight)
+                      ⏰ Open 10:00 AM – 01:30 AM (Late Night)
                     </span>
                   </div>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    Select your start and end times using easy 12-hour format with AM / PM options. Theater closes strictly at 12:00 AM Midnight.
+                    Select your start and end times using easy 12-hour format with AM / PM options. Party hall open till 01:30 AM (+₹500 after 11 PM).
                   </p>
 
                   <div className={styles.time12hInputsGrid}>
@@ -2137,7 +2149,7 @@ export default function BookingPortal({
                     {/* End Time Card */}
                     <div className={styles.timePickerCard}>
                       <div className={styles.timePickerCardHeader}>
-                        <span className={styles.timePickerCardTitle}>🔴 END TIME (MAX 12:00 AM)</span>
+                        <span className={styles.timePickerCardTitle}>🔴 END TIME (MAX 01:30 AM)</span>
                       </div>
                       <div className={styles.timePickerControls}>
                         <select
@@ -2314,6 +2326,11 @@ export default function BookingPortal({
                   {isCouponApplied && (
                     <div style={{ color: '#10b981', fontWeight: 600 }}>
                       <strong>Coupon Savings:</strong> -₹{calculateDiscount()}
+                    </div>
+                  )}
+                  {selectedSlot && isLateNightSlot(selectedSlot.time) && (
+                    <div style={{ color: '#f59e0b', fontWeight: 600 }}>
+                      <strong>Late Night Surcharge:</strong> +₹500 (After 11 PM)
                     </div>
                   )}
                   <div style={{ gridColumn: '1 / -1', borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '8px', paddingTop: '8px', fontSize: '1.15rem', color: 'var(--accent)', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

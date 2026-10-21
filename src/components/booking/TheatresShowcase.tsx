@@ -23,6 +23,7 @@ import {
   Camera
 } from 'lucide-react';
 import styles from './TheatresShowcase.module.css';
+import { isLateNightSlot } from '@/lib/time';
 import { OccasionType } from '@/types/booking';
 
 interface TheatreInfo {
@@ -162,6 +163,8 @@ interface SlotItem {
   label: string;
   basePrice: number;
   isBooked: boolean;
+  isLateNight?: boolean;
+  lateNightFee?: number;
 }
 
 interface TheatresShowcaseProps {
@@ -469,6 +472,7 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                       {slots.map((slot) => {
                         const isSelected = chosenSlot === slot.time;
                         const isBooked = slot.isBooked;
+                        const isLate = theatre.roomId !== 'ps5-gaming' && (slot.isLateNight ?? isLateNightSlot(slot.time));
 
                         return (
                           <button
@@ -479,13 +483,13 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                               isBooked ? styles.slotBtnBooked : ''
                             }`}
                             onClick={() => handleSlotClick(theatre, slot)}
-                            title={isBooked ? 'Slot Booked' : `Select ${slot.time}`}
+                            title={isBooked ? 'Slot Booked' : isLate ? `Select ${slot.time} (Late Night Surcharge +₹500)` : `Select ${slot.time}`}
                           >
                             <span className={styles.slotBtnTime}>
                               {slot.time.replace('-', '–')}
                             </span>
                             <span className={styles.slotBtnBadge}>
-                              {isBooked ? '❌ Booked' : '₹999 offer'}
+                              {isBooked ? '❌ Booked' : isLate ? '🌙 +₹500 Late' : '₹999 offer'}
                             </span>
                             {isSelected && <Check size={12} className={styles.slotCheckmark} />}
                           </button>

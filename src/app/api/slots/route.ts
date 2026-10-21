@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllBookings, getTimeSlots } from '@/lib/firestore';
-import { checkBookingOverlap, normalizeRoomId, RoomId } from '@/lib/time';
+import { checkBookingOverlap, normalizeRoomId, RoomId, isLateNightSlot } from '@/lib/time';
 
 const GAMING_1HR_SLOTS = [
   { id: 'gslot-1', time: '10:00 AM - 11:00 AM', label: 'Morning Slot 1', basePrice: 399 },
@@ -87,7 +87,13 @@ export async function GET(request: NextRequest) {
     // Map time slots and determine which ones are booked in the selected room using smart overlap checks
     const slotsWithAvailability = activeSlots.map((slot) => {
       const isBooked = checkBookingOverlap(date, slot.time, roomBookings);
-      return { ...slot, isBooked };
+      const isLate = !isGaming && isLateNightSlot(slot.time);
+      return {
+        ...slot,
+        isBooked,
+        isLateNight: isLate,
+        lateNightFee: isLate ? 500 : 0,
+      };
     });
 
     // Return active bookings for client-side overlap checks
@@ -97,7 +103,8 @@ export async function GET(request: NextRequest) {
     const ALL_ROOM_IDS: RoomId[] = ['angel-wings', 'red-velvet', 'royal-butterfly', 'ps5-gaming'];
     const roomsAvailability: Record<string, { slots: typeof slotsWithAvailability; activeBookings: typeof activeBookings }> = {};
     for (const rid of ALL_ROOM_IDS) {
-      const suiteSlots = (rid === 'ps5-gaming') ? GAMING_1HR_SLOTS : theaterSlots;
+      const isRidGaming = rid === 'ps5-gaming';
+      const suiteSlots = isRidGaming ? GAMING_1HR_SLOTS : theaterSlots;
       const sorted = [...suiteSlots].sort(
         (a, b) => parseSlotStartMinutes(a.time) - parseSlotStartMinutes(b.time)
       );
@@ -106,10 +113,15 @@ export async function GET(request: NextRequest) {
         : sorted;
       const bList = allBookings.filter((b) => b.status !== 'cancelled' && normalizeRoomId(b) === rid);
       roomsAvailability[rid] = {
-        slots: filtered.map((slot) => ({
-          ...slot,
-          isBooked: checkBookingOverlap(date, slot.time, bList),
-        })),
+        slots: filtered.map((slot) => {
+          const isSlotLate = !isRidGaming && isLateNightSlot(slot.time);
+          return {
+            ...slot,
+            isBooked: checkBookingOverlap(date, slot.time, bList),
+            isLateNight: isSlotLate,
+            lateNightFee: isSlotLate ? 500 : 0,
+          };
+        }),
         activeBookings: bList.map((b) => ({ id: b.id, date: b.date, timeSlot: b.timeSlot })),
       };
     }

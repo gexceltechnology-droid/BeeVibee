@@ -1,10 +1,25 @@
 /**
  * Operating Hours Constants for Bee Vibe
  * Opening: 10:00 AM (600 minutes)
- * Closing: 12:00 AM Midnight (1440 minutes) - Strict hard stop!
+ * Closing: 01:30 AM Late Night (1530 minutes) - Allows full late night party sessions!
  */
 export const VENUE_OPEN_MINUTES = 600; // 10:00 AM
-export const VENUE_CLOSE_MINUTES = 1440; // 12:00 AM Midnight
+export const VENUE_CLOSE_MINUTES = 1530; // 01:30 AM Late Night
+export const LATE_NIGHT_THRESHOLD_MINUTES = 23 * 60; // 1380 minutes (11:00 PM)
+
+/**
+ * Checks whether a given time slot runs past 11:00 PM or starts at/after 11:00 PM.
+ * Triggers the +₹500 Late Night Surcharge for BeeVibe Party Hall suites.
+ */
+export function isLateNightSlot(timeSlotStr?: string): boolean {
+  if (!timeSlotStr) return false;
+  try {
+    const { startMinutes, endMinutes } = parseTimeRange(timeSlotStr);
+    return endMinutes > LATE_NIGHT_THRESHOLD_MINUTES || startMinutes >= LATE_NIGHT_THRESHOLD_MINUTES;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Converts 12-hour components (1-12, 0-59, AM/PM) into minutes from midnight (0 to 1439).
@@ -31,7 +46,7 @@ export function convertMinutesTo12Hour(minutes: number): { hour12: number; minut
 }
 
 /**
- * Validates that a candidate time range is strictly within Bee Vibe operating hours (10:00 AM to 12:00 AM midnight).
+ * Validates that a candidate time range is strictly within Bee Vibe operating hours (10:00 AM to 01:30 AM).
  */
 export function validateSlotOperatingHours(startMinutes: number, endMinutes: number): { valid: boolean; error?: string } {
   if (startMinutes < VENUE_OPEN_MINUTES) {
@@ -43,7 +58,7 @@ export function validateSlotOperatingHours(startMinutes: number, endMinutes: num
   if (endMinutes > VENUE_CLOSE_MINUTES) {
     return {
       valid: false,
-      error: 'Bee Vibe closes at 12:00 AM Midnight. Bookings cannot extend past 12:00 AM.',
+      error: 'Bee Vibe closes at 01:30 AM. Bookings cannot extend past 01:30 AM.',
     };
   }
   if (endMinutes <= startMinutes) {

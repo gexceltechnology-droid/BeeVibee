@@ -86,13 +86,14 @@ Reply *2* to Check Available Time Slots!`,
       replyText:
         `📅 *SLOT AVAILABILITY & RESERVATIONS* 📅\n` +
         `----------------------------------------\n` +
-        `We operate slots daily from 10:00 AM to 12:00 AM (Midnight)!\n\n` +
+        `We operate slots daily from 10:00 AM to 01:30 AM (Late Night)!\n\n` +
         `⏰ *Popular Slots*:\n` +
         `• Morning: 10:00 AM - 12:00 PM\n` +
         `• Afternoon: 01:00 PM - 03:00 PM\n` +
         `• Evening: 04:00 PM - 06:00 PM\n` +
         `• Night Prime: 07:00 PM - 09:00 PM\n` +
-        `• Midnight Vibe: 10:00 PM - 12:00 AM\n\n` +
+        `• Midnight Vibe: 10:00 PM - 12:00 AM (+₹500 Late Night)\n` +
+        `• Late Night Bash: 11:00 PM - 01:00 AM (+₹500 Late Night)\n\n` +
         `🔗 Click below to pick your date, theme & book in 60 seconds:\n` +
         `https://www.beevibe.org/#booking\n\n` +
         `Reply *0* for Main Menu`,

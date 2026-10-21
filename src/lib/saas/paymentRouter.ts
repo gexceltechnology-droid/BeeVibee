@@ -16,6 +16,7 @@ import {
   Currency, 
   PaymentProvider 
 } from './types';
+import { isLateNightSlot } from '../time';
 
 export class UnsupportedPaymentProviderError extends Error {
   constructor(provider: string) {
@@ -367,8 +368,9 @@ export class PaymentRouter {
     packageName: string,
     durationHours: number,
     guestCount: number,
-    addons: { name: string; price: number; quantity?: number }[] = []
-  ): { basePrice: number; extraGuestCharge: number; addonsTotal: number; totalPrice: number; advanceRequired: number; balanceDue: number } {
+    addons: { name: string; price: number; quantity?: number }[] = [],
+    timeSlot?: string
+  ): { basePrice: number; extraGuestCharge: number; addonsTotal: number; lateNightFee: number; totalPrice: number; advanceRequired: number; balanceDue: number } {
     const lower = packageName.toLowerCase();
     let basePrice = 999;
     let isGaming = lower.includes('gaming') || lower.includes('dark');
@@ -386,7 +388,9 @@ export class PaymentRouter {
 
     const extraGuestCharge = guestCount > 2 ? (guestCount - 2) * 100 : 0;
     const addonsTotal = addons.reduce((sum, a) => sum + (a.price * (a.quantity || 1)), 0);
-    const totalPrice = basePrice + extraGuestCharge + addonsTotal;
+    const isLateNight = !isGaming && isLateNightSlot(timeSlot);
+    const lateNightFee = isLateNight ? 500 : 0;
+    const totalPrice = basePrice + extraGuestCharge + addonsTotal + lateNightFee;
     const advanceRequired = isGaming ? Math.min(basePrice, 500) : 500;
     const balanceDue = Math.max(0, totalPrice - advanceRequired);
 
@@ -394,6 +398,7 @@ export class PaymentRouter {
       basePrice,
       extraGuestCharge,
       addonsTotal,
+      lateNightFee,
       totalPrice,
       advanceRequired,
       balanceDue,

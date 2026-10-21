@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthorized } from '@/lib/auth';
-import { checkBookingOverlap, normalizeRoomId } from '@/lib/time';
+import { checkBookingOverlap, normalizeRoomId, isLateNightSlot } from '@/lib/time';
 import { sendBookingConfirmationEmail } from '@/lib/mail';
 import { sendSMS } from '@/lib/sms';
 import { notifyAdminOnWhatsAppAndSMS } from '@/lib/whatsapp';
@@ -221,6 +221,9 @@ export async function POST(request: NextRequest) {
 
     // Dynamic theme package pricing
     let pkgBase = 0;
+    const isLateNight = !isGaming && isLateNightSlot(timeSlot);
+    const lateNightFee = isLateNight ? 500 : 0;
+
     if (isGaming) {
       // Support both modern suite pricing (₹399 base covers 2 guests + extraGuests)
       // and legacy per-person pricing (₹99 * numericGuestCount * durationHours)
@@ -233,7 +236,13 @@ export async function POST(request: NextRequest) {
         pkgBase = suiteBase;
       }
     } else {
-      if (isSpecialOfferCoupon || body.isMonthOffer || Number(totalPrice) === 999 || isQuickBooking) {
+      if (
+        isSpecialOfferCoupon ||
+        body.isMonthOffer ||
+        Number(totalPrice) === 999 ||
+        Number(totalPrice) === (999 + lateNightFee) ||
+        isQuickBooking
+      ) {
         // Month Offer: Any theme at flat ₹999 / 2 hours promo!
         pkgBase = Math.round((999 / 2) * durationHours);
       } else {
@@ -258,7 +267,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const calculatedTotal = pkgBase + extraGuests + addonsTotal;
+    const calculatedTotal = pkgBase + extraGuests + addonsTotal + lateNightFee;
     if (Number(totalPrice) !== calculatedTotal) {
       return NextResponse.json({
         error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.`

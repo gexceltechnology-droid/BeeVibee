@@ -46,6 +46,8 @@ export interface TimeSlotOption {
   label: string;
   basePrice: number;
   isBooked?: boolean;
+  isLateNight?: boolean;
+  lateNightFee?: number;
 }
 
 export interface BookingState {
