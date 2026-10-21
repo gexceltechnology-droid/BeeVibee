@@ -7,12 +7,15 @@
 import crypto from 'crypto';
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
-import { normalizeRoomId } from './time';
-import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem } from './db';
+import { normalizeRoomId, checkBookingOverlap } from './time';
+import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem, PaymentLedgerEntry } from './db';
 import {
   readDb,
+  writeDb,
   addBooking as addBookingLocal,
   updateBookingStatus as updateBookingStatusLocal,
+  recordBookingPayment as recordBookingPaymentLocal,
+  updateBookingPaymentVerification as updateBookingPaymentVerificationLocal,
   addFoodOrder as addFoodOrderLocal,
   updateFoodOrderStatus as updateFoodOrderStatusLocal,
   addMenuItem as addMenuItemLocal,
@@ -22,7 +25,7 @@ import {
   verifyOtp as verifyOtpLocal,
 } from './db';
 
-export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem };
+export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem, PaymentLedgerEntry };
 
 export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'menu-1', name: 'Maggie', price: 70, description: 'Hot and delicious instant noodles.', category: 'snacks', inStock: true, icon: '🍜' },
@@ -159,7 +162,7 @@ export async function getBookingById(id: string): Promise<Booking | null> {
 }
 
 export async function addBookingToFirestore(
-  bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>
+  bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'> & { status?: Booking['status']; source?: string; paymentLedger?: PaymentLedgerEntry[] }
 ): Promise<Booking> {
   const dateParts = bookingData.date.split('-');
   const yy = dateParts[0].substring(2);
@@ -169,42 +172,107 @@ export async function addBookingToFirestore(
 
   try {
     const firestore = getDb();
-    const existing = await firestore
-      .collection('bookings')
-      .where('date', '==', bookingData.date)
-      .get();
-    const existingIds = new Set(existing.docs.map((doc) => doc.id.toLowerCase()));
-    let seq = existing.size + 1;
-    let bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
-    while (existingIds.has(bookingId.toLowerCase())) {
-      seq += 1;
-      bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
-    }
-
-    const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
-    const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);
-    const paymentStatus = bookingData.paymentStatus || (balanceDue === 0 ? 'fully_paid' : 'advance_paid');
-    const paymentMode = bookingData.paymentMode || 'UPI (8123635342@sbi)';
-    const utrNumber = (bookingData as any).utrNumber || '';
-
     const targetRoomId = (bookingData as any).roomId || normalizeRoomId(bookingData);
 
-    const newBooking: Booking = {
-      ...bookingData,
-      id: bookingId,
-      roomId: targetRoomId,
-      advancePaid,
-      balanceDue,
-      paymentStatus,
-      paymentMode,
-      utrNumber,
-      status: 'confirmed',
-      createdAt: new Date().toISOString(),
-    };
+    // Concurrency protection: Atomic transaction prevents race conditions and double-booking
+    // across multiple production serverless / container instances
+    const newBooking = await firestore.runTransaction(async (transaction) => {
+      const existingQuery = firestore
+        .collection('bookings')
+        .where('date', '==', bookingData.date);
+      const snapshot = await transaction.get(existingQuery);
 
-    await firestore.collection('bookings').doc(bookingId).set(newBooking);
+      const existingBookings = snapshot.docs.map(doc => doc.data() as Booking);
+
+      // Strict overlap check on bookings in the exact same room
+      const sameRoomBookings = existingBookings.filter(b => {
+        if (b.status === 'cancelled') return false;
+        return normalizeRoomId(b) === targetRoomId;
+      });
+
+      const isOverlap = checkBookingOverlap(bookingData.date, bookingData.timeSlot, sameRoomBookings);
+      if (isOverlap) {
+        throw new Error('SLOT_OVERLAP_DETECTED: This time slot overlaps with an existing booking in this room.');
+      }
+
+      // Check UTR duplicate across existing bookings if 12-digit UTR provided
+      const passedUtr = ((bookingData as any).utrNumber || '').replace(/\D/g, '').trim();
+      if (passedUtr && passedUtr.length === 12) {
+        const dupUtr = existingBookings.find(
+          b => b.status !== 'cancelled' && b.utrNumber && b.utrNumber.replace(/\D/g, '') === passedUtr
+        );
+        if (dupUtr) {
+          throw new Error('DUPLICATE_UTR_DETECTED: This UPI Transaction Reference Number (UTR) has already been submitted for another booking.');
+        }
+      }
+
+      const existingIds = new Set(snapshot.docs.map((doc) => doc.id.toLowerCase()));
+      let seq = snapshot.size + 1;
+      let bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+      while (existingIds.has(bookingId.toLowerCase())) {
+        seq += 1;
+        bookingId = `${datePrefix}-${String(seq).padStart(4, '0')}`;
+      }
+
+      const advancePaid = typeof bookingData.advancePaid === 'number' ? bookingData.advancePaid : Math.min(500, bookingData.totalPrice);
+      const balanceDue = typeof bookingData.balanceDue === 'number' ? bookingData.balanceDue : Math.max(0, bookingData.totalPrice - advancePaid);
+      const paymentStatus = bookingData.paymentStatus || (balanceDue === 0 ? 'fully_paid' : 'advance_paid');
+      const paymentMode = bookingData.paymentMode || 'UPI (8123635342@sbi)';
+      const utrNumber = (bookingData as any).utrNumber || '';
+      const source = bookingData.source || 'Website';
+      const status = bookingData.status || 'confirmed';
+
+      const initialLedger: PaymentLedgerEntry[] = bookingData.paymentLedger || (advancePaid > 0 ? [{
+        id: `PAY-${Date.now()}-01`,
+        amount: advancePaid,
+        paymentMode,
+        type: balanceDue === 0 ? 'full' : 'advance',
+        utrNumber: utrNumber || undefined,
+        verified: Boolean((bookingData as any).sbiVerified),
+        recordedAt: new Date().toISOString(),
+        recordedBy: source !== 'Website' ? `Staff (${source})` : 'Website Checkout',
+        notes: (bookingData as any).adminNotes || undefined,
+      }] : []);
+
+      const bookingRecord: Booking = {
+        ...bookingData,
+        id: bookingId,
+        roomId: targetRoomId,
+        source,
+        advancePaid,
+        balanceDue,
+        paymentStatus,
+        paymentMode,
+        utrNumber,
+        status,
+        paymentLedger: initialLedger,
+        createdAt: new Date().toISOString(),
+      };
+
+      transaction.set(firestore.collection('bookings').doc(bookingId), bookingRecord);
+      return bookingRecord;
+    });
+
+    // Dual-sync to local JSON DB to keep local cache warm
+    try {
+      const localDb = readDb();
+      if (!localDb.bookings) localDb.bookings = [];
+      const existingIdx = localDb.bookings.findIndex(b => b.id.toLowerCase() === newBooking.id.toLowerCase());
+      if (existingIdx >= 0) {
+        localDb.bookings[existingIdx] = newBooking;
+      } else {
+        localDb.bookings.push(newBooking);
+      }
+      writeDb(localDb);
+    } catch (syncErr) {
+      console.warn('[Firestore] Dual-sync to local DB warning:', syncErr);
+    }
+
     return newBooking;
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message && (err.message.includes('SLOT_OVERLAP_DETECTED') || err.message.includes('DUPLICATE_UTR_DETECTED'))) {
+      throw err;
+    }
     console.warn('[Firestore] addBookingToFirestore fallback to local:', (err as Error).message);
     const localBooking = addBookingLocal(bookingData);
     return localBooking;
@@ -213,8 +281,9 @@ export async function addBookingToFirestore(
 
 export async function updateBookingStatusInFirestore(
   id: string,
-  status: 'pending' | 'confirmed' | 'cancelled'
+  status: 'pending' | 'confirmed' | 'cancelled' | 'tentative' | 'completed'
 ): Promise<Booking> {
+  let updatedBooking: Booking | null = null;
   try {
     const firestore = getDb();
     const ref = firestore.collection('bookings').doc(id);
@@ -222,14 +291,14 @@ export async function updateBookingStatusInFirestore(
     if (doc.exists) {
       await ref.update({ status });
       const updated = await ref.get();
-      return updated.data() as Booking;
+      updatedBooking = updated.data() as Booking;
     }
   } catch (err) {
     // fallback
   }
-  const localUpdated = updateBookingStatusLocal(id, status);
-  if (!localUpdated) throw new Error(`Booking with ID ${id} not found.`);
-  return localUpdated;
+
+  const localUpdated = updateBookingStatusLocal(id, status as any);
+  return updatedBooking || localUpdated;
 }
 
 export async function getBookingsByPhone(phone: string): Promise<Booking[]> {
@@ -428,9 +497,21 @@ export async function verifyOtpFromFirestore(phone: string, code: string): Promi
 
 export async function updateBookingPaymentVerificationInFirestore(
   id: string,
-  updates: { sbiVerified?: boolean; balanceCollected?: boolean; adminNotes?: string; status?: 'pending' | 'confirmed' | 'cancelled' }
+  updates: {
+    sbiVerified?: boolean;
+    balanceCollected?: boolean;
+    adminNotes?: string;
+    status?: 'pending' | 'confirmed' | 'cancelled' | 'tentative' | 'completed';
+    advancePaid?: number;
+    balanceDue?: number;
+    paymentStatus?: 'advance_paid' | 'fully_paid' | 'pending';
+    paymentLedger?: PaymentLedgerEntry[];
+    source?: string;
+  }
 ): Promise<Booking> {
   const cleanId = id.trim();
+  let updatedBooking: Booking | null = null;
+
   try {
     const firestore = getDb();
     const updatePayload: Record<string, any> = {};
@@ -441,18 +522,106 @@ export async function updateBookingPaymentVerificationInFirestore(
     }
     if (updates.adminNotes !== undefined) updatePayload.adminNotes = updates.adminNotes;
     if (updates.status !== undefined) updatePayload.status = updates.status;
+    if (updates.advancePaid !== undefined) updatePayload.advancePaid = updates.advancePaid;
+    if (updates.balanceDue !== undefined) updatePayload.balanceDue = updates.balanceDue;
+    if (updates.paymentStatus !== undefined) updatePayload.paymentStatus = updates.paymentStatus;
+    if (updates.paymentLedger !== undefined) updatePayload.paymentLedger = updates.paymentLedger;
+    if (updates.source !== undefined) updatePayload.source = updates.source;
 
     await firestore.collection('bookings').doc(cleanId).set(updatePayload, { merge: true });
     const updatedDoc = await firestore.collection('bookings').doc(cleanId).get();
     if (updatedDoc.exists) {
-      return updatedDoc.data() as Booking;
+      updatedBooking = updatedDoc.data() as Booking;
     }
   } catch (err) {
     console.warn('Firestore update failed, falling back to local DB:', err);
   }
 
-  const { updateBookingPaymentVerification } = await import('./db');
-  return updateBookingPaymentVerification(cleanId, updates);
+  // Always update local DB to ensure synchronization
+  const localUpdated = updateBookingPaymentVerificationLocal(cleanId, updates);
+  return updatedBooking || localUpdated;
+}
+
+export async function recordBookingPaymentInFirestore(
+  id: string,
+  payment: Omit<PaymentLedgerEntry, 'id' | 'recordedAt'>
+): Promise<Booking> {
+  const cleanId = id.trim();
+  let updatedBooking: Booking | null = null;
+
+  try {
+    const firestore = getDb();
+    const docRef = firestore.collection('bookings').doc(cleanId);
+
+    // Concurrency protection: Atomic transaction guarantees ledger immutability and prevents duplicate payments
+    updatedBooking = await firestore.runTransaction(async (transaction) => {
+      const docSnap = await transaction.get(docRef);
+      if (!docSnap.exists) {
+        throw new Error(`Booking with ID ${cleanId} not found in Firestore.`);
+      }
+
+      const existing = docSnap.data() as Booking;
+      const ledger = existing.paymentLedger ? [...existing.paymentLedger] : [];
+
+      // 1. Prevent duplicate UTR reference in the same booking
+      if (payment.utrNumber && payment.utrNumber.trim()) {
+        const cleanUtr = payment.utrNumber.trim().toLowerCase();
+        const dupUtr = ledger.some(
+          entry => entry.utrNumber && entry.utrNumber.trim().toLowerCase() === cleanUtr
+        );
+        if (dupUtr) {
+          throw new Error(`DUPLICATE_PAYMENT_UTR: Payment reference "${payment.utrNumber}" has already been recorded for this booking.`);
+        }
+      }
+
+      // 2. Prevent accidental rapid double-click duplicate payments (within 60 seconds)
+      const now = Date.now();
+      const recentDup = ledger.find(e => 
+        e.amount === payment.amount &&
+        e.paymentMode === payment.paymentMode &&
+        e.type === payment.type &&
+        (now - new Date(e.recordedAt).getTime()) < 60000
+      );
+      if (recentDup) {
+        throw new Error(`DUPLICATE_PAYMENT_SUBMISSION: A matching payment of ₹${payment.amount} was just recorded. Duplicate submission blocked.`);
+      }
+
+      // 3. Append-only ledger entry
+      const newEntry: PaymentLedgerEntry = {
+        ...payment,
+        id: `PAY-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+        recordedAt: new Date().toISOString(),
+      };
+      ledger.push(newEntry);
+
+      // 4. Deterministic totals calculation
+      const totalPaid = ledger
+        .filter(p => p.type !== 'refund')
+        .reduce((sum, p) => sum + p.amount, 0);
+
+      const balanceDue = Math.max(0, existing.totalPrice - totalPaid);
+      const isFullyPaid = balanceDue === 0;
+
+      const updateData = {
+        paymentLedger: ledger,
+        advancePaid: totalPaid,
+        balanceDue,
+        paymentStatus: (isFullyPaid ? 'fully_paid' : 'advance_paid') as Booking['paymentStatus'],
+        balanceCollected: isFullyPaid ? true : existing.balanceCollected,
+      };
+
+      transaction.update(docRef, updateData);
+      return { ...existing, ...updateData };
+    });
+  } catch (err: any) {
+    if (err.message && (err.message.includes('DUPLICATE_PAYMENT') || err.message.includes('not found in Firestore'))) {
+      throw err;
+    }
+    console.warn('Firestore record payment failed, falling back to local DB:', err);
+  }
+
+  const localUpdated = recordBookingPaymentLocal(cleanId, payment);
+  return updatedBooking || localUpdated;
 }
 
 export async function deleteBookingFromFirestore(id: string): Promise<void> {

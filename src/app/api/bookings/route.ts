@@ -8,6 +8,8 @@ import {
   getAllBookings,
   addBookingToFirestore,
   updateBookingStatusInFirestore,
+  updateBookingPaymentVerificationInFirestore,
+  recordBookingPaymentInFirestore,
   getTimeSlots,
   getAllMenuItems,
   DEFAULT_MENU_ITEMS,
@@ -43,22 +45,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Automated submission rejected.' }, { status: 400 });
     }
 
+    // Check if staff / admin
+    const isAdmin = isAuthorized(request);
+
     // Basic validation
-    if (!customerName || !email || !phone || !date || !timeSlot || !packageName || totalPrice === undefined || !guestCount) {
+    if (!customerName || (!email && !isAdmin) || !phone || !date || !timeSlot || !packageName || (totalPrice === undefined && !isAdmin) || !guestCount) {
       return NextResponse.json({ error: 'Missing required booking fields.' }, { status: 400 });
     }
 
     const trimmedName = String(customerName).trim();
-    const trimmedEmail = String(email).trim();
     const trimmedPhone = String(phone).trim();
+    const trimmedEmail = email ? String(email).trim() : (isAdmin ? `${cleanPhoneNumber(trimmedPhone)}@beevibe.guest` : '');
 
-    if (!trimmedName || !trimmedEmail || !trimmedPhone) {
-      return NextResponse.json({ error: 'Name, email, and phone cannot be empty.' }, { status: 400 });
+    if (!trimmedName || !trimmedPhone || (!trimmedEmail && !isAdmin)) {
+      return NextResponse.json({ error: 'Name and phone cannot be empty.' }, { status: 400 });
     }
 
-    // Rate Limiting by IP and Phone: max 5 bookings per IP and 3 per phone per 10 minutes
+    // Rate Limiting by IP and Phone: max 15 bookings per IP and 10 per phone per 10 minutes
     const clientIp = getClientIp(request);
-    const isAdmin = isAuthorized(request);
     if (!isAdmin) {
       const ipLimit = checkRateLimit(`booking_ip_${clientIp}`, 15, 600);
       if (!ipLimit.allowed) {
@@ -93,7 +97,7 @@ export async function POST(request: NextRequest) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(trimmedEmail)) {
+    if (trimmedEmail && !emailRegex.test(trimmedEmail)) {
       return NextResponse.json({ error: 'Invalid email address format.' }, { status: 400 });
     }
 
@@ -268,11 +272,13 @@ export async function POST(request: NextRequest) {
     }
 
     const calculatedTotal = pkgBase + extraGuests + addonsTotal + lateNightFee;
-    if (Number(totalPrice) !== calculatedTotal) {
+    if (!isAdmin && Number(totalPrice) !== calculatedTotal) {
       return NextResponse.json({
         error: `Booking price mismatch. Expected: ₹${calculatedTotal}, Got: ₹${totalPrice}. Please refresh and try again.`
       }, { status: 400 });
     }
+
+    const finalTotalPrice = isAdmin && typeof totalPrice === 'number' ? Number(totalPrice) : calculatedTotal;
 
     // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
     const allBookings = await getAllBookings();
@@ -297,18 +303,18 @@ export async function POST(request: NextRequest) {
 
     const passedAdvance = typeof body.advancePaid === 'number'
       ? body.advancePaid
-      : (isQuickBooking ? 0 : Math.min(500, calculatedTotal));
+      : (isQuickBooking ? 0 : Math.min(500, finalTotalPrice));
     const passedBalance = typeof body.balanceDue === 'number'
       ? body.balanceDue
-      : Math.max(0, calculatedTotal - passedAdvance);
+      : Math.max(0, finalTotalPrice - passedAdvance);
     const passedStatus = body.paymentStatus || (passedBalance === 0 ? 'fully_paid' : (isQuickBooking ? 'pending' : 'advance_paid'));
-    const passedMode = body.paymentMode || (isQuickBooking ? 'PAY_AT_VENUE' : 'UPI (9900106474@okbizaxis)');
+    const passedMode = body.paymentMode || (isQuickBooking ? 'PAY_AT_VENUE' : (isAdmin ? 'Cash' : 'UPI (9900106474@okbizaxis)'));
     const passedUtr = typeof utrNumber === 'string'
       ? utrNumber.replace(/\D/g, '').trim()
       : (typeof body.utrNumber === 'string' ? body.utrNumber.replace(/\D/g, '').trim() : '');
 
-    // Strict 12-digit numeric UTR validation for bookings requiring advance payment
-    if (detectedBookingType === 'theater' && passedAdvance > 0 && !isQuickBooking) {
+    // Strict 12-digit numeric UTR validation ONLY for website bookings requiring advance payment
+    if (!isAdmin && detectedBookingType === 'theater' && passedAdvance > 0 && !isQuickBooking) {
       if (!passedUtr || passedUtr.length !== 12) {
         return NextResponse.json({
           error: `Invalid UPI Transaction Reference Number (UTR). Must be exactly 12 numeric digits (received ${passedUtr.length}/12).`
@@ -341,6 +347,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const bookingSource = body.source || (isAdmin ? 'Walk-in' : 'Website');
+    const bookingAdminNotes = body.adminNotes || body.notes || '';
+
     const newBooking = await addBookingToFirestore({
       customerName: trimmedName,
       email: trimmedEmail,
@@ -350,14 +359,17 @@ export async function POST(request: NextRequest) {
       packageName,
       roomId: targetRoomId,
       theme: targetRoomId,
+      source: bookingSource,
+      adminNotes: bookingAdminNotes,
+      status: body.status || 'confirmed',
       bookingType: detectedBookingType,
       addOns: addOns || [],
-      totalPrice: calculatedTotal,
+      totalPrice: finalTotalPrice,
       advancePaid: passedAdvance,
       balanceDue: passedBalance,
       paymentStatus: passedStatus,
       paymentMode: passedMode,
-      utrNumber: passedUtr,
+      utrNumber: passedUtr || body.utrNumber || '',
       couponCode: isSpecialOfferCoupon ? rawCoupon : (body.couponCode ? String(body.couponCode).trim() : undefined),
       discountAmount: typeof body.discountAmount === 'number' ? body.discountAmount : undefined,
       guestCount: numericGuestCount,
@@ -408,8 +420,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating booking:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
+    const errorMsg = error?.message || 'Internal Server Error';
+    const isConflict = errorMsg.includes('SLOT_OVERLAP_DETECTED') ||
+      errorMsg.includes('DUPLICATE_UTR_DETECTED') ||
+      errorMsg.includes('overlaps with an existing booking');
+    console.error('Error creating booking:', errorMsg);
+    return NextResponse.json({ error: errorMsg }, { status: isConflict ? 409 : 400 });
   }
 }
 
@@ -478,6 +494,62 @@ export async function DELETE(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Internal Server Error';
     console.error('Error deleting booking:', error);
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+// PATCH update booking payment ledger, verification, notes, or status (Admin endpoint)
+export async function PATCH(request: NextRequest) {
+  try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, action } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Booking ID is required.' }, { status: 400 });
+    }
+
+    if (action === 'record_payment') {
+      const { amount, paymentMode, type, utrNumber, verified, notes, recordedBy } = body;
+      const numAmount = Number(amount);
+      if (isNaN(numAmount) || numAmount <= 0) {
+        return NextResponse.json({ error: 'Valid payment amount greater than 0 is required.' }, { status: 400 });
+      }
+
+      const updated = await recordBookingPaymentInFirestore(id, {
+        amount: numAmount,
+        paymentMode: paymentMode || 'Cash',
+        type: type || 'balance',
+        utrNumber: utrNumber || undefined,
+        verified: verified !== undefined ? Boolean(verified) : true,
+        notes: notes || undefined,
+        recordedBy: recordedBy || 'Staff',
+      });
+
+      return NextResponse.json({ success: true, booking: updated });
+    }
+
+    // Generic update (verification, notes, status, source)
+    const { sbiVerified, balanceCollected, adminNotes, status, advancePaid, balanceDue, paymentStatus, source } = body;
+    const updated = await updateBookingPaymentVerificationInFirestore(id, {
+      sbiVerified,
+      balanceCollected,
+      adminNotes,
+      status,
+      advancePaid,
+      balanceDue,
+      paymentStatus,
+      source,
+    });
+
+    return NextResponse.json({ success: true, booking: updated });
+  } catch (error: any) {
+    const errorMsg = error?.message || 'Internal Server Error';
+    const isConflict = errorMsg.includes('DUPLICATE_PAYMENT');
+    console.error('Error patching booking:', errorMsg);
+    return NextResponse.json({ error: errorMsg }, { status: isConflict ? 409 : 400 });
   }
 }
 

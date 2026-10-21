@@ -3,6 +3,18 @@ import path from 'path';
 import crypto from 'crypto';
 import { checkBookingOverlap, normalizeRoomId } from './time';
 
+export interface PaymentLedgerEntry {
+  id: string;
+  amount: number;
+  paymentMode: string;
+  type: 'advance' | 'balance' | 'full' | 'refund';
+  utrNumber?: string;
+  verified?: boolean;
+  notes?: string;
+  recordedBy?: string;
+  recordedAt: string;
+}
+
 export interface Booking {
   id: string;
   customerName: string;
@@ -14,6 +26,7 @@ export interface Booking {
   bookingType?: 'gaming' | 'theater';
   roomId?: string; // Canonical room: 'angel-wings' | 'red-velvet' | 'royal-butterfly' | 'ps5-gaming'
   theme?: string;
+  source?: 'Website' | 'WhatsApp' | 'Phone Call' | 'Walk-in' | string;
   addOns: string[];
   totalPrice: number;
   advancePaid?: number;
@@ -26,7 +39,8 @@ export interface Booking {
   couponCode?: string;
   discountAmount?: number;
   adminNotes?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'tentative' | 'completed';
+  paymentLedger?: PaymentLedgerEntry[];
   guestCount: number;
   specialRequests?: string;
   createdAt: string;
@@ -197,7 +211,9 @@ export function getBookingsByDate(date: string): Booking[] {
 }
 
 // Helper to add a new booking
-export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>): Booking {
+export function addBooking(
+  bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'> & { status?: Booking['status'] }
+): Booking {
   const db = readDb();
   
   // Double-booking check using overlap logic - ONLY check against bookings in the SAME room!
@@ -238,12 +254,23 @@ export function addBooking(bookingData: Omit<Booking, 'id' | 'createdAt' | 'stat
     ...bookingData,
     id: bookingId,
     roomId: targetRoomId,
+    source: bookingData.source || 'Website',
     advancePaid,
     balanceDue,
     paymentStatus,
     paymentMode,
     utrNumber,
-    status: 'confirmed',
+    status: bookingData.status || 'confirmed',
+    paymentLedger: bookingData.paymentLedger || (advancePaid > 0 ? [{
+      id: `PAY-${Date.now()}-01`,
+      amount: advancePaid,
+      paymentMode,
+      type: balanceDue === 0 ? 'full' : 'advance',
+      utrNumber: utrNumber || undefined,
+      verified: Boolean((bookingData as any).sbiVerified),
+      recordedAt: new Date().toISOString(),
+      recordedBy: bookingData.source && bookingData.source !== 'Website' ? `Staff (${bookingData.source})` : 'Website Checkout',
+    }] : []),
     createdAt: new Date().toISOString(),
   };
 
@@ -577,7 +604,20 @@ export function deleteMenuItem(id: string): void {
 
 
 
-export function updateBookingPaymentVerification(id: string, updates: { sbiVerified?: boolean; balanceCollected?: boolean; adminNotes?: string; status?: 'pending' | 'confirmed' | 'cancelled' }): Booking {
+export function updateBookingPaymentVerification(
+  id: string,
+  updates: {
+    sbiVerified?: boolean;
+    balanceCollected?: boolean;
+    adminNotes?: string;
+    status?: 'pending' | 'confirmed' | 'cancelled' | 'tentative' | 'completed';
+    advancePaid?: number;
+    balanceDue?: number;
+    paymentStatus?: 'advance_paid' | 'fully_paid' | 'pending';
+    paymentLedger?: PaymentLedgerEntry[];
+    source?: string;
+  }
+): Booking {
   const db = readDb();
   const index = db.bookings.findIndex(b => b.id.toLowerCase() === id.toLowerCase());
   if (index === -1) {
@@ -589,13 +629,82 @@ export function updateBookingPaymentVerification(id: string, updates: { sbiVerif
     db.bookings[index].balanceCollected = updates.balanceCollected;
     if (updates.balanceCollected) {
       db.bookings[index].paymentStatus = 'fully_paid';
+      db.bookings[index].balanceDue = 0;
     }
   }
   if (updates.adminNotes !== undefined) db.bookings[index].adminNotes = updates.adminNotes;
   if (updates.status !== undefined) db.bookings[index].status = updates.status;
+  if (updates.advancePaid !== undefined) db.bookings[index].advancePaid = updates.advancePaid;
+  if (updates.balanceDue !== undefined) db.bookings[index].balanceDue = updates.balanceDue;
+  if (updates.paymentStatus !== undefined) db.bookings[index].paymentStatus = updates.paymentStatus;
+  if (updates.paymentLedger !== undefined) db.bookings[index].paymentLedger = updates.paymentLedger;
+  if (updates.source !== undefined) db.bookings[index].source = updates.source;
 
   writeDb(db);
   return db.bookings[index];
+}
+
+export function recordBookingPayment(
+  id: string,
+  payment: Omit<PaymentLedgerEntry, 'id' | 'recordedAt'>
+): Booking {
+  const db = readDb();
+  const index = db.bookings.findIndex(b => b.id.toLowerCase() === id.toLowerCase());
+  if (index === -1) {
+    throw new Error(`Booking with ID ${id} not found.`);
+  }
+
+  const booking = db.bookings[index];
+  const ledger = booking.paymentLedger ? [...booking.paymentLedger] : [];
+
+  // 1. Prevent duplicate UTR reference in the same booking
+  if (payment.utrNumber && payment.utrNumber.trim()) {
+    const cleanUtr = payment.utrNumber.trim().toLowerCase();
+    const dupUtr = ledger.some(
+      entry => entry.utrNumber && entry.utrNumber.trim().toLowerCase() === cleanUtr
+    );
+    if (dupUtr) {
+      throw new Error(`DUPLICATE_PAYMENT_UTR: Payment reference "${payment.utrNumber}" has already been recorded for this booking.`);
+    }
+  }
+
+  // 2. Prevent accidental rapid double-click duplicate payments (within 60 seconds)
+  const now = Date.now();
+  const recentDup = ledger.find(e => 
+    e.amount === payment.amount &&
+    e.paymentMode === payment.paymentMode &&
+    e.type === payment.type &&
+    (now - new Date(e.recordedAt).getTime()) < 60000
+  );
+  if (recentDup) {
+    throw new Error(`DUPLICATE_PAYMENT_SUBMISSION: A matching payment of ₹${payment.amount} was just recorded. Duplicate submission blocked.`);
+  }
+
+  // 3. Append-only ledger entry
+  const newEntry: PaymentLedgerEntry = {
+    ...payment,
+    id: `PAY-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+    recordedAt: new Date().toISOString(),
+  };
+  ledger.push(newEntry);
+  booking.paymentLedger = ledger;
+
+  // 4. Deterministic totals calculation
+  const totalPaid = ledger
+    .filter(p => p.type !== 'refund')
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  booking.advancePaid = totalPaid;
+  booking.balanceDue = Math.max(0, booking.totalPrice - totalPaid);
+  if (booking.balanceDue === 0) {
+    booking.paymentStatus = 'fully_paid';
+    booking.balanceCollected = true;
+  } else {
+    booking.paymentStatus = 'advance_paid';
+  }
+
+  writeDb(db);
+  return booking;
 }
 
 export function deleteBooking(id: string): void {

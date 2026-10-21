@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
+import { verifyAdminPasscode } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,17 +19,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { passcode } = body;
 
-    const serverPasscode = (process.env.ADMIN_PASSCODE || 'beevibe2026').trim();
-    const cleanPasscode = typeof passcode === 'string' ? passcode.trim() : '';
-
-    if (!cleanPasscode) {
-      return NextResponse.json({ error: 'Passcode is required.' }, { status: 400 });
-    }
-
-    if (cleanPasscode === serverPasscode) {
+    const verification = verifyAdminPasscode(passcode);
+    if (verification.valid) {
       return NextResponse.json({ success: true });
     } else {
-      return NextResponse.json({ success: false, error: 'Invalid admin passcode.' }, { status: 401 });
+      return NextResponse.json(
+        { success: false, error: verification.reason || 'Invalid admin passcode.' },
+        { status: 401 }
+      );
     }
   } catch (error: any) {
     console.error('Error in admin login:', error);

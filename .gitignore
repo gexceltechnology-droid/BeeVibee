@@ -32,16 +32,16 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
-# vercel
-.vercel
+# data backups
+data/backups/
 
-# typescript
+# typescript & build cache
 *.tsbuildinfo
 next-env.d.ts
-
 .vercel
-.env*
+
 
 # android
 .gradle/

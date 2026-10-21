@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import styles from './admin.module.css';
-import type { MenuItem } from '@/lib/db';
+import type { MenuItem, PaymentLedgerEntry } from '@/lib/db';
+import { ROOMS, ADD_ONS } from '@/types/booking';
+import { checkBookingOverlap, normalizeRoomId, isLateNightSlot } from '@/lib/time';
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
 
@@ -16,6 +18,9 @@ interface Booking {
   timeSlot: string;
   packageName: string;
   bookingType?: 'gaming' | 'theater';
+  roomId?: string;
+  theme?: string;
+  source?: 'Website' | 'WhatsApp' | 'Phone Call' | 'Walk-in' | string;
   addOns: string[];
   totalPrice: number;
   advancePaid?: number;
@@ -28,7 +33,8 @@ interface Booking {
   couponCode?: string;
   discountAmount?: number;
   adminNotes?: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled' | 'tentative' | 'completed';
+  paymentLedger?: PaymentLedgerEntry[];
   guestCount: number;
   specialRequests?: string;
   createdAt: string;
@@ -65,10 +71,11 @@ export default function AdminDashboard() {
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
   
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<'bookings' | 'payments' | 'crm' | 'orders' | 'qrs' | 'menu'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'payments' | 'crm' | 'orders' | 'qrs' | 'menu'>('bookings');
   
   // Filter States
   const [bookingCategoryFilter, setBookingCategoryFilter] = useState<'all' | 'theater' | 'gaming'>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'Website' | 'WhatsApp' | 'Phone Call' | 'Walk-in'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
@@ -102,6 +109,42 @@ export default function AdminDashboard() {
 
   // Invoice / Bill Generator Modal State
   const [selectedBookingForInvoice, setSelectedBookingForInvoice] = useState<Booking | null>(null);
+
+  // Manual Booking Modal States
+  const [isManualBookingModalOpen, setIsManualBookingModalOpen] = useState(false);
+  const [manualCustomerName, setManualCustomerName] = useState('');
+  const [manualPhone, setManualPhone] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
+  const [manualSource, setManualSource] = useState<'WhatsApp' | 'Phone Call' | 'Walk-in' | 'Website'>('Walk-in');
+  const [manualRoomId, setManualRoomId] = useState<string>('angel-wings');
+  const [manualDate, setManualDate] = useState<string>(() => {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  });
+  const [manualTimeSlot, setManualTimeSlot] = useState<string>('10:00 AM - 12:00 PM');
+  const [manualGuests, setManualGuests] = useState<number>(2);
+  const [manualAddOns, setManualAddOns] = useState<string[]>([]);
+  const [manualTotalPrice, setManualTotalPrice] = useState<number>(1299);
+  const [manualAdvancePaid, setManualAdvancePaid] = useState<number>(500);
+  const [manualPaymentMode, setManualPaymentMode] = useState<string>('Cash');
+  const [manualUtr, setManualUtr] = useState<string>('');
+  const [manualNotes, setManualNotes] = useState<string>('');
+  const [manualStatus, setManualStatus] = useState<'confirmed' | 'tentative'>('confirmed');
+  const [manualSubmitting, setManualSubmitting] = useState<boolean>(false);
+  const [manualError, setManualError] = useState<string>('');
+
+  // Record Payment Modal States
+  const [selectedBookingForPayment, setSelectedBookingForPayment] = useState<Booking | null>(null);
+  const [collectAmount, setCollectAmount] = useState<string>('');
+  const [collectPaymentMode, setCollectPaymentMode] = useState<string>('Cash');
+  const [collectType, setCollectType] = useState<'balance' | 'advance' | 'full' | 'refund'>('balance');
+  const [collectUtr, setCollectUtr] = useState<string>('');
+  const [collectNotes, setCollectNotes] = useState<string>('');
+  const [collectSubmitting, setCollectSubmitting] = useState<boolean>(false);
+
+  // Calendar View State
+  const [calendarViewDate, setCalendarViewDate] = useState<string>(() => {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  });
 
   // Web Audio Context
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -497,6 +540,196 @@ export default function AdminDashboard() {
       }
     } catch (err: unknown) {
       alert('Error updating balance collection: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  const calculatePriceForManualBooking = (roomId: string, guests: number, addOns: string[], slot: string): number => {
+    const isGaming = roomId === 'ps5-gaming';
+    let base = 1299;
+    if (roomId === 'angel-wings') base = 1299;
+    else if (roomId === 'red-velvet') base = 1099;
+    else if (roomId === 'royal-butterfly') base = 1499;
+    else if (roomId === 'ps5-gaming') base = 399;
+
+    const extraGuests = Math.max(0, guests - 2) * 100;
+
+    let addonsSum = 0;
+    for (const addonId of addOns) {
+      const found = ADD_ONS.find(a => a.id === addonId || a.name === addonId);
+      if (found) {
+        addonsSum += found.price;
+      }
+    }
+
+    const lateNightFee = (!isGaming && isLateNightSlot(slot)) ? 500 : 0;
+    return base + extraGuests + addonsSum + lateNightFee;
+  };
+
+  const handleOpenManualBooking = (presetRoom?: string, presetSlot?: string, presetDate?: string) => {
+    const targetRoom = presetRoom || 'angel-wings';
+    const targetDate = presetDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+    const isGaming = targetRoom === 'ps5-gaming';
+    const targetSlot = presetSlot || (isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM');
+    const autoPrice = calculatePriceForManualBooking(targetRoom, 2, [], targetSlot);
+
+    setManualCustomerName('');
+    setManualPhone('');
+    setManualEmail('');
+    setManualSource('Walk-in');
+    setManualRoomId(targetRoom);
+    setManualDate(targetDate);
+    setManualTimeSlot(targetSlot);
+    setManualGuests(2);
+    setManualAddOns([]);
+    setManualTotalPrice(autoPrice);
+    setManualAdvancePaid(Math.min(500, autoPrice));
+    setManualPaymentMode('Cash');
+    setManualUtr('');
+    setManualNotes('');
+    setManualStatus('confirmed');
+    setManualError('');
+    setIsManualBookingModalOpen(true);
+  };
+
+  const handleSubmitManualBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualError('');
+
+    const cleanName = manualCustomerName.trim();
+    const cleanPhone = manualPhone.trim().replace(/\D/g, '');
+    if (!cleanName) {
+      setManualError('Please enter the customer name.');
+      return;
+    }
+    if (cleanPhone.length < 10) {
+      setManualError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!manualDate || !manualTimeSlot) {
+      setManualError('Date and time slot are required.');
+      return;
+    }
+
+    // Client-side Overlap Check (Server also strictly re-checks)
+    const targetRoomNormalized = normalizeRoomId(manualRoomId);
+    const existingSameRoom = bookings.filter(b => {
+      if (b.status === 'cancelled') return false;
+      return normalizeRoomId(b) === targetRoomNormalized;
+    });
+
+    const isOverlapping = checkBookingOverlap(manualDate, manualTimeSlot, existingSameRoom);
+    if (isOverlapping) {
+      setManualError(`Overlapping slot detected! Another booking is already active in this room for ${manualTimeSlot} on ${manualDate}.`);
+      return;
+    }
+
+    setManualSubmitting(true);
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+
+    try {
+      const roomObj = ROOMS.find(r => r.id === manualRoomId);
+      const pkgName = roomObj ? `${roomObj.name} (${roomObj.occasionLabel})` : manualRoomId;
+
+      const payload = {
+        customerName: cleanName,
+        phone: cleanPhone,
+        email: manualEmail.trim() || undefined,
+        date: manualDate,
+        timeSlot: manualTimeSlot,
+        packageName: pkgName,
+        roomId: manualRoomId,
+        bookingType: manualRoomId === 'ps5-gaming' ? 'gaming' : 'theater',
+        guestCount: manualGuests,
+        addOns: manualAddOns,
+        totalPrice: Number(manualTotalPrice),
+        advancePaid: Number(manualAdvancePaid),
+        balanceDue: Math.max(0, Number(manualTotalPrice) - Number(manualAdvancePaid)),
+        paymentMode: manualPaymentMode,
+        utrNumber: manualUtr.trim() || undefined,
+        source: manualSource,
+        adminNotes: manualNotes.trim() || undefined,
+        status: manualStatus,
+      };
+
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create manual booking.');
+      }
+
+      await playBookingSound();
+      await fetchBookings(activePasscode);
+      setIsManualBookingModalOpen(false);
+      alert(`✅ Booking ${data.booking.id} created successfully!\n\nSource: ${manualSource}\nRoom: ${roomObj?.name}\nDate & Time: ${manualDate} (${manualTimeSlot})\nAdvance: ₹${manualAdvancePaid}\n\nThis slot is now immediately blocked on the live website.`);
+    } catch (err: unknown) {
+      setManualError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
+
+  const handleOpenPaymentModal = (booking: Booking) => {
+    setSelectedBookingForPayment(booking);
+    const due = booking.balanceDue ?? Math.max(0, booking.totalPrice - (booking.advancePaid ?? 0));
+    setCollectAmount(String(due));
+    setCollectPaymentMode('Cash');
+    setCollectType('balance');
+    setCollectUtr('');
+    setCollectNotes('');
+  };
+
+  const handleRecordPaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBookingForPayment) return;
+
+    const numAmount = Number(collectAmount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      alert('Please enter a valid amount greater than ₹0.');
+      return;
+    }
+
+    setCollectSubmitting(true);
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({
+          id: selectedBookingForPayment.id,
+          action: 'record_payment',
+          amount: numAmount,
+          paymentMode: collectPaymentMode,
+          type: collectType,
+          utrNumber: collectUtr.trim() || undefined,
+          notes: collectNotes.trim() || undefined,
+          recordedBy: 'Admin Desk Staff',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to record payment.');
+      }
+
+      await fetchBookings(activePasscode);
+      setSelectedBookingForPayment(null);
+      alert(`✅ Payment of ₹${numAmount} logged into ledger for ${selectedBookingForPayment.id}.\nRemaining balance: ₹${data.booking.balanceDue}`);
+    } catch (err: unknown) {
+      alert('Error recording payment: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setCollectSubmitting(false);
     }
   };
 
@@ -899,7 +1132,8 @@ export default function AdminDashboard() {
     const matchesCategory = bookingCategoryFilter === 'all' ? true : bookingCategoryFilter === 'gaming' ? isGaming : !isGaming;
     const matchesSearch = b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.phone.includes(searchTerm) || b.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDate = dateFilter ? b.date === dateFilter : true;
-    return matchesCategory && matchesSearch && matchesDate;
+    const matchesSource = sourceFilter === 'all' ? true : (b.source || 'Website') === sourceFilter;
+    return matchesCategory && matchesSearch && matchesDate && matchesSource;
   });
 
   // Filter Bookings for Payment Portal Ledger
@@ -1057,6 +1291,26 @@ export default function AdminDashboard() {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             type="button"
+            onClick={() => handleOpenManualBooking()}
+            className="btn btn-primary"
+            style={{
+              fontSize: '0.88rem',
+              padding: '8px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
+              border: 'none',
+              boxShadow: '0 4px 14px rgba(255, 0, 85, 0.4)',
+              cursor: 'pointer',
+              fontWeight: 600,
+            }}
+            title="Create a manual booking from WhatsApp, Phone, or Walk-in"
+          >
+            ✍️ + Manual Booking
+          </button>
+          <button
+            type="button"
             onClick={playBookingSound}
             className="btn btn-secondary"
             style={{ borderColor: '#f2a900', color: '#f2a900', fontSize: '0.85rem', padding: '8px 14px' }}
@@ -1079,9 +1333,15 @@ export default function AdminDashboard() {
       <div className={styles.tabContainerCustom}>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'bookings' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('bookings'); setSearchTerm(''); setDateFilter(''); }}
+          onClick={() => { setActiveTab('bookings'); setSearchTerm(''); setDateFilter(''); setSourceFilter('all'); }}
         >
-          📅 Bookings ({activeBookings})
+          📋 Bookings ({activeBookings})
+        </button>
+        <button
+          className={`${styles.tabBtnCustom} ${activeTab === 'calendar' ? styles.activeTabCustom : ''}`}
+          onClick={() => setActiveTab('calendar')}
+        >
+          📅 Visual Calendar
         </button>
         <button
           className={`${styles.tabBtnCustom} ${activeTab === 'payments' ? styles.activeTabCustom : ''}`}
@@ -1533,15 +1793,15 @@ export default function AdminDashboard() {
       {/* TAB 1: BOOKINGS TABLE */}
       {activeTab === 'bookings' && (
         <>
-          <div className={styles.filterBar}>
-            <input
-              type="text"
-              placeholder="Search by Name, Booking ID, Phone..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className={styles.filterBar} style={{ justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Search by Name, Booking ID, Phone..."
+                className={styles.searchInput}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               <select
                 className={styles.dateFilter}
                 value={bookingCategoryFilter}
@@ -1551,23 +1811,58 @@ export default function AdminDashboard() {
                 <option value="theater">🎬 Celebration Theater</option>
                 <option value="gaming">🎮 PS5 Gaming Lounge</option>
               </select>
+              <select
+                className={styles.dateFilter}
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value as any)}
+                style={{ minWidth: '150px' }}
+              >
+                <option value="all">🌐 All Booking Sources</option>
+                <option value="Website">🌐 Website Direct</option>
+                <option value="WhatsApp">💬 WhatsApp Booking</option>
+                <option value="Phone Call">📞 Phone Reservation</option>
+                <option value="Walk-in">🚶 Walk-in Counter</option>
+              </select>
               <input
                 type="date"
                 className={styles.dateFilter}
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
               />
+              {(searchTerm || dateFilter || bookingCategoryFilter !== 'all' || sourceFilter !== 'all') && (
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                  onClick={() => { setSearchTerm(''); setDateFilter(''); setBookingCategoryFilter('all'); setSourceFilter('all'); }}
+                >
+                  Clear
+                </button>
+              )}
             </div>
-            {(searchTerm || dateFilter || bookingCategoryFilter !== 'all') && (
-              <button className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.85rem' }} onClick={() => { setSearchTerm(''); setDateFilter(''); setBookingCategoryFilter('all'); }}>Clear</button>
-            )}
+
+            <button
+              type="button"
+              onClick={() => handleOpenManualBooking()}
+              className="btn btn-primary"
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
+                border: 'none',
+              }}
+            >
+              ✍️ + Add Manual Booking
+            </button>
           </div>
 
           <div className={styles.tableContainer}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Booking ID</th>
+                  <th>Booking Reference & Source</th>
                   <th>Customer Details</th>
                   <th>Show Date & Time</th>
                   <th>Package & Add-ons</th>
@@ -1580,7 +1875,20 @@ export default function AdminDashboard() {
                 {filteredBookings.length > 0 ? (
                   filteredBookings.map((b) => (
                     <tr key={b.id} className={newlyAddedIds.includes(b.id) ? styles.newRowHighlight : ''}>
-                      <td style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{b.id}</td>
+                      <td style={{ fontFamily: 'monospace' }}>
+                        <div style={{ fontWeight: 'bold' }}>{b.id}</div>
+                        <div style={{ marginTop: '4px' }}>
+                          {b.source === 'WhatsApp' ? (
+                            <span className={`${styles.sourceBadge} ${styles.sourceBadgeWhatsApp}`}>💬 WhatsApp</span>
+                          ) : b.source === 'Phone Call' ? (
+                            <span className={`${styles.sourceBadge} ${styles.sourceBadgePhone}`}>📞 Phone</span>
+                          ) : b.source === 'Walk-in' ? (
+                            <span className={`${styles.sourceBadge} ${styles.sourceBadgeWalkIn}`}>🚶 Walk-in</span>
+                          ) : (
+                            <span className={`${styles.sourceBadge} ${styles.sourceBadgeWebsite}`}>🌐 Website</span>
+                          )}
+                        </div>
+                      </td>
                       <td>
                         <div className={styles.customerName}>{b.customerName}</div>
                         <div className={styles.customerContact}>📱 {b.phone} <br />👥 {b.guestCount} Guests</div>
@@ -1619,6 +1927,9 @@ export default function AdminDashboard() {
                       <td style={{ fontWeight: 'bold', color: 'var(--accent)' }}>
                         <div>₹{b.totalPrice}</div>
                         <div style={{ fontSize: '0.75rem', color: '#10b981' }}>Adv: ₹{b.advancePaid ?? 500}</div>
+                        {b.balanceDue !== undefined && b.balanceDue > 0 && (
+                          <div style={{ fontSize: '0.72rem', color: '#f59e0b' }}>Bal: ₹{b.balanceDue}</div>
+                        )}
                         {b.couponCode && (
                           <div style={{ fontSize: '0.72rem', color: '#a855f7', fontWeight: 600, marginTop: '2px' }}>
                             🎟️ {b.couponCode}
@@ -1652,6 +1963,15 @@ export default function AdminDashboard() {
                               ✕ Cancel
                             </button>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenPaymentModal(b)}
+                            className={styles.actionBtn}
+                            style={{ borderColor: '#10b981', color: '#10b981' }}
+                            title="Collect balance or view payment ledger"
+                          >
+                            💵 Pay
+                          </button>
                           <button
                             type="button"
                             onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
@@ -1690,6 +2010,210 @@ export default function AdminDashboard() {
             </table>
           </div>
         </>
+      )}
+
+      {/* TAB 2: VISUAL BOOKING CALENDAR */}
+      {activeTab === 'calendar' && (
+        <div className={styles.calendarContainer}>
+          <div className={styles.calendarNav}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#ffffff' }}>
+                📅 Room Availability & Occupancy Grid
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                  onClick={() => {
+                    const d = new Date(calendarViewDate);
+                    d.setDate(d.getDate() - 1);
+                    setCalendarViewDate(d.toISOString().slice(0, 10));
+                  }}
+                  title="Previous Day"
+                >
+                  ◀ Prev
+                </button>
+                <input
+                  type="date"
+                  className={styles.dateFilter}
+                  value={calendarViewDate}
+                  onChange={(e) => setCalendarViewDate(e.target.value)}
+                  style={{ minWidth: '150px' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                  onClick={() => {
+                    const d = new Date(calendarViewDate);
+                    d.setDate(d.getDate() + 1);
+                    setCalendarViewDate(d.toISOString().slice(0, 10));
+                  }}
+                  title="Next Day"
+                >
+                  Next ▶
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+                  onClick={() => setCalendarViewDate(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date()))}
+                >
+                  Today
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleOpenManualBooking('angel-wings', undefined, calendarViewDate)}
+              className="btn btn-primary"
+              style={{
+                padding: '8px 16px',
+                fontSize: '0.85rem',
+                background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
+                border: 'none',
+              }}
+            >
+              ✍️ + Book This Date
+            </button>
+          </div>
+
+          <div className={styles.calendarGrid}>
+            {ROOMS.map((room) => {
+              const isGaming = room.id === 'ps5-gaming';
+              const slots = isGaming ? [
+                '10:00 AM - 11:00 AM',
+                '11:00 AM - 12:00 PM',
+                '12:00 PM - 01:00 PM',
+                '01:00 PM - 02:00 PM',
+                '02:00 PM - 03:00 PM',
+                '03:00 PM - 04:00 PM',
+                '04:00 PM - 05:00 PM',
+                '05:00 PM - 06:00 PM',
+                '06:00 PM - 07:00 PM',
+                '07:00 PM - 08:00 PM',
+                '08:00 PM - 09:00 PM',
+                '09:00 PM - 10:00 PM',
+                '10:00 PM - 11:00 PM',
+                '11:00 PM - 12:00 AM',
+              ] : [
+                '10:00 AM - 12:00 PM',
+                '12:30 PM - 02:30 PM',
+                '03:00 PM - 05:00 PM',
+                '05:30 PM - 07:30 PM',
+                '08:00 PM - 10:00 PM',
+                '10:00 PM - 12:00 AM',
+                '11:00 PM - 01:00 AM',
+              ];
+
+              const roomBookings = bookings.filter(b => {
+                if (b.status === 'cancelled') return false;
+                if (b.date !== calendarViewDate) return false;
+                return normalizeRoomId(b) === room.id;
+              });
+
+              const themeColor = room.id === 'angel-wings' ? '#ec4899' : room.id === 'red-velvet' ? '#ef4444' : room.id === 'royal-butterfly' ? '#a855f7' : '#06b6d4';
+
+              return (
+                <div key={room.id} className={styles.calendarRoomCol}>
+                  <div className={styles.calendarRoomHeader} style={{ borderTop: `3px solid ${themeColor}` }}>
+                    <div>
+                      <div style={{ color: themeColor, fontWeight: 700 }}>{room.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{room.occasionLabel} · {room.duration}</div>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '12px' }}>
+                      {roomBookings.length} Booked
+                    </span>
+                  </div>
+
+                  <div className={styles.calendarSlotsList}>
+                    {slots.map((slotTime) => {
+                      const matchedBooking = roomBookings.find(b => checkBookingOverlap(calendarViewDate, slotTime, [b]));
+
+                      if (matchedBooking) {
+                        const balance = matchedBooking.balanceDue ?? Math.max(0, matchedBooking.totalPrice - (matchedBooking.advancePaid ?? 500));
+                        return (
+                          <div key={slotTime} className={styles.calendarSlotBooked} style={{ borderLeftColor: themeColor }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>⏰ {slotTime}</span>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                background: matchedBooking.status === 'confirmed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                color: matchedBooking.status === 'confirmed' ? '#10b981' : '#f59e0b',
+                                fontWeight: 600,
+                              }}>
+                                {matchedBooking.status}
+                              </span>
+                            </div>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f3f4f6' }}>
+                              👤 {matchedBooking.customerName}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                              📱 {matchedBooking.phone} · 👥 {matchedBooking.guestCount} Guests
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.78rem' }}>
+                              <span style={{ fontWeight: 700, color: 'var(--accent)' }}>₹{matchedBooking.totalPrice}</span>
+                              <span style={{ color: balance > 0 ? '#f59e0b' : '#10b981' }}>
+                                {balance > 0 ? `Bal: ₹${balance}` : 'Paid ✅'}
+                              </span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenPaymentModal(matchedBooking)}
+                                className={styles.actionBtn}
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: '#10b981', color: '#10b981' }}
+                              >
+                                💵 Pay
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedBookingForInvoice(matchedBooking)}
+                                className={styles.actionBtn}
+                                style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: '#a855f7', color: '#c084fc' }}
+                              >
+                                📄 Bill
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => window.open(`/receipt?id=${matchedBooking.id}`, '_blank')}
+                                className={styles.actionBtn}
+                                style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                              >
+                                🧾
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={slotTime} className={styles.calendarSlotAvailable}>
+                          <div>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#9ca3af' }}>{slotTime}</span>
+                            <span style={{ fontSize: '0.72rem', color: '#10b981', marginLeft: '8px' }}>• Free</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenManualBooking(room.id, slotTime, calendarViewDate)}
+                            className="btn btn-secondary"
+                            style={{ padding: '3px 10px', fontSize: '0.75rem', borderColor: '#10b981', color: '#10b981' }}
+                          >
+                            + Book
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* TAB 4: FOOD ORDERS */}
@@ -2113,6 +2637,9 @@ export default function AdminDashboard() {
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>{selectedBookingForInvoice.customerName}</div>
                   <div style={{ fontSize: '0.85rem', color: '#475569' }}>📱 {selectedBookingForInvoice.phone}</div>
                   <div style={{ fontSize: '0.85rem', color: '#475569' }}>📧 {selectedBookingForInvoice.email}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#0284c7', marginTop: '4px', fontWeight: 600 }}>
+                    Source: {selectedBookingForInvoice.source || 'Website'}
+                  </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#64748b', fontWeight: 600 }}>Show Schedule</div>
@@ -2141,7 +2668,7 @@ export default function AdminDashboard() {
                   <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <td style={{ padding: '10px 12px' }}>
                       <strong>{selectedBookingForInvoice.packageName}</strong>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Standard 2-Hour Private Theater Screening</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Standard Private Suite Experience</div>
                     </td>
                     <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>
                       ₹{selectedBookingForInvoice.totalPrice - (selectedBookingForInvoice.addOns?.length ? selectedBookingForInvoice.addOns.length * 200 : 0)}
@@ -2168,7 +2695,7 @@ export default function AdminDashboard() {
                     </tr>
                   )}
                   <tr style={{ color: '#059669', fontWeight: 600 }}>
-                    <td style={{ padding: '6px 12px' }}>Advance Paid (UPI)</td>
+                    <td style={{ padding: '6px 12px' }}>Advance Paid ({selectedBookingForInvoice.paymentMode || 'UPI'})</td>
                     <td style={{ padding: '6px 12px', textAlign: 'right' }}>- ₹{selectedBookingForInvoice.advancePaid ?? 500}</td>
                   </tr>
                   <tr style={{ color: selectedBookingForInvoice.balanceCollected ? '#059669' : '#d97706', fontWeight: 800, fontSize: '1.05rem', borderTop: '1px dashed #cbd5e1' }}>
@@ -2182,8 +2709,31 @@ export default function AdminDashboard() {
                 </tbody>
               </table>
 
+              {/* Payment Ledger History */}
+              {selectedBookingForInvoice.paymentLedger && selectedBookingForInvoice.paymentLedger.length > 0 && (
+                <div style={{ marginBottom: '20px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                    Payment Transaction History:
+                  </div>
+                  <table style={{ width: '100%', fontSize: '0.78rem', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      {selectedBookingForInvoice.paymentLedger.map((p, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                          <td style={{ padding: '4px 6px', color: '#64748b' }}>
+                            {new Date(p.recordedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                          </td>
+                          <td style={{ padding: '4px 6px', fontWeight: 600, color: '#0f172a' }}>{p.paymentMode} ({p.type})</td>
+                          <td style={{ padding: '4px 6px', color: '#64748b' }}>{p.utrNumber ? `Ref: ${p.utrNumber}` : (p.notes || '')}</td>
+                          <td style={{ padding: '4px 6px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>₹{p.amount}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
               <div style={{ textAlign: 'center', fontSize: '0.78rem', color: '#94a3b8', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                Thank you for celebrating with Bee Vibe Cinema! For inquiries call +91 81236 35342.
+                Thank you for celebrating with Bee Vibe Party Hall! For inquiries call +91 99001 06474.
               </div>
             </div>
 
@@ -2336,6 +2886,504 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* MODAL 1: MANUAL BOOKING MODAL */}
+      {isManualBookingModalOpen && (
+        <div className={styles.modalOverlayCustom} onClick={() => setIsManualBookingModalOpen(false)}>
+          <div className={`${styles.modalContentCustom} ${styles.modalWide}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeaderCustom}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ✍️ Add Manual Booking (Staff Desk)
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Saves directly to database · Immediately blocks slots on live website
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.closeBtnCustom}
+                onClick={() => setIsManualBookingModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitManualBooking}>
+              <div className={styles.modalBodyCustom}>
+                {manualError && (
+                  <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.88rem' }}>
+                    ⚠️ {manualError}
+                  </div>
+                )}
+
+                {/* Booking Source Selector */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Booking Source</label>
+                  <div className={styles.pillsRow}>
+                    {(['Walk-in', 'WhatsApp', 'Phone Call', 'Website'] as const).map((src) => (
+                      <button
+                        type="button"
+                        key={src}
+                        className={`${styles.pillBtn} ${manualSource === src ? styles.pillBtnActive : ''}`}
+                        onClick={() => setManualSource(src)}
+                      >
+                        {src === 'WhatsApp' ? '💬 WhatsApp' : src === 'Phone Call' ? '📞 Phone Call' : src === 'Walk-in' ? '🚶 Walk-in Desk' : '🌐 Website Direct'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Customer Details Grid */}
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Customer Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rahul Sharma"
+                      className={styles.formInputCustom}
+                      value={manualCustomerName}
+                      onChange={(e) => setManualCustomerName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Customer Phone (10 Digits) *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. 9876543210"
+                      className={styles.formInputCustom}
+                      value={manualPhone}
+                      onChange={(e) => setManualPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Customer Email (Optional)</label>
+                    <input
+                      type="email"
+                      placeholder="e.g. rahul@gmail.com"
+                      className={styles.formInputCustom}
+                      value={manualEmail}
+                      onChange={(e) => setManualEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Guest Count (Base includes 2)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={15}
+                      className={styles.formInputCustom}
+                      value={manualGuests}
+                      onChange={(e) => {
+                        const count = parseInt(e.target.value, 10) || 1;
+                        setManualGuests(count);
+                        const newPrice = calculatePriceForManualBooking(manualRoomId, count, manualAddOns, manualTimeSlot);
+                        setManualTotalPrice(newPrice);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Room / Service Selector */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Celebration Suite / Service *</label>
+                  <select
+                    className={styles.formInputCustom}
+                    value={manualRoomId}
+                    onChange={(e) => {
+                      const newRoom = e.target.value;
+                      setManualRoomId(newRoom);
+                      const isG = newRoom === 'ps5-gaming';
+                      const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
+                      setManualTimeSlot(defaultSlot);
+                      const newPrice = calculatePriceForManualBooking(newRoom, manualGuests, manualAddOns, defaultSlot);
+                      setManualTotalPrice(newPrice);
+                    }}
+                  >
+                    {ROOMS.map(r => (
+                      <option key={r.id} value={r.id}>
+                        {r.name} ({r.occasionLabel}) — Base ₹{r.price} ({r.duration})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Date & Time Slot Grid */}
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Booking Date *</label>
+                    <input
+                      type="date"
+                      required
+                      className={styles.formInputCustom}
+                      value={manualDate}
+                      onChange={(e) => setManualDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Showtime Slot *</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={manualTimeSlot}
+                      onChange={(e) => {
+                        const newSlot = e.target.value;
+                        setManualTimeSlot(newSlot);
+                        const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, newSlot);
+                        setManualTotalPrice(newPrice);
+                      }}
+                    >
+                      {(manualRoomId === 'ps5-gaming' ? [
+                        '10:00 AM - 11:00 AM',
+                        '11:00 AM - 12:00 PM',
+                        '12:00 PM - 01:00 PM',
+                        '01:00 PM - 02:00 PM',
+                        '02:00 PM - 03:00 PM',
+                        '03:00 PM - 04:00 PM',
+                        '04:00 PM - 05:00 PM',
+                        '05:00 PM - 06:00 PM',
+                        '06:00 PM - 07:00 PM',
+                        '07:00 PM - 08:00 PM',
+                        '08:00 PM - 09:00 PM',
+                        '09:00 PM - 10:00 PM',
+                        '10:00 PM - 11:00 PM',
+                        '11:00 PM - 12:00 AM',
+                      ] : [
+                        '10:00 AM - 12:00 PM',
+                        '12:30 PM - 02:30 PM',
+                        '03:00 PM - 05:00 PM',
+                        '05:30 PM - 07:30 PM',
+                        '08:00 PM - 10:00 PM',
+                        '10:00 PM - 12:00 AM',
+                        '11:00 PM - 01:00 AM',
+                      ]).map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Add-ons Checklist */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabelCustom}>Select Add-ons (Optional)</label>
+                  <div className={styles.addonChecklist}>
+                    {ADD_ONS.map(addon => {
+                      const isChecked = manualAddOns.includes(addon.name);
+                      return (
+                        <div
+                          key={addon.id}
+                          className={`${styles.addonCheckItem} ${isChecked ? styles.addonCheckItemActive : ''}`}
+                          onClick={() => {
+                            const updated = isChecked
+                              ? manualAddOns.filter(a => a !== addon.name)
+                              : [...manualAddOns, addon.name];
+                            setManualAddOns(updated);
+                            const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, updated, manualTimeSlot);
+                            setManualTotalPrice(newPrice);
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{addon.icon} {addon.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#10b981' }}>+₹{addon.price}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Pricing & Advance Payment */}
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Total Package Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={100}
+                      className={styles.formInputCustom}
+                      value={manualTotalPrice}
+                      onChange={(e) => setManualTotalPrice(Number(e.target.value))}
+                    />
+                    <small style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      Auto-calculated. Staff can override for special rates.
+                    </small>
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Advance Payment Collected (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      max={manualTotalPrice}
+                      className={styles.formInputCustom}
+                      value={manualAdvancePaid}
+                      onChange={(e) => setManualAdvancePaid(Number(e.target.value))}
+                    />
+                    <small style={{ fontSize: '0.72rem', color: '#f59e0b' }}>
+                      Balance Due: ₹{Math.max(0, manualTotalPrice - manualAdvancePaid)}
+                    </small>
+                  </div>
+                </div>
+
+                {/* Payment Method & UTR */}
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Method</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={manualPaymentMode}
+                      onChange={(e) => setManualPaymentMode(e.target.value)}
+                    >
+                      <option value="Cash">💵 Cash at Venue Counter</option>
+                      <option value="UPI (Counter QR)">📱 UPI Counter QR (Google Pay / PhonePe)</option>
+                      <option value="Card (POS Machine)">💳 Credit / Debit Card (POS)</option>
+                      <option value="Bank Transfer">🏦 Direct Bank Transfer / NEFT</option>
+                      <option value="Pay at Venue Desk">⏳ Zero Advance (Pay at Desk)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Reference / UTR (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 12-digit UTR or Cash receipt #"
+                      className={styles.formInputCustom}
+                      value={manualUtr}
+                      onChange={(e) => setManualUtr(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Staff Notes */}
+                <div>
+                  <label className={styles.formLabelCustom}>Internal Staff Notes (Optional)</label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Requested flower cake setup, customer arriving 15m early..."
+                    className={styles.formTextareaCustom}
+                    value={manualNotes}
+                    onChange={(e) => setManualNotes(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.modalFooterCustom}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsManualBookingModalOpen(false)}
+                  disabled={manualSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)', border: 'none' }}
+                  disabled={manualSubmitting}
+                >
+                  {manualSubmitting ? 'Saving Booking...' : '💾 Confirm & Block Slot'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: RECORD PAYMENT & PAYMENT LEDGER */}
+      {selectedBookingForPayment && (
+        <div className={styles.modalOverlayCustom} onClick={() => setSelectedBookingForPayment(null)}>
+          <div className={`${styles.modalContentCustom} ${styles.modalWide}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeaderCustom}>
+              <div>
+                <h3>💵 Payment Ledger & Balance Collection</h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Booking ID: <span style={{ fontFamily: 'monospace', color: '#ffffff' }}>{selectedBookingForPayment.id}</span> · {selectedBookingForPayment.customerName}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.closeBtnCustom}
+                onClick={() => setSelectedBookingForPayment(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.modalBodyCustom}>
+              {/* Financial Snapshot */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>TOTAL BILL</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ffffff' }}>₹{selectedBookingForPayment.totalPrice}</div>
+                </div>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#10b981' }}>TOTAL COLLECTED</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#10b981' }}>₹{selectedBookingForPayment.advancePaid ?? 0}</div>
+                </div>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#f59e0b' }}>OUTSTANDING BALANCE</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#f59e0b' }}>₹{selectedBookingForPayment.balanceDue ?? 0}</div>
+                </div>
+                <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#60a5fa' }}>SETTLEMENT STATUS</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#60a5fa', marginTop: '4px' }}>
+                    {selectedBookingForPayment.balanceDue === 0 ? 'Fully Paid ✅' : 'Balance Due ⏳'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment History Ledger */}
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '0.9rem', marginBottom: '10px', color: '#ffffff' }}>
+                  📜 Timestamped Payment History ({selectedBookingForPayment.paymentLedger?.length || (selectedBookingForPayment.advancePaid ? 1 : 0)} entries)
+                </h4>
+                {selectedBookingForPayment.paymentLedger && selectedBookingForPayment.paymentLedger.length > 0 ? (
+                  <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.04)', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                          <th style={{ padding: '8px 10px' }}>Date / Time</th>
+                          <th style={{ padding: '8px 10px' }}>Type</th>
+                          <th style={{ padding: '8px 10px' }}>Amount</th>
+                          <th style={{ padding: '8px 10px' }}>Mode</th>
+                          <th style={{ padding: '8px 10px' }}>UTR / Notes</th>
+                          <th style={{ padding: '8px 10px' }}>Staff</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedBookingForPayment.paymentLedger.map((entry) => (
+                          <tr key={entry.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <td style={{ padding: '8px 10px' }}>{new Date(entry.recordedAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                            <td style={{ padding: '8px 10px', textTransform: 'capitalize' }}>
+                              <span style={{
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '0.72rem',
+                                background: entry.type === 'full' ? 'rgba(16, 185, 129, 0.2)' : entry.type === 'balance' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                color: entry.type === 'full' ? '#10b981' : entry.type === 'balance' ? '#60a5fa' : '#fbbf24',
+                              }}>
+                                {entry.type}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 10px', fontWeight: 700, color: '#10b981' }}>₹{entry.amount}</td>
+                            <td style={{ padding: '8px 10px' }}>{entry.paymentMode}</td>
+                            <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>
+                              {entry.utrNumber || entry.notes || '—'}
+                            </td>
+                            <td style={{ padding: '8px 10px', color: 'var(--text-secondary)' }}>{entry.recordedBy || 'System'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '8px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    Initial Advance: ₹{selectedBookingForPayment.advancePaid ?? 0} ({selectedBookingForPayment.paymentMode || 'UPI'})
+                  </div>
+                )}
+              </div>
+
+              {/* Record New Payment Form */}
+              <form onSubmit={handleRecordPaymentSubmit} style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h4 style={{ fontSize: '0.9rem', marginBottom: '12px', color: '#ffffff' }}>
+                  ➕ Record New Transaction
+                </h4>
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Amount (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      className={styles.formInputCustom}
+                      value={collectAmount}
+                      onChange={(e) => setCollectAmount(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Mode *</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={collectPaymentMode}
+                      onChange={(e) => setCollectPaymentMode(e.target.value)}
+                    >
+                      <option value="Cash">💵 Cash</option>
+                      <option value="UPI">📱 UPI (Google Pay / PhonePe)</option>
+                      <option value="Card">💳 Credit / Debit Card</option>
+                      <option value="Bank Transfer">🏦 Bank Transfer</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Type</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={collectType}
+                      onChange={(e) => setCollectType(e.target.value as any)}
+                    >
+                      <option value="balance">Remaining Balance</option>
+                      <option value="advance">Additional Advance</option>
+                      <option value="full">Full Settlement</option>
+                      <option value="refund">Refund / Adjustment</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>UTR / Cheque / Ref Number (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 524168749321"
+                      className={styles.formInputCustom}
+                      value={collectUtr}
+                      onChange={(e) => setCollectUtr(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '14px' }}>
+                  <label className={styles.formLabelCustom}>Receipt / Staff Notes (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Paid in cash at reception desk..."
+                    className={styles.formInputCustom}
+                    value={collectNotes}
+                    onChange={(e) => setCollectNotes(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setSelectedBookingForPayment(null)}
+                  >
+                    Close
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={collectSubmitting}
+                    style={{ background: '#10b981', borderColor: '#10b981', color: '#ffffff' }}
+                  >
+                    {collectSubmitting ? 'Recording...' : '💾 Log Transaction'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Mobile Bottom Navigation */}
       <div className={styles.mobileBottomNav}>
         <button
@@ -2343,8 +3391,16 @@ export default function AdminDashboard() {
           className={`${styles.mobileNavItem} ${activeTab === 'bookings' ? styles.mobileNavItemActive : ''}`}
           onClick={() => setActiveTab('bookings')}
         >
-          <span className={styles.mobileNavIcon}>📅</span>
+          <span className={styles.mobileNavIcon}>📋</span>
           <span>Bookings</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'calendar' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('calendar')}
+        >
+          <span className={styles.mobileNavIcon}>📅</span>
+          <span>Calendar</span>
         </button>
         <button
           type="button"
