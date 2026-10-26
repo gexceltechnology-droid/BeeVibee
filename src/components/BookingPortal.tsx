@@ -5,9 +5,6 @@ import styles from './BookingPortal.module.css';
 
 import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_CLOSE_MINUTES, isLateNightSlot } from '@/lib/time';
 import { Download, Printer, FileText } from 'lucide-react';
-import type { ConfirmationResult } from 'firebase/auth';
-import { isFirebaseConfigured } from '@/lib/firebase';
-import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
 
 import { EXPERIENCES } from '@/lib/experiences';
@@ -153,7 +150,6 @@ export default function BookingPortal({
   const [otpSent, setOtpSent] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
-  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
   const [customerBookings, setCustomerBookings] = useState<ConfirmedBooking[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
@@ -282,114 +278,34 @@ export default function BookingPortal({
     return () => clearTimeout(timer);
   }, [isCustomerLoggedIn, customerPhone]);
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleLoginWithPhone = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-    setLoginLoading(true);
 
     const trimmedPhone = loginPhone.trim();
-    if (!trimmedPhone) {
-      setLoginError('Phone number is required.');
-      setLoginLoading(false);
+    if (!trimmedPhone || trimmedPhone.replace(/\D/g, '').length < 10) {
+      setLoginError('Please enter a valid 10-digit phone number.');
       return;
     }
 
     let finalPhone = trimmedPhone;
     if (!finalPhone.startsWith('+')) {
-      // Remove any leading zeros and prepend countryCode
       finalPhone = `${countryCode}${finalPhone.replace(/^0+/, '')}`;
     }
 
-    try {
-      if (isFirebaseConfigured()) {
-        const recaptchaVerifier = setupRecaptcha('firebase-recaptcha-btn');
-        if (!recaptchaVerifier) {
-          throw new Error('Failed to initialize Firebase reCAPTCHA.');
-        }
-        const fbRes = await sendFirebaseOtp(finalPhone, recaptchaVerifier);
-        if (!fbRes.success || !fbRes.confirmationResult) {
-          throw new Error(fbRes.error || 'Failed to send OTP via Firebase.');
-        }
-        setFirebaseConfirmation(fbRes.confirmationResult);
-        setOtpSent(true);
-      } else {
-        const res = await fetch('/api/otp/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: finalPhone }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to send OTP.');
-
-        setOtpSent(true);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to send OTP. Please check the number.';
-      setLoginError(msg);
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
+    sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+    sessionStorage.setItem('bee_vibe_phone_token', 'bypassed');
+    setPhoneVerificationToken('bypassed');
+    setCustomerPhone(finalPhone);
+    setIsCustomerLoggedIn(true);
+    setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
+    setShowLoginModal(false);
     setLoginError('');
-    setLoginLoading(true);
-
-    const trimmedPhone = loginPhone.trim();
-    let finalPhone = trimmedPhone;
-    if (!finalPhone.startsWith('+')) {
-      finalPhone = `${countryCode}${finalPhone.replace(/^0+/, '')}`;
-    }
-    const trimmedCode = otpCode.trim();
-
-    if (!trimmedPhone || !trimmedCode) {
-      setLoginError('Phone number and OTP code are required.');
-      setLoginLoading(false);
-      return;
-    }
-
-    try {
-      let token = '';
-      if (isFirebaseConfigured() && firebaseConfirmation) {
-        const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, trimmedCode);
-        if (!fbVerify.success || !fbVerify.idToken) {
-          throw new Error(fbVerify.error || 'Invalid OTP code.');
-        }
-        token = fbVerify.idToken;
-      } else {
-        const res = await fetch('/api/otp/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: finalPhone, code: trimmedCode }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
-        token = data.verificationToken;
-      }
-
-      // Login successful
-      sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
-      sessionStorage.setItem('bee_vibe_phone_token', token);
-      setPhoneVerificationToken(token);
-      setCustomerPhone(finalPhone);
-      setIsCustomerLoggedIn(true);
-      setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
-
-      // Reset
-      setShowLoginModal(false);
-      setOtpSent(false);
-      setOtpCode('');
-      setLoginPhone('');
-      setLoginError('');
-      setFirebaseConfirmation(null);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'OTP verification failed. Please try again.';
-      setLoginError(msg);
-    } finally {
-      setLoginLoading(false);
-    }
+    setCurrentView('orders');
+    fetchCustomerBookings(finalPhone);
   };
+
+
 
   const handleCustomerLogout = () => {
     sessionStorage.removeItem('bee_vibe_customer_phone');
@@ -713,12 +629,13 @@ export default function BookingPortal({
       }
     }
     if (step === 4) {
-      if (!isCustomerLoggedIn) {
-        setErrorAndScroll('Please log in and verify your phone number to proceed.');
-        return;
-      }
+      const activePhone = (customerPhone || customerDetails.phone || '').trim();
       if (!customerDetails.name || !customerDetails.email) {
         setErrorAndScroll('Please fill in all required fields (Name and Email).');
+        return;
+      }
+      if (!activePhone || activePhone.replace(/\D/g, '').length < 10) {
+        setErrorAndScroll('Please enter a valid 10-digit mobile number.');
         return;
       }
     }
@@ -733,9 +650,9 @@ export default function BookingPortal({
   const handleSubmitBooking = async () => {
     setError('');
 
-    if (!isCustomerLoggedIn) {
-      setShowLoginModal(true);
-      setErrorAndScroll('Please verify your phone number first to complete the booking.');
+    const finalPhone = (customerPhone || customerDetails.phone || '').trim();
+    if (!finalPhone || finalPhone.replace(/\D/g, '').length < 10) {
+      setErrorAndScroll('Please enter a valid 10-digit mobile number.');
       return;
     }
     if (!customerDetails.name.trim()) { setErrorAndScroll('Please enter your full name.'); return; }
@@ -765,8 +682,8 @@ export default function BookingPortal({
     const bookingPayload = {
       customerName: customerDetails.name,
       email: customerDetails.email,
-      phone: customerPhone,
-      phoneVerificationToken,
+      phone: finalPhone,
+      phoneVerificationToken: 'bypassed',
       b_company_ref: '', // Anti-bot honeypot
       date: selectedDate,
       timeSlot: selectedSlot?.time,
@@ -1408,79 +1325,35 @@ export default function BookingPortal({
             <span className={styles.loginLogo}>🔑</span>
             <h3 className={styles.loginTitle}>Customer Login</h3>
             <p className={styles.loginDesc}>
-              {!otpSent
-                ? 'Enter your phone number to receive a verification OTP code and access your orders.'
-                : 'Enter the 6-digit OTP code sent to your phone number.'}
+              Enter your mobile phone number to look up your reservations and digital passes.
             </p>
 
-            {otpSent && (
-              <div className={styles.mockHelpAlert} style={{ background: 'rgba(16, 185, 129, 0.08)', borderColor: 'rgba(16, 185, 129, 0.3)', color: '#10b981' }}>
-                (OTP sent successfully.)
+            <form onSubmit={handleLoginWithPhone}>
+              <div className={styles.phoneInputContainer}>
+                <select
+                  className={styles.countryCodeSelect}
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                >
+                  <option value="+91">🇮🇳 +91</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+971">🇦🇪 +971</option>
+                  <option value="+65">🇸🇬 +65</option>
+                  <option value="+61">🇦🇺 +61</option>
+                </select>
+                <input
+                  type="tel"
+                  placeholder="Enter Phone (Ex: 9900106474)"
+                  className={styles.loginPhoneInput}
+                  value={loginPhone}
+                  onChange={(e) => setLoginPhone(e.target.value)}
+                  required
+                />
               </div>
-            )}
-
-            <form onSubmit={!otpSent ? handleSendOTP : handleVerifyOTP}>
-              {!otpSent ? (
-                <>
-                  <div className={styles.phoneInputContainer}>
-                    <select
-                      className={styles.countryCodeSelect}
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      disabled={loginLoading}
-                    >
-                      <option value="+91">🇮🇳 +91</option>
-                      <option value="+1">🇺🇸 +1</option>
-                      <option value="+44">🇬🇧 +44</option>
-                      <option value="+971">🇦🇪 +971</option>
-                      <option value="+65">🇸🇬 +65</option>
-                      <option value="+61">🇦🇺 +61</option>
-                    </select>
-                    <input
-                      type="tel"
-                      placeholder="Enter Phone (Ex: 9900106474)"
-                      className={styles.loginPhoneInput}
-                      value={loginPhone}
-                      onChange={(e) => setLoginPhone(e.target.value)}
-                      disabled={loginLoading}
-                      required
-                    />
-                  </div>
-                  <button type="submit" className={styles.loginSubmitBtn} disabled={loginLoading}>
-                    {loginLoading ? 'Sending OTP...' : 'Send OTP Code'}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <input
-                    type="text"
-                    placeholder="•••••"
-                    className={styles.loginInput}
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    disabled={loginLoading}
-                    required
-                  />
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOtpSent(false);
-                        setOtpCode('');
-                      }}
-                      className="btn btn-secondary"
-                      style={{ flex: 1, padding: '10px' }}
-                      disabled={loginLoading}
-                    >
-                      Change Phone
-                    </button>
-                    <button type="submit" className={styles.loginSubmitBtn} style={{ flex: 2 }} disabled={loginLoading}>
-                      {loginLoading ? 'Verifying...' : 'Verify & Login'}
-                    </button>
-                  </div>
-                </>
-              )}
+              <button type="submit" className={styles.loginSubmitBtn}>
+                Access My Bookings
+              </button>
             </form>
 
             {loginError && <div className={styles.loginError} style={{ marginTop: '16px' }}>{loginError}</div>}
@@ -2347,26 +2220,6 @@ export default function BookingPortal({
                 </div>
               </div>
 
-              {!isCustomerLoggedIn ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px', background: 'rgba(255,255,255,0.01)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '8px', maxWidth: '420px', margin: '0 auto' }}>
-                  <div className={styles.mockHelpAlert} style={{ background: 'rgba(242, 169, 0, 0.04)', borderColor: 'rgba(242, 169, 0, 0.2)', width: '100%' }}>
-                    🔒 Verification Required
-                  </div>
-                  <p style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: '1.4' }}>
-                    Please verify your phone number to secure your booking slot and link it to your profile.
-                  </p>
-                  <button
-                    type="button"
-                    className={styles.loginSubmitBtn}
-                    onClick={() => {
-                      setShowLoginModal(true);
-                      setLoginError('');
-                    }}
-                  >
-                    Verify Phone via OTP
-                  </button>
-                </div>
-              ) : (
                 <div className={styles.bookingForm}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel} htmlFor="customer-name">Full Name *</label>
@@ -2395,16 +2248,22 @@ export default function BookingPortal({
                     />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel} htmlFor="customer-phone">Phone Number (Verified ✓)</label>
+                    <label className={styles.formLabel} htmlFor="customer-phone">
+                      WhatsApp Mobile Number *
+                    </label>
                     <input
                       type="tel"
                       id="customer-phone"
                       name="phone"
                       className={styles.formInput}
-                      value={customerPhone}
-                      disabled
+                      placeholder="10-digit mobile number (Ex. 9900106474)"
+                      value={customerPhone || customerDetails.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setCustomerPhone(val);
+                        setCustomerDetails((prev) => ({ ...prev, phone: val }));
+                      }}
                       required
-                      style={{ opacity: 0.7, borderColor: '#10b981', color: '#10b981', fontWeight: 'bold' }}
                     />
                   </div>
                   <div className={styles.formGroup}>
@@ -2740,7 +2599,6 @@ export default function BookingPortal({
                     </div>
                   </div>
                 </div>
-              )}
             </div>
           )}
 

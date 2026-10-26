@@ -4,6 +4,13 @@ import { cleanPhoneNumber } from './whatsappUtils';
 const TOKEN_SECRET = process.env.PHONE_VERIFICATION_SECRET || process.env.ADMIN_PASSCODE || 'beevibe_secure_phone_token_2026';
 
 /**
+ * Check if phone verification / SMS OTP is currently disabled
+ */
+export function isPhoneVerificationDisabled(): boolean {
+  return true;
+}
+
+/**
  * Generate a cryptographically signed HMAC token proving phone verification
  * Valid for 15 minutes by default.
  */
@@ -159,6 +166,11 @@ export async function verifyCustomerPhone(
   phone: string,
   token: string
 ): Promise<{ valid: boolean; reason?: string }> {
+  // If verification is temporarily disabled, immediately accept
+  if (isPhoneVerificationDisabled()) {
+    return { valid: true };
+  }
+
   if (!phone || !token) {
     return { valid: false, reason: 'Phone number and verification token are required.' };
   }

@@ -49,9 +49,6 @@ import {
   isLateNightSlot,
   VENUE_CLOSE_MINUTES,
 } from '@/lib/time';
-import { isFirebaseConfigured } from '@/lib/firebase';
-import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode } from '@/lib/firebaseAuth';
-import type { ConfirmationResult } from 'firebase/auth';
 
 interface BookingFlowModalProps {
   isOpen: boolean;
@@ -149,16 +146,7 @@ export default function BookingFlowModal({
     }
   }, [initialPhone, customerPhone]);
 
-  // Phone OTP Verification States
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [phoneVerificationToken, setPhoneVerificationToken] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpSending, setOtpSending] = useState(false);
-  const [otpVerifying, setOtpVerifying] = useState(false);
-  const [otpError, setOtpError] = useState('');
-  const [otpCountdown, setOtpCountdown] = useState(0);
-  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
+
 
   // Payment
   const [utrNumber, setUtrNumber] = useState('');
@@ -489,107 +477,12 @@ export default function BookingFlowModal({
   };
 
   // OTP Resend Countdown
-  useEffect(() => {
-    if (otpCountdown <= 0) return;
-    const timer = setTimeout(() => setOtpCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [otpCountdown]);
-
-  // Handle Send OTP
-  const handleSendOtp = async () => {
-    setOtpError('');
-    const clean = customerPhone.trim().replace(/\D/g, '');
-    if (clean.length !== 10) {
-      setOtpError('Please enter a valid 10-digit mobile number first.');
-      return;
-    }
-
-    setOtpSending(true);
-    const formattedE164 = `+91${clean}`;
-
-    try {
-      if (isFirebaseConfigured()) {
-        const recaptchaVerifier = setupRecaptcha('booking-recaptcha-anchor');
-        if (!recaptchaVerifier) {
-          throw new Error('Could not initialize reCAPTCHA.');
-        }
-        const fbRes = await sendFirebaseOtp(formattedE164, recaptchaVerifier);
-        if (!fbRes.success || !fbRes.confirmationResult) {
-          throw new Error(fbRes.error || 'Failed to send OTP via SMS.');
-        }
-        setFirebaseConfirmation(fbRes.confirmationResult);
-        setOtpSent(true);
-        setOtpCountdown(30);
-      } else {
-        const res = await fetch('/api/otp/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formattedE164 }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to send OTP.');
-        setOtpSent(true);
-        setOtpCountdown(30);
-      }
-    } catch (err: any) {
-      setOtpError(err?.message || 'Failed to dispatch verification code. Please check your number.');
-    } finally {
-      setOtpSending(false);
-    }
-  };
-
-  // Handle Verify OTP
-  const handleVerifyOtp = async () => {
-    setOtpError('');
-    const cleanCode = otpCode.trim();
-    if (!cleanCode || cleanCode.length < 4) {
-      setOtpError('Please enter the 6-digit verification code.');
-      return;
-    }
-
-    setOtpVerifying(true);
-    const cleanPhone = customerPhone.trim().replace(/\D/g, '');
-    const formattedE164 = `+91${cleanPhone}`;
-
-    try {
-      if (isFirebaseConfigured() && firebaseConfirmation) {
-        const res = await verifyFirebaseOtpCode(firebaseConfirmation, cleanCode);
-        if (!res.success || !res.idToken) {
-          throw new Error(res.error || 'Invalid OTP code.');
-        }
-        setPhoneVerificationToken(res.idToken);
-        setIsPhoneVerified(true);
-        setOtpSent(false);
-        setOtpCode('');
-      } else {
-        const res = await fetch('/api/otp/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: formattedE164, code: cleanCode }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Invalid verification code.');
-        setPhoneVerificationToken(data.verificationToken);
-        setIsPhoneVerified(true);
-        setOtpSent(false);
-        setOtpCode('');
-      }
-    } catch (err: any) {
-      setOtpError(err?.message || 'Verification failed. Please try again.');
-    } finally {
-      setOtpVerifying(false);
-    }
-  };
 
   // Final submit handler connected to /api/bookings
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeRoom) {
       setSubmitError('Please select a private suite to complete your booking.');
-      return;
-    }
-    if (!isPhoneVerified || !phoneVerificationToken) {
-      setSubmitError('Please verify your mobile number with OTP before confirming booking.');
       return;
     }
     if (!utrNumber.trim()) {
@@ -624,7 +517,7 @@ export default function BookingFlowModal({
           customer_name: customerName.trim(),
           name: customerName.trim(),
           phone: customerPhone.trim(),
-          phoneVerificationToken,
+          phoneVerificationToken: 'bypassed',
           b_company_ref: '', // Anti-bot honeypot field
           email: customerEmail.trim() || `${customerPhone.trim()}@beevibe.guest`,
           date: selectedDate,
@@ -668,7 +561,7 @@ export default function BookingFlowModal({
   const canGoToStep2 = !!activeRoom;
   const canGoToStep3 = !!selectedSlot;
   const canGoToStep4 = true;
-  const canGoToStep5 = !!(customerName.trim() && customerPhone.trim().length === 10 && isPhoneVerified && phoneVerificationToken);
+  const canGoToStep5 = !!(customerName.trim() && customerPhone.trim().length === 10);
 
   if (!isOpen) return null;
 
@@ -1378,116 +1271,13 @@ export default function BookingFlowModal({
                         className={styles.phoneInput}
                         placeholder="98765 43210"
                         value={customerPhone}
-                        disabled={isPhoneVerified}
                         onChange={(e) => {
                           const newPhone = e.target.value.replace(/\D/g, '').slice(0, 10);
                           setCustomerPhone(newPhone);
-                          if (isPhoneVerified) {
-                            setIsPhoneVerified(false);
-                            setPhoneVerificationToken('');
-                            setOtpSent(false);
-                            setOtpCode('');
-                          }
                         }}
                         required
                       />
-                      {!isPhoneVerified && (
-                        <button
-                          type="button"
-                          className={styles.otpActionBtn}
-                          disabled={customerPhone.length !== 10 || otpSending}
-                          onClick={handleSendOtp}
-                        >
-                          {otpSending ? (
-                            <>
-                              <Loader2 size={13} className="animate-spin" />
-                              <span>Sending...</span>
-                            </>
-                          ) : otpSent ? (
-                            <span>Resend Code</span>
-                          ) : (
-                            <>
-                              <KeyRound size={13} />
-                              <span>Verify Phone</span>
-                            </>
-                          )}
-                        </button>
-                      )}
                     </div>
-
-                    {/* Verified Phone Status Badge */}
-                    {isPhoneVerified && (
-                      <div className={styles.verifiedBadge}>
-                        <ShieldCheck size={16} />
-                        <span>Verified Mobile Number (+91 {customerPhone})</span>
-                        <button
-                          type="button"
-                          className={styles.verifiedChangeBtn}
-                          onClick={() => {
-                            setIsPhoneVerified(false);
-                            setPhoneVerificationToken('');
-                            setOtpSent(false);
-                          }}
-                        >
-                          Change
-                        </button>
-                      </div>
-                    )}
-
-                    {/* Inline OTP Verification Console */}
-                    {!isPhoneVerified && otpSent && (
-                      <div className={styles.otpVerificationCard}>
-                        <div className={styles.otpVerificationHeader}>
-                          <span className={styles.otpVerificationTitle}>
-                            <KeyRound size={14} /> Enter 6-digit SMS verification code:
-                          </span>
-                          <button
-                            type="button"
-                            className={styles.resendBtn}
-                            disabled={otpCountdown > 0 || otpSending}
-                            onClick={handleSendOtp}
-                          >
-                            {otpCountdown > 0 ? `Resend in ${otpCountdown}s` : 'Resend Code'}
-                          </button>
-                        </div>
-                        <div className={styles.otpInputRow}>
-                          <input
-                            type="text"
-                            maxLength={6}
-                            placeholder="• • • • • •"
-                            className={styles.otpCodeInput}
-                            value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                          />
-                          <button
-                            type="button"
-                            className={styles.verifyOtpBtn}
-                            disabled={otpCode.length < 4 || otpVerifying}
-                            onClick={handleVerifyOtp}
-                          >
-                            {otpVerifying ? (
-                              <>
-                                <Loader2 size={13} className="animate-spin" />
-                                <span>Verifying...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Check size={14} />
-                                <span>Confirm OTP</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* OTP Error Messages */}
-                    {otpError && (
-                      <div className={styles.otpErrorMsg}>
-                        <AlertCircle size={14} />
-                        <span>{otpError}</span>
-                      </div>
-                    )}
                   </div>
 
                   <div className={styles.formGroup + ' ' + styles.formFull}>

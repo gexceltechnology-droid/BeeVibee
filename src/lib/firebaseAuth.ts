@@ -12,6 +12,13 @@ declare global {
 }
 
 /**
+ * Check if SMS OTP phone verification is disabled (e.g., during maintenance or quota recharge)
+ */
+export function isPhoneVerificationDisabled(): boolean {
+  return true;
+}
+
+/**
  * Format phone number to E.164 (e.g., +919900106474)
  */
 export function formatPhoneNumberE164(phone: string): string {

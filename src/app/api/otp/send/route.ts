@@ -3,12 +3,17 @@ import { sendSMS } from '@/lib/sms';
 import { saveOtpToFirestore } from '@/lib/firestore';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
+import { isPhoneVerificationDisabled } from '@/lib/phoneVerification';
 
 export async function POST(request: NextRequest) {
   try {
     const { phone } = await request.json();
     if (!phone) {
       return NextResponse.json({ error: 'Phone number is required.' }, { status: 400 });
+    }
+
+    if (isPhoneVerificationDisabled()) {
+      return NextResponse.json({ success: true, message: 'Phone verification is currently bypassed.' });
     }
 
     const trimmedPhone = String(phone).trim();

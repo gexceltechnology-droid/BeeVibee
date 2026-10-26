@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyOtpFromFirestore } from '@/lib/firestore';
-import { createSignedPhoneToken } from '@/lib/phoneVerification';
+import { createSignedPhoneToken, isPhoneVerificationDisabled } from '@/lib/phoneVerification';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 
 export async function POST(request: NextRequest) {
   try {
     const { phone, code } = await request.json();
-    if (!phone || !code) {
-      return NextResponse.json({ error: 'Phone number and verification code are required.' }, { status: 400 });
+    if (!phone) {
+      return NextResponse.json({ error: 'Phone number is required.' }, { status: 400 });
     }
 
     const trimmedPhone = String(phone).trim();
+
+    if (isPhoneVerificationDisabled()) {
+      const verificationToken = createSignedPhoneToken(trimmedPhone);
+      return NextResponse.json({ success: true, verificationToken });
+    }
+
+    if (!code) {
+      return NextResponse.json({ error: 'Verification code is required.' }, { status: 400 });
+    }
     const inputCode = String(code).trim();
     const cleaned = cleanPhoneNumber(trimmedPhone);
 
