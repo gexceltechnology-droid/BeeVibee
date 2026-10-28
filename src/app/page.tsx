@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import {
   Sparkles,
   ChevronDown,
@@ -35,7 +36,18 @@ import BookingFlowModal from '@/components/booking/BookingFlowModal';
 import TheatresShowcase from '@/components/booking/TheatresShowcase';
 import WhatsAppBotWidget from '@/components/WhatsAppBotWidget';
 import { ROOMS, OCCASIONS, RoomExperience, OccasionType } from '@/types/booking';
+import { GOOGLE_REVIEWS, GOOGLE_BUSINESS_STATS } from '@/data/googleReviews';
 import styles from './page.module.css';
+
+// Sleek Google multi-colored 'G' icon
+const GoogleIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+  </svg>
+);
 
 export default function Home() {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -60,6 +72,7 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeGalleryTab, setActiveGalleryTab] = useState<'all' | 'birthday' | 'romantic' | 'vip' | 'gaming'>('all');
+  const [activeReviewFilter, setActiveReviewFilter] = useState<'all' | 'birthday' | 'romance' | 'gaming' | 'party'>('all');
 
   // Scroll listener
   useEffect(() => {
@@ -128,30 +141,15 @@ export default function Home() {
     setIsBookingModalOpen(true);
   };
 
-  // Reviews Data
-  const reviews = [
-    {
-      name: 'Ananya & Vikram',
-      occasion: 'Birthday Celebration 🎂',
-      quote:
-        'Celebrated my boyfriend\'s 25th birthday here in Jayanagar. The 180-inch screen and personalized LED name board had us stunned! 100% private and soundproof.',
-      rating: 5,
-    },
-    {
-      name: 'Sneha R.',
-      occasion: 'Surprise Party 🩷',
-      quote:
-        'Booked the Angel Wings & Neon room for my sister\'s surprise party. The fog entry effect during cake cutting was pure cinema. Booking online took less than 2 minutes!',
-      rating: 5,
-    },
-    {
-      name: 'Pradeep K.',
-      occasion: 'PS5 Gaming Night 🎮',
-      quote:
-        'The PS5 setup on the 180-inch 4K screen with 7.1 surround sound is insane. Played EA FC 24 and Tekken 8 with friends. Best private gaming lounge in Bangalore.',
-      rating: 5,
-    },
-  ];
+  // Google Reviews Filtering (100+ Reviews on Google Maps)
+  const filteredReviews = GOOGLE_REVIEWS.filter((rev) => {
+    if (activeReviewFilter === 'all') return true;
+    if (activeReviewFilter === 'birthday') return rev.occasion.toLowerCase().includes('birthday');
+    if (activeReviewFilter === 'romance') return rev.occasion.toLowerCase().includes('anniversary') || rev.occasion.toLowerCase().includes('romance') || rev.occasion.toLowerCase().includes('date');
+    if (activeReviewFilter === 'gaming') return rev.occasion.toLowerCase().includes('gaming') || rev.occasion.toLowerCase().includes('ps5');
+    if (activeReviewFilter === 'party') return rev.occasion.toLowerCase().includes('bachelorette') || rev.occasion.toLowerCase().includes('movie') || rev.occasion.toLowerCase().includes('vip') || rev.occasion.toLowerCase().includes('party');
+    return true;
+  });
 
   // Gallery Data
   const galleryItems = [
@@ -230,6 +228,7 @@ export default function Home() {
                 <li><a href="#why-beevibe" className={styles.navLink}>Why BeeVibe</a></li>
                 <li><a href="#how-it-works" className={styles.navLink}>How It Works</a></li>
                 <li><a href="#gallery" className={styles.navLink}>Gallery</a></li>
+                <li><a href="#reviews" className={styles.navLink}>Reviews</a></li>
                 <li><a href="#location" className={styles.navLink}>Location</a></li>
               </ul>
             </nav>
@@ -278,6 +277,7 @@ export default function Home() {
               <li><a href="#why-beevibe" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Why BeeVibe</a></li>
               <li><a href="#how-it-works" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>How It Works</a></li>
               <li><a href="#gallery" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Gallery</a></li>
+              <li><a href="#reviews" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Reviews</a></li>
               <li><a href="#location" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Location</a></li>
               <li style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <a
@@ -369,6 +369,10 @@ export default function Home() {
 
             {/* Trust Points Bar */}
             <div className={styles.heroTrustBar}>
+              <a href="#reviews" className={styles.trustItem} style={{ textDecoration: 'none', color: 'inherit' }} title="Read 100+ Verified Google Reviews">
+                <span className={styles.trustItemIcon}>⭐</span>
+                <span>4.9★ (100+ Reviews)</span>
+              </a>
               <div className={styles.trustItem}>
                 <span className={styles.trustItemIcon}>🎬</span>
                 <span>180&quot; 4K Cinema</span>
@@ -894,36 +898,178 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          7. CUSTOMER REVIEWS
+          7. VERIFIED GOOGLE REVIEWS (100+ REVIEWS)
           ══════════════════════════════════════════════════ */}
-      <section className={`${styles.section} ${styles.sectionAlt}`}>
+      <section id="reviews" className={`${styles.section} ${styles.sectionAlt}`}>
         <div className="container">
           <div className={styles.sectionHeader}>
             <div className={styles.sectionBadge}>
-              <Star size={13} /> 4.9 STAR RATED VENUE
+              <GoogleIcon size={14} /> 4.9★ ON GOOGLE MAPS
             </div>
-            <h2 className={styles.sectionTitle}>Loved by Guests Across Bengaluru</h2>
+            <h2 className={styles.sectionTitle}>Loved by 100+ Guests Across Bengaluru</h2>
             <p className={styles.sectionSubtitle}>
-              Read how couples, birthday hosts, and gamers experienced BeeVibe celebration theatre.
+              Authentic Google reviews from couples, birthday celebrants, and gamers who experienced BeeVibe.
             </p>
           </div>
 
+          {/* Google Business Rating Overview Card */}
+          <div className={styles.googleRatingCard}>
+            <div className={styles.googleRatingLeft}>
+              <div className={styles.googleLogoBadge} title="Verified Google Business Profile">
+                <GoogleIcon size={32} />
+              </div>
+              <div className={styles.googleScoreWrap}>
+                <div className={styles.googleScoreRow}>
+                  <span className={styles.googleScoreNum}>{GOOGLE_BUSINESS_STATS.rating}</span>
+                  <div className={styles.googleScoreStars}>★★★★★</div>
+                </div>
+                <div className={styles.googleScoreLabel}>
+                  {GOOGLE_BUSINESS_STATS.reviewCountDisplay} Verified Google Reviews
+                </div>
+                <div className={styles.googleScoreSub}>
+                  {GOOGLE_BUSINESS_STATS.verifiedBusinessName} • {GOOGLE_BUSINESS_STATS.location}
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.googleRatingActions}>
+              <a
+                href={GOOGLE_BUSINESS_STATS.googleMapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.googleBtnPrimary}
+              >
+                <span>Read all 100+ on Google</span>
+                <ExternalLink size={14} />
+              </a>
+              <a
+                href={GOOGLE_BUSINESS_STATS.writeReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.googleBtnSecondary}
+              >
+                <Star size={14} fill="#FBBC05" color="#FBBC05" />
+                <span>Write a Review</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Live Auto-Updating Google Reviews (Elfsight Stream) */}
+          <div className={styles.elfsightWidgetWrapper}>
+            <Script src="https://elfsightcdn.com/platform.js" strategy="afterInteractive" />
+            <div className="elfsight-app-5bec4ea5-b93d-4f6e-9663-ffdfffb94cdf" data-elfsight-app-lazy />
+          </div>
+
+          {/* Interactive Category Filter */}
+          <div className={styles.resultsFilterRow} style={{ marginBottom: '24px' }}>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${activeReviewFilter === 'all' ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveReviewFilter('all')}
+            >
+              All Reviews ({GOOGLE_REVIEWS.length})
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${activeReviewFilter === 'birthday' ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveReviewFilter('birthday')}
+            >
+              🎂 Birthdays
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${activeReviewFilter === 'romance' ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveReviewFilter('romance')}
+            >
+              💖 Romantic Dates
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${activeReviewFilter === 'gaming' ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveReviewFilter('gaming')}
+            >
+              🎮 PS5 Gaming
+            </button>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${activeReviewFilter === 'party' ? styles.filterChipActive : ''}`}
+              onClick={() => setActiveReviewFilter('party')}
+            >
+              🎉 VIP &amp; Groups
+            </button>
+          </div>
+
+          {/* Reviews Grid */}
           <div className={styles.reviewsGrid}>
-            {reviews.map((rev, idx) => (
-              <div key={idx} className={styles.reviewCard}>
+            {filteredReviews.map((rev) => (
+              <div key={rev.id} className={styles.reviewCard}>
                 <div>
+                  <div className={styles.reviewCardTop}>
+                    <span className={styles.googleVerifiedPill}>
+                      <GoogleIcon size={12} /> Google Verified
+                    </span>
+                    <span className={styles.reviewTimeAgo}>{rev.timeAgo}</span>
+                  </div>
+
                   <div className={styles.reviewStars}>★★★★★</div>
+
+                  {rev.theme && (
+                    <div className={styles.reviewThemeBadge}>
+                      ✦ {rev.theme}
+                    </div>
+                  )}
+
                   <p className={styles.reviewQuote}>&ldquo;{rev.quote}&rdquo;</p>
                 </div>
+
                 <div className={styles.reviewerRow}>
-                  <div className={styles.reviewerAvatar}>{rev.name[0]}</div>
+                  <div
+                    className={styles.reviewerAvatar}
+                    style={{ background: rev.avatarColor || '#2563EB' }}
+                  >
+                    {rev.name[0]}
+                  </div>
                   <div className={styles.reviewerInfo}>
-                    <strong className={styles.reviewerName}>{rev.name}</strong>
+                    <strong className={styles.reviewerName}>
+                      {rev.name}
+                      <CheckCircle2 size={13} color="#1A73E8" fill="#E8F0FE" />
+                    </strong>
                     <span className={styles.reviewerTag}>{rev.occasion}</span>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Bottom Trust & Google Review CTA */}
+          <div className={styles.reviewsBottomBanner}>
+            <div className={styles.reviewsBottomText}>
+              <h3>Recently celebrated at BeeVibe?</h3>
+              <p>Your feedback helps other celebrants discover Bangalore&apos;s coziest private theatre!</p>
+            </div>
+            <div className={styles.reviewsBottomActions}>
+              <a
+                href={GOOGLE_BUSINESS_STATS.writeReviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-navy"
+              >
+                <Star size={15} fill="#FBBC05" color="#FBBC05" />
+                <span>Leave a Review on Google</span>
+              </a>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => {
+                  setPreselectedRoomId('');
+                  setPreselectedOccasion('');
+                  setIsBookingModalOpen(true);
+                }}
+              >
+                <span>Book Your Celebration</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
           </div>
         </div>
       </section>
