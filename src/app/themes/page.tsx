@@ -74,8 +74,12 @@ export default function ThemesPage() {
             </Link>
 
             <Link href="/" className={styles.brandLogo}>
-              <span>BEE<span className={styles.brandHighlight}>VIBE</span></span>
-              <span className={styles.brandSub}>Private Celebration Theatre</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/bee-vibe-logo-light.png"
+                alt="BeeVibe Mini Private Theater"
+                className={styles.logoImg}
+              />
             </Link>
 
             <div className={styles.headerRightActions}>
@@ -351,7 +355,14 @@ export default function ThemesPage() {
         <div className="container">
           <div className={styles.footerInner}>
             <div>
-              <div className={styles.footerLogo}>BEEVIBE</div>
+              <Link href="/">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/bee-vibe-logo-light.png"
+                  alt="BeeVibe Mini Private Theater"
+                  style={{ height: '38px', width: 'auto', marginBottom: '8px' }}
+                />
+              </Link>
               <p className={styles.footerAddress}>
                 1340, 2nd Floor, 41st Cross Road, 4th Gate, Opposite Jain University, Jayanagar 9th Block, Bengaluru.
               </p>

@@ -1,12 +1,13 @@
 /* ═══════════════════════════════════════════════════════════════
    BEEVIBE THEATRES SHOWCASE & LIVE SLOTS
-   Styled to BeeVibe Premium Blue Luxury Palette:
-   Pure White (#FFFFFF) | Deep Navy (#102A43) | Royal Blue (#2563EB) | Soft Blue (#EEF5FF)
+   Styled to BeeVibe Warm Honey Boutique Palette:
+   Deep Dark Chocolate (#FFF9F4) | Roasted Espresso (#FFFFFF)
+   Rich Honey Amber (#E8BF69) | Champagne Glow (#E8BF69)
    ═══════════════════════════════════════════════════════════════ */
 
 .showcaseSection {
   padding: 64px 0 80px 0;
-  background: linear-gradient(180deg, #F8FAFC 0%, #EEF5FF 50%, #F8FAFC 100%);
+  background: linear-gradient(180deg, #FFFDFB 0%, #FFF9F4 50%, #FFFDFB 100%);
   position: relative;
   overflow: hidden;
 }
@@ -22,14 +23,14 @@
   align-items: center;
   gap: 12px;
   background: #FFFFFF;
-  border: 1px solid var(--border-blue, rgba(37, 99, 235, 0.2));
+  border: 1px solid #F0E5DC;
   padding: 6px 18px;
   border-radius: 999px;
   margin-bottom: 16px;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 10px rgba(16, 42, 67, 0.05);
+  box-shadow: 0 4px 16px rgba(48, 33, 31, 0.05);
 }
 
 .liveIndicator {
@@ -54,20 +55,20 @@
 }
 
 .headerSubtitleTag {
-  color: var(--royal, #2563EB);
+  color: #E8BF69;
   font-weight: 700;
 }
 
 .headingTitle {
   font-size: clamp(1.8rem, 3.5vw, 2.6rem);
   font-weight: 900;
-  color: var(--navy, #102A43);
+  color: #30211F;
   margin-bottom: 12px;
   letter-spacing: -0.02em;
 }
 
 .headingDesc {
-  color: var(--text-secondary, #486581);
+  color: #786B68;
   font-size: 1rem;
   line-height: 1.6;
   margin-bottom: 24px;
@@ -88,15 +89,15 @@
   align-items: center;
   gap: 6px;
   background: #FFFFFF;
-  border: 1px solid var(--border-light, #E2E8F0);
+  border: 1px solid #F0E5DC;
   padding: 4px;
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(16, 42, 67, 0.04);
+  box-shadow: 0 4px 16px rgba(48, 33, 31, 0.04);
 }
 
 .datePill {
   background: transparent;
-  color: var(--text-secondary, #486581);
+  color: #786B68;
   border: none;
   padding: 8px 18px;
   border-radius: 999px;
@@ -107,15 +108,15 @@
 }
 
 .datePill:hover {
-  color: var(--royal, #2563EB);
-  background: var(--soft-blue, #EEF5FF);
+  color: #E8BF69;
+  background: #F0E5DC;
 }
 
 .datePillActive {
-  background: var(--royal, #2563EB) !important;
-  color: #FFFFFF !important;
-  font-weight: 700;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  background: linear-gradient(135deg, #E8BF69, #DDAF52) !important;
+  color: #FFF9F4 !important;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(232, 191, 105, 0.35);
 }
 
 .datePickerInputWrap {
@@ -123,34 +124,35 @@
   align-items: center;
   gap: 8px;
   background: #FFFFFF;
-  border: 1px solid var(--border-light, #E2E8F0);
+  border: 1px solid #F0E5DC;
   padding: 7px 16px;
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(16, 42, 67, 0.04);
+  box-shadow: 0 4px 16px rgba(48, 33, 31, 0.04);
 }
 
 .calendarIcon {
-  color: var(--royal, #2563EB);
+  color: #E8BF69;
 }
 
 .dateInput {
   background: transparent;
   border: none;
-  color: var(--navy, #102A43);
+  color: #30211F;
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   outline: none;
+  color-scheme: light;
 }
 
 .loadingSlotsNotice {
   font-size: 0.82rem;
-  color: var(--royal, #2563EB);
+  color: #E8BF69;
   font-weight: 700;
   animation: pulseDot 1.2s infinite;
 }
 
-/* Theatres Grid (Binge Town style 3-column layout) */
+/* Theatres Grid (3-column layout) */
 .theatresGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -164,22 +166,22 @@
   }
 }
 
-/* Theatre Card - Clean White & Border */
+/* Theatre Card */
 .theatreCard {
   background: #FFFFFF;
-  border: 1.5px solid var(--border-light, #E2E8F0);
+  border: 1.5px solid #F0E5DC;
   border-radius: 20px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+  box-shadow: 0 10px 30px rgba(48, 33, 31, 0.06);
 }
 
 .theatreCard:hover {
   transform: translateY(-5px);
-  border-color: var(--border-blue-hover, rgba(37, 99, 235, 0.35));
-  box-shadow: 0 18px 45px rgba(16, 42, 67, 0.12), 0 0 20px rgba(37, 99, 235, 0.08);
+  border-color: #E8BF69;
+  box-shadow: 0 18px 45px rgba(48, 33, 31, 0.10), 0 0 25px #F0E5DC;
 }
 
 /* Image Carousel */
@@ -187,7 +189,7 @@
   position: relative;
   width: 100%;
   height: 230px;
-  background: #0B1D30;
+  background: #FFF9F4;
   overflow: hidden;
 }
 
@@ -206,44 +208,47 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  background: rgba(16, 42, 67, 0.85);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(8px);
-  color: #FFFFFF;
-  padding: 5px 12px;
+  -webkit-backdrop-filter: blur(8px);
+  color: #30211F;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(232, 191, 105, 0.5);
   display: flex;
   align-items: center;
   gap: 6px;
   z-index: 2;
+  box-shadow: 0 4px 14px rgba(48, 33, 31, 0.12);
 }
 
 .arrowBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(6px);
-  color: var(--navy, #102A43);
-  border: 1px solid rgba(16, 42, 67, 0.1);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #30211F;
+  border: 1.5px solid #F0E5DC;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 2;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(48, 33, 31, 0.15);
 }
 
 .arrowBtn:hover {
-  background: var(--royal, #2563EB);
-  color: #FFFFFF;
-  border-color: var(--royal, #2563EB);
+  background: #E8BF69;
+  color: #30211F;
+  border-color: #E8BF69;
   transform: translateY(-50%) scale(1.08);
 }
 
@@ -266,38 +271,43 @@
 }
 
 .imgActionPill {
-  background: rgba(16, 42, 67, 0.85);
-  backdrop-filter: blur(6px);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #30211F;
+  border: 1px solid rgba(240, 229, 220, 0.9);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.74rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 5px;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(48, 33, 31, 0.10);
 }
 
 .imgActionPill:hover {
-  background: var(--royal, #2563EB);
-  color: #FFFFFF;
+  background: #FFF9F4;
+  border-color: #E8BF69;
+  color: #30211F;
 }
 
 .imgActionPillSec {
-  background: rgba(16, 42, 67, 0.85);
-  backdrop-filter: blur(6px);
-  color: #DBEAFE;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.72rem;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #30211F;
+  border: 1px solid rgba(240, 229, 220, 0.9);
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.74rem;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 5px;
+  box-shadow: 0 2px 8px rgba(48, 33, 31, 0.10);
 }
 
 .dotsRow {
@@ -308,18 +318,22 @@
   align-items: center;
   gap: 5px;
   z-index: 2;
+  background: rgba(0, 0, 0, 0.32);
+  padding: 3px 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
 }
 
 .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.65);
   transition: all 0.2s ease;
 }
 
 .dotActive {
-  background: #FFFFFF;
+  background: #E8BF69;
   width: 14px;
   border-radius: 4px;
 }
@@ -341,14 +355,14 @@
 .theatreTitle {
   font-size: 1.25rem;
   font-weight: 800;
-  color: var(--navy, #102A43);
+  color: #30211F;
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .theatreTheme {
   font-size: 0.84rem;
-  color: var(--royal, #2563EB);
+  color: #E8BF69;
   font-weight: 700;
   margin-top: 2px;
 }
@@ -365,11 +379,11 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  background: var(--soft-blue, #EEF5FF);
-  border: 1px solid var(--border-blue, rgba(37, 99, 235, 0.2));
+  background: #FFF9F4;
+  border: 1px solid #F0E5DC;
   border-radius: 8px;
   padding: 6px 10px;
-  color: var(--navy, #102A43);
+  color: #30211F;
   text-decoration: none;
   font-size: 0.65rem;
   font-weight: 800;
@@ -378,9 +392,9 @@
 }
 
 .quickIconBtn:hover {
-  background: #DBEAFE;
-  color: var(--royal, #2563EB);
-  border-color: var(--royal, #2563EB);
+  background: #F0E5DC;
+  color: #E8BF69;
+  border-color: #E8BF69;
   transform: translateY(-1px);
 }
 
@@ -397,7 +411,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--text-secondary, #486581);
+  color: #786B68;
   font-weight: 600;
 }
 
@@ -410,15 +424,15 @@
 }
 
 .slotsAvailable {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
 .slotsFull {
-  background: rgba(239, 68, 68, 0.1);
-  color: #DC2626;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.10);
+  color: #B91C1C;
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 /* Features List */
@@ -427,7 +441,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border-bottom: 1px solid var(--border-light, #E2E8F0);
+  border-bottom: 1px solid #F0E5DC;
 }
 
 .featureItem {
@@ -437,7 +451,7 @@
 
 .featureText {
   font-size: 0.82rem;
-  color: var(--text-secondary, #486581);
+  color: #786B68;
   font-weight: 500;
   line-height: 1.4;
 }
@@ -446,7 +460,7 @@
 .slotsSection {
   padding: 16px 20px;
   flex-grow: 1;
-  background: var(--bg-secondary, #F8FAFC);
+  background: #FFFDFB;
 }
 
 .slotsSectionTitle {
@@ -456,16 +470,16 @@
   margin-bottom: 12px;
   font-size: 0.88rem;
   font-weight: 800;
-  color: var(--navy, #102A43);
+  color: #30211F;
 }
 
 .selectedSlotPill {
   font-size: 0.76rem;
-  color: var(--royal, #2563EB);
-  background: var(--ice-blue, #DBEAFE);
+  color: #E8BF69;
+  background: #F0E5DC;
   padding: 2px 8px;
   border-radius: 6px;
-  border: 1px solid var(--border-blue, rgba(37, 99, 235, 0.3));
+  border: 1px solid rgba(232, 191, 105, 0.35);
   font-weight: 700;
 }
 
@@ -474,10 +488,10 @@
   align-items: center;
   gap: 8px;
   background: #FFFFFF;
-  border: 1px dashed var(--border-light, #CBD5E1);
+  border: 1px dashed #F0E5DC;
   border-radius: 10px;
   padding: 14px;
-  color: var(--text-muted, #829AB1);
+  color: #9E918E;
   font-size: 0.8rem;
 }
 
@@ -488,8 +502,8 @@
 }
 
 .slotBtn {
-  background: #FFFFFF;
-  border: 1px solid var(--border-light, #CBD5E1);
+  background: #FFFDFB;
+  border: 1px solid #F0E5DC;
   border-radius: 10px;
   padding: 8px 6px;
   display: flex;
@@ -501,59 +515,59 @@
   position: relative;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
-  box-shadow: 0 1px 4px rgba(16, 42, 67, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .slotBtn:hover:not(:disabled) {
-  background: #EFF6FF;
-  border-color: var(--royal, #2563EB);
+  background: #FDF1F2;
+  border-color: #E8BF69;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 4px 14px #F0E5DC;
 }
 
 .slotBtnSelected {
-  background: #EFF6FF !important;
-  border-color: var(--royal, #2563EB) !important;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
+  background: #F0E5DC !important;
+  border-color: #E8BF69 !important;
+  box-shadow: 0 0 0 2px rgba(232, 191, 105, 0.35) !important;
 }
 
 .slotBtnBooked {
   opacity: 0.45;
   cursor: not-allowed;
-  background: #F1F5F9;
-  border-color: #E2E8F0;
+  background: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.05);
   box-shadow: none;
 }
 
 .slotBtnTime {
   font-size: 0.76rem;
   font-weight: 700;
-  color: var(--navy, #102A43);
+  color: #30211F;
   white-space: nowrap;
 }
 
 .slotBtnBadge {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #059669;
+  color: #34D399;
 }
 
 .slotBtnBooked .slotBtnBadge {
-  color: #DC2626;
+  color: #F87171;
 }
 
 .slotCheckmark {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: var(--royal, #2563EB);
+  color: #E8BF69;
 }
 
 /* Card Footer */
 .cardFooter {
   padding: 16px 20px;
   background: #FFFFFF;
-  border-top: 1px solid var(--border-light, #E2E8F0);
+  border-top: 1px solid #F0E5DC;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -573,31 +587,31 @@
 
 .priceOriginal {
   font-size: 0.85rem;
-  color: var(--text-muted, #829AB1);
+  color: #9E918E;
   text-decoration: line-through;
 }
 
 .priceCurrent {
   font-size: 1.35rem;
   font-weight: 900;
-  color: var(--navy, #102A43);
+  color: #E8BF69;
   letter-spacing: -0.02em;
 }
 
 .priceUnit {
   font-size: 0.75rem;
-  color: var(--text-secondary, #486581);
+  color: #786B68;
 }
 
 .pricePromoNote {
   font-size: 0.7rem;
-  color: #059669;
+  color: #34D399;
   font-weight: 700;
 }
 
 .bookNowBtn {
-  background: linear-gradient(135deg, var(--royal, #2563EB) 0%, var(--royal-hover, #1D4ED8) 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  color: #FFF9F4;
   border: none;
   border-radius: 10px;
   padding: 10px 18px;
@@ -609,14 +623,14 @@
   gap: 6px;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(232, 191, 105, 0.35);
 }
 
 .bookNowBtn:hover {
-  background: var(--navy, #102A43);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69 0%, #E8BF69 100%);
+  color: #FFF9F4;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 42, 67, 0.2);
+  box-shadow: 0 6px 20px rgba(232, 191, 105, 0.5);
 }
 
 @media (max-width: 768px) {

@@ -1,8 +1,8 @@
 .finderCard {
   background: #FFFFFF;
-  border: 1.5px solid var(--border-blue);
-  border-radius: 20px;
-  box-shadow: 0 16px 45px rgba(16, 42, 67, 0.12), 0 2px 8px rgba(16, 42, 67, 0.04);
+  border: 1.5px solid #F0E5DC;
+  border-radius: 24px;
+  box-shadow: 0 12px 35px rgba(48, 33, 31, 0.05);
   padding: 28px;
   width: 100%;
   position: relative;
@@ -11,23 +11,23 @@
 }
 
 .finderCard:hover {
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: 0 20px 55px rgba(16, 42, 67, 0.16);
+  border-color: rgba(232, 191, 105, 0.6);
+  box-shadow: 0 16px 45px rgba(48, 33, 31, 0.08);
 }
 
 .finderHeader {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 }
 
 .finderBadge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--soft-blue);
-  color: var(--royal);
-  border: 1px solid var(--border-blue);
+  background: #FCE1E2;
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.4);
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 4px 12px;
@@ -36,17 +36,17 @@
 }
 
 .finderTitle {
-  font-family: var(--font-title);
+  font-family: var(--font-serif);
   font-size: 1.6rem;
-  font-weight: 800;
-  color: var(--navy);
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  color: #30211F;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
 }
 
 .finderSubtitle {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: #786B68;
   margin: 0;
   line-height: 1.5;
 }
@@ -83,9 +83,9 @@
 }
 
 .fieldBox {
-  background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 12px;
+  background: #FFF9F4;
+  border: 1.5px solid #F0E5DC;
+  border-radius: 16px;
   padding: 10px 14px;
   transition: all 0.2s ease;
   display: flex;
@@ -93,9 +93,9 @@
 }
 
 .fieldBox:focus-within {
-  border-color: var(--royal);
+  border-color: #E8BF69;
   background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  box-shadow: 0 0 0 3px rgba(232, 191, 105, 0.25);
 }
 
 .fieldBoxError {
@@ -118,13 +118,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--navy);
+  color: #786B68;
   margin-bottom: 4px;
   cursor: pointer;
 }
 
 .fieldIcon {
-  color: var(--royal);
+  color: #E8BF69;
 }
 
 .fieldIconEmoji {
@@ -139,14 +139,14 @@
   font-family: var(--font-body);
   font-size: 0.94rem;
   font-weight: 600;
-  color: var(--navy);
+  color: #30211F;
   width: 100%;
   cursor: pointer;
   padding: 2px 0;
 }
 
 .fieldInput::placeholder {
-  color: #94A3B8;
+  color: #9E918E;
   font-weight: 500;
   font-size: 0.88rem;
 }
@@ -157,7 +157,7 @@
 
 .fieldSelect option {
   background: #FFFFFF;
-  color: var(--navy);
+  color: #30211F;
 }
 
 .submitContainer {
@@ -166,29 +166,30 @@
 }
 
 .submitBtn {
-  background: var(--royal);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  color: #30211F;
   border: none;
-  border-radius: 12px;
-  padding: 14px 28px;
-  font-family: var(--font-title);
+  border-radius: 9999px;
+  padding: 14px 32px;
+  font-family: var(--font-body);
   font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  box-shadow: 0 4px 18px rgba(232, 191, 105, 0.38);
   transition: all 0.22s cubic-bezier(0.25, 0.8, 0.25, 1);
   width: 100%;
 }
 
 .submitBtn:hover {
-  background: var(--royal-hover);
+  background: linear-gradient(135deg, #EFCA7B 0%, #E8BF69 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+  box-shadow: 0 8px 24px rgba(232, 191, 105, 0.5);
+  color: #30211F;
 }
 
 @media (min-width: 640px) {

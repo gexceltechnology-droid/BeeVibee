@@ -183,9 +183,13 @@ export default function WhatsAppBotWidget({ offsetForBottomBar = false }: WhatsA
       )}
 
       {/* Floating Trigger Button */}
-      <button className={styles.triggerBtn} onClick={() => setIsOpen(!isOpen)}>
-        <MessageSquare size={22} />
-        <span>WhatsApp Bot</span>
+      <button
+        className={styles.triggerBtn}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="WhatsApp Concierge"
+        title="Chat on WhatsApp (+91 99001 06474)"
+      >
+        <MessageSquare size={24} />
         <span className={styles.badgeDot} />
       </button>
     </div>

@@ -3,6 +3,8 @@
   overflow: hidden;
   padding-top: 120px;
   min-height: 100vh;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .galleryHero {
@@ -15,27 +17,27 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: #786B68;
   margin-bottom: 20px;
 }
 
 .breadcrumb a {
-  color: var(--text-secondary);
+  color: #786B68;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .breadcrumb a:hover {
-  color: var(--accent);
+  color: #E8BF69;
 }
 
 .heroTag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  color: #09090b;
+  background: #F0E5DC;
+  border: 1px solid rgba(232, 191, 105, 0.3);
+  color: #E8BF69;
   padding: 6px 16px;
   border-radius: 30px;
   font-size: 0.82rem;
@@ -49,14 +51,14 @@
   font-family: var(--font-title);
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 800;
-  color: #09090b;
+  color: #30211F;
   margin-bottom: 16px;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .heroSubtitle {
-  color: var(--text-secondary);
+  color: #786B68;
   font-size: 1.05rem;
   max-width: 720px;
   margin: 0 auto 32px auto;
@@ -73,9 +75,9 @@
 }
 
 .statItem {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: #FFFFFF;
+  border: 1px solid #F0E5DC;
+  box-shadow: 0 4px 16px rgba(48, 33, 31, 0.04);
   padding: 16px 24px;
   border-radius: var(--radius-md);
   text-align: center;
@@ -86,13 +88,13 @@
   font-family: var(--font-title);
   font-size: 1.6rem;
   font-weight: 800;
-  color: #09090b;
+  color: #E8BF69;
   margin-bottom: 4px;
 }
 
 .statLabel {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: #786B68;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -104,11 +106,11 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(14, 11, 8, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid #F0E5DC;
+  box-shadow: 0 4px 20px rgba(48, 33, 31, 0.06);
 }
 
 .header {
@@ -137,7 +139,7 @@
 }
 
 .navLink {
-  color: var(--text-secondary);
+  color: #786B68;
   text-decoration: none;
   font-weight: 500;
   font-size: 0.95rem;
@@ -145,7 +147,7 @@
 }
 
 .navLink:hover {
-  color: var(--accent);
+  color: #E8BF69;
 }
 
 @media (max-width: 768px) {

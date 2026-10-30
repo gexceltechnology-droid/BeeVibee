@@ -18,11 +18,11 @@ import {
   Phone,
   Flame,
   ArrowRight,
-  ExternalLink,
   ShieldCheck,
-  Camera
+  Camera,
 } from 'lucide-react';
 import styles from './TheatresShowcase.module.css';
+import TiltCard from '@/components/effects/TiltCard';
 import { isLateNightSlot } from '@/lib/time';
 import { OccasionType } from '@/types/booking';
 
@@ -339,7 +339,7 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
             const chosenSlot = selectedSlotsByRoom[theatre.roomId];
 
             return (
-              <div key={theatre.id} className={styles.theatreCard}>
+              <TiltCard key={theatre.id} className={styles.theatreCard}>
                 {/* 1. Media Carousel Wrap */}
                 <div className={styles.imageWrap}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -519,7 +519,7 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                     <ArrowRight size={15} />
                   </button>
                 </div>
-              </div>
+              </TiltCard>
             );
           })}
         </div>

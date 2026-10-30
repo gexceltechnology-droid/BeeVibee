@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(16, 42, 67, 0.65);
+  background: rgba(10, 8, 6, 0.75);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   display: flex;
@@ -27,8 +27,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 70px rgba(16, 42, 67, 0.25);
-  border: 1.5px solid var(--border-blue);
+  box-shadow: 0 25px 80px rgba(48, 33, 31, 0.12), 0 0 40px #F0E5DC;
+  border: 1.5px solid rgba(232, 191, 105, 0.3);
   animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -44,9 +44,9 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #E2E8F0;
-  color: var(--navy);
+  background: rgba(26, 20, 15, 0.9);
+  border: 1px solid rgba(232, 191, 105, 0.3);
+  color: #30211F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -57,8 +57,8 @@
 }
 
 .closeBtn:hover {
-  background: #FFFFFF;
-  color: var(--royal);
+  background: #FFF9F4;
+  color: #E8BF69;
   transform: scale(1.08);
 }
 
@@ -71,7 +71,7 @@
   position: relative;
   width: 100%;
   height: 320px;
-  background: var(--navy);
+  background: #FFF9F4;
 }
 
 @media (max-width: 640px) {
@@ -103,10 +103,10 @@
 }
 
 .occasionBadge {
-  background: rgba(37, 99, 235, 0.95);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69, #DDAF52);
+  color: #FFF9F4;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 800;
   padding: 5px 12px;
   border-radius: 9999px;
   display: flex;
@@ -116,9 +116,9 @@
 }
 
 .verifiedBadge {
-  background: rgba(16, 42, 67, 0.85);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(14, 11, 8, 0.88);
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   font-size: 0.72rem;
   font-weight: 700;
   padding: 5px 12px;
@@ -140,7 +140,7 @@
   height: 36px;
   border-radius: 6px;
   overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(232, 191, 105, 0.3);
   padding: 0;
   cursor: pointer;
   background: none;
@@ -148,7 +148,7 @@
 }
 
 .thumbActive {
-  border-color: var(--royal);
+  border-color: #E8BF69;
   transform: scale(1.08);
 }
 
@@ -175,7 +175,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--royal);
+  color: #E8BF69;
   display: block;
   margin-bottom: 4px;
 }
@@ -184,14 +184,14 @@
   font-family: var(--font-title);
   font-size: 1.6rem;
   font-weight: 800;
-  color: var(--navy);
+  color: #30211F;
   margin: 0;
   line-height: 1.2;
 }
 
 .headerDurationBadge {
-  background: var(--soft-blue);
-  color: var(--royal);
+  background: #F0E5DC;
+  color: #E8BF69;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 6px 14px;
@@ -200,12 +200,12 @@
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  border: 1px solid var(--border-blue);
+  border: 1px solid rgba(232, 191, 105, 0.3);
 }
 
 .description {
   font-size: 0.94rem;
-  color: var(--text-secondary);
+  color: #786B68;
   line-height: 1.6;
   margin-bottom: 22px;
 }
@@ -214,8 +214,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  background: var(--soft-blue);
-  border: 1px solid var(--border-blue);
+  background: #FFF9F4;
+  border: 1px solid #F0E5DC;
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 24px;
@@ -234,7 +234,7 @@
 }
 
 .specIcon {
-  color: var(--royal);
+  color: #E8BF69;
   flex-shrink: 0;
 }
 
@@ -247,13 +247,13 @@
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--navy);
+  color: #E8BF69;
 }
 
 .specText span {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #30211F;
 }
 
 .sectionBlock {
@@ -264,13 +264,13 @@
   font-family: var(--font-title);
   font-size: 1.05rem;
   font-weight: 800;
-  color: var(--navy);
+  color: #30211F;
   margin: 0 0 10px 0;
 }
 
 .sectionSubtitle {
   font-size: 0.82rem;
-  color: var(--text-secondary);
+  color: #786B68;
   margin: -6px 0 12px 0;
 }
 
@@ -291,16 +291,16 @@
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: #786B68;
 }
 
 .checkBullet {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--soft-blue);
-  color: var(--royal);
-  border: 1px solid var(--border-blue);
+  background: #F0E5DC;
+  color: #E8BF69;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -318,8 +318,8 @@
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #FFF9F4;
+  border: 1px solid #F0E5DC;
   border-radius: 10px;
 }
 
@@ -335,19 +335,19 @@
 
 .addonInfo strong {
   font-size: 0.85rem;
-  color: var(--navy);
+  color: #30211F;
 }
 
 .addonInfo span {
   font-size: 0.74rem;
-  color: var(--text-muted);
+  color: #786B68;
 }
 
 .addonTag {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--royal);
-  background: var(--soft-blue);
+  color: #E8BF69;
+  background: #F0E5DC;
   padding: 3px 8px;
   border-radius: 6px;
   white-space: nowrap;
@@ -357,17 +357,17 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: var(--soft-blue);
-  border: 1px solid var(--border-blue);
+  background: rgba(232, 191, 105, 0.10);
+  border: 1px solid #F0E5DC;
   border-radius: 12px;
   padding: 12px 14px;
   font-size: 0.82rem;
-  color: var(--navy);
+  color: #786B68;
   line-height: 1.5;
 }
 
 .policyIcon {
-  color: var(--royal);
+  color: #E8BF69;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -377,9 +377,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #FFFFFF;
-  border-top: 1px solid #E2E8F0;
-  box-shadow: 0 -4px 15px rgba(16, 42, 67, 0.04);
+  background: #FFFDFB;
+  border-top: 1px solid #F0E5DC;
+  box-shadow: 0 -4px 15px rgba(48, 33, 31, 0.05);
 }
 
 .footerPerks {
@@ -390,12 +390,12 @@
 .footerPerkText {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #786B68;
 }
 
 .bookNowBtn {
-  background: var(--royal);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  color: #FFF9F4;
   border: none;
   border-radius: 10px;
   padding: 12px 24px;
@@ -406,12 +406,13 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(232, 191, 105, 0.35);
   transition: all 0.2s;
 }
 
 .bookNowBtn:hover {
-  background: var(--royal-hover);
+  background: linear-gradient(135deg, #E8BF69 0%, #E8BF69 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 8px 22px rgba(232, 191, 105, 0.5);
+  color: #FFF9F4;
 }

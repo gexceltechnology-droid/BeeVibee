@@ -1,0 +1,247 @@
+.portalSection {
+  position: relative;
+  padding: 80px 0 100px 0;
+  background: linear-gradient(180deg, #FFF9F4 0%, #FFFDFB 50%, #FFF9F4 100%);
+  overflow: hidden;
+}
+
+/* Decorative Gold Chevron Guides on left and right */
+.chevronGuideLeft {
+  position: absolute;
+  top: 15%;
+  left: 32px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.chevronGuideRight {
+  position: absolute;
+  top: 15%;
+  right: 32px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+@media (max-width: 1024px) {
+  .chevronGuideLeft,
+  .chevronGuideRight {
+    display: none;
+  }
+}
+
+.portalHeader {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 44px auto;
+}
+
+.portalOverline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #C59B3F;
+  background: #FFFFFF;
+  border: 1px solid rgba(232, 191, 105, 0.4);
+  padding: 6px 18px;
+  border-radius: 9999px;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 14px rgba(48, 33, 31, 0.04);
+}
+
+.portalHeading {
+  font-family: var(--font-serif);
+  font-size: clamp(2.2rem, 4.4vw, 3.4rem);
+  font-weight: 700;
+  color: #30211F;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px 0;
+}
+
+.goldText {
+  color: #C59B3F;
+  background: linear-gradient(135deg, #C59B3F 0%, #B8861E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.portalSubheading {
+  font-size: 1.05rem;
+  color: #786B68;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Panoramic Canvas Frame */
+.canvasFrame {
+  position: relative;
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 4px solid #FFFFFF;
+  box-shadow: 0 24px 60px rgba(48, 33, 31, 0.12), 0 0 40px rgba(232, 191, 105, 0.15);
+  background: #30211F;
+}
+
+.canvasImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 540px;
+  overflow: hidden;
+  will-change: transform;
+}
+
+@media (max-width: 900px) {
+  .canvasImageWrapper {
+    height: 420px;
+  }
+}
+
+@media (max-width: 600px) {
+  .canvasImageWrapper {
+    height: 340px;
+  }
+}
+
+.panoramicImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.panoramicVignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(14, 11, 8, 0.25) 0%,
+    transparent 35%,
+    rgba(14, 11, 8, 0.75) 100%
+  );
+  pointer-events: none;
+}
+
+/* Floating In-Scene Badge Pills */
+.inScenePills {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  z-index: 3;
+}
+
+.scenePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #30211F;
+  border: 1px solid rgba(240, 229, 220, 0.9);
+  padding: 7px 16px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.pillIcon {
+  color: #C59B3F;
+}
+
+/* Bottom In-Scene Glass Card */
+.sceneCardBottom {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
+  z-index: 3;
+}
+
+@media (max-width: 768px) {
+  .sceneCardBottom {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px 20px;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+  }
+}
+
+.sceneCardLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sceneTag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #C59B3F;
+}
+
+.sceneTitle {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #30211F;
+  margin: 0;
+}
+
+.sceneDesc {
+  font-size: 0.88rem;
+  color: #786B68;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sceneCardRight {
+  flex-shrink: 0;
+}
+
+.sceneBookBtn {
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  color: #30211F;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  box-shadow: 0 6px 18px rgba(232, 191, 105, 0.4);
+  white-space: nowrap;
+}
+
+.sceneBookBtn:hover {
+  background: linear-gradient(135deg, #EFCA7B 0%, #E8BF69 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(232, 191, 105, 0.55);
+}

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Plus_Jakarta_Sans, Press_Start_2P, VT323 } from "next/font/google";
+import { Outfit, Plus_Jakarta_Sans, Playfair_Display, Press_Start_2P, VT323 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
@@ -12,6 +12,12 @@ const outfit = Outfit({
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -32,7 +38,7 @@ const vt323 = VT323({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.beevibe.org";
 
 export const viewport: Viewport = {
-  themeColor: "#102A43",
+  themeColor: "#FFF9F4",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
@@ -279,7 +285,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable} ${pressStart2P.variable} ${vt323.variable}`}>
+    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable} ${playfair.variable} ${pressStart2P.variable} ${vt323.variable}`}>
       <head>
         <script
           type="application/ld+json"

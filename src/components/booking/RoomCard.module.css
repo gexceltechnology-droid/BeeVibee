@@ -1,9 +1,9 @@
 .card {
   background: #FFFFFF;
-  border: 1.5px solid var(--border-light);
+  border: 1.5px solid #F0E5DC;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(16, 42, 67, 0.06);
+  box-shadow: 0 10px 30px rgba(48, 33, 31, 0.06);
   transition: all 0.28s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   flex-direction: column;
@@ -11,8 +11,8 @@
 
 .card:hover {
   transform: translateY(-5px);
-  border-color: var(--border-blue-hover);
-  box-shadow: 0 18px 45px rgba(16, 42, 67, 0.12), 0 0 20px rgba(37, 99, 235, 0.08);
+  border-color: #E8BF69;
+  box-shadow: 0 18px 45px rgba(48, 33, 31, 0.10), 0 0 25px #F0E5DC;
 }
 
 .imageContainer {
@@ -21,6 +21,7 @@
   height: 240px;
   overflow: hidden;
   cursor: pointer;
+  background: #FFF9F4;
 }
 
 .roomImage {
@@ -37,7 +38,7 @@
 .imageOverlayGradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(16, 42, 67, 0.4) 0%, rgba(16, 42, 67, 0) 40%, rgba(16, 42, 67, 0.75) 100%);
+  background: linear-gradient(180deg, rgba(14, 11, 8, 0.4) 0%, rgba(14, 11, 8, 0) 40%, rgba(14, 11, 8, 0.88) 100%);
   pointer-events: none;
 }
 
@@ -69,8 +70,9 @@
 }
 
 .statusFewLeft {
-  background: rgba(245, 158, 11, 0.95);
-  color: #FFFFFF;
+  background: rgba(232, 191, 105, 0.95);
+  color: #FFF9F4;
+  font-weight: 800;
 }
 
 .statusBooked {
@@ -84,9 +86,9 @@
 }
 
 .editorialBadge {
-  background: rgba(16, 42, 67, 0.85);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(14, 11, 8, 0.85);
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -99,13 +101,13 @@
   position: absolute;
   top: 14px;
   right: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #E2E8F0;
+  background: rgba(26, 20, 15, 0.9);
+  border: 1px solid rgba(232, 191, 105, 0.3);
   border-radius: 9999px;
   padding: 5px 12px;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #30211F;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -116,8 +118,8 @@
 }
 
 .quickViewBtn:hover {
-  background: #FFFFFF;
-  color: var(--royal);
+  background: #FFF9F4;
+  color: #E8BF69;
   transform: scale(1.04);
 }
 
@@ -125,9 +127,9 @@
   position: absolute;
   bottom: 12px;
   left: 14px;
-  background: rgba(16, 42, 67, 0.85);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(14, 11, 8, 0.88);
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 0.72rem;
@@ -158,7 +160,7 @@
   font-family: var(--font-title);
   font-size: 1.3rem;
   font-weight: 800;
-  color: var(--navy);
+  color: #30211F;
   margin: 0;
   line-height: 1.25;
   cursor: pointer;
@@ -166,12 +168,12 @@
 }
 
 .roomTitle:hover {
-  color: var(--royal);
+  color: #E8BF69;
 }
 
 .durationBadge {
-  background: var(--soft-blue);
-  color: var(--royal);
+  background: #F0E5DC;
+  color: #E8BF69;
   font-size: 0.76rem;
   font-weight: 700;
   padding: 6px 12px;
@@ -180,13 +182,13 @@
   align-items: center;
   gap: 6px;
   white-space: nowrap;
-  border: 1px solid var(--border-blue);
+  border: 1px solid rgba(232, 191, 105, 0.3);
   flex-shrink: 0;
 }
 
 .description {
   font-size: 0.88rem;
-  color: var(--text-secondary);
+  color: #786B68;
   line-height: 1.5;
   margin-bottom: 16px;
   display: -webkit-box;
@@ -206,17 +208,17 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--soft-blue);
-  color: var(--navy);
+  background: #FFF9F4;
+  color: #E8BF69;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid var(--border-blue);
+  border: 1px solid #F0E5DC;
 }
 
 .featuresPreview {
-  border-top: 1px dashed var(--border-light);
+  border-top: 1px dashed #F0E5DC;
   padding-top: 12px;
   margin-bottom: 20px;
   display: flex;
@@ -229,11 +231,11 @@
   align-items: center;
   gap: 8px;
   font-size: 0.82rem;
-  color: var(--text-secondary);
+  color: #786B68;
 }
 
 .checkIcon {
-  color: var(--royal);
+  color: #E8BF69;
   flex-shrink: 0;
 }
 
@@ -245,46 +247,47 @@
 }
 
 .detailsBtn {
-  background: #FFFFFF;
-  border: 1.5px solid var(--border-light);
+  background: #FFF9F4;
+  border: 1.5px solid #F0E5DC;
   border-radius: 10px;
   padding: 10px 14px;
   font-family: var(--font-title);
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #30211F;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
 }
 
 .detailsBtn:hover {
-  background: var(--soft-blue);
-  border-color: var(--border-blue);
-  color: var(--royal);
+  background: rgba(232, 191, 105, 0.14);
+  border-color: #E8BF69;
+  color: #E8BF69;
 }
 
 .viewSlotsBtn {
-  background: var(--royal);
-  border: 1.5px solid var(--royal);
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  border: 1.5px solid #E8BF69;
   border-radius: 10px;
   padding: 10px 16px;
   font-family: var(--font-title);
   font-size: 0.88rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #FFF9F4;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(232, 191, 105, 0.35);
 }
 
 .viewSlotsBtn:hover {
-  background: var(--royal-hover);
-  border-color: var(--royal-hover);
+  background: linear-gradient(135deg, #E8BF69 0%, #E8BF69 100%);
+  border-color: #E8BF69;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 20px rgba(232, 191, 105, 0.5);
+  color: #FFF9F4;
 }

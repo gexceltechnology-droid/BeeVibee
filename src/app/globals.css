@@ -1,54 +1,94 @@
 :root {
   /* ═══════════════════════════════════════════════════════════════
-     BEEVIBE PREMIUM BLUE LUXURY PALETTE (BOOKING-FIRST PLATFORM)
+     BEEVIBE CELEBRATION DESIGN SYSTEM (LIGHT, ELEGANT, PASTEL)
+     Visual Reference: "The Bash Hub" & Luxury Event Boutiques
+     Warm Ivory (#FFF9F4) | Blush Pink (#FCE1E2) | Champagne Gold (#E8BF69)
+     Espresso Text (#30211F) | Secondary Text (#786B68) | White Cards (#FFFFFF)
      ═══════════════════════════════════════════════════════════════ */
-  --navy: #102A43;
-  --navy-dark: #0B1D30;
-  --navy-light: #243B53;
-  --royal: #2563EB;
-  --royal-hover: #1D4ED8;
-  --royal-light: #3B82F6;
-  --light-blue: #60A5FA;
-  --soft-blue: #EEF5FF;
-  --soft-blue-alt: #F0F7FF;
-  --ice-blue: #DBEAFE;
-  --white: #FFFFFF;
-
-  /* Semantic UI Tokens */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F8FAFC;
-  --bg-soft-blue: #EEF5FF;
+  --bg-primary: #FFF9F4;
+  --bg-secondary: #FFFDFB;
   --bg-card: #FFFFFF;
-  
-  --text-primary: #102A43;
-  --text-secondary: #486581;
-  --text-muted: #829AB1;
-  --text-inverse: #FFFFFF;
-  
-  --accent: #2563EB;
-  --accent-navy: #102A43;
-  --accent-light: #60A5FA;
-  --accent-soft: #EEF5FF;
-  
-  --border-light: #E2E8F0;
-  --border-blue: rgba(37, 99, 235, 0.18);
-  --border-blue-hover: rgba(37, 99, 235, 0.35);
+  --bg-card-elevated: #FFFFFF;
+  --bg-blush: #FCE1E2;
+  --bg-soft-blue: #FAF0E8;
 
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(16, 42, 67, 0.04);
-  --shadow-md: 0 8px 24px rgba(16, 42, 67, 0.08);
-  --shadow-lg: 0 16px 40px rgba(16, 42, 67, 0.10);
-  --shadow-blue: 0 12px 32px rgba(37, 99, 235, 0.20);
-  --shadow-navy: 0 14px 36px rgba(16, 42, 67, 0.16);
+  /* Primary Accent & Champagne Gold Scale */
+  --accent-gold: #E8BF69;
+  --accent-gold-hover: #DDAF52;
+  --accent-champagne: #E8BF69;
+  --accent-champagne-light: #FBF4E4;
+  --accent-gold-tint: rgba(232, 191, 105, 0.14);
+  --accent-gold-glow: 0 0 25px rgba(232, 191, 105, 0.30);
+
+  /* Blush Pink Scale */
+  --blush: #FCE1E2;
+  --blush-light: #FDF1F2;
+  --blush-dark: #F5C6C8;
+
+  /* Borders */
+  --border-subtle: #F0E5DC;
+  --border-light: #F4EBE3;
+  --border-gold: rgba(232, 191, 105, 0.45);
+  --border-gold-hover: #E8BF69;
+  --border-accent: rgba(232, 191, 105, 0.40);
+
+  /* Typography Scales */
+  --text-primary: #30211F;
+  --text-secondary: #786B68;
+  --text-muted: #9E918E;
+  --text-inverse: #FFF9F4;
+
+  /* Backwards-Compatible Semantic Tokens */
+  --espresso-base: #FFF9F4;
+  --espresso-surface: #FFFFFF;
+  --espresso-card: #FFFFFF;
+  --espresso-elevated: #FFFFFF;
+  --espresso-border: #F0E5DC;
+  --honey: #E8BF69;
+  --honey-hover: #DDAF52;
+  --honey-light: #E8BF69;
+  --honey-pale: #FBF4E4;
+  --honey-tint: rgba(232, 191, 105, 0.12);
+  --honey-border: #F0E5DC;
+  --navy: #30211F;
+  --navy-dark: #221615;
+  --navy-light: #4A3734;
+  --royal: #E8BF69;
+  --royal-hover: #DDAF52;
+  --royal-light: #E8BF69;
+  --light-blue: #FCE1E2;
+  --soft-blue: rgba(252, 225, 226, 0.50);
+  --soft-blue-alt: rgba(255, 249, 244, 0.70);
+  --ice-blue: #FAF0E8;
+  --white: #FFFFFF;
+  --accent: #E8BF69;
+  --accent-navy: #30211F;
+  --accent-light: #E8BF69;
+  --accent-soft: rgba(232, 191, 105, 0.14);
+  --border-blue: #F0E5DC;
+  --border-blue-hover: #E8BF69;
+
+  /* Logo Wing Touches */
+  --wing-rose: #FF6584;
+  --wing-cyan: #38BDF8;
+
+  /* Soft Ambient Celebration Shadows */
+  --shadow-sm: 0 4px 14px rgba(48, 33, 31, 0.04);
+  --shadow-md: 0 10px 28px rgba(48, 33, 31, 0.06);
+  --shadow-lg: 0 20px 45px rgba(48, 33, 31, 0.08);
+  --shadow-gold: 0 8px 24px rgba(232, 191, 105, 0.32);
+  --shadow-blue: 0 8px 24px rgba(232, 191, 105, 0.25);
+  --shadow-navy: 0 10px 30px rgba(48, 33, 31, 0.15);
 
   /* Border Radii */
-  --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
   --radius-full: 9999px;
 
   /* Typography */
+  --font-serif: var(--font-serif), 'Playfair Display', Georgia, serif;
   --font-title: var(--font-outfit), 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: var(--font-plus-jakarta), 'Plus Jakarta Sans', -apple-system, sans-serif;
 
@@ -65,6 +105,8 @@
 html, body {
   max-width: 100vw;
   overflow-x: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 body {
@@ -78,7 +120,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-title);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   color: var(--text-primary);
 }
 
@@ -96,15 +138,15 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Button System */
+/* Button System - Elegant Rounded Pill Aesthetics */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 26px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-title);
+  padding: 12px 28px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
@@ -115,59 +157,61 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .btn-primary {
-  background: var(--royal);
-  color: #FFFFFF;
-  border-color: var(--royal);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #E8BF69 0%, #DDAF52 100%);
+  color: #30211F;
+  border-color: #E8BF69;
+  box-shadow: 0 4px 18px rgba(232, 191, 105, 0.38);
+  font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--royal-hover);
-  border-color: var(--royal-hover);
+  background: linear-gradient(135deg, #EFCA7B 0%, #E8BF69 100%);
+  border-color: #EFCA7B;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
-  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(232, 191, 105, 0.50);
+  color: #30211F;
 }
 
 .btn-secondary {
   background: #FFFFFF;
-  color: var(--royal);
-  border: 1.5px solid var(--border-blue);
+  color: #30211F;
+  border: 1.5px solid #F0E5DC;
   box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
-  background: var(--soft-blue);
-  border-color: var(--royal);
+  background: #FFFDFB;
+  border-color: #E8BF69;
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
-  color: var(--royal);
+  color: #30211F;
 }
 
 .btn-navy {
-  background: var(--navy);
-  color: #FFFFFF;
-  border-color: var(--navy);
-  box-shadow: 0 4px 14px rgba(16, 42, 67, 0.2);
+  background: #30211F;
+  color: #FFF9F4;
+  border: 1.5px solid #30211F;
+  box-shadow: var(--shadow-sm);
 }
 
 .btn-navy:hover {
-  background: var(--navy-dark);
-  border-color: var(--navy-dark);
+  background: #4A3734;
+  border-color: #4A3734;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.3);
-  color: #FFFFFF;
+  box-shadow: var(--shadow-md);
+  color: #FFF9F4;
 }
 
 .btn-soft {
-  background: var(--soft-blue);
-  color: var(--royal);
-  border-color: transparent;
+  background: #FCE1E2;
+  color: #30211F;
+  border-color: rgba(232, 191, 105, 0.35);
 }
 
 .btn-soft:hover {
-  background: var(--ice-blue);
-  color: var(--royal-hover);
+  background: #F8D5D7;
+  color: #30211F;
+  border-color: #E8BF69;
 }
 
 /* Badge Styles */
@@ -175,44 +219,45 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--soft-blue);
-  color: var(--royal);
-  border: 1px solid var(--border-blue);
+  background: #FFFFFF;
+  color: #786B68;
+  border: 1px solid #F0E5DC;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(48, 33, 31, 0.04);
 }
 
 .badge-navy {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(16, 42, 67, 0.08);
-  color: var(--navy);
-  border: 1px solid rgba(16, 42, 67, 0.15);
+  background: #FCE1E2;
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.35);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: var(--radius-full);
 }
 
-/* Custom Scrollbar */
+/* Custom Soft Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--soft-blue);
+  background: #FFF9F4;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #E8DACF;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--royal-light);
+  background: #E8BF69;
 }

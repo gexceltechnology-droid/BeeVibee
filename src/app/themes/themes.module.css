@@ -1,21 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════
    BEEVIBE THEMES & SUITES PAGE STYLESHEET
-   Deep Navy (#102A43) | Royal Blue (#2563EB) | Soft Blue (#EEF5FF)
+   Styled to BeeVibe Warm Honey Boutique Palette:
+   Deep Dark Chocolate (#FFF9F4) | Roasted Espresso (#FFFFFF)
+   Rich Honey Amber (#E8BF69) | Champagne Glow (#E8BF69)
    ═══════════════════════════════════════════════════════════════ */
 
 .main {
   min-height: 100vh;
-  background-color: #F8FAFC;
-  color: var(--navy);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
 }
 
 /* ─── Header ─── */
 .header {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(14, 11, 8, 0.92);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid #F0E5DC;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -34,19 +36,25 @@
   gap: 6px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #30211F;
   text-decoration: none;
   padding: 8px 14px;
   border-radius: 8px;
-  background: var(--soft-blue);
-  border: 1px solid var(--border-blue);
+  background: #FFF9F4;
+  border: 1px solid #F0E5DC;
   transition: all 0.2s ease;
 }
 
 .backHomeBtn:hover {
-  background: #DBEAFE;
-  color: var(--royal);
+  background: #33261C;
+  color: #E8BF69;
   transform: translateX(-2px);
+}
+
+.logoImg {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
 }
 
 .brandLogo {
@@ -57,12 +65,12 @@
   font-family: var(--font-title);
   font-size: 1.45rem;
   font-weight: 900;
-  color: var(--navy);
+  color: #30211F;
   letter-spacing: -0.02em;
 }
 
 .brandHighlight {
-  color: var(--royal);
+  color: #E8BF69;
 }
 
 .brandSub {
@@ -70,12 +78,12 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--royal);
+  color: #E8BF69;
 }
 
 /* ─── Hero Section ─── */
 .heroSection {
-  background: linear-gradient(180deg, #EEF5FF 0%, #F8FAFC 100%);
+  background: radial-gradient(ellipse 90% 65% at 50% -10%, #F0E5DC 0%, rgba(20, 15, 11, 0.95) 60%, #FFF9F4 100%);
   padding: 60px 0 40px;
   text-align: center;
 }
@@ -89,24 +97,24 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #FFFFFF;
-  border: 1px solid var(--border-blue);
+  background: #F0E5DC;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   border-radius: 9999px;
   padding: 6px 16px;
-  color: var(--royal);
+  color: #E8BF69;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .heroTitle {
   font-family: var(--font-title);
   font-size: clamp(2.2rem, 4.5vw, 3.4rem);
   font-weight: 900;
-  color: var(--navy);
+  color: #30211F;
   line-height: 1.15;
   letter-spacing: -0.02em;
   margin: 0 0 16px 0;
@@ -114,7 +122,7 @@
 
 .heroDescription {
   font-size: 1.05rem;
-  color: var(--text-secondary);
+  color: #786B68;
   line-height: 1.6;
   margin: 0 auto 32px;
   max-width: 720px;
@@ -134,28 +142,30 @@
   align-items: center;
   gap: 8px;
   background: #FFFFFF;
-  border: 1.5px solid var(--border-light);
+  border: 1.5px solid #F0E5DC;
   border-radius: 9999px;
   padding: 10px 20px;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #786B68;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .filterChip:hover {
-  border-color: var(--border-blue);
-  color: var(--royal);
+  border-color: #E8BF69;
+  color: #E8BF69;
+  background: #F0E5DC;
   transform: translateY(-1px);
 }
 
 .filterChipActive {
-  background: var(--royal);
-  border-color: var(--royal);
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(135deg, #E8BF69, #DDAF52);
+  border-color: #E8BF69;
+  color: #FFF9F4;
+  font-weight: 800;
+  box-shadow: 0 4px 14px rgba(232, 191, 105, 0.35);
 }
 
 /* ─── Themes Section ─── */
@@ -171,18 +181,18 @@
 
 .themeShowcaseCard {
   background: #FFFFFF;
-  border: 1.5px solid var(--border-light);
+  border: 1.5px solid #F0E5DC;
   border-radius: 24px;
   overflow: hidden;
   display: grid;
   grid-template-columns: 1.05fr 1.35fr;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 30px rgba(48, 33, 31, 0.06);
   transition: all 0.3s ease;
 }
 
 .themeShowcaseCard:hover {
-  border-color: var(--border-blue);
-  box-shadow: var(--shadow-xl);
+  border-color: #E8BF69;
+  box-shadow: 0 18px 45px rgba(48, 33, 31, 0.10), 0 0 25px #F0E5DC;
 }
 
 @media (max-width: 960px) {
@@ -194,7 +204,7 @@
 /* ─── Media Column ─── */
 .themeMediaCol {
   padding: 24px;
-  background: #F8FAFC;
+  background: #FFFDFB;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -206,7 +216,7 @@
   border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 16px rgba(48, 33, 31, 0.05);
 }
 
 .themeMainImg {
@@ -224,9 +234,9 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  background: rgba(16, 42, 67, 0.88);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(14, 11, 8, 0.88);
+  color: #30211F;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   padding: 5px 12px;
   border-radius: 9999px;
   font-size: 0.74rem;
@@ -241,8 +251,8 @@
   position: absolute;
   bottom: 14px;
   left: 14px;
-  background: var(--royal);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, #E8BF69, #DDAF52);
+  color: #FFF9F4;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -261,12 +271,12 @@
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  border: 1.5px solid #E2E8F0;
+  border: 1.5px solid #F0E5DC;
   transition: all 0.2s ease;
 }
 
 .themeThumb:hover {
-  border-color: var(--royal);
+  border-color: #E8BF69;
   transform: translateY(-2px);
 }
 
@@ -302,7 +312,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--royal);
+  color: #E8BF69;
   display: block;
   margin-bottom: 4px;
 }
@@ -311,15 +321,15 @@
   font-family: var(--font-title);
   font-size: 1.7rem;
   font-weight: 900;
-  color: var(--navy);
+  color: #30211F;
   margin: 0;
   line-height: 1.2;
 }
 
 .durationPill {
-  background: var(--soft-blue);
-  color: var(--royal);
-  border: 1px solid var(--border-blue);
+  background: #F0E5DC;
+  color: #E8BF69;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   padding: 6px 14px;
   border-radius: 9999px;
   font-size: 0.78rem;
@@ -346,7 +356,7 @@
 
 .priceLabel {
   font-size: 0.8rem;
-  color: var(--text-secondary);
+  color: #786B68;
   font-weight: 600;
 }
 
@@ -354,16 +364,16 @@
   font-family: var(--font-title);
   font-size: 1.35rem;
   font-weight: 900;
-  color: var(--navy);
+  color: #E8BF69;
 }
 
 .couponOfferTag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  color: #1D4ED8;
+  background: #F0E5DC;
+  border: 1px solid #F0E5DC;
+  color: #E8BF69;
   padding: 4px 12px;
   border-radius: 9999px;
   font-size: 0.8rem;
@@ -371,19 +381,19 @@
 }
 
 .couponInclusionsAlert {
-  background: #F0FDF4;
-  border: 1px solid #BBF7D0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: 10px;
   padding: 10px 14px;
   margin-bottom: 16px;
   font-size: 0.82rem;
-  color: #166534;
+  color: #34D399;
   line-height: 1.45;
 }
 
 .themeDesc {
   font-size: 0.94rem;
-  color: var(--text-secondary);
+  color: #786B68;
   line-height: 1.55;
   margin: 0 0 20px 0;
 }
@@ -395,12 +405,13 @@
   gap: 10px;
   margin-bottom: 24px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #E2E8F0;
+  border-bottom: 1px solid #F0E5DC;
 }
 
 .specBadge {
-  background: #F1F5F9;
-  color: var(--navy);
+  background: #FFF9F4;
+  color: #30211F;
+  border: 1px solid #F0E5DC;
   border-radius: 8px;
   padding: 7px 12px;
   font-size: 0.8rem;
@@ -411,7 +422,7 @@
 }
 
 .specBadge svg {
-  color: var(--royal);
+  color: #E8BF69;
 }
 
 /* ─── Inclusions Section ─── */
@@ -423,7 +434,7 @@
   font-family: var(--font-title);
   font-size: 0.95rem;
   font-weight: 800;
-  color: var(--navy);
+  color: #30211F;
   margin: 0 0 12px 0;
   letter-spacing: 0.01em;
 }
@@ -445,7 +456,7 @@
   align-items: flex-start;
   gap: 8px;
   font-size: 0.85rem;
-  color: #334155;
+  color: #786B68;
   line-height: 1.4;
 }
 
@@ -457,8 +468,8 @@
 
 /* ─── Add-on Preview ─── */
 .addonPreviewRow {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
+  background: #FFF9F4;
+  border: 1px solid #F0E5DC;
   border-radius: 12px;
   padding: 12px 16px;
   margin-bottom: 28px;
@@ -470,7 +481,7 @@
 .addonLabel {
   font-size: 0.74rem;
   font-weight: 700;
-  color: var(--text-muted);
+  color: #E8BF69;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -483,12 +494,12 @@
 
 .addonChip {
   background: #FFFFFF;
-  border: 1px solid #CBD5E1;
+  border: 1px solid #F0E5DC;
   border-radius: 6px;
   padding: 4px 10px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--navy);
+  color: #30211F;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -509,15 +520,16 @@
 }
 
 .bannerCard {
-  background: linear-gradient(135deg, var(--royal) 0%, #1D4ED8 100%);
+  background: radial-gradient(ellipse 90% 70% at 50% 0%, #F0E5DC 0%, #FFFFFF 100%);
+  border: 1.5px solid rgba(232, 191, 105, 0.35);
   border-radius: 24px;
   padding: 48px;
-  color: #FFFFFF;
+  color: #30211F;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  box-shadow: 0 12px 36px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 20px 50px rgba(48, 33, 31, 0.10);
 }
 
 @media (max-width: 860px) {
@@ -532,13 +544,13 @@
   font-family: var(--font-title);
   font-size: 1.8rem;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #30211F;
   margin: 0 0 10px 0;
 }
 
 .bannerSub {
   font-size: 0.98rem;
-  color: #DBEAFE;
+  color: #786B68;
   line-height: 1.6;
   margin: 0;
   max-width: 600px;
@@ -565,8 +577,9 @@
 
 /* ─── Footer ─── */
 .footer {
-  background: var(--navy);
-  color: #FFFFFF;
+  background: #FFF9F4;
+  color: #30211F;
+  border-top: 1px solid rgba(232, 191, 105, 0.14);
   padding: 50px 0 30px;
   margin-top: auto;
 }
@@ -585,11 +598,12 @@
   font-weight: 900;
   letter-spacing: -0.02em;
   margin-bottom: 8px;
+  color: #30211F;
 }
 
 .footerAddress {
   font-size: 0.85rem;
-  color: #94A3B8;
+  color: #786B68;
   max-width: 480px;
   line-height: 1.5;
   margin: 0;
@@ -601,7 +615,7 @@
 }
 
 .footerLinks a {
-  color: #CBD5E1;
+  color: #786B68;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
@@ -609,7 +623,7 @@
 }
 
 .footerLinks a:hover {
-  color: #FFFFFF;
+  color: #E8BF69;
 }
 
 /* ─── Book on Call in Themes Page ─── */
@@ -620,9 +634,9 @@
 }
 
 .headerCallBtn {
-  background: var(--soft-blue);
-  color: var(--royal);
-  border: 1.5px solid var(--border-blue);
+  background: #F0E5DC;
+  color: #E8BF69;
+  border: 1.5px solid rgba(232, 191, 105, 0.3);
   padding: 8px 14px;
   border-radius: 8px;
   font-size: 0.78rem;
@@ -635,9 +649,9 @@
 }
 
 .headerCallBtn:hover {
-  background: var(--royal);
-  color: #FFFFFF;
-  border-color: var(--royal);
+  background: #E8BF69;
+  color: #FFF9F4;
+  border-color: #E8BF69;
 }
 
 @media (max-width: 680px) {
@@ -659,7 +673,13 @@
     display: none;
   }
 
-  .brandLogo {
+  .logoImg {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+.brandLogo {
     font-size: 1.15rem;
     flex-shrink: 0;
   }
@@ -697,9 +717,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: #EFF6FF;
-  border: 1px solid #BFDBFE;
-  color: #1D4ED8;
+  background: #F0E5DC;
+  border: 1px solid #F0E5DC;
+  color: #E8BF69;
   padding: 8px 18px;
   border-radius: 9999px;
   font-size: 0.85rem;
@@ -708,7 +728,7 @@
 }
 
 .heroCallBanner a {
-  color: var(--navy);
+  color: #30211F;
   font-weight: 800;
   text-decoration: underline;
 }

@@ -1,14 +1,14 @@
 /* ===========================
-   /book page — Premium Booking
+   /book page — Warm Honey Boutique
    =========================== */
 
 .page {
   min-height: 100vh;
-  background-color: #ffffff;
-  color: #09090b;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   position: relative;
   overflow-x: hidden;
-  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Ambient glow blob */
@@ -19,7 +19,7 @@
   transform: translateX(-50%);
   width: 750px;
   height: 420px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, 0.02) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 50% 0%, #F0E5DC 0%, transparent 65%);
   filter: blur(85px);
   pointer-events: none;
   z-index: 0;
@@ -29,7 +29,7 @@
 .gridPattern {
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(232, 191, 105, 0.06) 1px, transparent 1px);
   background-size: 32px 32px;
   pointer-events: none;
   z-index: 0;
@@ -48,11 +48,11 @@
 }
 
 .headerScrolled {
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(14, 11, 8, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid #F0E5DC;
+  box-shadow: 0 4px 20px rgba(48, 33, 31, 0.06);
 }
 
 .headerInner {
@@ -99,17 +99,17 @@
 }
 
 .logoBrand {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-title);
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--navy);
+  color: #30211F;
 }
 
 .logoSub {
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--royal);
+  color: #E8BF69;
   text-transform: uppercase;
 }
 
@@ -119,19 +119,20 @@
   gap: 6px;
   padding: 8px 20px;
   border-radius: 8px;
-  border: 1px solid var(--border-blue);
-  background: #ffffff;
-  color: var(--navy);
+  border: 1px solid rgba(232, 191, 105, 0.3);
+  background: #FFF9F4;
+  color: #30211F;
   font-size: 0.88rem;
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 1px 3px rgba(16, 42, 67, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: all 0.25s ease;
 }
 
 .backBtn:hover {
-  background: var(--soft-blue);
-  color: var(--royal);
+  background: #33261C;
+  color: #E8BF69;
+  border-color: #E8BF69;
 }
 
 /* ===== Main Content ===== */
@@ -152,35 +153,34 @@
 .heroBadge {
   display: inline-block;
   padding: 5px 18px;
-  background: var(--soft-blue);
-  border: 1px solid var(--border-blue);
+  background: #F0E5DC;
+  border: 1px solid rgba(232, 191, 105, 0.3);
   border-radius: 100px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-title);
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--royal);
   letter-spacing: 0.15em;
-  color: #09090b;
+  color: #E8BF69;
   text-transform: uppercase;
   margin-bottom: 20px;
 }
 
 .heroTitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-title);
   font-size: clamp(2.6rem, 5vw, 4rem);
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 18px;
-  color: #09090b;
+  color: #30211F;
 }
 
 .heroAccent {
-  color: var(--accent);
+  color: #E8BF69;
 }
 
 .heroSub {
   font-size: 1.05rem;
-  color: #475569;
+  color: #786B68;
   max-width: 580px;
   margin: 0 auto 28px;
   line-height: 1.7;
@@ -198,27 +198,27 @@
 .pill {
   display: inline-block;
   padding: 7px 18px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #FFFFFF;
+  border: 1px solid #F0E5DC;
   border-radius: 100px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #09090b;
+  color: #30211F;
   letter-spacing: 0.02em;
 }
 
 .extraInfo {
   font-size: 0.8rem;
-  color: #64748b;
+  color: #786B68;
 }
 
 /* ===== Booking Portal Box ===== */
 .portalWrapper {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #FFFFFF;
+  border: 1.5px solid #F0E5DC;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 40px rgba(48, 33, 31, 0.06);
 }
 
 /* ===== Contact Strip ===== */
@@ -229,7 +229,7 @@
   gap: 28px;
   margin-top: 52px;
   padding-top: 32px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #F0E5DC;
 }
 
 .contactItem {
@@ -237,12 +237,12 @@
   align-items: flex-start;
   gap: 8px;
   font-size: 0.875rem;
-  color: #64748b;
+  color: #786B68;
   max-width: 420px;
 }
 
 .contactItem a {
-  color: #475569;
+  color: #786B68;
   text-decoration: none;
   transition: color 0.2s;
   line-height: 1.4;
@@ -250,11 +250,11 @@
 }
 
 .contactItem a:hover {
-  color: #09090b;
+  color: #E8BF69;
 }
 
 .contactIcon {
-  color: var(--accent);
+  color: #E8BF69;
   flex-shrink: 0;
   margin-top: 3px;
 }
