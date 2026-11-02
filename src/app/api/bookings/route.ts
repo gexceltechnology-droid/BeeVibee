@@ -516,6 +516,53 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true, booking: updated });
     }
 
+    if (action === 'edit_booking') {
+      const {
+        customerName,
+        phone,
+        email,
+        date,
+        timeSlot,
+        packageName,
+        roomId,
+        theme,
+        guestCount,
+        totalPrice,
+        advancePaid,
+        balanceDue,
+        status,
+        specialRequests,
+        adminNotes,
+        source,
+        paymentStatus,
+        paymentMode,
+        utrNumber,
+      } = body;
+      const { updateBookingDetailsInFirestore } = await import('@/lib/firestore');
+      const updated = await updateBookingDetailsInFirestore(id, {
+        ...(customerName !== undefined && { customerName: String(customerName).trim() }),
+        ...(phone !== undefined && { phone: String(phone).trim() }),
+        ...(email !== undefined && { email: String(email).trim() }),
+        ...(date !== undefined && { date: String(date).trim() }),
+        ...(timeSlot !== undefined && { timeSlot: String(timeSlot).trim() }),
+        ...(packageName !== undefined && { packageName: String(packageName).trim() }),
+        ...(roomId !== undefined && { roomId: String(roomId).trim() }),
+        ...(theme !== undefined && { theme: String(theme).trim() }),
+        ...(guestCount !== undefined && { guestCount: Number(guestCount) }),
+        ...(totalPrice !== undefined && { totalPrice: Number(totalPrice) }),
+        ...(advancePaid !== undefined && { advancePaid: Number(advancePaid) }),
+        ...(balanceDue !== undefined && { balanceDue: Number(balanceDue) }),
+        ...(status !== undefined && { status }),
+        ...(specialRequests !== undefined && { specialRequests: String(specialRequests) }),
+        ...(adminNotes !== undefined && { adminNotes: String(adminNotes) }),
+        ...(source !== undefined && { source: String(source) }),
+        ...(paymentStatus !== undefined && { paymentStatus }),
+        ...(paymentMode !== undefined && { paymentMode }),
+        ...(utrNumber !== undefined && { utrNumber: String(utrNumber).trim() }),
+      });
+      return NextResponse.json({ success: true, booking: updated });
+    }
+
     // Generic update (verification, notes, status, source)
     const { sbiVerified, balanceCollected, adminNotes, status, advancePaid, balanceDue, paymentStatus, source } = body;
     const updated = await updateBookingPaymentVerificationInFirestore(id, {

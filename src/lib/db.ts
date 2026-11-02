@@ -548,6 +548,14 @@ export function updateFoodOrderStatus(id: string, status: FoodOrder['status']): 
   return db.foodOrders[index];
 }
 
+// Helper to delete a food order
+export function deleteFoodOrder(id: string): void {
+  const db = readDb();
+  if (!db.foodOrders) return;
+  db.foodOrders = db.foodOrders.filter((o) => o.id !== id);
+  writeDb(db);
+}
+
 // Helper to add a new menu item
 export function addMenuItem(itemData: Omit<MenuItem, 'id' | 'inStock'>): MenuItem {
   const db = readDb();
@@ -639,6 +647,22 @@ export function updateBookingPaymentVerification(
   if (updates.paymentStatus !== undefined) db.bookings[index].paymentStatus = updates.paymentStatus;
   if (updates.paymentLedger !== undefined) db.bookings[index].paymentLedger = updates.paymentLedger;
   if (updates.source !== undefined) db.bookings[index].source = updates.source;
+
+  writeDb(db);
+  return db.bookings[index];
+}
+
+export function updateBookingDetails(id: string, updates: Partial<Booking>): Booking {
+  const db = readDb();
+  const index = db.bookings.findIndex(b => b.id.toLowerCase() === id.toLowerCase());
+  if (index === -1) {
+    throw new Error(`Booking with ID ${id} not found.`);
+  }
+
+  db.bookings[index] = {
+    ...db.bookings[index],
+    ...updates,
+  };
 
   writeDb(db);
   return db.bookings[index];

@@ -390,6 +390,19 @@ export async function updateOrderStatusInFirestore(
   return updated;
 }
 
+export async function deleteOrderFromFirestore(id: string): Promise<void> {
+  const cleanId = id.trim();
+  try {
+    const firestore = getDb();
+    await firestore.collection('foodOrders').doc(cleanId).delete();
+  } catch (err) {
+    console.warn('Firestore delete order failed, falling back to local DB:', err);
+  }
+
+  const { deleteFoodOrder } = await import('./db');
+  deleteFoodOrder(cleanId);
+}
+
 // ─── Menu Items ──────────────────────────────────────────────────────────────
 
 export async function getAllMenuItems(): Promise<MenuItem[]> {
@@ -621,6 +634,26 @@ export async function recordBookingPaymentInFirestore(
   }
 
   const localUpdated = recordBookingPaymentLocal(cleanId, payment);
+  return updatedBooking || localUpdated;
+}
+
+export async function updateBookingDetailsInFirestore(id: string, updates: Partial<Booking>): Promise<Booking> {
+  const cleanId = id.trim();
+  let updatedBooking: Booking | null = null;
+  try {
+    const firestore = getDb();
+    const docRef = firestore.collection('bookings').doc(cleanId);
+    await docRef.set(updates, { merge: true });
+    const snap = await docRef.get();
+    if (snap.exists) {
+      updatedBooking = { id: snap.id, ...snap.data() } as Booking;
+    }
+  } catch (err) {
+    console.warn('Firestore update booking failed, falling back to local DB:', err);
+  }
+
+  const { updateBookingDetails } = await import('./db');
+  const localUpdated = updateBookingDetails(cleanId, updates);
   return updatedBooking || localUpdated;
 }
 

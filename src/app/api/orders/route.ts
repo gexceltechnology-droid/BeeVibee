@@ -4,6 +4,7 @@ import {
   getAllOrders,
   addOrderToFirestore,
   updateOrderStatusInFirestore,
+  deleteOrderFromFirestore,
   getAllMenuItems,
   DEFAULT_MENU_ITEMS,
 } from '@/lib/firestore';
@@ -157,6 +158,34 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (error: any) {
     console.error('Error updating food order status:', error);
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
+  }
+}
+
+// DELETE a food order (Admin endpoint)
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!isAuthorized(request)) {
+      return NextResponse.json({ error: 'Unauthorized access.' }, { status: 401 });
+    }
+
+    let id: string | null = null;
+    try {
+      const body = await request.json();
+      id = body?.id || null;
+    } catch {
+      const { searchParams } = new URL(request.url);
+      id = searchParams.get('id');
+    }
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID is required.' }, { status: 400 });
+    }
+
+    await deleteOrderFromFirestore(id);
+    return NextResponse.json({ success: true, message: `Food order ${id} deleted.` });
+  } catch (error: any) {
+    console.error('Error deleting food order:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 400 });
   }
 }

@@ -8,6 +8,10 @@ import { ROOMS, ADD_ONS } from '@/types/booking';
 import { checkBookingOverlap, normalizeRoomId, isLateNightSlot } from '@/lib/time';
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
+import SewayaOverview from '@/components/admin/SewayaOverview';
+import LeadHub from '@/components/admin/LeadHub';
+import OperationsHub from '@/components/admin/OperationsHub';
+import AIAssistantDrawer from '@/components/admin/AIAssistantDrawer';
 
 interface Booking {
   id: string;
@@ -71,7 +75,8 @@ export default function AdminDashboard() {
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
   
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'payments' | 'crm' | 'orders' | 'qrs' | 'menu'>('bookings');
+  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'bookings' | 'calendar' | 'payments' | 'operations' | 'crm' | 'orders' | 'qrs' | 'menu'>('overview');
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   
   // Filter States
   const [bookingCategoryFilter, setBookingCategoryFilter] = useState<'all' | 'theater' | 'gaming'>('all');
@@ -140,6 +145,30 @@ export default function AdminDashboard() {
   const [collectUtr, setCollectUtr] = useState<string>('');
   const [collectNotes, setCollectNotes] = useState<string>('');
   const [collectSubmitting, setCollectSubmitting] = useState<boolean>(false);
+
+  // Edit Booking Modal State
+  const [isEditBookingModalOpen, setIsEditBookingModalOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [editCustomerName, setEditCustomerName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editTimeSlot, setEditTimeSlot] = useState('');
+  const [editRoomId, setEditRoomId] = useState('angel-wings');
+  const [editPackageName, setEditPackageName] = useState('');
+  const [editGuestCount, setEditGuestCount] = useState('2');
+  const [editTotalPrice, setEditTotalPrice] = useState('1299');
+  const [editAdvancePaid, setEditAdvancePaid] = useState('500');
+  const [editBalanceDue, setEditBalanceDue] = useState('799');
+  const [editStatus, setEditStatus] = useState<Booking['status']>('confirmed');
+  const [editPaymentStatus, setEditPaymentStatus] = useState<'pending' | 'advance_paid' | 'fully_paid'>('advance_paid');
+  const [editPaymentMode, setEditPaymentMode] = useState('UPI (8123635342@sbi)');
+  const [editUtrNumber, setEditUtrNumber] = useState('');
+  const [editSource, setEditSource] = useState('Website');
+  const [editSpecialRequests, setEditSpecialRequests] = useState('');
+  const [editAdminNotes, setEditAdminNotes] = useState('');
+  const [editBookingSubmitting, setEditBookingSubmitting] = useState(false);
+  const [editBookingError, setEditBookingError] = useState('');
 
   // Calendar View State
   const [calendarViewDate, setCalendarViewDate] = useState<string>(() => {
@@ -461,6 +490,108 @@ export default function AdminDashboard() {
       }
     } catch (err: unknown) {
       alert('Error deleting booking: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
+  // Edit Booking Handlers
+  const handleOpenEditBookingModal = (booking: Booking) => {
+    setEditingBooking(booking);
+    setEditCustomerName(booking.customerName || '');
+    setEditPhone(booking.phone || '');
+    setEditEmail(booking.email || '');
+    setEditDate(booking.date || '');
+    setEditTimeSlot(booking.timeSlot || '');
+    setEditRoomId(booking.roomId || 'angel-wings');
+    setEditPackageName(booking.packageName || '');
+    setEditGuestCount(String(booking.guestCount || 2));
+    setEditTotalPrice(String(booking.totalPrice || 0));
+    setEditAdvancePaid(String(booking.advancePaid ?? 500));
+    setEditBalanceDue(String(booking.balanceDue ?? Math.max(0, (booking.totalPrice || 0) - (booking.advancePaid ?? 500))));
+    setEditStatus(booking.status || 'confirmed');
+    setEditPaymentStatus(booking.paymentStatus || 'advance_paid');
+    setEditPaymentMode(booking.paymentMode || 'UPI (8123635342@sbi)');
+    setEditUtrNumber(booking.utrNumber || '');
+    setEditSource(booking.source || 'Website');
+    setEditSpecialRequests(booking.specialRequests || '');
+    setEditAdminNotes(booking.adminNotes || '');
+    setEditBookingError('');
+    setIsEditBookingModalOpen(true);
+  };
+
+  const handleSaveEditBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBooking) return;
+    setEditBookingSubmitting(true);
+    setEditBookingError('');
+
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({
+          id: editingBooking.id,
+          action: 'edit_booking',
+          customerName: editCustomerName.trim(),
+          phone: editPhone.trim(),
+          email: editEmail.trim() || undefined,
+          date: editDate,
+          timeSlot: editTimeSlot,
+          roomId: editRoomId,
+          packageName: editPackageName.trim() || editRoomId,
+          guestCount: Number(editGuestCount) || 2,
+          totalPrice: Number(editTotalPrice) || 0,
+          advancePaid: Number(editAdvancePaid) || 0,
+          balanceDue: Number(editBalanceDue) || 0,
+          status: editStatus,
+          paymentStatus: editPaymentStatus,
+          paymentMode: editPaymentMode,
+          utrNumber: editUtrNumber.trim() || undefined,
+          source: editSource,
+          specialRequests: editSpecialRequests.trim() || undefined,
+          adminNotes: editAdminNotes.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save booking edits.');
+      }
+
+      setBookings(prev => prev.map(b => b.id === editingBooking.id ? (data.booking || { ...b, ...data }) : b));
+      setIsEditBookingModalOpen(false);
+      setEditingBooking(null);
+      alert(`✅ Booking ${editingBooking.id} updated successfully!`);
+    } catch (err: unknown) {
+      setEditBookingError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setEditBookingSubmitting(false);
+    }
+  };
+
+  // Delete Food Order Handler
+  const handleDeleteOrder = async (id: string) => {
+    if (!confirm(`Are you sure you want to permanently delete food order #${id}?`)) return;
+    const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setOrders(prev => prev.filter(o => o.id !== id));
+      } else {
+        alert('Failed to delete food order.');
+      }
+    } catch (err: unknown) {
+      alert('Error deleting order: ' + (err instanceof Error ? err.message : String(err)));
     }
   };
 
@@ -1283,45 +1414,280 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      <div className={styles.dashboardHeader}>
-        <div>
-          <h1 className={styles.title}>Bee Vibe Management Portal</h1>
-          <p className={styles.subtitle}>Unified Multi-Tenant Engine · Payment Reconciliation · Guest CRM & Loyalty Hub</p>
+      {/* SEWAYA-STYLE FLOATING PILL NAVIGATION BAR */}
+      <div
+        style={{
+          background: '#ffffff',
+          borderRadius: '9999px',
+          border: '1px solid #f1f5f9',
+          padding: '8px 20px',
+          boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.03)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '28px',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        {/* Brand / Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.2rem',
+              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            🐝
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#1e293b', letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>BeeVibe</span>
+              <span style={{ fontSize: '0.68rem', fontWeight: 600, background: '#f1f5f9', color: '#64748b', padding: '1px 6px', borderRadius: '9999px' }}>
+                Business OS
+              </span>
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+
+        {/* Floating Centered Segmented Navigation Pills */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: '#f8fafc',
+            borderRadius: '9999px',
+            padding: '4px',
+            gap: '2px',
+            flexWrap: 'wrap',
+          }}
+        >
+          <button
+            onClick={() => setActiveTab('overview')}
+            style={{
+              border: 'none',
+              background: activeTab === 'overview' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'overview' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'overview' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 18px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'overview' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Dashboard
+          </button>
+
+          <button
+            onClick={() => setActiveTab('leads')}
+            style={{
+              border: 'none',
+              background: activeTab === 'leads' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'leads' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'leads' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'leads' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            🎯 Leads
+          </button>
+
+          <button
+            onClick={() => setActiveTab('calendar')}
+            style={{
+              border: 'none',
+              background: activeTab === 'calendar' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'calendar' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'calendar' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'calendar' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Calendar
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('bookings'); setSearchTerm(''); setDateFilter(''); setSourceFilter('all'); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'bookings' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'bookings' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'bookings' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'bookings' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Bookings ({activeBookings})
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('payments'); setSearchTerm(''); setPaymentFilter('all'); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'payments' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'payments' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'payments' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'payments' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Payments
+          </button>
+
+          <button
+            onClick={() => setActiveTab('operations')}
+            style={{
+              border: 'none',
+              background: activeTab === 'operations' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'operations' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'operations' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'operations' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Operations
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('orders'); setSearchTerm(''); setOrderStatusFilter('all'); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'orders' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'orders' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'orders' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'orders' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Orders
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('menu'); setSearchTerm(''); setMenuCategoryFilter('all'); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'menu' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'menu' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'menu' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'menu' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            Menu
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('crm'); setSearchTerm(''); setCrmTierFilter('all'); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'crm' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'crm' ? '#ffffff' : '#64748b',
+              fontWeight: activeTab === 'crm' ? 600 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'crm' ? '0 2px 6px rgba(0,0,0,0.1)' : 'none',
+            }}
+          >
+            CRM
+          </button>
+        </div>
+
+        {/* Right Utility Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
-            onClick={() => handleOpenManualBooking()}
-            className="btn btn-primary"
+            onClick={() => setIsAssistantOpen(true)}
             style={{
-              fontSize: '0.88rem',
-              padding: '8px 16px',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '9999px',
+              padding: '7px 14px',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
-              border: 'none',
-              boxShadow: '0 4px 14px rgba(255, 0, 85, 0.4)',
-              cursor: 'pointer',
-              fontWeight: 600,
+              boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)',
             }}
-            title="Create a manual booking from WhatsApp, Phone, or Walk-in"
+            title="Open Authorised AI Business Assistant"
           >
-            ✍️ + Manual Booking
+            <span>🤖</span>
+            <span>AI Copilot</span>
           </button>
+
           <button
             type="button"
             onClick={playBookingSound}
-            className="btn btn-secondary"
-            style={{ borderColor: '#f2a900', color: '#f2a900', fontSize: '0.85rem', padding: '8px 14px' }}
-            title="Test sound alerts"
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '9999px',
+              padding: '7px 12px',
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              color: '#475569',
+            }}
+            title="Test Sound Alert"
           >
-            🔔 Sound Test
+            🔔
           </button>
-          <Link href="/" className="btn btn-secondary" style={{ fontSize: '0.85rem', padding: '8px 14px' }}>
-            View Website
-          </Link>
-          <button onClick={handleLogout} className="btn btn-secondary" style={{ borderColor: '#ef4444', color: '#f87171', fontSize: '0.85rem', padding: '8px 14px' }}>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              background: '#fef2f2',
+              color: '#ef4444',
+              border: '1px solid #fee2e2',
+              borderRadius: '9999px',
+              padding: '7px 14px',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
             Sign Out
           </button>
         </div>
@@ -1329,51 +1695,30 @@ export default function AdminDashboard() {
 
       {error && <div className={styles.loginError} style={{ margin: '0 0 24px 0', padding: '14px', fontSize: '0.9rem' }}>{error}</div>}
 
-      {/* TABS NAVIGATION */}
-      <div className={styles.tabContainerCustom}>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'bookings' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('bookings'); setSearchTerm(''); setDateFilter(''); setSourceFilter('all'); }}
-        >
-          📋 Bookings ({activeBookings})
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'calendar' ? styles.activeTabCustom : ''}`}
-          onClick={() => setActiveTab('calendar')}
-        >
-          📅 Visual Calendar
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'payments' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('payments'); setSearchTerm(''); setPaymentFilter('all'); }}
-        >
-          💳 Payment Portal
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'crm' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('crm'); setSearchTerm(''); setCrmTierFilter('all'); }}
-        >
-          👥 CRM & Guest Hub ({uniqueCustomersCount})
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'orders' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('orders'); setSearchTerm(''); setOrderStatusFilter('all'); }}
-        >
-          🍿 Food Orders ({activeOrdersCount})
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'menu' ? styles.activeTabCustom : ''}`}
-          onClick={() => { setActiveTab('menu'); setSearchTerm(''); setMenuCategoryFilter('all'); }}
-        >
-          🍔 Menu ({menuItems.length})
-        </button>
-        <button
-          className={`${styles.tabBtnCustom} ${activeTab === 'qrs' ? styles.activeTabCustom : ''}`}
-          onClick={() => setActiveTab('qrs')}
-        >
-          🖨️ Standees
-        </button>
-      </div>
+      {/* VIEW 1: SEWAYA-STYLE OVERVIEW DASHBOARD */}
+      {activeTab === 'overview' && (
+        <SewayaOverview
+          bookings={bookings}
+          onSelectBooking={(b) => setSelectedBookingForInvoice(b)}
+          onOpenManualBooking={() => handleOpenManualBooking()}
+          onSwitchTab={(tab) => setActiveTab(tab as any)}
+          onEditBooking={(b) => handleOpenEditBookingModal(b)}
+          onDeleteBooking={(id) => handleDeleteBooking(id)}
+        />
+      )}
+
+      {/* VIEW 2: UNIFIED LEAD MANAGEMENT */}
+      {activeTab === 'leads' && (
+        <LeadHub onConvertLeadToBooking={() => handleOpenManualBooking()} />
+      )}
+
+      {/* VIEW 3: EVENT OPERATIONS & SUITE READINESS */}
+      {activeTab === 'operations' && (
+        <OperationsHub
+          bookings={bookings}
+          onOpenManualBooking={(room, date) => handleOpenManualBooking(room, undefined, date)}
+        />
+      )}
 
       {/* TAB 1: BOOKINGS METRICS */}
       {activeTab === 'bookings' && (
@@ -1991,6 +2336,15 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             type="button"
+                            onClick={() => handleOpenEditBookingModal(b)}
+                            className={styles.actionBtn}
+                            style={{ borderColor: '#3b82f6', color: '#60a5fa' }}
+                            title="Edit booking details"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleDeleteBooking(b.id)}
                             className={`${styles.actionBtn} ${styles.btnDanger}`}
                             title="Delete booking"
@@ -2344,10 +2698,18 @@ export default function AdminDashboard() {
                             </button>
                           )}
                           {o.status === 'served' && (
-                            <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600 }}>
+                            <span style={{ fontSize: '0.78rem', color: '#10b981', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}>
                               ✓ Delivered
                             </span>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteOrder(o.id)}
+                            className={`${styles.actionBtn} ${styles.btnDanger}`}
+                            title="Delete food order"
+                          >
+                            🗑️
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -3384,6 +3746,286 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* MODAL: EDIT BOOKING MODAL */}
+      {isEditBookingModalOpen && editingBooking && (
+        <div className={styles.modalOverlayCustom} onClick={() => setIsEditBookingModalOpen(false)}>
+          <div className={`${styles.modalContentCustom} ${styles.modalWide}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeaderCustom}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  ✏️ Edit Reservation #{editingBooking.id}
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Update guest details, slot schedule, pricing breakdown, or status
+                </p>
+              </div>
+              <button
+                type="button"
+                className={styles.closeBtnCustom}
+                onClick={() => setIsEditBookingModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditBooking}>
+              <div className={styles.modalBodyCustom}>
+                {editBookingError && (
+                  <div style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#fca5a5', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.88rem' }}>
+                    ⚠️ {editBookingError}
+                  </div>
+                )}
+
+                {/* Customer Details */}
+                <div className={styles.formGridTwo}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Customer Name *</label>
+                    <input
+                      type="text"
+                      required
+                      className={styles.formInputCustom}
+                      value={editCustomerName}
+                      onChange={(e) => setEditCustomerName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Mobile Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      className={styles.formInputCustom}
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo} style={{ marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Email Address</label>
+                    <input
+                      type="email"
+                      className={styles.formInputCustom}
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Booking Source</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={editSource}
+                      onChange={(e) => setEditSource(e.target.value)}
+                    >
+                      <option value="Website">🌐 Website Direct</option>
+                      <option value="WhatsApp">💬 WhatsApp</option>
+                      <option value="Phone Call">📞 Phone Call</option>
+                      <option value="Walk-in">🚶 Walk-in Desk</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Suite & Schedule */}
+                <div className={styles.formGridTwo} style={{ marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Room / Suite</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={editRoomId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditRoomId(val);
+                        const rObj = ROOMS.find(r => r.id === val);
+                        if (rObj) setEditPackageName(`${rObj.name} (${rObj.occasionLabel})`);
+                      }}
+                    >
+                      {ROOMS.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name} ({r.occasionLabel})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Package Display Name</label>
+                    <input
+                      type="text"
+                      className={styles.formInputCustom}
+                      value={editPackageName}
+                      onChange={(e) => setEditPackageName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo} style={{ marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Show Date *</label>
+                    <input
+                      type="date"
+                      required
+                      className={styles.formInputCustom}
+                      value={editDate}
+                      onChange={(e) => setEditDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Time Slot *</label>
+                    <input
+                      type="text"
+                      required
+                      className={styles.formInputCustom}
+                      value={editTimeSlot}
+                      onChange={(e) => setEditTimeSlot(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Financial Ledger & Status */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Guest Count</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className={styles.formInputCustom}
+                      value={editGuestCount}
+                      onChange={(e) => setEditGuestCount(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Total Price (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className={styles.formInputCustom}
+                      value={editTotalPrice}
+                      onChange={(e) => {
+                        const tot = Number(e.target.value) || 0;
+                        const adv = Number(editAdvancePaid) || 0;
+                        setEditTotalPrice(e.target.value);
+                        setEditBalanceDue(String(Math.max(0, tot - adv)));
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Advance Paid (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className={styles.formInputCustom}
+                      value={editAdvancePaid}
+                      onChange={(e) => {
+                        const adv = Number(e.target.value) || 0;
+                        const tot = Number(editTotalPrice) || 0;
+                        setEditAdvancePaid(e.target.value);
+                        setEditBalanceDue(String(Math.max(0, tot - adv)));
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Balance Due (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      className={styles.formInputCustom}
+                      value={editBalanceDue}
+                      onChange={(e) => setEditBalanceDue(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo} style={{ marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Booking Status</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={editStatus}
+                      onChange={(e) => setEditStatus(e.target.value as any)}
+                    >
+                      <option value="confirmed">✅ Confirmed</option>
+                      <option value="pending">⏳ Pending Verification</option>
+                      <option value="tentative">📝 Tentative Hold</option>
+                      <option value="cancelled">❌ Cancelled</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Status</label>
+                    <select
+                      className={styles.formInputCustom}
+                      value={editPaymentStatus}
+                      onChange={(e) => setEditPaymentStatus(e.target.value as any)}
+                    >
+                      <option value="fully_paid">✨ Fully Paid (₹0 Due)</option>
+                      <option value="advance_paid">💵 Advance Paid (Balance Due)</option>
+                      <option value="pending">⏳ Pending Payment</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.formGridTwo} style={{ marginTop: '12px' }}>
+                  <div>
+                    <label className={styles.formLabelCustom}>Payment Mode</label>
+                    <input
+                      type="text"
+                      className={styles.formInputCustom}
+                      value={editPaymentMode}
+                      onChange={(e) => setEditPaymentMode(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={styles.formLabelCustom}>UTR / Ref Number</label>
+                    <input
+                      type="text"
+                      className={styles.formInputCustom}
+                      value={editUtrNumber}
+                      onChange={(e) => setEditUtrNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '12px' }}>
+                  <label className={styles.formLabelCustom}>Special Requests / Cake / Surprise Notes</label>
+                  <textarea
+                    rows={2}
+                    className={styles.formInputCustom}
+                    value={editSpecialRequests}
+                    onChange={(e) => setEditSpecialRequests(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ marginTop: '12px' }}>
+                  <label className={styles.formLabelCustom}>Staff / Admin Internal Notes</label>
+                  <input
+                    type="text"
+                    className={styles.formInputCustom}
+                    value={editAdminNotes}
+                    onChange={(e) => setEditAdminNotes(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '18px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setIsEditBookingModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={editBookingSubmitting}
+                    style={{ background: '#3b82f6', borderColor: '#3b82f6', color: '#ffffff' }}
+                  >
+                    {editBookingSubmitting ? 'Saving...' : '💾 Save Booking Changes'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Fixed Mobile Bottom Navigation */}
       <div className={styles.mobileBottomNav}>
         <button
@@ -3435,6 +4077,13 @@ export default function AdminDashboard() {
           <span>Menu</span>
         </button>
       </div>
+
+      {/* AUTHORISED AI BUSINESS COPILOT DRAWER */}
+      <AIAssistantDrawer
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        onSwitchTab={(tab) => setActiveTab(tab as any)}
+      />
     </div>
   );
 }

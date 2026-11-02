@@ -1084,8 +1084,11 @@ export default function Home() {
             </div>
           </div>
 
-          <div className={styles.footerBottom}>
-            <p>&copy; {new Date().getFullYear()} BeeVibe Private Celebration Theatre. All rights reserved. Jayanagar 9th Block, Bengaluru.</p>
+          <div className={styles.footerBottom} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <p style={{ margin: 0 }}>&copy; {new Date().getFullYear()} BeeVibe Private Celebration Theatre. All rights reserved. Jayanagar 9th Block, Bengaluru.</p>
+            <Link href="/admin" style={{ color: '#786B68', opacity: 0.7, fontSize: '0.78rem', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>🔒 Staff Portal</span>
+            </Link>
           </div>
         </div>
       </footer>
