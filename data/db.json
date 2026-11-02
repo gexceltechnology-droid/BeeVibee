@@ -150,5 +150,105 @@
       "inStock": true,
       "icon": "🍨"
     }
+  ],
+  "themes": [
+    {
+      "id": "angel-wings",
+      "name": "Angel Wings & Birthday Stage",
+      "theme": "Birthday Celebration Theme",
+      "occasion": "birthday",
+      "occasionLabel": "Birthday Celebration",
+      "price": 1299,
+      "duration": "1 Hr 30 Mins",
+      "durationHours": 1.5,
+      "capacity": "Up to 6 Guests",
+      "maxGuests": 6,
+      "includedGuests": 2,
+      "extraGuestPrice": 100,
+      "image": "/gallery/theme-pink.jpg",
+      "galleryImages": [
+        "/gallery/theme-pink.jpg",
+        "/gallery/theme-pink-wings.jpg",
+        "/gallery/theme-pink-screen.jpg",
+        "/gallery/theme-pink-arch.jpg"
+      ],
+      "description": "Vibrant celebration suite featuring glowing illuminated angel wings, \"Happy Birthday\" & \"Let's Party\" neon signs, pink shimmer sequin wall, and cake pedestal stage.",
+      "features": [
+        "Giant Glowing Illuminated Angel Wings",
+        "180\" 4K Laser Projection Screen",
+        "7.1 Dolby Atmos Surround Sound",
+        "Private Air-Conditioned Suite (100% Privacy)",
+        "Dedicated Cake-Cutting Pedestal Stage",
+        "All OTT Platforms (Netflix, Prime, Hotstar & YouTube)"
+      ],
+      "status": "available",
+      "badge": "TOP PICK FOR BIRTHDAYS"
+    },
+    {
+      "id": "red-velvet",
+      "name": "Red Velvet Heart",
+      "theme": "Date & Anniversary Theme",
+      "occasion": "anniversary",
+      "occasionLabel": "Date / Anniversary",
+      "price": 1099,
+      "duration": "1 Hr 30 Mins",
+      "durationHours": 1.5,
+      "capacity": "Up to 3 - 4 Guests",
+      "maxGuests": 4,
+      "includedGuests": 2,
+      "extraGuestPrice": 100,
+      "image": "/gallery/theme-red.jpg",
+      "galleryImages": [
+        "/gallery/theme-red.jpg",
+        "/gallery/theme-red-screen.jpg",
+        "/gallery/theme-red-heart.jpg",
+        "/gallery/theme-red-couch.jpg"
+      ],
+      "description": "Intimate romantic suite featuring a giant red floral heart with \"Will You Marry Me?\" neon sign, red shimmer sequin wall, plush red velvet lounge couch (seats 3-4), LOVE lighted boxes, and 180\" 4K laser cinema.",
+      "features": [
+        "Giant Red Floral Heart with \"Will You Marry Me?\" Neon",
+        "Plush Red Velvet Couch & Marble Coffee Table (Seats 3-4)",
+        "180\" 4K Laser Cinema with Dolby 7.1 Audio",
+        "Stacked \"LOVE\" Lighted Block Boxes & Lighted Arch",
+        "Dedicated Cake-Cutting Pedestal Stage & Picket Fence",
+        "100% Private Air-Conditioned Suite with All OTT Streaming"
+      ],
+      "status": "available",
+      "badge": "MOST POPULAR FOR COUPLES"
+    },
+    {
+      "id": "royal-butterfly",
+      "name": "Royal Butterfly",
+      "theme": "Grand VIP Celebration Theme",
+      "occasion": "vip",
+      "occasionLabel": "VIP Celebration",
+      "price": 1499,
+      "duration": "1 Hr 30 Mins",
+      "durationHours": 1.5,
+      "capacity": "Up to 10 Guests",
+      "maxGuests": 10,
+      "includedGuests": 2,
+      "extraGuestPrice": 100,
+      "image": "/gallery/theme-purple.jpg",
+      "galleryImages": [
+        "/gallery/theme-purple.jpg",
+        "/gallery/theme-purple-screen.jpg",
+        "/gallery/theme-purple-movie.jpg",
+        "/gallery/theme-purple-stage.jpg",
+        "/gallery/theme-purple-couch.jpg"
+      ],
+      "description": "Our flagship VIP celebration theatre featuring triple lighted balloon canopies, illuminated butterfly wings, warm \"HAPPY BIRTHDAY\" marquee letters, and gold shimmer wall.",
+      "features": [
+        "Grand Illuminated Butterfly Wings & Canopy",
+        "180\" 4K Laser Projection Cinema Display",
+        "Dolby Atmos 7.1 Room-Calibrated Audio",
+        "Spacious VIP Plush Couch (Seats up to 10)",
+        "Warm \"HAPPY BIRTHDAY\" Marquee Letters",
+        "Gold Shimmer Sequin Backdrop for Photography",
+        "Optional PS5 4K Gaming Lounge Add-On (+₹499 for 2 Persons / 1 Hr)"
+      ],
+      "status": "few_left",
+      "badge": "FLAGSHIP VIP THEATRE"
+    }
   ]
 }
