@@ -161,7 +161,7 @@ export default function AdminDashboard() {
   const [editAdvancePaid, setEditAdvancePaid] = useState('500');
   const [editBalanceDue, setEditBalanceDue] = useState('799');
   const [editStatus, setEditStatus] = useState<Booking['status']>('confirmed');
-  const [editPaymentStatus, setEditPaymentStatus] = useState<'pending' | 'advance_paid' | 'fully_paid'>('advance_paid');
+  const [editPaymentStatus, setEditPaymentStatus] = useState<'pending' | 'advance_paid' | 'fully_paid' | string>('advance_paid');
   const [editPaymentMode, setEditPaymentMode] = useState('UPI (8123635342@sbi)');
   const [editUtrNumber, setEditUtrNumber] = useState('');
   const [editSource, setEditSource] = useState('Website');
