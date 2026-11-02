@@ -7,7 +7,7 @@
 import crypto from 'crypto';
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
-import { normalizeRoomId, checkBookingOverlap } from './time';
+import { normalizeRoomId, checkBookingOverlap, parseTimeRange } from './time';
 import type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem, PaymentLedgerEntry } from './db';
 import {
   readDb,
@@ -461,13 +461,50 @@ export async function getTimeSlots(): Promise<TimeSlot[]> {
     const firestore = getDb();
     const snapshot = await firestore.collection('timeSlots').get();
     if (!snapshot.empty) {
-      return snapshot.docs.map(doc => doc.data() as TimeSlot);
+      const docs = snapshot.docs.map(doc => doc.data() as TimeSlot);
+      const hasOldSlots = docs.some(d => {
+        try {
+          const { startMinutes, endMinutes } = parseTimeRange(d.time);
+          return (endMinutes - startMinutes) !== 90;
+        } catch {
+          return true;
+        }
+      });
+
+      if (!hasOldSlots && docs.length >= 8) {
+        return docs;
+      }
+
+      // Purge outdated 2-hour slots and sync standard 1 hr 30 min slots to Firestore
+      try {
+        const batch = firestore.batch();
+        snapshot.docs.forEach(doc => batch.delete(doc.ref));
+        DEFAULT_TIME_SLOTS.forEach(slot => {
+          const ref = firestore.collection('timeSlots').doc(slot.id);
+          batch.set(ref, slot);
+        });
+        await batch.commit();
+      } catch (e) {
+        console.error('Error overwriting outdated timeSlots in Firestore:', e);
+      }
+      return DEFAULT_TIME_SLOTS;
+    } else {
+      // Seed Firestore with 1 hr 30 min slots
+      try {
+        const batch = firestore.batch();
+        DEFAULT_TIME_SLOTS.forEach(slot => {
+          const ref = firestore.collection('timeSlots').doc(slot.id);
+          batch.set(ref, slot);
+        });
+        await batch.commit();
+      } catch {}
+      return DEFAULT_TIME_SLOTS;
     }
   } catch (err) {
     // fallback
   }
   const local = readDb();
-  return local.timeSlots || DEFAULT_TIME_SLOTS;
+  return DEFAULT_TIME_SLOTS;
 }
 
 // ─── OTP Operations ─────────────────────────────────────────────────────────

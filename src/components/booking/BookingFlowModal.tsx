@@ -271,8 +271,8 @@ export default function BookingFlowModal({
 
   // List of available 30-min start times within operating hours (10:00 AM to 01:30 AM Late Night)
   const availableCustomStartTimes = useMemo(() => {
-    const durationH = activeRoom?.durationHours || 2;
-    const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60; // 11:30 PM for 2hr, 12:30 AM for 1hr
+    const durationH = activeRoom?.durationHours || 1.5;
+    const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60; // 12:00 AM for 1.5hr
 
     const times: { label: string; mins: number }[] = [];
     for (let m = 600; m <= maxStartMins; m += 30) {

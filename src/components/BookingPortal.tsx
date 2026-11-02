@@ -1925,7 +1925,7 @@ export default function BookingPortal({
                 <>
                   <h3 style={{ margin: '16px 0 8px 0', fontFamily: 'var(--font-title)' }}>Available Time Slots</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                    Select a 2-hour celebration slot. Price depends on your selected theme package in the next step.
+                    Select a 1 hr 30 min celebration slot. Price depends on your selected theme package in the next step.
                   </p>
 
                   {loading ? (

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllBookings, getTimeSlots } from '@/lib/firestore';
+import { getAllBookings, getTimeSlots, DEFAULT_TIME_SLOTS } from '@/lib/firestore';
 import { checkBookingOverlap, normalizeRoomId, RoomId, isLateNightSlot } from '@/lib/time';
 
 const GAMING_1HR_SLOTS = [
@@ -34,7 +34,8 @@ export async function GET(request: NextRequest) {
     const isGaming = type === 'gaming' || roomParam.toLowerCase().includes('gaming') || roomParam.toLowerCase().includes('ps5');
     const targetRoomId: RoomId = normalizeRoomId(roomParam || (isGaming ? 'ps5-gaming' : 'angel-wings'));
 
-    const [theaterSlots, allBookings] = await Promise.all([getTimeSlots(), getAllBookings()]);
+    const [theaterSlotsFromDb, allBookings] = await Promise.all([getTimeSlots(), getAllBookings()]);
+    const theaterSlots = (theaterSlotsFromDb && theaterSlotsFromDb.length >= 8) ? theaterSlotsFromDb : DEFAULT_TIME_SLOTS;
 
     const baseSlots = (targetRoomId === 'ps5-gaming' || isGaming) ? GAMING_1HR_SLOTS : theaterSlots;
 

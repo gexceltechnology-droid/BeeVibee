@@ -706,7 +706,7 @@ export default function Home() {
               <span className={styles.stepNumber}>03</span>
               <h3 className={styles.stepCardTitle}>Pick Time Slot</h3>
               <p className={styles.stepCardDesc}>
-                Choose your date and check real-time available 2-hour slots.
+                Choose your date and check real-time available 1 hr 30 min slots.
               </p>
             </div>
 
