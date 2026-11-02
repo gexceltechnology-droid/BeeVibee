@@ -261,3 +261,17 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: #E8BF69;
 }
+
+/* Ensure native select dropdown options always have crisp black letters on white background across all OS & browsers */
+select option,
+option {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  font-weight: 500;
+}
+
+select optgroup {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  font-weight: 700;
+}

@@ -24,8 +24,9 @@ import {
   saveOtp as saveOtpLocal,
   verifyOtp as verifyOtpLocal,
 } from './db';
+import type { RoomExperience } from '../types/booking';
 
-export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem, PaymentLedgerEntry };
+export type { Booking, TimeSlot, FoodOrderItem, FoodOrder, MenuItem, PaymentLedgerEntry, RoomExperience };
 
 export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   { id: 'menu-1', name: 'Maggie', price: 70, description: 'Hot and delicious instant noodles.', category: 'snacks', inStock: true, icon: '🍜' },
@@ -706,5 +707,49 @@ export async function deleteBookingFromFirestore(id: string): Promise<void> {
 
   const { deleteBooking } = await import('./db');
   deleteBooking(cleanId);
+}
+
+// ─── Celebration Suite Themes & Pricing ───────────────────────────────────────
+
+export async function getAllThemes(): Promise<RoomExperience[]> {
+  const { getAllThemesLocal } = await import('./db');
+  const localList = getAllThemesLocal();
+  try {
+    const firestore = getDb();
+    const snapshot = await firestore.collection('themes').get();
+    if (!snapshot.empty) {
+      const fsThemes = snapshot.docs.map(doc => doc.data() as RoomExperience);
+      const map = new Map<string, RoomExperience>();
+      for (const t of localList) map.set(t.id, t);
+      for (const t of fsThemes) map.set(t.id, { ...map.get(t.id), ...t });
+      return Array.from(map.values());
+    }
+  } catch (err) {
+    console.warn('Firestore fetch themes failed, using local DB:', err);
+  }
+  return localList;
+}
+
+export async function updateThemeInFirestore(
+  id: string,
+  updates: Partial<RoomExperience>
+): Promise<RoomExperience> {
+  const cleanId = id.trim();
+  let updatedTheme: RoomExperience | null = null;
+  try {
+    const firestore = getDb();
+    const docRef = firestore.collection('themes').doc(cleanId);
+    await docRef.set(updates, { merge: true });
+    const snap = await docRef.get();
+    if (snap.exists) {
+      updatedTheme = { id: snap.id, ...snap.data() } as RoomExperience;
+    }
+  } catch (err) {
+    console.warn('Firestore update theme failed, using local DB:', err);
+  }
+
+  const { updateThemeLocal } = await import('./db');
+  const localUpdated = updateThemeLocal(cleanId, updates);
+  return updatedTheme || localUpdated;
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -33,9 +33,23 @@ export default function ThemesPage() {
   const [preselectedRoomId, setPreselectedRoomId] = useState<string>('');
   const [preselectedOccasion, setPreselectedOccasion] = useState<OccasionType | ''>('');
   const [preselectedSlot, setPreselectedSlot] = useState<string>('');
+  const [themesList, setThemesList] = useState<RoomExperience[]>(ROOMS);
+
+  useEffect(() => {
+    let isCancelled = false;
+    fetch('/api/themes')
+      .then(res => res.json())
+      .then(data => {
+        if (!isCancelled && data.themes && Array.isArray(data.themes)) {
+          setThemesList(data.themes);
+        }
+      })
+      .catch(() => {});
+    return () => { isCancelled = true; };
+  }, []);
 
   // Filtered rooms
-  const filteredRooms = ROOMS.filter((room) => {
+  const filteredRooms = themesList.filter((room) => {
     if (activeOccasionFilter === 'all') return true;
     return room.occasion === activeOccasionFilter;
   });
@@ -43,7 +57,7 @@ export default function ThemesPage() {
   // Open booking modal directly with specific room or unselected
   const handleQuickBook = (roomId?: string, slotTime?: string) => {
     if (roomId) {
-      const target = ROOMS.find((r) => r.id === roomId);
+      const target = themesList.find((r) => r.id === roomId);
       setPreselectedRoomId(roomId);
       if (target) {
         setPreselectedOccasion(target.occasion);

@@ -140,6 +140,22 @@ export default function BookingFlowModal({
   const [customerEmail, setCustomerEmail] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
+  // Themes list dynamically synchronized with admin panel edits
+  const [activeRooms, setActiveRooms] = useState<RoomExperience[]>(ROOMS);
+
+  useEffect(() => {
+    let isCancelled = false;
+    fetch('/api/themes')
+      .then(res => res.json())
+      .then(data => {
+        if (!isCancelled && data.themes && Array.isArray(data.themes)) {
+          setActiveRooms(data.themes);
+        }
+      })
+      .catch(() => {});
+    return () => { isCancelled = true; };
+  }, []);
+
   // Sync initialPhone whenever it changes and customerPhone hasn't been modified yet
   useEffect(() => {
     if (initialPhone && !customerPhone) {
@@ -176,7 +192,7 @@ export default function BookingFlowModal({
       if (initialDate) setSelectedDate(initialDate);
       if (initialSlot) setSelectedSlot(initialSlot);
       if (initialGuests) {
-        const room = ROOMS.find((r) => r.id === initialRoomId);
+        const room = activeRooms.find((r) => r.id === initialRoomId);
         setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
       }
       if (initialSlot && initialRoomId) {
@@ -187,12 +203,12 @@ export default function BookingFlowModal({
         setCurrentStep(1);
       }
     }
-  }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests, initialSlot]);
+  }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests, initialSlot, activeRooms]);
 
   // Find active room object (null if no room selected yet)
   const activeRoom = useMemo(() => {
-    return selectedRoomId ? ROOMS.find((r) => r.id === selectedRoomId) || null : null;
-  }, [selectedRoomId]);
+    return selectedRoomId ? activeRooms.find((r) => r.id === selectedRoomId) || null : null;
+  }, [selectedRoomId, activeRooms]);
 
   const isGamingRoom = Boolean(activeRoom && (activeRoom.id === 'ps5-gaming' || activeRoom.occasion === 'gaming'));
 
@@ -789,7 +805,7 @@ export default function BookingFlowModal({
                     ) : null}
                   </div>
                   <div className={styles.roomsGrid}>
-                    {ROOMS.map((room) => {
+                    {activeRooms.map((room) => {
                       const isSelected = selectedRoomId === room.id;
                       const isRecommended = selectedOccasion
                         ? (selectedOccasion === 'birthday'

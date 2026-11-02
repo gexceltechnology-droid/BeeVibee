@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Link from 'next/link';
 import styles from './admin.module.css';
 import type { MenuItem, PaymentLedgerEntry } from '@/lib/db';
-import { ROOMS, ADD_ONS } from '@/types/booking';
+import { ROOMS, ADD_ONS, RoomExperience } from '@/types/booking';
 import {
   checkBookingOverlap,
   normalizeRoomId,
@@ -94,8 +94,21 @@ export default function AdminDashboard() {
   const [newlyAddedIds, setNewlyAddedIds] = useState<string[]>([]);
   
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'bookings' | 'calendar' | 'payments' | 'operations' | 'crm' | 'orders' | 'qrs' | 'menu'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'bookings' | 'calendar' | 'payments' | 'operations' | 'crm' | 'orders' | 'qrs' | 'menu' | 'themes'>('overview');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+
+  // Themes & Costs State
+  const [themesList, setThemesList] = useState<RoomExperience[]>(ROOMS);
+  const [savingThemeId, setSavingThemeId] = useState<string | null>(null);
+  const [themeFeedback, setThemeFeedback] = useState<{ id: string; msg: string; type: 'success' | 'error' } | null>(null);
+  const [editingThemeImages, setEditingThemeImages] = useState<Record<string, {
+    image: string;
+    galleryImages: string[];
+    price: number;
+    extraGuestPrice: number;
+    description: string;
+    duration: string;
+  }>>({});
   
   // Filter States
   const [bookingCategoryFilter, setBookingCategoryFilter] = useState<'all' | 'theater' | 'gaming'>('all');
@@ -381,6 +394,79 @@ export default function AdminDashboard() {
     }
   }, []);
 
+  // Fetch Themes & Pricing
+  const fetchThemes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/themes');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.themes && Array.isArray(data.themes)) {
+          setThemesList(data.themes);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching themes:', err);
+    }
+  }, []);
+
+  // Sync editingThemeImages whenever themesList updates
+  useEffect(() => {
+    const initialMap: Record<string, any> = {};
+    for (const t of themesList) {
+      initialMap[t.id] = {
+        image: t.image,
+        galleryImages: t.galleryImages ? [...t.galleryImages] : [t.image],
+        price: t.price,
+        extraGuestPrice: t.extraGuestPrice ?? 100,
+        description: t.description || '',
+        duration: t.duration || '1 Hr 30 Mins',
+      };
+    }
+    setEditingThemeImages(prev => ({ ...initialMap, ...prev }));
+  }, [themesList]);
+
+  // Handle Save Theme
+  const handleSaveTheme = async (themeId: string) => {
+    const currentEdit = editingThemeImages[themeId];
+    if (!currentEdit) return;
+
+    setSavingThemeId(themeId);
+    setThemeFeedback(null);
+
+    try {
+      const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+      const res = await fetch('/api/themes', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
+        body: JSON.stringify({
+          id: themeId,
+          price: Number(currentEdit.price),
+          extraGuestPrice: Number(currentEdit.extraGuestPrice),
+          image: currentEdit.image,
+          galleryImages: currentEdit.galleryImages,
+          description: currentEdit.description,
+          duration: currentEdit.duration,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save theme modifications');
+      }
+
+      setThemesList(prev => prev.map(t => (t.id === themeId ? { ...t, ...data.theme } : t)));
+      setThemeFeedback({ id: themeId, msg: `Saved! Base ₹${currentEdit.price} and imagery updated successfully.`, type: 'success' });
+      setTimeout(() => setThemeFeedback(null), 5000);
+    } catch (err: any) {
+      setThemeFeedback({ id: themeId, msg: err.message || 'Error saving theme.', type: 'error' });
+    } finally {
+      setSavingThemeId(null);
+    }
+  };
+
   const verifyPasscode = useCallback(async (codeToCheck: string) => {
     const cleanCode = codeToCheck.trim();
     if (!cleanCode) {
@@ -405,6 +491,7 @@ export default function AdminDashboard() {
         fetchBookings(cleanCode);
         fetchOrders(cleanCode);
         fetchMenu(cleanCode);
+        fetchThemes();
 
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
           Notification.requestPermission().catch(() => {});
@@ -420,7 +507,7 @@ export default function AdminDashboard() {
     } finally {
       setLoginLoading(false);
     }
-  }, [fetchBookings, fetchOrders, fetchMenu]);
+  }, [fetchBookings, fetchOrders, fetchMenu, fetchThemes]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -434,8 +521,12 @@ export default function AdminDashboard() {
     return () => clearTimeout(timer);
   }, [verifyPasscode]);
 
+  // Initial load of themes regardless of auth
+  useEffect(() => {
+    fetchThemes();
+  }, [fetchThemes]);
 
-  // Polling for live bookings, payments and orders
+  // Polling for live bookings, payments, orders, and themes
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -702,11 +793,9 @@ export default function AdminDashboard() {
 
   const calculatePriceForManualBooking = (roomId: string, guests: number, addOns: string[], slot: string): number => {
     const isGaming = roomId === 'ps5-gaming';
-    let base = 1299;
-    if (roomId === 'angel-wings') base = 1299;
-    else if (roomId === 'red-velvet') base = 1099;
-    else if (roomId === 'royal-butterfly') base = 1499;
-    else if (roomId === 'ps5-gaming') base = 399;
+    const foundTheme = themesList.find(t => t.id === roomId);
+    let base = foundTheme ? foundTheme.price : 1299;
+    if (roomId === 'ps5-gaming') base = 399;
 
     let durationHours = 1.5;
     try {
@@ -722,7 +811,8 @@ export default function AdminDashboard() {
       base = Math.round((base / 1.5) * durationHours);
     }
 
-    const extraGuests = Math.max(0, guests - 2) * 100;
+    const extraRate = foundTheme ? (foundTheme.extraGuestPrice ?? 100) : 100;
+    const extraGuests = Math.max(0, guests - 2) * extraRate;
 
     let addonsSum = 0;
     for (const addonId of addOns) {
@@ -1739,6 +1829,28 @@ export default function AdminDashboard() {
             }}
           >
             CRM
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('themes'); setSearchTerm(''); }}
+            style={{
+              border: 'none',
+              background: activeTab === 'themes' ? '#1e1e24' : 'transparent',
+              color: activeTab === 'themes' ? '#e8bf69' : '#64748b',
+              fontWeight: activeTab === 'themes' ? 700 : 500,
+              fontSize: '0.84rem',
+              padding: '7px 16px',
+              borderRadius: '9999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: activeTab === 'themes' ? '0 2px 8px rgba(232, 191, 105, 0.25)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>🎨</span>
+            <span>Themes & Costs</span>
           </button>
         </div>
 
@@ -2966,6 +3078,400 @@ export default function AdminDashboard() {
         </>
       )}
 
+      {/* TAB: THEMES & COSTS MANAGER */}
+      {activeTab === 'themes' && (
+        <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
+          {/* Header Action Banner */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(232, 191, 105, 0.12) 0%, rgba(18, 18, 24, 0.9) 100%)',
+            border: '1px solid rgba(232, 191, 105, 0.3)',
+            borderRadius: '16px',
+            padding: '24px 28px',
+            marginBottom: '28px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '16px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '1.6rem' }}>🎨</span>
+                <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: '#ffffff', fontFamily: 'var(--font-title)' }}>
+                  Celebration Suite Themes, Imagery & Pricing
+                </h2>
+                <span style={{
+                  background: 'rgba(232, 191, 105, 0.2)',
+                  color: '#e8bf69',
+                  border: '1px solid rgba(232, 191, 105, 0.4)',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  padding: '3px 10px',
+                  borderRadius: '9999px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}>
+                  Live Sync
+                </span>
+              </div>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '750px', lineHeight: 1.5 }}>
+                Directly manage cover photos, gallery images, base booking prices (1 Hr 30 Mins standard slots), and extra guest charges. Saved changes update live on the website and booking calculations.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => fetchThemes()}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.82rem', padding: '8px 16px', borderRadius: '8px' }}
+                title="Refresh latest themes from database"
+              >
+                🔄 Refresh Themes
+              </button>
+            </div>
+          </div>
+
+          {/* Suites Grid */}
+          <div className={styles.themesGrid}>
+            {themesList.map((theme) => {
+              const edit = editingThemeImages[theme.id] || {
+                image: theme.image,
+                galleryImages: theme.galleryImages || [theme.image],
+                price: theme.price,
+                extraGuestPrice: theme.extraGuestPrice ?? 100,
+                description: theme.description,
+                duration: theme.duration || '1 Hr 30 Mins',
+              };
+
+              const isSaving = savingThemeId === theme.id;
+              const feedback = themeFeedback?.id === theme.id ? themeFeedback : null;
+
+              // Color accents
+              const themeGlow = theme.id === 'angel-wings'
+                ? 'rgba(244, 114, 182, 0.2)'
+                : theme.id === 'red-velvet'
+                ? 'rgba(239, 68, 68, 0.2)'
+                : 'rgba(168, 85, 247, 0.2)';
+
+              const themeBorder = theme.id === 'angel-wings'
+                ? 'rgba(244, 114, 182, 0.4)'
+                : theme.id === 'red-velvet'
+                ? 'rgba(239, 68, 68, 0.4)'
+                : 'rgba(168, 85, 247, 0.4)';
+
+              const themeBadgeBg = theme.id === 'angel-wings'
+                ? '#f472b6'
+                : theme.id === 'red-velvet'
+                ? '#ef4444'
+                : '#a855f7';
+
+              return (
+                <div
+                  key={theme.id}
+                  className={styles.themeManagerCard}
+                  style={{ borderColor: themeBorder, boxShadow: `0 8px 30px ${themeGlow}` }}
+                >
+                  {/* Card Header */}
+                  <div className={styles.themeCardHeader}>
+                    <div>
+                      <div className={styles.themeCardTitle}>{theme.name}</div>
+                      <div className={styles.themeCardSubtitle}>
+                        {theme.occasionLabel} • {theme.capacity || 'Up to 6 Guests'}
+                      </div>
+                    </div>
+                    <span
+                      className={styles.themeCardBadge}
+                      style={{ background: themeBadgeBg, color: '#ffffff' }}
+                    >
+                      {theme.id === 'royal-butterfly' ? 'VIP Suite' : theme.id === 'red-velvet' ? 'Couples Pick' : 'Birthday Pick'}
+                    </span>
+                  </div>
+
+                  {/* Visual Cover Preview */}
+                  <div className={styles.themePreviewBanner}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={edit.image}
+                      alt={theme.name}
+                      className={styles.themePreviewImg}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = theme.image || '/gallery/theme-pink.jpg';
+                      }}
+                    />
+                    <div className={styles.themePreviewOverlay}>
+                      <span>🖼️ Cover Photo</span>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className={styles.themeCardBody}>
+                    {/* Pricing Inputs */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <label className={styles.themeSectionLabel}>
+                          <span>💰 Base Price (₹)</span>
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: 700 }}>₹</span>
+                          <input
+                            type="number"
+                            required
+                            min={1}
+                            className={styles.formInputCustom}
+                            style={{ paddingLeft: '28px', fontSize: '1.1rem', fontWeight: 700, color: '#10b981' }}
+                            value={edit.price}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setEditingThemeImages(prev => ({
+                                ...prev,
+                                [theme.id]: { ...edit, price: val }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                          For {theme.duration || '1 Hr 30 Mins'} (2 guests)
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className={styles.themeSectionLabel}>
+                          <span>👥 Extra Guest (₹)</span>
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                          <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#e8bf69', fontWeight: 700 }}>₹</span>
+                          <input
+                            type="number"
+                            min={0}
+                            className={styles.formInputCustom}
+                            style={{ paddingLeft: '28px', fontSize: '1.1rem', fontWeight: 700, color: '#e8bf69' }}
+                            value={edit.extraGuestPrice}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setEditingThemeImages(prev => ({
+                                ...prev,
+                                [theme.id]: { ...edit, extraGuestPrice: val }
+                              }));
+                            }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                          Per person above 2 guests
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cover Image URL */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label className={styles.themeSectionLabel} style={{ margin: 0 }}>
+                          <span>🖼️ Cover Photo URL</span>
+                        </label>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const defaultPreset = theme.id === 'angel-wings'
+                                ? '/gallery/theme-pink.jpg'
+                                : theme.id === 'red-velvet'
+                                ? '/gallery/theme-red.jpg'
+                                : '/gallery/theme-purple.jpg';
+                              setEditingThemeImages(prev => ({
+                                ...prev,
+                                [theme.id]: { ...edit, image: defaultPreset }
+                              }));
+                            }}
+                            style={{
+                              background: 'rgba(255,255,255,0.06)',
+                              border: '1px solid rgba(255,255,255,0.15)',
+                              color: '#cbd5e1',
+                              fontSize: '0.7rem',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                            title="Reset to default local image"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                      <input
+                        type="text"
+                        className={styles.formInputCustom}
+                        placeholder="e.g. /gallery/theme-pink.jpg or https://..."
+                        value={edit.image}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingThemeImages(prev => ({
+                            ...prev,
+                            [theme.id]: { ...edit, image: val }
+                          }));
+                        }}
+                      />
+                    </div>
+
+                    {/* Gallery Images */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label className={styles.themeSectionLabel} style={{ margin: 0 }}>
+                          <span>📸 Gallery Images ({edit.galleryImages?.length || 0})</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newImg = prompt('Enter image URL for gallery (e.g. /gallery/my-photo.jpg or https://...):');
+                            if (newImg && newImg.trim()) {
+                              setEditingThemeImages(prev => ({
+                                ...prev,
+                                [theme.id]: {
+                                  ...edit,
+                                  galleryImages: [...(edit.galleryImages || []), newImg.trim()]
+                                }
+                              }));
+                            }
+                          }}
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.15)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            color: '#60a5fa',
+                            fontSize: '0.72rem',
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                          }}
+                        >
+                          ➕ Add Photo
+                        </button>
+                      </div>
+
+                      {/* Gallery Thumbnails List */}
+                      {edit.galleryImages && edit.galleryImages.length > 0 && (
+                        <div className={styles.galleryThumbRow}>
+                          {edit.galleryImages.map((gImg, idx) => (
+                            <div key={idx} className={styles.galleryThumbItem} title={`${gImg} (Click to set as cover)`}>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={gImg}
+                                alt="Gallery item"
+                                className={styles.galleryThumbImg}
+                                onClick={() => {
+                                  setEditingThemeImages(prev => ({
+                                    ...prev,
+                                    [theme.id]: { ...edit, image: gImg }
+                                  }));
+                                }}
+                                style={{ cursor: 'pointer' }}
+                              />
+                              <button
+                                type="button"
+                                className={styles.galleryThumbRemove}
+                                title="Remove photo"
+                                onClick={() => {
+                                  const updated = edit.galleryImages.filter((_, i) => i !== idx);
+                                  setEditingThemeImages(prev => ({
+                                    ...prev,
+                                    [theme.id]: { ...edit, galleryImages: updated }
+                                  }));
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <span style={{ fontSize: '0.7rem', color: '#94a3b8', display: 'block', marginTop: '4px' }}>
+                        Tip: Click any gallery thumbnail to quickly set it as the main Cover Photo!
+                      </span>
+                    </div>
+
+                    {/* Description / Neon Highlights */}
+                    <div>
+                      <label className={styles.themeSectionLabel}>
+                        <span>✨ Theme Features & Neon Details</span>
+                      </label>
+                      <textarea
+                        rows={3}
+                        className={styles.formTextareaCustom}
+                        style={{ fontSize: '0.85rem', lineHeight: 1.4 }}
+                        value={edit.description}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setEditingThemeImages(prev => ({
+                            ...prev,
+                            [theme.id]: { ...edit, description: val }
+                          }));
+                        }}
+                      />
+                    </div>
+
+                    {/* Feedback Alert */}
+                    {feedback && (
+                      <div style={{
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        background: feedback.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: `1px solid ${feedback.type === 'success' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                        color: feedback.type === 'success' ? '#34d399' : '#f87171',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}>
+                        <span>{feedback.type === 'success' ? '✅' : '⚠️'}</span>
+                        <span>{feedback.msg}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Footer with Save Button */}
+                  <div className={styles.themeCardFooter}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      ID: <code>{theme.id}</code>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => handleSaveTheme(theme.id)}
+                      className="btn btn-primary"
+                      style={{
+                        padding: '8px 20px',
+                        fontSize: '0.86rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        background: isSaving ? '#64748b' : 'linear-gradient(135deg, #e8bf69 0%, #ddaf52 100%)',
+                        color: '#30211f',
+                        boxShadow: '0 4px 14px rgba(232, 191, 105, 0.35)',
+                      }}
+                    >
+                      {isSaving ? (
+                        <>
+                          <span>⏳</span>
+                          <span>Saving Changes...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>💾</span>
+                          <span>Save Theme & Price</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* TAB 6: QR STANDEES */}
       {activeTab === 'qrs' && (
         <div className={styles.qrGridContainer}>
@@ -3482,8 +3988,8 @@ export default function AdminDashboard() {
                       setManualTotalPrice(newPrice);
                     }}
                   >
-                    {ROOMS.map(r => (
-                      <option key={r.id} value={r.id}>
+                    {themesList.map(r => (
+                      <option key={r.id} value={r.id} style={{ color: '#111827', backgroundColor: '#ffffff' }}>
                         {r.name} ({r.occasionLabel}) — Base ₹{r.price} ({r.duration})
                       </option>
                     ))}
@@ -3591,7 +4097,7 @@ export default function AdminDashboard() {
                             '10:00 PM - 11:00 PM',
                             '11:00 PM - 12:00 AM',
                           ] : STANDARD_MANUAL_SLOTS).map(slot => (
-                            <option key={slot} value={slot}>{slot}</option>
+                            <option key={slot} value={slot} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{slot}</option>
                           ))}
                         </select>
                       )}
@@ -3636,7 +4142,7 @@ export default function AdminDashboard() {
                               }}
                             >
                               {['01','02','03','04','05','06','07','08','09','10','11','12'].map(h => (
-                                <option key={h} value={h}>{h}</option>
+                                <option key={h} value={h} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{h}</option>
                               ))}
                             </select>
                             <span style={{ alignSelf: 'center', fontWeight: 700, color: '#94a3b8' }}>:</span>
@@ -3651,7 +4157,7 @@ export default function AdminDashboard() {
                               }}
                             >
                               {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
-                                <option key={m} value={m}>{m}</option>
+                                <option key={m} value={m} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{m}</option>
                               ))}
                             </select>
                             <select
@@ -3664,8 +4170,8 @@ export default function AdminDashboard() {
                                 updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, val, manualCustomEndHour, manualCustomEndMin, manualCustomEndAmPm);
                               }}
                             >
-                              <option value="AM">AM</option>
-                              <option value="PM">PM</option>
+                              <option value="AM" style={{ color: '#111827', backgroundColor: '#ffffff' }}>AM</option>
+                              <option value="PM" style={{ color: '#111827', backgroundColor: '#ffffff' }}>PM</option>
                             </select>
                           </div>
                         </div>
@@ -3687,7 +4193,7 @@ export default function AdminDashboard() {
                               }}
                             >
                               {['01','02','03','04','05','06','07','08','09','10','11','12'].map(h => (
-                                <option key={h} value={h}>{h}</option>
+                                <option key={h} value={h} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{h}</option>
                               ))}
                             </select>
                             <span style={{ alignSelf: 'center', fontWeight: 700, color: '#94a3b8' }}>:</span>
@@ -3702,7 +4208,7 @@ export default function AdminDashboard() {
                               }}
                             >
                               {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
-                                <option key={m} value={m}>{m}</option>
+                                <option key={m} value={m} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{m}</option>
                               ))}
                             </select>
                             <select
@@ -3715,8 +4221,8 @@ export default function AdminDashboard() {
                                 updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, manualCustomStartAmPm, manualCustomEndHour, manualCustomEndMin, val);
                               }}
                             >
-                              <option value="AM">AM</option>
-                              <option value="PM">PM</option>
+                              <option value="AM" style={{ color: '#111827', backgroundColor: '#ffffff' }}>AM</option>
+                              <option value="PM" style={{ color: '#111827', backgroundColor: '#ffffff' }}>PM</option>
                             </select>
                           </div>
                         </div>
@@ -3874,11 +4380,11 @@ export default function AdminDashboard() {
                       value={manualPaymentMode}
                       onChange={(e) => setManualPaymentMode(e.target.value)}
                     >
-                      <option value="Cash">💵 Cash at Venue Counter</option>
-                      <option value="UPI (Counter QR)">📱 UPI Counter QR (Google Pay / PhonePe)</option>
-                      <option value="Card (POS Machine)">💳 Credit / Debit Card (POS)</option>
-                      <option value="Bank Transfer">🏦 Direct Bank Transfer / NEFT</option>
-                      <option value="Pay at Venue Desk">⏳ Zero Advance (Pay at Desk)</option>
+                      <option value="Cash" style={{ color: '#111827', backgroundColor: '#ffffff' }}>💵 Cash at Venue Counter</option>
+                      <option value="UPI (Counter QR)" style={{ color: '#111827', backgroundColor: '#ffffff' }}>📱 UPI Counter QR (Google Pay / PhonePe)</option>
+                      <option value="Card (POS Machine)" style={{ color: '#111827', backgroundColor: '#ffffff' }}>💳 Credit / Debit Card (POS)</option>
+                      <option value="Bank Transfer" style={{ color: '#111827', backgroundColor: '#ffffff' }}>🏦 Direct Bank Transfer / NEFT</option>
+                      <option value="Pay at Venue Desk" style={{ color: '#111827', backgroundColor: '#ffffff' }}>⏳ Zero Advance (Pay at Desk)</option>
                     </select>
                   </div>
                   <div>
@@ -4444,6 +4950,14 @@ export default function AdminDashboard() {
         >
           <span className={styles.mobileNavIcon}>🍔</span>
           <span>Menu</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.mobileNavItem} ${activeTab === 'themes' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('themes')}
+        >
+          <span className={styles.mobileNavIcon}>🎨</span>
+          <span>Themes</span>
         </button>
       </div>
 

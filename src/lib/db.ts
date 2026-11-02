@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { checkBookingOverlap, normalizeRoomId } from './time';
+import { RoomExperience, ROOMS } from '../types/booking';
 
 export interface PaymentLedgerEntry {
   id: string;
@@ -95,6 +96,7 @@ export interface DatabaseSchema {
   otps?: OtpRecord[];
   foodOrders?: FoodOrder[];
   menuItems?: MenuItem[];
+  themes?: RoomExperience[];
 }
 
 const IS_SERVERLESS = process.env.NODE_ENV === 'production' || !!process.env.VERCEL || !!process.env.AWS_LAMBDA_FUNCTION_NAME;
@@ -163,6 +165,10 @@ function initDb(): DatabaseSchema {
     let modified = false;
     if (!parsed.menuItems || parsed.menuItems.length === 0) {
       parsed.menuItems = DEFAULT_MENU_ITEMS;
+      modified = true;
+    }
+    if (!parsed.themes || parsed.themes.length === 0) {
+      parsed.themes = ROOMS;
       modified = true;
     }
     if (modified) {
@@ -736,5 +742,37 @@ export function deleteBooking(id: string): void {
   const db = readDb();
   db.bookings = db.bookings.filter(b => b.id.toLowerCase() !== id.toLowerCase());
   writeDb(db);
+}
+
+// ─── Celebration Suite Themes & Pricing ───────────────────────────────────────
+
+export function getAllThemesLocal(): RoomExperience[] {
+  const db = readDb();
+  if (db.themes && Array.isArray(db.themes) && db.themes.length > 0) {
+    return db.themes;
+  }
+  return ROOMS;
+}
+
+export function updateThemeLocal(id: string, updates: Partial<RoomExperience>): RoomExperience {
+  const db = readDb();
+  const currentThemes: RoomExperience[] = db.themes && Array.isArray(db.themes) && db.themes.length > 0 
+    ? [...db.themes] 
+    : [...ROOMS];
+
+  const index = currentThemes.findIndex(t => t.id === id);
+  if (index === -1) {
+    throw new Error(`Theme with id "${id}" not found.`);
+  }
+
+  const updatedTheme: RoomExperience = {
+    ...currentThemes[index],
+    ...updates,
+    id, // preserve immutable ID
+  };
+
+  currentThemes[index] = updatedTheme;
+  writeDb({ ...db, themes: currentThemes });
+  return updatedTheme;
 }
 
