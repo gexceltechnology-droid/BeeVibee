@@ -42,13 +42,14 @@ export const DEFAULT_MENU_ITEMS: MenuItem[] = [
 ];
 
 export const DEFAULT_TIME_SLOTS: TimeSlot[] = [
-  { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
-  { id: 'slot-2', time: '12:30 PM - 02:30 PM', label: 'Matinee Show', basePrice: 999 },
-  { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
-  { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
-  { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999 },
-  { id: 'slot-7', time: '11:00 PM - 01:00 AM', label: 'Late Night Bash', basePrice: 999 },
+  { id: 'slot-1', time: '10:00 AM - 11:30 AM', label: 'Morning Show', basePrice: 999 },
+  { id: 'slot-2', time: '12:00 PM - 01:30 PM', label: 'Matinee Show', basePrice: 999 },
+  { id: 'slot-3', time: '02:00 PM - 03:30 PM', label: 'Afternoon Vibe', basePrice: 999 },
+  { id: 'slot-4', time: '04:00 PM - 05:30 PM', label: 'Sunset Vibe', basePrice: 999 },
+  { id: 'slot-5', time: '06:00 PM - 07:30 PM', label: 'Evening Show', basePrice: 999 },
+  { id: 'slot-6', time: '08:00 PM - 09:30 PM', label: 'Prime Night Vibe', basePrice: 999 },
+  { id: 'slot-7', time: '10:00 PM - 11:30 PM', label: 'Midnight Vibe', basePrice: 999 },
+  { id: 'slot-8', time: '12:00 AM - 01:30 AM', label: 'Late Night Bash', basePrice: 999 },
 ];
 
 let adminApp: App | null = null;

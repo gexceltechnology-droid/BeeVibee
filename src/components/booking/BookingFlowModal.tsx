@@ -77,13 +77,14 @@ function parseSlotStartMinutes(slotTimeStr: string): number {
 }
 
 const DEFAULT_SLOTS: TimeSlotOption[] = [
-  { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
-  { id: 'slot-2', time: '12:30 PM - 02:30 PM', label: 'Matinee Show', basePrice: 999 },
-  { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
-  { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
-  { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Night Vibe', basePrice: 999 },
-  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999, isLateNight: true, lateNightFee: 500 },
-  { id: 'slot-7', time: '11:00 PM - 01:00 AM', label: 'Late Night Bash', basePrice: 999, isLateNight: true, lateNightFee: 500 },
+  { id: 'slot-1', time: '10:00 AM - 11:30 AM', label: 'Morning Show', basePrice: 999 },
+  { id: 'slot-2', time: '12:00 PM - 01:30 PM', label: 'Matinee Show', basePrice: 999 },
+  { id: 'slot-3', time: '02:00 PM - 03:30 PM', label: 'Afternoon Vibe', basePrice: 999 },
+  { id: 'slot-4', time: '04:00 PM - 05:30 PM', label: 'Sunset Vibe', basePrice: 999 },
+  { id: 'slot-5', time: '06:00 PM - 07:30 PM', label: 'Evening Show', basePrice: 999 },
+  { id: 'slot-6', time: '08:00 PM - 09:30 PM', label: 'Prime Night Vibe', basePrice: 999 },
+  { id: 'slot-7', time: '10:00 PM - 11:30 PM', label: 'Midnight Vibe', basePrice: 999, isLateNight: true, lateNightFee: 500 },
+  { id: 'slot-8', time: '12:00 AM - 01:30 AM', label: 'Late Night Bash', basePrice: 999, isLateNight: true, lateNightFee: 500 },
 ];
 
 const GAMING_SLOTS: TimeSlotOption[] = [
@@ -300,7 +301,7 @@ export default function BookingFlowModal({
   // Helper to build formatted custom time range string
   const getCustomSlotString = (startTime: string) => {
     if (!startTime) return '';
-    const durationH = activeRoom?.durationHours || 2;
+    const durationH = activeRoom?.durationHours || 1.5;
     try {
       const startMins = parseTimeToMinutes(startTime);
       const endMins = startMins + durationH * 60;
@@ -462,6 +463,8 @@ export default function BookingFlowModal({
 
   // Toggle add-on checkbox
   const toggleAddOn = (addonId: string) => {
+    const item = ADD_ONS.find((a) => a.id === addonId);
+    if (item?.allowedRoomId && item.allowedRoomId !== activeRoom?.id) return;
     setSelectedAddOns((prev) =>
       prev.includes(addonId) ? prev.filter((id) => id !== addonId) : [...prev, addonId]
     );
@@ -803,6 +806,12 @@ export default function BookingFlowModal({
                             if (!selectedOccasion) {
                               setSelectedOccasion(room.occasion);
                             }
+                            setSelectedAddOns((prev) =>
+                              prev.filter((id) => {
+                                const item = ADD_ONS.find((a) => a.id === id);
+                                return !item?.allowedRoomId || item.allowedRoomId === room.id;
+                              })
+                            );
                           }}
                         >
                           <div className={styles.roomSelectImgWrap}>
@@ -1040,7 +1049,7 @@ export default function BookingFlowModal({
                             <div className={styles.customSlotField}>
                               <label className={styles.customSlotLabel}>Session Duration:</label>
                               <div className={styles.customSlotDurationPill}>
-                                ⏱️ {activeRoom?.duration || '2 Hours'} Session
+                                ⏱️ {activeRoom?.duration || '1 Hr 30 Mins'} Session
                               </div>
                             </div>
                           </div>
@@ -1150,7 +1159,7 @@ export default function BookingFlowModal({
                 ) : null}
 
                 <div className={styles.addonsGrid}>
-                  {ADD_ONS.map((addon) => {
+                  {ADD_ONS.filter((addon) => !addon.allowedRoomId || addon.allowedRoomId === activeRoom?.id).map((addon) => {
                     const isChecked = selectedAddOns.includes(addon.id);
                     const isWaivedByCoupon = pricing.isCouponValid && (addon.id === 'addon-fog' || addon.id === 'addon-led' || addon.id === 'addon-decor');
 
@@ -1413,7 +1422,7 @@ export default function BookingFlowModal({
                     <img src={activeRoom?.image || ''} alt={activeRoom?.name || 'Private Suite'} className={styles.billRoomThumb} />
                     <div className={styles.billRoomMeta}>
                       <strong>{activeRoom?.name || 'Private Suite'}</strong>
-                      <span className={styles.billRoomSession}>{activeRoom?.duration || '2 Hours'} Session • Up to {activeRoom?.maxGuests || 6} Guests • 180&quot; 4K Cinema</span>
+                      <span className={styles.billRoomSession}>{activeRoom?.duration || '1 Hr 30 Mins'} Session • Up to {activeRoom?.maxGuests || 6} Guests • 180&quot; 4K Cinema</span>
                       <span className={styles.billRoomDateSlot}>📅 {selectedDate} • ⏰ {selectedSlot || 'Selected Slot'}</span>
                     </div>
                     <div className={styles.billRoomBase}>

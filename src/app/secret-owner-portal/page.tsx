@@ -700,7 +700,7 @@ export default function AdminDashboard() {
     const targetRoom = presetRoom || 'angel-wings';
     const targetDate = presetDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
     const isGaming = targetRoom === 'ps5-gaming';
-    const targetSlot = presetSlot || (isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM');
+    const targetSlot = presetSlot || (isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM');
     const autoPrice = calculatePriceForManualBooking(targetRoom, 2, [], targetSlot);
 
     setManualCustomerName('');
@@ -2453,13 +2453,14 @@ export default function AdminDashboard() {
                 '10:00 PM - 11:00 PM',
                 '11:00 PM - 12:00 AM',
               ] : [
-                '10:00 AM - 12:00 PM',
-                '12:30 PM - 02:30 PM',
-                '03:00 PM - 05:00 PM',
-                '05:30 PM - 07:30 PM',
-                '08:00 PM - 10:00 PM',
-                '10:00 PM - 12:00 AM',
-                '11:00 PM - 01:00 AM',
+                '10:00 AM - 11:30 AM',
+                '12:00 PM - 01:30 PM',
+                '02:00 PM - 03:30 PM',
+                '04:00 PM - 05:30 PM',
+                '06:00 PM - 07:30 PM',
+                '08:00 PM - 09:30 PM',
+                '10:00 PM - 11:30 PM',
+                '12:00 AM - 01:30 AM',
               ];
 
               const roomBookings = bookings.filter(b => {
@@ -3360,9 +3361,14 @@ export default function AdminDashboard() {
                       const newRoom = e.target.value;
                       setManualRoomId(newRoom);
                       const isG = newRoom === 'ps5-gaming';
-                      const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
+                      const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
                       setManualTimeSlot(defaultSlot);
-                      const newPrice = calculatePriceForManualBooking(newRoom, manualGuests, manualAddOns, defaultSlot);
+                      const validAddOns = manualAddOns.filter(name => {
+                        const item = ADD_ONS.find(a => a.name === name || a.id === name);
+                        return !item?.allowedRoomId || item.allowedRoomId === newRoom;
+                      });
+                      setManualAddOns(validAddOns);
+                      const newPrice = calculatePriceForManualBooking(newRoom, manualGuests, validAddOns, defaultSlot);
                       setManualTotalPrice(newPrice);
                     }}
                   >
@@ -3414,13 +3420,14 @@ export default function AdminDashboard() {
                         '10:00 PM - 11:00 PM',
                         '11:00 PM - 12:00 AM',
                       ] : [
-                        '10:00 AM - 12:00 PM',
-                        '12:30 PM - 02:30 PM',
-                        '03:00 PM - 05:00 PM',
-                        '05:30 PM - 07:30 PM',
-                        '08:00 PM - 10:00 PM',
-                        '10:00 PM - 12:00 AM',
-                        '11:00 PM - 01:00 AM',
+                        '10:00 AM - 11:30 AM',
+                        '12:00 PM - 01:30 PM',
+                        '02:00 PM - 03:30 PM',
+                        '04:00 PM - 05:30 PM',
+                        '06:00 PM - 07:30 PM',
+                        '08:00 PM - 09:30 PM',
+                        '10:00 PM - 11:30 PM',
+                        '12:00 AM - 01:30 AM',
                       ]).map(slot => (
                         <option key={slot} value={slot}>{slot}</option>
                       ))}
@@ -3432,7 +3439,7 @@ export default function AdminDashboard() {
                 <div style={{ marginBottom: '16px' }}>
                   <label className={styles.formLabelCustom}>Select Add-ons (Optional)</label>
                   <div className={styles.addonChecklist}>
-                    {ADD_ONS.map(addon => {
+                    {ADD_ONS.filter(addon => !addon.allowedRoomId || addon.allowedRoomId === manualRoomId).map(addon => {
                       const isChecked = manualAddOns.includes(addon.name);
                       return (
                         <div

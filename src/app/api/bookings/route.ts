@@ -205,6 +205,8 @@ export async function POST(request: NextRequest) {
         addonsTotal += 450;
       } else if (nameStr.includes('DSLR') || nameStr.includes('Photography') || nameStr.includes('addon-dslr')) {
         addonsTotal += 499;
+      } else if (nameStr.includes('PS5') || nameStr.includes('Gaming Lounge') || nameStr.includes('addon-gaming-ps5')) {
+        addonsTotal += 499;
       }
     }
 
@@ -232,8 +234,8 @@ export async function POST(request: NextRequest) {
         Number(totalPrice) === (999 + lateNightFee) ||
         isQuickBooking
       ) {
-        // Month Offer: Any theme at flat ₹999 / 2 hours promo!
-        pkgBase = Math.round((999 / 2) * durationHours);
+        // Month Offer: Any theme at flat ₹999 / 1.5 hours promo!
+        pkgBase = Math.round((999 / 1.5) * durationHours);
       } else {
         let packagePrice = 1499;
         if (targetRoomId === 'royal-butterfly') {
@@ -252,7 +254,7 @@ export async function POST(request: NextRequest) {
             packagePrice = 1099;
           }
         }
-        pkgBase = Math.round((packagePrice / 2) * durationHours);
+        pkgBase = Math.round((packagePrice / 1.5) * durationHours);
       }
     }
 

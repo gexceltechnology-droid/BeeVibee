@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
     // Return active bookings for client-side overlap checks
     const activeBookings = roomBookings.map((b) => ({ id: b.id, date: b.date, timeSlot: b.timeSlot }));
 
-    // Also build a full map of availability for all 4 rooms so any UI can read other rooms
-    const ALL_ROOM_IDS: RoomId[] = ['angel-wings', 'red-velvet', 'royal-butterfly', 'ps5-gaming'];
+    // Also build a full map of availability for celebration suites so any UI can read other rooms
+    const ALL_ROOM_IDS: RoomId[] = ['angel-wings', 'red-velvet', 'royal-butterfly'];
     const roomsAvailability: Record<string, { slots: typeof slotsWithAvailability; activeBookings: typeof activeBookings }> = {};
     for (const rid of ALL_ROOM_IDS) {
       const isRidGaming = rid === 'ps5-gaming';

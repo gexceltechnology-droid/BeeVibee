@@ -124,35 +124,9 @@ const THEATRES: TheatreInfo[] = [
       '🍿 Food & Cafe Available*',
       '🔒 100% Private & Soundproof Suite',
       '💜 Grand Triple Canopies & Butterfly Stage',
+      '🎮 Optional PS5 Gaming Lounge Add-On (+₹499 for 2 Persons / 1 Hr)',
       '🎂 Add Cake (₹499), Fog entry etc in next step',
       '🎁 Complimentary Cold Fog & LED Name Board*',
-    ],
-  },
-  {
-    id: 'theatre-gaming',
-    roomId: 'ps5-gaming',
-    occasion: 'gaming',
-    title: 'PS5 Gaming Lounge',
-    themeName: 'Next-Gen 4K Arena',
-    badge: '180" 4K Low Latency 🎮',
-    capacity: 'Max 4 Players',
-    maxGuests: 4,
-    originalPrice: 199,
-    promoPrice: 99,
-    priceNote: '₹99 per person / hour',
-    themeSlug: 'purple',
-    images: [
-      '/gallery/ps5-gaming.jpg',
-      '/gaming-banner.jpg',
-      '/gallery/theme-purple-screen.jpg',
-    ],
-    features: [
-      '🎮 Max 4 Players',
-      '🍿 Cafe & Snack Platter Available*',
-      '🔒 100% Private Gaming Arena',
-      '⚡ Sony PS5 + 2 Wireless DualSense Controllers',
-      '🏆 EA FC 24, Tekken 8, MK1 & Spider-Man 2',
-      '🎟️ Only ₹99 / person / hour',
     ],
   },
 ];
@@ -505,7 +479,7 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                     <div className={styles.priceRow}>
                       <span className={styles.priceOriginal}>₹{theatre.originalPrice}</span>
                       <span className={styles.priceCurrent}>₹{theatre.promoPrice}</span>
-                      <span className={styles.priceUnit}>/ 2 hrs</span>
+                      <span className={styles.priceUnit}>/ 1 hr 30 min</span>
                     </div>
                     <span className={styles.pricePromoNote}>{theatre.priceNote}</span>
                   </div>

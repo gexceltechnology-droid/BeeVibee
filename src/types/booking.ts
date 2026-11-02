@@ -38,6 +38,7 @@ export interface AddOnItem {
   icon: string;
   description: string;
   popular?: boolean;
+  allowedRoomId?: string;
 }
 
 export interface TimeSlotOption {
@@ -92,14 +93,6 @@ export const OCCASIONS: OccasionItem[] = [
     tagline: 'Grand royal butterfly canopy, gold sequin shimmer wall',
     recommendedRoomId: 'royal-butterfly',
   },
-  {
-    id: 'gaming',
-    label: 'PS5 Gaming Lounge',
-    shortLabel: 'Gaming',
-    icon: '🎮',
-    tagline: 'Sony PlayStation 5 on 180" 4K display with 2 wireless controllers',
-    recommendedRoomId: 'ps5-gaming',
-  },
 ];
 
 export const ROOMS: RoomExperience[] = [
@@ -110,8 +103,8 @@ export const ROOMS: RoomExperience[] = [
     occasion: 'birthday',
     occasionLabel: 'Birthday Celebration',
     price: 1299,
-    duration: '2 Hours',
-    durationHours: 2,
+    duration: '1 Hr 30 Mins',
+    durationHours: 1.5,
     capacity: 'Up to 6 Guests',
     maxGuests: 6,
     includedGuests: 2,
@@ -142,8 +135,8 @@ export const ROOMS: RoomExperience[] = [
     occasion: 'anniversary',
     occasionLabel: 'Date / Anniversary',
     price: 1099,
-    duration: '2 Hours',
-    durationHours: 2,
+    duration: '1 Hr 30 Mins',
+    durationHours: 1.5,
     capacity: 'Up to 3 - 4 Guests',
     maxGuests: 4,
     includedGuests: 2,
@@ -174,8 +167,8 @@ export const ROOMS: RoomExperience[] = [
     occasion: 'vip',
     occasionLabel: 'VIP Celebration',
     price: 1499,
-    duration: '2 Hours',
-    durationHours: 2,
+    duration: '1 Hr 30 Mins',
+    durationHours: 1.5,
     capacity: 'Up to 10 Guests',
     maxGuests: 10,
     includedGuests: 2,
@@ -196,36 +189,10 @@ export const ROOMS: RoomExperience[] = [
       'Spacious VIP Plush Couch (Seats up to 10)',
       'Warm "HAPPY BIRTHDAY" Marquee Letters',
       'Gold Shimmer Sequin Backdrop for Photography',
+      'Optional PS5 4K Gaming Lounge Add-On (+₹499 for 2 Persons / 1 Hr)',
     ],
     status: 'few_left',
     badge: 'FLAGSHIP VIP THEATRE',
-  },
-  {
-    id: 'ps5-gaming',
-    name: 'PS5 Gaming Lounge',
-    theme: 'Next-Gen Multiplayer Gaming',
-    occasion: 'gaming',
-    occasionLabel: 'Gaming',
-    price: 399,
-    duration: '1 Hour',
-    durationHours: 1,
-    capacity: 'Up to 4 Players',
-    maxGuests: 4,
-    includedGuests: 2,
-    extraGuestPrice: 100,
-    image: '/gallery/ps5-gaming.jpg',
-    galleryImages: ['/gallery/ps5-gaming.jpg', '/gallery/theme-purple.jpg'],
-    description: 'High-octane private gaming arena featuring 1 Sony PlayStation 5 console, 2 DualSense wireless controllers, top multiplayer AAA games, and 180" low-latency display.',
-    features: [
-      'Sony PlayStation 5 Console + 2 DualSense Controllers',
-      '180" Low-Latency 4K Gaming Screen',
-      'Top Games: EA FC 24 / FIFA, Tekken 8, Mortal Kombat 1, Spider-Man 2',
-      'Dolby 7.1 Directional Surround Sound',
-      '100% Private Room — Zero Queues or Distractions',
-      'Open Daily Till 12 AM Midnight',
-    ],
-    status: 'available',
-    badge: 'PS5 4K GAMING',
   },
 ];
 
@@ -272,5 +239,15 @@ export const ADD_ONS: AddOnItem[] = [
     category: 'food',
     icon: '🍿',
     description: '1 medium cup of popcorn and coke.',
+  },
+  {
+    id: 'addon-gaming-ps5',
+    name: 'PS5 Gaming Lounge (1 Hour)',
+    price: 499,
+    category: 'media',
+    icon: '🎮',
+    description: '1 Hour of PS5 4K Gaming on 180" display with 2 wireless DualSense controllers (Fixed ₹499 for 2 persons). Exclusive add-on for Royal Butterfly Purple Suite.',
+    popular: true,
+    allowedRoomId: 'royal-butterfly',
   },
 ];

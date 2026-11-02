@@ -67,7 +67,7 @@ const GALLERY_ITEMS: GalleryItem[] = [
     image: '/gallery/theme-purple.jpg',
     description: 'Authentic BeeVibe Purple VIP Suite featuring grand balloon arches, illuminated butterfly wings, warm "HAPPY BIRTHDAY" marquee letters, gold shimmer backdrop, and 180" 4K laser projection screen with Dolby Atmos 7.1.',
     tags: ['Illuminated Butterfly Wings', 'HAPPY BIRTHDAY Marquee', 'Purple Balloon Arches', '180" 4K Screen', 'Dolby Atmos 7.1'],
-    highlights: ['2 Hours Private VIP Session', '100% Private VIP Celebration Hall', 'Cake Cutting Pedestal Stage'],
+    highlights: ['1 Hr 30 Mins Private VIP Session', '100% Private VIP Celebration Hall', 'Cake Cutting Pedestal Stage'],
     bookingLink: '/book?theme=purple'
   },
   {

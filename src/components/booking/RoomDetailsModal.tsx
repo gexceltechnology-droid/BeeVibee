@@ -134,7 +134,7 @@ export default function RoomDetailsModal({
                 <h4 className={styles.sectionTitle}>Customizable Add-Ons Available</h4>
                 <p className={styles.sectionSubtitle}>You can add any of these during your booking step:</p>
                 <div className={styles.addonsList}>
-                  {ADD_ONS.slice(0, 4).map((addon) => (
+                  {ADD_ONS.filter((addon) => !addon.allowedRoomId || addon.allowedRoomId === room.id).map((addon) => (
                     <div key={addon.id} className={styles.addonItem}>
                       <span className={styles.addonIcon}>{addon.icon}</span>
                       <div className={styles.addonInfo}>
