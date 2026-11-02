@@ -5,7 +5,26 @@ import Link from 'next/link';
 import styles from './admin.module.css';
 import type { MenuItem, PaymentLedgerEntry } from '@/lib/db';
 import { ROOMS, ADD_ONS } from '@/types/booking';
-import { checkBookingOverlap, normalizeRoomId, isLateNightSlot } from '@/lib/time';
+import {
+  checkBookingOverlap,
+  normalizeRoomId,
+  isLateNightSlot,
+  parseTimeRange,
+  convert12HourToMinutes,
+  convertMinutesTo12Hour,
+  formatCustomTimeRange,
+} from '@/lib/time';
+
+const STANDARD_MANUAL_SLOTS = [
+  '10:00 AM - 11:30 AM',
+  '12:00 PM - 01:30 PM',
+  '02:00 PM - 03:30 PM',
+  '04:00 PM - 05:30 PM',
+  '06:00 PM - 07:30 PM',
+  '08:00 PM - 09:30 PM',
+  '10:00 PM - 11:30 PM',
+  '12:00 AM - 01:30 AM',
+];
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
 import SewayaOverview from '@/components/admin/SewayaOverview';
@@ -125,7 +144,14 @@ export default function AdminDashboard() {
   const [manualDate, setManualDate] = useState<string>(() => {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   });
-  const [manualTimeSlot, setManualTimeSlot] = useState<string>('10:00 AM - 12:00 PM');
+  const [manualTimeSlot, setManualTimeSlot] = useState<string>('10:00 AM - 11:30 AM');
+  const [manualSlotMode, setManualSlotMode] = useState<'standard' | 'custom'>('standard');
+  const [manualCustomStartHour, setManualCustomStartHour] = useState<string>('10');
+  const [manualCustomStartMin, setManualCustomStartMin] = useState<string>('00');
+  const [manualCustomStartAmPm, setManualCustomStartAmPm] = useState<'AM' | 'PM'>('AM');
+  const [manualCustomEndHour, setManualCustomEndHour] = useState<string>('11');
+  const [manualCustomEndMin, setManualCustomEndMin] = useState<string>('30');
+  const [manualCustomEndAmPm, setManualCustomEndAmPm] = useState<'AM' | 'PM'>('AM');
   const [manualGuests, setManualGuests] = useState<number>(2);
   const [manualAddOns, setManualAddOns] = useState<string[]>([]);
   const [manualTotalPrice, setManualTotalPrice] = useState<number>(1299);
@@ -682,6 +708,20 @@ export default function AdminDashboard() {
     else if (roomId === 'royal-butterfly') base = 1499;
     else if (roomId === 'ps5-gaming') base = 399;
 
+    let durationHours = 1.5;
+    try {
+      const { startMinutes, endMinutes } = parseTimeRange(slot);
+      const diff = endMinutes - startMinutes;
+      if (diff > 0) {
+        durationHours = diff / 60;
+      }
+    } catch {}
+
+    // Scale base price proportionally for custom durations (e.g. 2 hours, 3 hours)
+    if (durationHours > 0 && !isGaming && durationHours !== 1.5) {
+      base = Math.round((base / 1.5) * durationHours);
+    }
+
     const extraGuests = Math.max(0, guests - 2) * 100;
 
     let addonsSum = 0;
@@ -696,11 +736,74 @@ export default function AdminDashboard() {
     return base + extraGuests + addonsSum + lateNightFee;
   };
 
+  const updateManualCustomSlot = (
+    sH = manualCustomStartHour,
+    sM = manualCustomStartMin,
+    sAp = manualCustomStartAmPm,
+    eH = manualCustomEndHour,
+    eM = manualCustomEndMin,
+    eAp = manualCustomEndAmPm
+  ) => {
+    const startM = convert12HourToMinutes(parseInt(sH, 10), parseInt(sM, 10), sAp);
+    let endM = convert12HourToMinutes(parseInt(eH, 10), parseInt(eM, 10), eAp);
+    if (endM <= startM) {
+      endM += 24 * 60;
+    }
+    const slotStr = formatCustomTimeRange(startM, endM);
+    setManualTimeSlot(slotStr);
+    const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, slotStr);
+    setManualTotalPrice(newPrice);
+  };
+
+  const applyManualQuickDuration = (durationH: number) => {
+    const startM = convert12HourToMinutes(
+      parseInt(manualCustomStartHour, 10),
+      parseInt(manualCustomStartMin, 10),
+      manualCustomStartAmPm
+    );
+    const endM = startM + Math.round(durationH * 60);
+    const { hour12, minute, ampm } = convertMinutesTo12Hour(endM);
+    const eHStr = hour12.toString().padStart(2, '0');
+    const eMStr = minute.toString().padStart(2, '0');
+    setManualCustomEndHour(eHStr);
+    setManualCustomEndMin(eMStr);
+    setManualCustomEndAmPm(ampm);
+
+    const slotStr = formatCustomTimeRange(startM, endM);
+    setManualTimeSlot(slotStr);
+    const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, slotStr);
+    setManualTotalPrice(newPrice);
+  };
+
   const handleOpenManualBooking = (presetRoom?: string, presetSlot?: string, presetDate?: string) => {
     const targetRoom = presetRoom || 'angel-wings';
     const targetDate = presetDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
     const isGaming = targetRoom === 'ps5-gaming';
-    const targetSlot = presetSlot || (isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM');
+    const defaultStandardSlot = isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
+    const targetSlot = presetSlot || defaultStandardSlot;
+
+    const isStandard = STANDARD_MANUAL_SLOTS.includes(targetSlot);
+    setManualSlotMode(isStandard ? 'standard' : (presetSlot ? 'custom' : 'standard'));
+
+    try {
+      const { startMinutes, endMinutes } = parseTimeRange(targetSlot);
+      const s = convertMinutesTo12Hour(startMinutes);
+      const e = convertMinutesTo12Hour(endMinutes);
+      setManualCustomStartHour(s.hour12.toString().padStart(2, '0'));
+      setManualCustomStartMin(s.minute.toString().padStart(2, '0'));
+      setManualCustomStartAmPm(s.ampm);
+      setManualCustomEndHour(e.hour12.toString().padStart(2, '0'));
+      setManualCustomEndMin(e.minute.toString().padStart(2, '0'));
+      setManualCustomEndAmPm(e.ampm);
+    } catch {
+      setManualCustomStartHour('10');
+      setManualCustomStartMin('00');
+      setManualCustomStartAmPm('AM');
+      setManualCustomEndHour('11');
+      setManualCustomEndMin('30');
+      setManualCustomEndAmPm('AM');
+    }
+
     const autoPrice = calculatePriceForManualBooking(targetRoom, 2, [], targetSlot);
 
     setManualCustomerName('');
@@ -738,6 +841,13 @@ export default function AdminDashboard() {
     }
     if (!manualDate || !manualTimeSlot) {
       setManualError('Date and time slot are required.');
+      return;
+    }
+
+    try {
+      parseTimeRange(manualTimeSlot);
+    } catch {
+      setManualError('Please provide a valid time slot format, e.g. "10:00 AM - 11:30 AM" or "02:15 PM - 03:45 PM".');
       return;
     }
 
@@ -3381,58 +3491,310 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Date & Time Slot Grid */}
-                <div className={styles.formGridTwo}>
-                  <div>
-                    <label className={styles.formLabelCustom}>Booking Date *</label>
-                    <input
-                      type="date"
-                      required
-                      className={styles.formInputCustom}
-                      value={manualDate}
-                      onChange={(e) => setManualDate(e.target.value)}
-                    />
+                <div style={{ marginBottom: '16px' }}>
+                  <div className={styles.formGridTwo} style={{ marginBottom: manualSlotMode === 'custom' ? '12px' : '0' }}>
+                    <div>
+                      <label className={styles.formLabelCustom}>Booking Date *</label>
+                      <input
+                        type="date"
+                        required
+                        className={styles.formInputCustom}
+                        value={manualDate}
+                        onChange={(e) => setManualDate(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <label className={styles.formLabelCustom} style={{ margin: 0 }}>Showtime Slot *</label>
+                        <div style={{ display: 'flex', gap: '4px', background: 'rgba(255, 255, 255, 0.06)', padding: '2px', borderRadius: '6px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setManualSlotMode('standard');
+                              const fallbackSlot = manualRoomId === 'ps5-gaming' ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
+                              const slotToUse = STANDARD_MANUAL_SLOTS.includes(manualTimeSlot) ? manualTimeSlot : fallbackSlot;
+                              setManualTimeSlot(slotToUse);
+                              const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, slotToUse);
+                              setManualTotalPrice(newPrice);
+                            }}
+                            style={{
+                              background: manualSlotMode === 'standard' ? 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)' : 'transparent',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            ⏱️ Predefined
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setManualSlotMode('custom');
+                              try {
+                                const { startMinutes, endMinutes } = parseTimeRange(manualTimeSlot);
+                                const s = convertMinutesTo12Hour(startMinutes);
+                                const e = convertMinutesTo12Hour(endMinutes);
+                                setManualCustomStartHour(s.hour12.toString().padStart(2, '0'));
+                                setManualCustomStartMin(s.minute.toString().padStart(2, '0'));
+                                setManualCustomStartAmPm(s.ampm);
+                                setManualCustomEndHour(e.hour12.toString().padStart(2, '0'));
+                                setManualCustomEndMin(e.minute.toString().padStart(2, '0'));
+                                setManualCustomEndAmPm(e.ampm);
+                              } catch {}
+                            }}
+                            style={{
+                              background: manualSlotMode === 'custom' ? 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' : 'transparent',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '4px 10px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            ⚙️ Custom Timing
+                          </button>
+                        </div>
+                      </div>
+
+                      {manualSlotMode === 'standard' && (
+                        <select
+                          className={styles.formInputCustom}
+                          value={manualTimeSlot}
+                          onChange={(e) => {
+                            const newSlot = e.target.value;
+                            setManualTimeSlot(newSlot);
+                            const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, newSlot);
+                            setManualTotalPrice(newPrice);
+                          }}
+                        >
+                          {(manualRoomId === 'ps5-gaming' ? [
+                            '10:00 AM - 11:00 AM',
+                            '11:00 AM - 12:00 PM',
+                            '12:00 PM - 01:00 PM',
+                            '01:00 PM - 02:00 PM',
+                            '02:00 PM - 03:00 PM',
+                            '03:00 PM - 04:00 PM',
+                            '04:00 PM - 05:00 PM',
+                            '05:00 PM - 06:00 PM',
+                            '06:00 PM - 07:00 PM',
+                            '07:00 PM - 08:00 PM',
+                            '08:00 PM - 09:00 PM',
+                            '09:00 PM - 10:00 PM',
+                            '10:00 PM - 11:00 PM',
+                            '11:00 PM - 12:00 AM',
+                          ] : STANDARD_MANUAL_SLOTS).map(slot => (
+                            <option key={slot} value={slot}>{slot}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <label className={styles.formLabelCustom}>Showtime Slot *</label>
-                    <select
-                      className={styles.formInputCustom}
-                      value={manualTimeSlot}
-                      onChange={(e) => {
-                        const newSlot = e.target.value;
-                        setManualTimeSlot(newSlot);
-                        const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, newSlot);
-                        setManualTotalPrice(newPrice);
-                      }}
-                    >
-                      {(manualRoomId === 'ps5-gaming' ? [
-                        '10:00 AM - 11:00 AM',
-                        '11:00 AM - 12:00 PM',
-                        '12:00 PM - 01:00 PM',
-                        '01:00 PM - 02:00 PM',
-                        '02:00 PM - 03:00 PM',
-                        '03:00 PM - 04:00 PM',
-                        '04:00 PM - 05:00 PM',
-                        '05:00 PM - 06:00 PM',
-                        '06:00 PM - 07:00 PM',
-                        '07:00 PM - 08:00 PM',
-                        '08:00 PM - 09:00 PM',
-                        '09:00 PM - 10:00 PM',
-                        '10:00 PM - 11:00 PM',
-                        '11:00 PM - 12:00 AM',
-                      ] : [
-                        '10:00 AM - 11:30 AM',
-                        '12:00 PM - 01:30 PM',
-                        '02:00 PM - 03:30 PM',
-                        '04:00 PM - 05:30 PM',
-                        '06:00 PM - 07:30 PM',
-                        '08:00 PM - 09:30 PM',
-                        '10:00 PM - 11:30 PM',
-                        '12:00 AM - 01:30 AM',
-                      ]).map(slot => (
-                        <option key={slot} value={slot}>{slot}</option>
-                      ))}
-                    </select>
-                  </div>
+
+                  {/* Expanded Custom Slot Timing Configuration Box */}
+                  {manualSlotMode === 'custom' && (
+                    <div style={{
+                      background: 'rgba(168, 85, 247, 0.07)',
+                      border: '1px solid rgba(168, 85, 247, 0.3)',
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#f3e8ff', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          ⚙️ Custom Showtime Slot Builder
+                        </span>
+                        <span style={{ fontSize: '0.72rem', color: '#cbd5e1' }}>
+                          Operating hours: 10:00 AM – 01:30 AM Late Night
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+                        {/* Start Time Selector */}
+                        <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                          <span style={{ fontSize: '0.73rem', color: '#cbd5e1', fontWeight: 700, display: 'block', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                            START TIME
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', flex: 1, minWidth: '55px' }}
+                              value={manualCustomStartHour}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setManualCustomStartHour(val);
+                                updateManualCustomSlot(val, manualCustomStartMin, manualCustomStartAmPm, manualCustomEndHour, manualCustomEndMin, manualCustomEndAmPm);
+                              }}
+                            >
+                              {['01','02','03','04','05','06','07','08','09','10','11','12'].map(h => (
+                                <option key={h} value={h}>{h}</option>
+                              ))}
+                            </select>
+                            <span style={{ alignSelf: 'center', fontWeight: 700, color: '#94a3b8' }}>:</span>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', flex: 1, minWidth: '55px' }}
+                              value={manualCustomStartMin}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setManualCustomStartMin(val);
+                                updateManualCustomSlot(manualCustomStartHour, val, manualCustomStartAmPm, manualCustomEndHour, manualCustomEndMin, manualCustomEndAmPm);
+                              }}
+                            >
+                              {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', width: '65px' }}
+                              value={manualCustomStartAmPm}
+                              onChange={(e) => {
+                                const val = e.target.value as 'AM' | 'PM';
+                                setManualCustomStartAmPm(val);
+                                updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, val, manualCustomEndHour, manualCustomEndMin, manualCustomEndAmPm);
+                              }}
+                            >
+                              <option value="AM">AM</option>
+                              <option value="PM">PM</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* End Time Selector */}
+                        <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                          <span style={{ fontSize: '0.73rem', color: '#cbd5e1', fontWeight: 700, display: 'block', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                            END TIME
+                          </span>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', flex: 1, minWidth: '55px' }}
+                              value={manualCustomEndHour}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setManualCustomEndHour(val);
+                                updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, manualCustomStartAmPm, val, manualCustomEndMin, manualCustomEndAmPm);
+                              }}
+                            >
+                              {['01','02','03','04','05','06','07','08','09','10','11','12'].map(h => (
+                                <option key={h} value={h}>{h}</option>
+                              ))}
+                            </select>
+                            <span style={{ alignSelf: 'center', fontWeight: 700, color: '#94a3b8' }}>:</span>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', flex: 1, minWidth: '55px' }}
+                              value={manualCustomEndMin}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setManualCustomEndMin(val);
+                                updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, manualCustomStartAmPm, manualCustomEndHour, val, manualCustomEndAmPm);
+                              }}
+                            >
+                              {['00','05','10','15','20','25','30','35','40','45','50','55'].map(m => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                            <select
+                              className={styles.formInputCustom}
+                              style={{ padding: '8px 6px', fontSize: '0.85rem', width: '65px' }}
+                              value={manualCustomEndAmPm}
+                              onChange={(e) => {
+                                const val = e.target.value as 'AM' | 'PM';
+                                setManualCustomEndAmPm(val);
+                                updateManualCustomSlot(manualCustomStartHour, manualCustomStartMin, manualCustomStartAmPm, manualCustomEndHour, manualCustomEndMin, val);
+                              }}
+                            >
+                              <option value="AM">AM</option>
+                              <option value="PM">PM</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Quick Duration Buttons */}
+                      <div>
+                        <span style={{ fontSize: '0.73rem', color: '#94a3b8', display: 'block', marginBottom: '6px' }}>
+                          ⚡ Quick Duration Presets (Sets End Time from Start Time):
+                        </span>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                          {[
+                            { label: '+1 Hr', duration: 1 },
+                            { label: '+1.5 Hrs (Standard)', duration: 1.5 },
+                            { label: '+2 Hrs', duration: 2 },
+                            { label: '+2.5 Hrs', duration: 2.5 },
+                            { label: '+3 Hrs (Movie & Party)', duration: 3 },
+                            { label: '+4 Hrs (Mega Bash)', duration: 4 },
+                          ].map((btn) => (
+                            <button
+                              key={btn.label}
+                              type="button"
+                              onClick={() => applyManualQuickDuration(btn.duration)}
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                border: '1px solid rgba(255, 255, 255, 0.15)',
+                                color: '#f1f5f9',
+                                padding: '5px 10px',
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {btn.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Active Formatted Slot & Direct Manual Text Override */}
+                      <div style={{ background: 'rgba(0, 0, 0, 0.35)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.74rem', color: '#cbd5e1', fontWeight: 600 }}>
+                            Formatted Slot String (Editable or auto-generated):
+                          </span>
+                          {isLateNightSlot(manualTimeSlot) && (
+                            <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 700, background: 'rgba(245, 158, 11, 0.15)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                              🌙 Late Night Slot (+₹500 Surcharge)
+                            </span>
+                          )}
+                        </div>
+                        <input
+                          type="text"
+                          className={styles.formInputCustom}
+                          style={{
+                            fontWeight: 700,
+                            color: '#38bdf8',
+                            fontSize: '0.95rem',
+                            letterSpacing: '0.5px',
+                            background: 'rgba(0, 0, 0, 0.5)',
+                            borderColor: '#38bdf8',
+                          }}
+                          value={manualTimeSlot}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setManualTimeSlot(val);
+                            const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, val);
+                            setManualTotalPrice(newPrice);
+                          }}
+                          placeholder="e.g. 02:15 PM - 03:45 PM"
+                        />
+                        <small style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', marginTop: '4px' }}>
+                          This exact string will be saved and blocked in the calendar.
+                        </small>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Add-ons Checklist */}

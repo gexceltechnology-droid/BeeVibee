@@ -103,11 +103,11 @@ export async function POST(request: NextRequest) {
     const dd = String(todayIST.getDate()).padStart(2, '0');
     const todayStr = `${yyyy}-${mm}-${dd}`;
 
-    if (date < todayStr) {
+    if (!isAdmin && date < todayStr) {
       return NextResponse.json({ error: 'Cannot book slots on a past date.' }, { status: 400 });
     }
 
-    if (date === todayStr) {
+    if (!isAdmin && date === todayStr) {
       try {
         const { parseTimeRange } = await import('@/lib/time');
         const { startMinutes } = parseTimeRange(timeSlot);
