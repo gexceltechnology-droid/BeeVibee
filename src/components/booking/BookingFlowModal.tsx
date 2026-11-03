@@ -48,6 +48,7 @@ import {
   formatCustomTimeRange,
   isLateNightSlot,
   VENUE_CLOSE_MINUTES,
+  checkBookingOverlap,
 } from '@/lib/time';
 import { isFirebaseConfigured } from '@/lib/firebase';
 import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode, isPhoneVerificationDisabled } from '@/lib/firebaseAuth';
@@ -107,6 +108,24 @@ const GAMING_SLOTS: TimeSlotOption[] = [
   { id: 'g-14', time: '11:00 PM - 12:00 AM', label: 'Slot 14', basePrice: 399 },
 ];
 
+const CELEBRATION_DURATIONS = [
+  { hours: 1.5, label: '1 Hr 30 Mins (Standard)' },
+  { hours: 2, label: '2 Hours' },
+  { hours: 2.5, label: '2 Hrs 30 Mins' },
+  { hours: 3, label: '3 Hours (Full Movie & Party)' },
+  { hours: 3.5, label: '3 Hrs 30 Mins' },
+  { hours: 4, label: '4 Hours (Mega Celebration)' },
+];
+
+const GAMING_DURATIONS = [
+  { hours: 1, label: '1 Hour (Standard Gaming)' },
+  { hours: 1.5, label: '1 Hr 30 Mins' },
+  { hours: 2, label: '2 Hours' },
+  { hours: 2.5, label: '2 Hrs 30 Mins' },
+  { hours: 3, label: '3 Hours (Pro Gaming Session)' },
+  { hours: 4, label: '4 Hours (Gaming Marathon)' },
+];
+
 export default function BookingFlowModal({
   isOpen,
   onClose,
@@ -129,6 +148,8 @@ export default function BookingFlowModal({
   const [selectedSlot, setSelectedSlot] = useState<string>(initialSlot || '');
   const [isCustomSlot, setIsCustomSlot] = useState(false);
   const [customStartTime, setCustomStartTime] = useState('04:30 PM');
+  const [customDurationHours, setCustomDurationHours] = useState<number>(1.5);
+  const [activeBookings, setActiveBookings] = useState<{ id?: string; date: string; timeSlot: string }[]>([]);
   const [guestCount, setGuestCount] = useState<number>(() => {
     const room = initialRoomId ? ROOMS.find((r) => r.id === initialRoomId) : null;
     return room ? Math.min(initialGuests, room.maxGuests) : (initialGuests || 2);
@@ -237,6 +258,7 @@ export default function BookingFlowModal({
         if (savedDraft.selectedSlot) setSelectedSlot(savedDraft.selectedSlot);
         if (savedDraft.isCustomSlot !== undefined) setIsCustomSlot(savedDraft.isCustomSlot);
         if (savedDraft.customStartTime) setCustomStartTime(savedDraft.customStartTime);
+        if (savedDraft.customDurationHours) setCustomDurationHours(Number(savedDraft.customDurationHours));
         if (savedDraft.guestCount) setGuestCount(savedDraft.guestCount);
         if (Array.isArray(savedDraft.selectedAddOns)) setSelectedAddOns(savedDraft.selectedAddOns);
         if (savedDraft.cakeFlavor) setCakeFlavor(savedDraft.cakeFlavor);
@@ -269,6 +291,7 @@ export default function BookingFlowModal({
           selectedSlot,
           isCustomSlot,
           customStartTime,
+          customDurationHours,
           guestCount,
           selectedAddOns,
           cakeFlavor,
@@ -338,6 +361,9 @@ export default function BookingFlowModal({
           const data = await res.json();
           if (!isCancelled && data.slots && Array.isArray(data.slots)) {
             setAvailableSlots(data.slots);
+            if (data.activeBookings && Array.isArray(data.activeBookings)) {
+              setActiveBookings(data.activeBookings);
+            }
             return;
           }
         }
@@ -384,8 +410,8 @@ export default function BookingFlowModal({
 
   // List of available 30-min start times within operating hours (10:00 AM to 01:30 AM Late Night)
   const availableCustomStartTimes = useMemo(() => {
-    const durationH = activeRoom?.durationHours || 1.5;
-    const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60; // 12:00 AM for 1.5hr
+    const durationH = isCustomSlot ? customDurationHours : (activeRoom?.durationHours || 1.5);
+    const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60;
 
     const times: { label: string; mins: number }[] = [];
     for (let m = 600; m <= maxStartMins; m += 30) {
@@ -409,12 +435,11 @@ export default function BookingFlowModal({
 
     const futureTimes = times.filter((t) => t.mins > currentMinutes);
     return futureTimes.map((t) => t.label);
-  }, [activeRoom?.durationHours, selectedDate]);
+  }, [isCustomSlot, customDurationHours, activeRoom?.durationHours, selectedDate]);
 
   // Helper to build formatted custom time range string
-  const getCustomSlotString = (startTime: string) => {
+  const getCustomSlotString = (startTime: string, durationH = customDurationHours) => {
     if (!startTime) return '';
-    const durationH = activeRoom?.durationHours || 1.5;
     try {
       const startMins = parseTimeToMinutes(startTime);
       const endMins = startMins + durationH * 60;
@@ -425,17 +450,23 @@ export default function BookingFlowModal({
   };
 
   const calculatedCustomSlot = useMemo(() => {
-    return getCustomSlotString(customStartTime);
-  }, [customStartTime, activeRoom?.durationHours]);
+    return getCustomSlotString(customStartTime, customDurationHours);
+  }, [customStartTime, customDurationHours]);
+
+  // Check if candidate custom slot conflicts with an existing booking in this room
+  const isCustomSlotBooked = useMemo(() => {
+    if (!isCustomSlot || !calculatedCustomSlot || !activeBookings.length) return false;
+    return checkBookingOverlap(selectedDate, calculatedCustomSlot, activeBookings);
+  }, [isCustomSlot, calculatedCustomSlot, selectedDate, activeBookings]);
 
   // Keep customStartTime valid when date or suite duration changes
   useEffect(() => {
     if (isCustomSlot && availableCustomStartTimes.length > 0 && !availableCustomStartTimes.includes(customStartTime)) {
       const nextTime = availableCustomStartTimes[0];
       setCustomStartTime(nextTime);
-      setSelectedSlot(getCustomSlotString(nextTime));
+      setSelectedSlot(getCustomSlotString(nextTime, customDurationHours));
     }
-  }, [selectedDate, isCustomSlot, availableCustomStartTimes, customStartTime]);
+  }, [selectedDate, isCustomSlot, availableCustomStartTimes, customStartTime, customDurationHours]);
 
   const handleSelectCustomSlot = () => {
     setIsCustomSlot(true);
@@ -444,7 +475,7 @@ export default function BookingFlowModal({
       chosen = availableCustomStartTimes[0];
       setCustomStartTime(chosen);
     }
-    const slotStr = getCustomSlotString(chosen);
+    const slotStr = getCustomSlotString(chosen, customDurationHours);
     if (slotStr) {
       setSelectedSlot(slotStr);
     }
@@ -452,7 +483,15 @@ export default function BookingFlowModal({
 
   const handleCustomStartTimeChange = (newStartTime: string) => {
     setCustomStartTime(newStartTime);
-    const slotStr = getCustomSlotString(newStartTime);
+    const slotStr = getCustomSlotString(newStartTime, customDurationHours);
+    if (slotStr) {
+      setSelectedSlot(slotStr);
+    }
+  };
+
+  const handleCustomDurationChange = (newDuration: number) => {
+    setCustomDurationHours(newDuration);
+    const slotStr = getCustomSlotString(customStartTime, newDuration);
     if (slotStr) {
       setSelectedSlot(slotStr);
     }
@@ -492,12 +531,33 @@ export default function BookingFlowModal({
         isCouponValid: false,
       };
     }
-    const isCelebrationTheme = activeRoom.occasion !== 'gaming';
+    const isGaming = activeRoom.occasion === 'gaming';
+    const isCelebrationTheme = !isGaming;
     const isCouponValid = (appliedCoupon === 'BEEVIBE999' || appliedCoupon === 'VIBE999') && isCelebrationTheme;
 
-    const baseRoomPrice = activeRoom.price;
-    const effectiveRoomPrice = isCouponValid ? 999 : baseRoomPrice;
-    const roomDiscount = isCouponValid ? Math.max(0, baseRoomPrice - 999) : 0;
+    const activeDuration = isCustomSlot
+      ? customDurationHours
+      : (activeRoom.durationHours || (isGaming ? 1 : 1.5));
+
+    let baseRoomPrice = activeRoom.price;
+    let effectiveRoomPrice = activeRoom.price;
+    let roomDiscount = 0;
+
+    if (isGaming) {
+      baseRoomPrice = Math.round(activeRoom.price * activeDuration);
+      effectiveRoomPrice = baseRoomPrice;
+      roomDiscount = 0;
+    } else {
+      // Celebration suites: standard package base is for 1.5 hours
+      baseRoomPrice = Math.round((activeRoom.price / 1.5) * activeDuration);
+      if (isCouponValid) {
+        effectiveRoomPrice = Math.round((999 / 1.5) * activeDuration);
+        roomDiscount = Math.max(0, baseRoomPrice - effectiveRoomPrice);
+      } else {
+        effectiveRoomPrice = baseRoomPrice;
+        roomDiscount = 0;
+      }
+    }
 
     const extraGuests = Math.max(0, guestCount - activeRoom.includedGuests);
     const extraGuestCost = extraGuests * activeRoom.extraGuestPrice;
@@ -548,8 +608,9 @@ export default function BookingFlowModal({
       advance,
       remaining,
       isCouponValid,
+      durationHours: activeDuration,
     };
-  }, [activeRoom, guestCount, selectedAddOns, appliedCoupon, selectedSlot]);
+  }, [activeRoom, guestCount, selectedAddOns, appliedCoupon, selectedSlot, isCustomSlot, customDurationHours]);
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponInput).trim().toUpperCase();
@@ -734,6 +795,7 @@ export default function BookingFlowModal({
           date: selectedDate,
           eventDate: selectedDate,
           timeSlot: selectedSlot || availableSlots[0]?.time || '10:00 AM - 12:00 PM',
+          durationHours: isCustomSlot ? customDurationHours : (activeRoom.durationHours || 1.5),
           packageName: `${activeRoom.name} (${activeRoom.occasionLabel})`,
           roomId: activeRoom.id,
           theme: activeRoom.id,
@@ -880,7 +942,7 @@ export default function BookingFlowModal({
                       <>
                         <div className={styles.mobileBillRoom}>
                           <div>
-                            <strong>{activeRoom.name} ({activeRoom.duration})</strong>
+                            <strong>{activeRoom.name} ({isCustomSlot ? `${customDurationHours} Hours Session` : activeRoom.duration})</strong>
                             <span className={styles.mobileBillDate}>{selectedDate} {selectedSlot ? `• ${selectedSlot}${isCustomSlot ? ' (Custom)' : ''}` : ''} • {guestCount} Guests</span>
                           </div>
                           <span className={styles.mobileBillRoomPrice}>₹{pricing.baseRoomPrice}</span>
@@ -1293,20 +1355,46 @@ export default function BookingFlowModal({
                             </div>
 
                             <div className={styles.customSlotField}>
-                              <label className={styles.customSlotLabel}>Session Duration:</label>
-                              <div className={styles.customSlotDurationPill}>
-                                ⏱️ {activeRoom?.duration || '1 Hr 30 Mins'} Session
-                              </div>
+                              <label htmlFor="custom-slot-duration-select" className={styles.customSlotLabel}>
+                                <Clock size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
+                                Session Duration:
+                              </label>
+                              <select
+                                id="custom-slot-duration-select"
+                                value={customDurationHours}
+                                onChange={(e) => handleCustomDurationChange(parseFloat(e.target.value))}
+                                className={styles.customSlotSelect}
+                              >
+                                {(isGamingRoom ? GAMING_DURATIONS : CELEBRATION_DURATIONS).map((d) => (
+                                  <option key={d.hours} value={d.hours}>
+                                    ⏱️ {d.label}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
                           </div>
 
                           <div className={styles.customSlotSummaryBox}>
-                            <span className={styles.customSlotSummaryLabel}>Your Selected Custom Slot:</span>
-                            <strong className={styles.customSlotSummaryTime}>
-                              {calculatedCustomSlot.replace('-', '–')}
-                            </strong>
-                            <span className={styles.customSlotSummaryBadge}>Custom Slot</span>
+                            <div>
+                              <span className={styles.customSlotSummaryLabel}>Your Selected Custom Slot:</span>
+                              <strong className={styles.customSlotSummaryTime}>
+                                {calculatedCustomSlot.replace('-', '–')}
+                              </strong>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                              <span className={styles.customSlotDurationTag}>
+                                ⏱️ {customDurationHours} {customDurationHours === 1 ? 'Hour' : 'Hours'} Session
+                              </span>
+                              <span className={styles.customSlotSummaryBadge}>Custom Slot</span>
+                            </div>
                           </div>
+
+                          {isCustomSlotBooked && (
+                            <div className={styles.customSlotWarning}>
+                              <AlertCircle size={15} />
+                              <span>This custom slot overlaps with an existing booking in this suite. Please pick another start time or duration.</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </>
@@ -1333,7 +1421,7 @@ export default function BookingFlowModal({
                   <button
                     type="button"
                     className="btn btn-primary"
-                    disabled={!selectedSlot}
+                    disabled={!selectedSlot || (isCustomSlot && isCustomSlotBooked)}
                     onClick={() => {
                       if (isGamingRoom) {
                         setSelectedAddOns([]);
@@ -2020,6 +2108,10 @@ export default function BookingFlowModal({
                       <strong className={styles.ticketVal}>{selectedSlot || '10:00 AM - 12:00 PM'}</strong>
                     </div>
                     <div className={styles.ticketItem}>
+                      <span className={styles.ticketLabel}>DURATION</span>
+                      <strong className={styles.ticketVal}>{isCustomSlot ? `${customDurationHours} Hours` : (activeRoom?.duration || '1.5 Hours')}</strong>
+                    </div>
+                    <div className={styles.ticketItem}>
                       <span className={styles.ticketLabel}>GUESTS</span>
                       <strong className={styles.ticketVal}>{guestCount} Guests</strong>
                     </div>
@@ -2164,7 +2256,7 @@ export default function BookingFlowModal({
                 {/* Price Breakdown */}
                 <div className={styles.breakdownList}>
                   <div className={styles.breakdownRow}>
-                    <span>Experience Suite {activeRoom ? `(${activeRoom.duration})` : ''}</span>
+                    <span>Experience Suite {activeRoom ? `(${isCustomSlot ? `${customDurationHours} Hours Session` : activeRoom.duration})` : ''}</span>
                     <strong>{activeRoom ? `₹${pricing.baseRoomPrice}` : '—'}</strong>
                   </div>
 

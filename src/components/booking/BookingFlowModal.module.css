@@ -867,6 +867,30 @@
   text-transform: uppercase;
 }
 
+.customSlotDurationTag {
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #FDE68A;
+}
+
+.customSlotWarning {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #B91C1C;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
 @media (max-width: 580px) {
   .slotCard {
     padding: 10px 4px;
