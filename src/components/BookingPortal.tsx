@@ -6,6 +6,9 @@ import styles from './BookingPortal.module.css';
 import { checkBookingOverlap, formatCustomTimeRange, parseTimeRange, convert12HourToMinutes, convertMinutesTo12Hour, validateSlotOperatingHours, VENUE_CLOSE_MINUTES, isLateNightSlot } from '@/lib/time';
 import { Download, Printer, FileText } from 'lucide-react';
 import { getAdminWhatsAppDeepLink } from '@/lib/whatsappUtils';
+import type { ConfirmationResult } from 'firebase/auth';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { setupRecaptcha, sendFirebaseOtp, verifyFirebaseOtpCode, isPhoneVerificationDisabled } from '@/lib/firebaseAuth';
 
 import { EXPERIENCES } from '@/lib/experiences';
 
@@ -150,6 +153,7 @@ export default function BookingPortal({
   const [otpSent, setOtpSent] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
   const [customerBookings, setCustomerBookings] = useState<ConfirmedBooking[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState('');
@@ -278,13 +282,15 @@ export default function BookingPortal({
     return () => clearTimeout(timer);
   }, [isCustomerLoggedIn, customerPhone]);
 
-  const handleLoginWithPhone = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setLoginLoading(true);
 
     const trimmedPhone = loginPhone.trim();
     if (!trimmedPhone || trimmedPhone.replace(/\D/g, '').length < 10) {
-      setLoginError('Please enter a valid 10-digit phone number.');
+      setLoginError('Please enter a valid 10-digit mobile number.');
+      setLoginLoading(false);
       return;
     }
 
@@ -293,16 +299,109 @@ export default function BookingPortal({
       finalPhone = `${countryCode}${finalPhone.replace(/^0+/, '')}`;
     }
 
-    sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
-    sessionStorage.setItem('bee_vibe_phone_token', 'bypassed');
-    setPhoneVerificationToken('bypassed');
-    setCustomerPhone(finalPhone);
-    setIsCustomerLoggedIn(true);
-    setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
-    setShowLoginModal(false);
+    if (isPhoneVerificationDisabled()) {
+      sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', 'bypassed');
+      setPhoneVerificationToken('bypassed');
+      setCustomerPhone(finalPhone);
+      setIsCustomerLoggedIn(true);
+      setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
+      setShowLoginModal(false);
+      setLoginLoading(false);
+      setCurrentView('orders');
+      fetchCustomerBookings(finalPhone);
+      return;
+    }
+
+    try {
+      if (isFirebaseConfigured()) {
+        const recaptchaVerifier = setupRecaptcha('firebase-recaptcha-btn');
+        if (!recaptchaVerifier) {
+          throw new Error('Failed to initialize Firebase reCAPTCHA.');
+        }
+        const fbRes = await sendFirebaseOtp(finalPhone, recaptchaVerifier);
+        if (!fbRes.success || !fbRes.confirmationResult) {
+          throw new Error(fbRes.error || 'Failed to send OTP via Firebase.');
+        }
+        setFirebaseConfirmation(fbRes.confirmationResult);
+        setOtpSent(true);
+      } else {
+        const res = await fetch('/api/otp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to send OTP.');
+        setOtpSent(true);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send OTP. Please check the number.';
+      setLoginError(msg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoginError('');
-    setCurrentView('orders');
-    fetchCustomerBookings(finalPhone);
+    setLoginLoading(true);
+
+    const trimmedPhone = loginPhone.trim();
+    let finalPhone = trimmedPhone;
+    if (!finalPhone.startsWith('+')) {
+      finalPhone = `${countryCode}${finalPhone.replace(/^0+/, '')}`;
+    }
+    const trimmedCode = otpCode.trim();
+
+    if (!trimmedPhone || !trimmedCode) {
+      setLoginError('Phone number and OTP code are required.');
+      setLoginLoading(false);
+      return;
+    }
+
+    try {
+      let token = '';
+      if (isFirebaseConfigured() && firebaseConfirmation) {
+        const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, trimmedCode);
+        if (!fbVerify.success || !fbVerify.idToken) {
+          throw new Error(fbVerify.error || 'Invalid OTP code.');
+        }
+        token = fbVerify.idToken;
+      } else {
+        const res = await fetch('/api/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone, code: trimmedCode }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
+        token = data.verificationToken;
+      }
+
+      // Login successful
+      sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', token);
+      setPhoneVerificationToken(token);
+      setCustomerPhone(finalPhone);
+      setIsCustomerLoggedIn(true);
+      setCustomerDetails((prev) => ({ ...prev, phone: finalPhone }));
+
+      // Reset
+      setShowLoginModal(false);
+      setOtpSent(false);
+      setLoginPhone('');
+      setOtpCode('');
+      setLoginError('');
+      setCurrentView('orders');
+      fetchCustomerBookings(finalPhone);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to verify OTP.';
+      setLoginError(msg);
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
 
@@ -1328,32 +1427,70 @@ export default function BookingPortal({
               Enter your mobile phone number to look up your reservations and digital passes.
             </p>
 
-            <form onSubmit={handleLoginWithPhone}>
-              <div className={styles.phoneInputContainer}>
-                <select
-                  className={styles.countryCodeSelect}
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                >
-                  <option value="+91">🇮🇳 +91</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+971">🇦🇪 +971</option>
-                  <option value="+65">🇸🇬 +65</option>
-                  <option value="+61">🇦🇺 +61</option>
-                </select>
-                <input
-                  type="tel"
-                  placeholder="Enter Phone (Ex: 9900106474)"
-                  className={styles.loginPhoneInput}
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className={styles.loginSubmitBtn}>
-                Access My Bookings
-              </button>
+            <form onSubmit={!otpSent ? handleSendOTP : handleVerifyOTP}>
+              {!otpSent ? (
+                <>
+                  <div className={styles.phoneInputContainer}>
+                    <select
+                      className={styles.countryCodeSelect}
+                      value={countryCode}
+                      onChange={(e) => setCountryCode(e.target.value)}
+                      disabled={loginLoading}
+                    >
+                      <option value="+91">🇮🇳 +91</option>
+                      <option value="+1">🇺🇸 +1</option>
+                      <option value="+44">🇬🇧 +44</option>
+                      <option value="+971">🇦🇪 +971</option>
+                      <option value="+65">🇸🇬 +65</option>
+                      <option value="+61">🇦🇺 +61</option>
+                    </select>
+                    <input
+                      type="tel"
+                      placeholder="Enter Phone (Ex: 9900106474)"
+                      className={styles.loginPhoneInput}
+                      value={loginPhone}
+                      onChange={(e) => setLoginPhone(e.target.value)}
+                      disabled={loginLoading}
+                      required
+                    />
+                  </div>
+                  <button type="submit" id="firebase-recaptcha-btn" className={styles.loginSubmitBtn} disabled={loginLoading}>
+                    {loginLoading ? 'Sending OTP...' : 'Send OTP Code'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    placeholder="••••••"
+                    className={styles.loginInput}
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    disabled={loginLoading}
+                    required
+                  />
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setOtpSent(false)}
+                      disabled={loginLoading}
+                      style={{ flex: 1, padding: '10px' }}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="submit"
+                      className={styles.loginSubmitBtn}
+                      disabled={loginLoading || otpCode.trim().length < 4}
+                      style={{ flex: 2 }}
+                    >
+                      {loginLoading ? 'Verifying...' : 'Verify & View'}
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
 
             {loginError && <div className={styles.loginError} style={{ marginTop: '16px' }}>{loginError}</div>}

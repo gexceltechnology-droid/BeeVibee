@@ -7,7 +7,10 @@ const TOKEN_SECRET = process.env.PHONE_VERIFICATION_SECRET || process.env.ADMIN_
  * Check if phone verification / SMS OTP is currently disabled
  */
 export function isPhoneVerificationDisabled(): boolean {
-  return true;
+  return (
+    process.env.NEXT_PUBLIC_DISABLE_PHONE_VERIFICATION === 'true' ||
+    process.env.DISABLE_PHONE_VERIFICATION === 'true'
+  );
 }
 
 /**

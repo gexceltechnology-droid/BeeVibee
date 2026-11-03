@@ -15,7 +15,10 @@ declare global {
  * Check if SMS OTP phone verification is disabled (e.g., during maintenance or quota recharge)
  */
 export function isPhoneVerificationDisabled(): boolean {
-  return true;
+  return (
+    process.env.NEXT_PUBLIC_DISABLE_PHONE_VERIFICATION === 'true' ||
+    process.env.DISABLE_PHONE_VERIFICATION === 'true'
+  );
 }
 
 /**

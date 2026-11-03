@@ -16,6 +16,7 @@ import {
 } from '@/lib/firestore';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
+import { verifyCustomerPhone } from '@/lib/phoneVerification';
 
 // GET all bookings (Admin endpoint)
 export async function GET(request: NextRequest) {
@@ -79,6 +80,20 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Mandatory Server-Side Phone Verification
+      const tokenToVerify = body.phoneVerificationToken || body.firebaseIdToken || body.idToken;
+      if (!tokenToVerify) {
+        return NextResponse.json({
+          error: 'Phone number verification is required. Please verify your mobile number with OTP before booking.'
+        }, { status: 403 });
+      }
+
+      const verificationResult = await verifyCustomerPhone(trimmedPhone, tokenToVerify);
+      if (!verificationResult.valid) {
+        return NextResponse.json({
+          error: verificationResult.reason || 'Phone verification failed or expired. Please re-verify your phone number via OTP.'
+        }, { status: 403 });
+      }
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

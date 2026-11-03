@@ -19,6 +19,9 @@ import {
   VENUE_CLOSE_MINUTES
 } from '@/lib/time';
 import { getAdminWhatsAppDeepLink, BookingData } from '@/lib/whatsappUtils';
+import { isFirebaseConfigured } from '@/lib/firebase';
+import { sendFirebaseOtp, setupRecaptcha, verifyFirebaseOtpCode, isPhoneVerificationDisabled } from '@/lib/firebaseAuth';
+import type { ConfirmationResult } from 'firebase/auth';
 
 interface ConfirmedBooking {
   id: string;
@@ -122,13 +125,19 @@ export default function GamingBookPage() {
   const [utrNumber, setUtrNumber] = useState('');
   const [upiCopied, setUpiCopied] = useState(false);
 
-  // Auth
+  // Auth / OTP
   const [isCustomerLoggedIn, setIsCustomerLoggedIn] = useState(false);
   const [customerPhone, setCustomerPhone] = useState('');
+  const [phoneVerificationToken, setPhoneVerificationToken] = useState(() =>
+    typeof window !== 'undefined' ? sessionStorage.getItem('bee_vibe_phone_token') || '' : ''
+  );
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginPhone, setLoginPhone] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [firebaseConfirmation, setFirebaseConfirmation] = useState<ConfirmationResult | null>(null);
 
   // Booking Flow & Status
   const [activeBookings, setActiveBookings] = useState<ConfirmedBooking[]>([]);
@@ -351,21 +360,91 @@ export default function GamingBookPage() {
     return pkgBase;
   };
 
-  const handleLoginWithPhone = (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setLoginLoading(true);
     const phoneTrimmed = loginPhone.trim();
     if (!phoneTrimmed || phoneTrimmed.replace(/\D/g, '').length < 10) {
-      setLoginError('Please enter a valid 10-digit phone number.');
+      setLoginError('Please enter a valid 10-digit mobile number.');
+      setLoginLoading(false);
       return;
     }
     const finalPhone = phoneTrimmed.startsWith('+') ? phoneTrimmed : `+91${phoneTrimmed.replace(/^0+/, '')}`;
-    sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
-    sessionStorage.setItem('bee_vibe_phone_token', 'bypassed');
-    setCustomerPhone(finalPhone);
-    setIsCustomerLoggedIn(true);
-    setShowLoginModal(false);
+
+    if (isPhoneVerificationDisabled()) {
+      sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', 'bypassed');
+      setPhoneVerificationToken('bypassed');
+      setCustomerPhone(finalPhone);
+      setIsCustomerLoggedIn(true);
+      setShowLoginModal(false);
+      setLoginLoading(false);
+      return;
+    }
+
+    try {
+      if (isFirebaseConfigured()) {
+        const recaptchaVerifier = setupRecaptcha('firebase-recaptcha-btn-gaming');
+        if (!recaptchaVerifier) throw new Error('reCAPTCHA failed to initialize.');
+        const fbRes = await sendFirebaseOtp(finalPhone, recaptchaVerifier);
+        if (!fbRes.success) throw new Error(fbRes.error || 'Failed to send OTP.');
+        setFirebaseConfirmation(fbRes.confirmationResult || null);
+      } else {
+        const res = await fetch('/api/otp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone }),
+        });
+        if (!res.ok) throw new Error('Failed to send OTP.');
+      }
+      setOtpSent(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error sending OTP.';
+      setLoginError(msg);
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoginError('');
+    setLoginLoading(true);
+    const finalPhone = loginPhone.trim().startsWith('+') ? loginPhone.trim() : `+91${loginPhone.trim().replace(/^0+/, '')}`;
+
+    try {
+      let token = '';
+      if (isFirebaseConfigured() && firebaseConfirmation) {
+        const fbVerify = await verifyFirebaseOtpCode(firebaseConfirmation, otpCode.trim());
+        if (!fbVerify.success || !fbVerify.idToken) throw new Error(fbVerify.error || 'Invalid OTP.');
+        token = fbVerify.idToken;
+      } else {
+        const res = await fetch('/api/otp/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: finalPhone, code: otpCode.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Invalid OTP code.');
+        token = data.verificationToken;
+      }
+
+      sessionStorage.setItem('bee_vibe_customer_phone', finalPhone);
+      sessionStorage.setItem('bee_vibe_phone_token', token);
+      setPhoneVerificationToken(token);
+      setCustomerPhone(finalPhone);
+      setIsCustomerLoggedIn(true);
+      setShowLoginModal(false);
+      setOtpSent(false);
+      setLoginPhone('');
+      setOtpCode('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid code.';
+      setLoginError(msg);
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   const handleSubmitBooking = async () => {
@@ -376,9 +455,14 @@ export default function GamingBookPage() {
       setError('Please enter a valid 10-digit mobile number.');
       return;
     }
+    if (!isPhoneVerificationDisabled() && (!phoneVerificationToken || phoneVerificationToken === 'bypassed')) {
+      setError('Please log in and verify your mobile number with OTP first.');
+      setShowLoginModal(true);
+      return;
+    }
     if (!customerDetails.name.trim()) { setError('Please enter your full name.'); return; }
     if (!customerDetails.email.trim()) { setError('Please enter your email address.'); return; }
-    const emailRegex = /^[^s@]+@[^s@]+.[^s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerDetails.email.trim())) { setError('Please enter a valid email address.'); return; }
     if (customerDetails.guestCount < 1 || customerDetails.guestCount > 10) { setError('Guest count must be between 1 and 10.'); return; }
 
@@ -392,7 +476,7 @@ export default function GamingBookPage() {
       customerName: customerDetails.name,
       email: customerDetails.email,
       phone: finalPhone,
-      phoneVerificationToken: 'bypassed',
+      phoneVerificationToken: phoneVerificationToken || (isPhoneVerificationDisabled() ? 'bypassed' : ''),
       b_company_ref: '', // Anti-bot honeypot
       date: selectedDate,
       timeSlot: selectedSlot?.time,
@@ -954,23 +1038,46 @@ export default function GamingBookPage() {
               📱 GAMER ACCESS
             </h3>
 
-            <form onSubmit={handleLoginWithPhone}>
-              <div style={{ marginBottom: '16px' }}>
-                <label className={styles.formLabel} htmlFor="otp-phone">Mobile Phone Number</label>
-                <input
-                  type="tel"
-                  id="otp-phone"
-                  className={styles.formInput}
-                  placeholder="Enter 10-digit mobile number"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  required
-                />
-              </div>
-              <button type="submit" className={styles.btnNavNext} style={{ width: '100%' }}>
-                ACCESS MY GAMING PASSES
-              </button>
-            </form>
+            {!otpSent ? (
+              <form onSubmit={handleSendOTP}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabel} htmlFor="otp-phone">Mobile Phone Number</label>
+                  <input
+                    type="tel"
+                    id="otp-phone"
+                    className={styles.formInput}
+                    placeholder="Enter 10-digit mobile number"
+                    value={loginPhone}
+                    onChange={(e) => setLoginPhone(e.target.value)}
+                    disabled={loginLoading}
+                    required
+                  />
+                </div>
+                <div id="firebase-recaptcha-btn-gaming" />
+                <button type="submit" className={styles.btnNavNext} style={{ width: '100%' }} disabled={loginLoading}>
+                  {loginLoading ? 'SENDING OTP...' : 'SEND OTP CODE'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOTP}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label className={styles.formLabel} htmlFor="otp-code">Enter 6-Digit OTP</label>
+                  <input
+                    type="text"
+                    id="otp-code"
+                    className={styles.formInput}
+                    placeholder="Enter 6-digit code"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    disabled={loginLoading}
+                    required
+                  />
+                </div>
+                <button type="submit" className={styles.btnNavNext} style={{ width: '100%' }} disabled={loginLoading || otpCode.trim().length < 4}>
+                  {loginLoading ? 'VERIFYING...' : 'VERIFY & PROCEED'}
+                </button>
+              </form>
+            )}
 
             {loginError && <div className={styles.errorMessage} style={{ marginTop: '16px' }}>{loginError}</div>}
             <button
