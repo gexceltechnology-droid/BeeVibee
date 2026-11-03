@@ -131,7 +131,7 @@ export default function BookingFlowModal({
     return room ? Math.min(initialGuests, room.maxGuests) : (initialGuests || 2);
   });
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
-  const [cakeFlavor, setCakeFlavor] = useState<string>('Chocolate Truffle');
+  const [cakeFlavor, setCakeFlavor] = useState<string>('');
   const [ledNameText, setLedNameText] = useState<string>('');
 
   // Customer Details
@@ -1223,11 +1223,12 @@ export default function BookingFlowModal({
                                 onChange={(e) => setCakeFlavor(e.target.value)}
                                 className={styles.addonSelectInput}
                               >
-                                <option value="Chocolate Truffle">Chocolate Truffle</option>
-                                <option value="Red Velvet">Red Velvet</option>
-                                <option value="Butterscotch">Butterscotch</option>
-                                <option value="Black Forest">Black Forest</option>
-                                <option value="Pineapple Fresh Cream">Pineapple Fresh Cream</option>
+                                <option value="" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Select One</option>
+                                <option value="Chocolate Truffle" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Chocolate Truffle</option>
+                                <option value="Red Velvet" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Red Velvet</option>
+                                <option value="Butterscotch" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Butterscotch</option>
+                                <option value="Black Forest" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Black Forest</option>
+                                <option value="Pineapple Fresh Cream" style={{ color: '#111827', backgroundColor: '#ffffff' }}>Pineapple Fresh Cream</option>
                               </select>
                             </div>
                           )}
@@ -1249,7 +1250,13 @@ export default function BookingFlowModal({
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => setCurrentStep(4)}
+                    onClick={() => {
+                      if (selectedAddOns.includes('addon-cake') && !cakeFlavor) {
+                        alert('Please select a cake flavor before proceeding.');
+                        return;
+                      }
+                      setCurrentStep(4);
+                    }}
                   >
                     <span>NEXT: GUEST DETAILS</span>
                     <ArrowRight size={16} />
@@ -1468,7 +1475,11 @@ export default function BookingFlowModal({
                       const isWaived = pricing.isCouponValid && (id === 'addon-fog' || id === 'addon-led' || id === 'addon-decor');
                       return (
                         <div key={id} className={styles.billLineItem}>
-                          <span>{item.icon} {item.name}</span>
+                          <span>
+                            {item.icon} {item.name}
+                            {id === 'addon-cake' && cakeFlavor ? ` (${cakeFlavor})` : ''}
+                            {id === 'addon-led' && ledNameText ? ` ("${ledNameText}")` : ''}
+                          </span>
                           <strong className={isWaived ? styles.billFreeTag : ''}>
                             {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
                           </strong>
