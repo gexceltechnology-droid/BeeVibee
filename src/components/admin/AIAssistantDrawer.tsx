@@ -158,7 +158,7 @@ export default function AIAssistantDrawer({ isOpen, onClose, onSwitchTab }: AIAs
               cursor: 'pointer',
             }}
           >
-            📊 Today's Schedule
+            📊 Today&apos;s Schedule
           </button>
           <button
             onClick={() => handleSend('Audit Payments', 'payment_audit')}
