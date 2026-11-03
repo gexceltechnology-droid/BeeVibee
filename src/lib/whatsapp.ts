@@ -57,6 +57,7 @@ export async function sendWhatsAppViaTwilio(
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
+      signal: AbortSignal.timeout(3500),
     });
 
     if (res.ok) {
@@ -86,7 +87,7 @@ export async function sendWhatsAppViaCallMeBot(
   try {
     const cleanPhone = cleanPhoneNumber(phone);
     const url = `https://api.callmebot.com/whatsapp.php?phone=${cleanPhone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
     if (res.ok) {
       console.log(`[CallMeBot] Direct WhatsApp message sent to +${cleanPhone}`);
       return { success: true };
@@ -124,6 +125,7 @@ export async function sendWhatsAppViaUltraMsg(
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
+      signal: AbortSignal.timeout(3500),
     });
 
     if (res.ok) {
@@ -174,6 +176,7 @@ export async function sendWhatsAppViaMetaCloudApi(
         type: 'text',
         text: { preview_url: false, body: message },
       }),
+      signal: AbortSignal.timeout(3500),
     });
 
     if (res.ok) {
@@ -218,6 +221,7 @@ export async function sendWhatsAppViaMetaCloudApi(
         type: 'template',
         template: templateBody,
       }),
+      signal: AbortSignal.timeout(3500),
     });
 
     if (templateRes.ok) {
@@ -255,6 +259,7 @@ export async function sendWhatsAppViaWebhook(
         message,
         timestamp: new Date().toISOString(),
       }),
+      signal: AbortSignal.timeout(3500),
     });
     if (res.ok) {
       console.log(`[WhatsApp Webhook] Direct message dispatched for +${cleanTo}`);

@@ -645,6 +645,11 @@ export function updateBookingPaymentVerification(
     if (updates.balanceCollected) {
       db.bookings[index].paymentStatus = 'fully_paid';
       db.bookings[index].balanceDue = 0;
+    } else {
+      const adv = db.bookings[index].advancePaid ?? 500;
+      const tot = db.bookings[index].totalPrice ?? 0;
+      db.bookings[index].balanceDue = Math.max(0, tot - adv);
+      db.bookings[index].paymentStatus = adv > 0 ? 'advance_paid' : 'pending';
     }
   }
   if (updates.adminNotes !== undefined) db.bookings[index].adminNotes = updates.adminNotes;

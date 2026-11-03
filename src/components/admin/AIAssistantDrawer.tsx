@@ -36,9 +36,13 @@ export default function AIAssistantDrawer({ isOpen, onClose, onSwitchTab }: AIAs
     setLoading(true);
 
     try {
+      const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
       const res = await fetch('/api/admin/assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
         body: JSON.stringify({ query: textToSend, tool: explicitTool }),
       });
 

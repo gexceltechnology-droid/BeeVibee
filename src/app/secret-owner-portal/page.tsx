@@ -13,6 +13,7 @@ import {
   convert12HourToMinutes,
   convertMinutesTo12Hour,
   formatCustomTimeRange,
+  getRelativeDateStr,
 } from '@/lib/time';
 
 const STANDARD_MANUAL_SLOTS = [
@@ -218,6 +219,7 @@ export default function AdminDashboard() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const knownBookingIdsRef = useRef<Set<string> | null>(null);
   const knownOrderIdsRef = useRef<Set<string> | null>(null);
+  const isPollingInFlightRef = useRef(false);
 
   const initAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
@@ -342,7 +344,28 @@ export default function AdminDashboard() {
         }
       }
       knownBookingIdsRef.current = new Set(currentBookings.map(b => b.id));
-      setBookings(currentBookings);
+      setBookings(prev => {
+        if (
+          prev.length === currentBookings.length &&
+          prev.every((b, idx) => {
+            const c = currentBookings[idx];
+            return (
+              c &&
+              b.id === c.id &&
+              b.status === c.status &&
+              b.sbiVerified === c.sbiVerified &&
+              b.balanceCollected === c.balanceCollected &&
+              b.paymentStatus === c.paymentStatus &&
+              b.totalPrice === c.totalPrice &&
+              b.advancePaid === c.advancePaid &&
+              b.balanceDue === c.balanceDue
+            );
+          })
+        ) {
+          return prev;
+        }
+        return currentBookings;
+      });
     } catch (err: unknown) {
       if (!isBackground) {
         setError(err instanceof Error ? err.message : 'Error fetching bookings.');
@@ -369,7 +392,18 @@ export default function AdminDashboard() {
           }
         }
         knownOrderIdsRef.current = new Set(currentOrders.map(o => o.id));
-        setOrders(currentOrders);
+        setOrders(prev => {
+          if (
+            prev.length === currentOrders.length &&
+            prev.every((o, idx) => {
+              const c = currentOrders[idx];
+              return c && o.id === c.id && o.status === c.status && o.totalPrice === c.totalPrice;
+            })
+          ) {
+            return prev;
+          }
+          return currentOrders;
+        });
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -526,18 +560,28 @@ export default function AdminDashboard() {
     fetchThemes();
   }, [fetchThemes]);
 
-  // Polling for live bookings, payments, orders, and themes
+  // Polling for live bookings and orders with concurrency guard and visibility pause
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const interval = setInterval(() => {
-      fetchBookings(undefined, true);
-      fetchOrders(undefined);
-      fetchMenu(undefined);
-    }, 5000);
+    const poll = async () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      if (isPollingInFlightRef.current) return;
+      isPollingInFlightRef.current = true;
+      try {
+        await Promise.allSettled([
+          fetchBookings(undefined, true),
+          fetchOrders(undefined),
+        ]);
+      } finally {
+        isPollingInFlightRef.current = false;
+      }
+    };
+
+    const interval = setInterval(poll, 10000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, fetchBookings, fetchOrders, fetchMenu]);
+  }, [isAuthenticated, fetchBookings, fetchOrders]);
 
   // Derived CRM profiles memoized without cascading effects
   const crmProfiles = useMemo(() => {
@@ -2601,11 +2645,7 @@ export default function AdminDashboard() {
                   type="button"
                   className="btn btn-secondary"
                   style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-                  onClick={() => {
-                    const d = new Date(calendarViewDate);
-                    d.setDate(d.getDate() - 1);
-                    setCalendarViewDate(d.toISOString().slice(0, 10));
-                  }}
+                  onClick={() => setCalendarViewDate(getRelativeDateStr(calendarViewDate, -1))}
                   title="Previous Day"
                 >
                   ◀ Prev
@@ -2621,11 +2661,7 @@ export default function AdminDashboard() {
                   type="button"
                   className="btn btn-secondary"
                   style={{ padding: '6px 12px', fontSize: '0.85rem' }}
-                  onClick={() => {
-                    const d = new Date(calendarViewDate);
-                    d.setDate(d.getDate() + 1);
-                    setCalendarViewDate(d.toISOString().slice(0, 10));
-                  }}
+                  onClick={() => setCalendarViewDate(getRelativeDateStr(calendarViewDate, 1))}
                   title="Next Day"
                 >
                   Next ▶
@@ -2785,6 +2821,81 @@ export default function AdminDashboard() {
                         </div>
                       );
                     })}
+
+                    {/* Render any custom/unmapped bookings for this room on this date */}
+                    {(() => {
+                      const standardMatchedIds = new Set(
+                        slots.map(s => roomBookings.find(b => checkBookingOverlap(calendarViewDate, s, [b]))?.id).filter(Boolean)
+                      );
+                      const unmappedBookings = roomBookings.filter(b => !standardMatchedIds.has(b.id));
+                      if (unmappedBookings.length === 0) return null;
+
+                      return (
+                        <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed rgba(255,255,255,0.15)' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#f59e0b', display: 'block', marginBottom: '6px' }}>
+                            ⚡ Custom Timing Bookings ({unmappedBookings.length})
+                          </span>
+                          {unmappedBookings.map(b => {
+                            const balance = b.balanceDue ?? Math.max(0, b.totalPrice - (b.advancePaid ?? 500));
+                            return (
+                              <div key={b.id} className={styles.calendarSlotBooked} style={{ borderLeftColor: '#f59e0b', marginBottom: '6px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fcd34d' }}>⚙️ {b.timeSlot}</span>
+                                  <span style={{
+                                    fontSize: '0.7rem',
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    background: b.status === 'confirmed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                                    color: b.status === 'confirmed' ? '#10b981' : '#f59e0b',
+                                    fontWeight: 600,
+                                  }}>
+                                    {b.status}
+                                  </span>
+                                </div>
+                                <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#f3f4f6' }}>
+                                  👤 {b.customerName}
+                                </div>
+                                <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                  📱 {b.phone} · 👥 {b.guestCount} Guests
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '0.78rem' }}>
+                                  <span style={{ fontWeight: 700, color: 'var(--accent)' }}>₹{b.totalPrice}</span>
+                                  <span style={{ color: balance > 0 ? '#f59e0b' : '#10b981' }}>
+                                    {balance > 0 ? `Bal: ₹${balance}` : 'Paid ✅'}
+                                  </span>
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenPaymentModal(b)}
+                                    className={styles.actionBtn}
+                                    style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: '#10b981', color: '#10b981' }}
+                                  >
+                                    💵 Pay
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedBookingForInvoice(b)}
+                                    className={styles.actionBtn}
+                                    style={{ padding: '3px 8px', fontSize: '0.72rem', borderColor: '#a855f7', color: '#c084fc' }}
+                                  >
+                                    📄 Bill
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => window.open(`/receipt?id=${b.id}`, '_blank')}
+                                    className={styles.actionBtn}
+                                    style={{ padding: '3px 8px', fontSize: '0.72rem' }}
+                                  >
+                                    🧾
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               );

@@ -116,12 +116,14 @@ export async function POST(request: NextRequest) {
       notes: notes ? String(notes).trim() : undefined,
     });
 
-    // Trigger automated server notification to admin phone, WhatsApp & Telegram (+919900106474)
-    try {
-      await notifyAdminOnWhatsAppAndSMS('food_order', newOrder);
-    } catch (notifErr) {
-      console.error('Admin food order notification error:', notifErr);
-    }
+    // Trigger automated server notification to admin phone, WhatsApp & Telegram in background
+    (async () => {
+      try {
+        await notifyAdminOnWhatsAppAndSMS('food_order', newOrder);
+      } catch (notifErr) {
+        console.error('Admin food order notification error:', notifErr);
+      }
+    })();
 
     return NextResponse.json(
       {

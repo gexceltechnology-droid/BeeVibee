@@ -110,20 +110,46 @@ export function getDb(): Firestore {
   return db;
 }
 
+// ─── In-Memory Acceleration Caches ──────────────────────────────────────────
+let cachedBookings: { data: Booking[]; timestamp: number } | null = null;
+const BOOKINGS_CACHE_TTL = 3000; // 3 seconds in-memory cache
+
+let cachedTimeSlots: { data: TimeSlot[]; timestamp: number } | null = null;
+const TIME_SLOTS_CACHE_TTL = 60000; // 60 seconds
+
+let cachedThemes: { data: RoomExperience[]; timestamp: number } | null = null;
+const THEMES_CACHE_TTL = 60000; // 60 seconds
+
+export function invalidateBookingsCache() {
+  cachedBookings = null;
+}
+
+export function invalidateThemesCache() {
+  cachedThemes = null;
+}
+
 // ─── Bookings ───────────────────────────────────────────────────────────────
 
 export async function getAllBookings(): Promise<Booking[]> {
+  if (cachedBookings && (Date.now() - cachedBookings.timestamp) < BOOKINGS_CACHE_TTL) {
+    return cachedBookings.data;
+  }
+  let result: Booking[] = [];
   try {
     const firestore = getDb();
     const snapshot = await firestore.collection('bookings').orderBy('createdAt', 'desc').get();
     if (!snapshot.empty) {
-      return snapshot.docs.map(doc => doc.data() as Booking);
+      result = snapshot.docs.map(doc => doc.data() as Booking);
     }
   } catch (err) {
     // fallback
   }
-  const local = readDb();
-  return local.bookings || [];
+  if (result.length === 0) {
+    const local = readDb();
+    result = local.bookings || [];
+  }
+  cachedBookings = { data: result, timestamp: Date.now() };
+  return result;
 }
 
 export async function getBookingsByDate(date: string): Promise<Booking[]> {
@@ -270,6 +296,7 @@ export async function addBookingToFirestore(
       console.warn('[Firestore] Dual-sync to local DB warning:', syncErr);
     }
 
+    invalidateBookingsCache();
     return newBooking;
   } catch (err: any) {
     if (err.message && (err.message.includes('SLOT_OVERLAP_DETECTED') || err.message.includes('DUPLICATE_UTR_DETECTED'))) {
@@ -277,6 +304,7 @@ export async function addBookingToFirestore(
     }
     console.warn('[Firestore] addBookingToFirestore fallback to local:', (err as Error).message);
     const localBooking = addBookingLocal(bookingData);
+    invalidateBookingsCache();
     return localBooking;
   }
 }
@@ -300,6 +328,7 @@ export async function updateBookingStatusInFirestore(
   }
 
   const localUpdated = updateBookingStatusLocal(id, status as any);
+  invalidateBookingsCache();
   return updatedBooking || localUpdated;
 }
 
@@ -458,6 +487,10 @@ export async function deleteMenuItemFromFirestore(id: string): Promise<void> {
 // ─── Time Slots ──────────────────────────────────────────────────────────────
 
 export async function getTimeSlots(): Promise<TimeSlot[]> {
+  if (cachedTimeSlots && (Date.now() - cachedTimeSlots.timestamp) < TIME_SLOTS_CACHE_TTL) {
+    return cachedTimeSlots.data;
+  }
+  let slots = DEFAULT_TIME_SLOTS;
   try {
     const firestore = getDb();
     const snapshot = await firestore.collection('timeSlots').get();
@@ -473,22 +506,21 @@ export async function getTimeSlots(): Promise<TimeSlot[]> {
       });
 
       if (!hasOldSlots && docs.length >= 8) {
-        return docs;
+        slots = docs;
+      } else {
+        // Purge outdated 2-hour slots and sync standard 1 hr 30 min slots to Firestore
+        try {
+          const batch = firestore.batch();
+          snapshot.docs.forEach(doc => batch.delete(doc.ref));
+          DEFAULT_TIME_SLOTS.forEach(slot => {
+            const ref = firestore.collection('timeSlots').doc(slot.id);
+            batch.set(ref, slot);
+          });
+          await batch.commit();
+        } catch (e) {
+          console.error('Error overwriting outdated timeSlots in Firestore:', e);
+        }
       }
-
-      // Purge outdated 2-hour slots and sync standard 1 hr 30 min slots to Firestore
-      try {
-        const batch = firestore.batch();
-        snapshot.docs.forEach(doc => batch.delete(doc.ref));
-        DEFAULT_TIME_SLOTS.forEach(slot => {
-          const ref = firestore.collection('timeSlots').doc(slot.id);
-          batch.set(ref, slot);
-        });
-        await batch.commit();
-      } catch (e) {
-        console.error('Error overwriting outdated timeSlots in Firestore:', e);
-      }
-      return DEFAULT_TIME_SLOTS;
     } else {
       // Seed Firestore with 1 hr 30 min slots
       try {
@@ -499,13 +531,12 @@ export async function getTimeSlots(): Promise<TimeSlot[]> {
         });
         await batch.commit();
       } catch {}
-      return DEFAULT_TIME_SLOTS;
     }
   } catch (err) {
     // fallback
   }
-  const local = readDb();
-  return DEFAULT_TIME_SLOTS;
+  cachedTimeSlots = { data: slots, timestamp: Date.now() };
+  return slots;
 }
 
 // ─── OTP Operations ─────────────────────────────────────────────────────────
@@ -570,7 +601,21 @@ export async function updateBookingPaymentVerificationInFirestore(
     if (updates.sbiVerified !== undefined) updatePayload.sbiVerified = updates.sbiVerified;
     if (updates.balanceCollected !== undefined) {
       updatePayload.balanceCollected = updates.balanceCollected;
-      if (updates.balanceCollected) updatePayload.paymentStatus = 'fully_paid';
+      if (updates.balanceCollected) {
+        updatePayload.paymentStatus = 'fully_paid';
+        updatePayload.balanceDue = 0;
+      } else {
+        try {
+          const docSnap = await firestore.collection('bookings').doc(cleanId).get();
+          const currentData = docSnap.data() as Booking | undefined;
+          const adv = currentData?.advancePaid ?? 500;
+          const tot = currentData?.totalPrice ?? 0;
+          updatePayload.balanceDue = Math.max(0, tot - adv);
+          updatePayload.paymentStatus = adv > 0 ? 'advance_paid' : 'pending';
+        } catch {
+          updatePayload.paymentStatus = 'advance_paid';
+        }
+      }
     }
     if (updates.adminNotes !== undefined) updatePayload.adminNotes = updates.adminNotes;
     if (updates.status !== undefined) updatePayload.status = updates.status;
@@ -591,6 +636,7 @@ export async function updateBookingPaymentVerificationInFirestore(
 
   // Always update local DB to ensure synchronization
   const localUpdated = updateBookingPaymentVerificationLocal(cleanId, updates);
+  invalidateBookingsCache();
   return updatedBooking || localUpdated;
 }
 
@@ -673,6 +719,7 @@ export async function recordBookingPaymentInFirestore(
   }
 
   const localUpdated = recordBookingPaymentLocal(cleanId, payment);
+  invalidateBookingsCache();
   return updatedBooking || localUpdated;
 }
 
@@ -693,6 +740,7 @@ export async function updateBookingDetailsInFirestore(id: string, updates: Parti
 
   const { updateBookingDetails } = await import('./db');
   const localUpdated = updateBookingDetails(cleanId, updates);
+  invalidateBookingsCache();
   return updatedBooking || localUpdated;
 }
 
@@ -707,13 +755,18 @@ export async function deleteBookingFromFirestore(id: string): Promise<void> {
 
   const { deleteBooking } = await import('./db');
   deleteBooking(cleanId);
+  invalidateBookingsCache();
 }
 
 // ─── Celebration Suite Themes & Pricing ───────────────────────────────────────
 
 export async function getAllThemes(): Promise<RoomExperience[]> {
+  if (cachedThemes && (Date.now() - cachedThemes.timestamp) < THEMES_CACHE_TTL) {
+    return cachedThemes.data;
+  }
   const { getAllThemesLocal } = await import('./db');
   const localList = getAllThemesLocal();
+  let result = localList;
   try {
     const firestore = getDb();
     const snapshot = await firestore.collection('themes').get();
@@ -722,12 +775,13 @@ export async function getAllThemes(): Promise<RoomExperience[]> {
       const map = new Map<string, RoomExperience>();
       for (const t of localList) map.set(t.id, t);
       for (const t of fsThemes) map.set(t.id, { ...map.get(t.id), ...t });
-      return Array.from(map.values());
+      result = Array.from(map.values());
     }
   } catch (err) {
     console.warn('Firestore fetch themes failed, using local DB:', err);
   }
-  return localList;
+  cachedThemes = { data: result, timestamp: Date.now() };
+  return result;
 }
 
 export async function updateThemeInFirestore(
@@ -750,6 +804,7 @@ export async function updateThemeInFirestore(
 
   const { updateThemeLocal } = await import('./db');
   const localUpdated = updateThemeLocal(cleanId, updates);
+  invalidateThemesCache();
   return updatedTheme || localUpdated;
 }
 

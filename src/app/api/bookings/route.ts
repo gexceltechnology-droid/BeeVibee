@@ -363,47 +363,52 @@ export async function POST(request: NextRequest) {
       specialRequests: specialRequests || '',
     });
 
-    // Send confirmation email asynchronously (non-blocking)
-    try {
-      await sendBookingConfirmationEmail(newBooking);
-    } catch (emailError) {
-      console.error('Failed to send booking confirmation email:', emailError);
-    }
+    // Dispatch external notifications (Email, SMS, WhatsApp, Telegram, CRM) in the background.
+    // Detached execution ensures the booking is confirmed instantly to the client (< 300ms)
+    // without blocking on slow third-party networks or hanging tunnels.
+    (async () => {
+      try {
+        const messageBody = `Your Bee Vibe booking is confirmed!\n\nTicket Code: ${newBooking.id}\nDate: ${newBooking.date}\nTime: ${newBooking.timeSlot}\n\nPresent this code at the entrance. Thank you!`;
 
-    // Send confirmation SMS asynchronously (non-blocking)
-    try {
-      const messageBody = `Your Bee Vibe booking is confirmed!\n\nTicket Code: ${newBooking.id}\nDate: ${newBooking.date}\nTime: ${newBooking.timeSlot}\n\nPresent this code at the entrance. Thank you!`;
-      await sendSMS(newBooking.phone, messageBody);
-    } catch (smsError) {
-      console.error('Failed to send booking confirmation SMS:', smsError);
-    }
+        await Promise.allSettled([
+          // 1. Customer Email
+          sendBookingConfirmationEmail(newBooking).catch((emailError) => {
+            console.error('Failed to send booking confirmation email:', emailError);
+          }),
 
-    // Trigger automated server notification to admin phone, WhatsApp & Telegram (+919900106474)
-    try {
-      await notifyAdminOnWhatsAppAndSMS('booking', newBooking);
-    } catch (notifErr) {
-      console.error('Failed sending Admin booking notification:', notifErr);
-    }
+          // 2. Customer SMS
+          sendSMS(newBooking.phone, messageBody).catch((smsError) => {
+            console.error('Failed to send booking confirmation SMS:', smsError);
+          }),
 
-    // Forward booking inquiry to BeeVibe Lead Manager CRM
-    try {
-      await fetch('https://rental-license-ment-consideration.trycloudflare.com/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_name: body.name || body.customer_name || body.customerName || trimmedName,
-          phone: body.phone || trimmedPhone,
-          interest: 'Party Hall',
-          occasion: body.occasion || 'Event',
-          event_date: body.eventDate || body.date || date,
-          guest_count: body.guests || body.guest_count || body.guestCount || numericGuestCount,
-          source: 'Website',
-          notes: body.notes || body.specialRequests || specialRequests || 'Inquiry from beevibe.org website',
-        }),
-      });
-    } catch (crmError) {
-      console.error('Lead Manager CRM sync error:', crmError);
-    }
+          // 3. Admin WhatsApp, Telegram, and SMS alerts
+          notifyAdminOnWhatsAppAndSMS('booking', newBooking).catch((notifErr) => {
+            console.error('Failed sending Admin booking notification:', notifErr);
+          }),
+
+          // 4. External CRM sync (with strict 3s timeout to never hang process)
+          fetch('https://rental-license-ment-consideration.trycloudflare.com/api/leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              customer_name: body.name || body.customer_name || body.customerName || trimmedName,
+              phone: body.phone || trimmedPhone,
+              interest: 'Party Hall',
+              occasion: body.occasion || 'Event',
+              event_date: body.eventDate || body.date || date,
+              guest_count: body.guests || body.guest_count || body.guestCount || numericGuestCount,
+              source: 'Website',
+              notes: body.notes || body.specialRequests || specialRequests || 'Inquiry from beevibe.org website',
+            }),
+            signal: AbortSignal.timeout(3000),
+          }).catch((crmError) => {
+            console.warn('Lead Manager CRM sync info/timeout:', crmError?.message || crmError);
+          }),
+        ]);
+      } catch (bgError) {
+        console.error('Background booking notifications error:', bgError);
+      }
+    })();
 
     return NextResponse.json({ success: true, booking: newBooking }, { status: 201 });
   } catch (error: any) {

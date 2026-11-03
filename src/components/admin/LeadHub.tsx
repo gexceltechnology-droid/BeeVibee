@@ -56,7 +56,12 @@ export default function LeadHub({ onConvertLeadToBooking }: LeadHubProps) {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/leads');
+      const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
+      const res = await fetch('/api/leads', {
+        headers: {
+          'X-Admin-Passcode': activePasscode,
+        },
+      });
       if (res.ok) {
         const json = await res.json();
         setLeads(json.leads || []);
@@ -97,9 +102,13 @@ export default function LeadHub({ onConvertLeadToBooking }: LeadHubProps) {
 
     setSubmitting(true);
     try {
+      const activePasscode = (sessionStorage.getItem('bee_vibe_admin_passcode') || '').trim();
       const res = await fetch('/api/leads', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Passcode': activePasscode,
+        },
         body: JSON.stringify({
           customerName: newLeadName || 'Inquiry Guest',
           phone: newLeadPhone,
