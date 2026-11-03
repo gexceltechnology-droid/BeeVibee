@@ -58,10 +58,10 @@ const THEATRES: TheatreInfo[] = [
     priceNote: 'Flat ₹999 with Coupon BEEVIBE999',
     themeSlug: 'red',
     images: [
-      '/gallery/theme-red.jpg',
-      '/gallery/theme-red-heart.jpg',
-      '/gallery/theme-red-couch.jpg',
-      '/gallery/theme-red-screen.jpg',
+      '/gallery/theme-red.webp',
+      '/gallery/theme-red-heart.webp',
+      '/gallery/theme-red-couch.webp',
+      '/gallery/theme-red-screen.webp',
     ],
     features: [
       '👥 Max 3 - 4 People',
@@ -86,10 +86,10 @@ const THEATRES: TheatreInfo[] = [
     priceNote: 'Flat ₹999 with Coupon BEEVIBE999',
     themeSlug: 'pink',
     images: [
-      '/gallery/theme-pink.jpg',
-      '/gallery/theme-pink-wings.jpg',
-      '/gallery/theme-pink-arch.jpg',
-      '/gallery/theme-pink-screen.jpg',
+      '/gallery/theme-pink.webp',
+      '/gallery/theme-pink-wings.webp',
+      '/gallery/theme-pink-arch.webp',
+      '/gallery/theme-pink-screen.webp',
     ],
     features: [
       '👥 Max 6 People',
@@ -114,10 +114,10 @@ const THEATRES: TheatreInfo[] = [
     priceNote: 'Flat ₹999 with Coupon BEEVIBE999',
     themeSlug: 'purple',
     images: [
-      '/gallery/theme-purple.jpg',
-      '/gallery/theme-purple-stage.jpg',
-      '/gallery/theme-purple-couch.jpg',
-      '/gallery/theme-purple-screen.jpg',
+      '/gallery/theme-purple.webp',
+      '/gallery/theme-purple-stage.webp',
+      '/gallery/theme-purple-couch.webp',
+      '/gallery/theme-purple-screen.webp',
     ],
     features: [
       '👥 Max 10 People',
@@ -167,11 +167,30 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
   const [roomsSlots, setRoomsSlots] = useState<Record<string, SlotItem[]>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const todayIST = useMemo(() => getTodayIST(), []);
-  const tomorrowIST = useMemo(() => {
+  const [todayIST, setTodayIST] = useState<string>(() => getTodayIST());
+  const [tomorrowIST, setTomorrowIST] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(d);
+  });
+  const [todayDisplay, setTodayDisplay] = useState('Today');
+  const [tomorrowDisplay, setTomorrowDisplay] = useState('Tomorrow');
+
+  // Compute live client system dates dynamically (DEF-02)
+  useEffect(() => {
+    const now = new Date();
+    const tIST = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now);
+    const tmDate = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const tmIST = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(tmDate);
+
+    setTodayIST(tIST);
+    setTomorrowIST(tmIST);
+
+    const tLabel = now.toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' });
+    const tmLabel = tmDate.toLocaleDateString('en-US', { timeZone: 'Asia/Kolkata', weekday: 'short', month: 'short', day: 'numeric' });
+
+    setTodayDisplay(`Today (${tLabel})`);
+    setTomorrowDisplay(`Tomorrow (${tmLabel})`);
   }, []);
 
   // Fetch slots whenever selectedDate changes
@@ -271,18 +290,14 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                 className={`${styles.datePill} ${selectedDate === todayIST ? styles.datePillActive : ''}`}
                 onClick={() => setSelectedDate(todayIST)}
               >
-                Today ({new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })})
+                {todayDisplay}
               </button>
               <button
                 type="button"
                 className={`${styles.datePill} ${selectedDate === tomorrowIST ? styles.datePillActive : ''}`}
                 onClick={() => setSelectedDate(tomorrowIST)}
               >
-                Tomorrow ({(() => {
-                  const d = new Date();
-                  d.setDate(d.getDate() + 1);
-                  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-                })()})
+                {tomorrowDisplay}
               </button>
             </div>
 
@@ -321,6 +336,8 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                     src={activeImg}
                     alt={theatre.title}
                     className={styles.theatreImage}
+                    loading="lazy"
+                    decoding="async"
                   />
 
                   {/* Top Badge */}
@@ -405,15 +422,21 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                   <div className={styles.locationBadge}>
                     <MapPin size={13} /> Jayanagar 9th Block
                   </div>
-                  <div
-                    className={`${styles.slotsCountBadge} ${
-                      availableSlotsCount > 0 ? styles.slotsAvailable : styles.slotsFull
-                    }`}
-                  >
-                    {availableSlotsCount > 0
-                      ? `${availableSlotsCount} Slots Available`
-                      : '0 Slots Available'}
-                  </div>
+                  {isLoading || roomsSlots[theatre.roomId] === undefined ? (
+                    <div className={`${styles.slotsCountBadge} ${styles.slotsLoading}`}>
+                      <span className={styles.slotLoadingDot} /> Checking Live Slots...
+                    </div>
+                  ) : (
+                    <div
+                      className={`${styles.slotsCountBadge} ${
+                        availableSlotsCount > 0 ? styles.slotsAvailable : styles.slotsFull
+                      }`}
+                    >
+                      {availableSlotsCount > 0
+                        ? `${availableSlotsCount} Slots Available`
+                        : '0 Slots Available'}
+                    </div>
+                  )}
                 </div>
 
                 {/* 4. Specifications & Highlights List */}
@@ -436,7 +459,16 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                     )}
                   </div>
 
-                  {slots.length === 0 ? (
+                  {isLoading || roomsSlots[theatre.roomId] === undefined ? (
+                    <div className={styles.skeletonSlotsGrid}>
+                      {[1, 2, 3, 4, 5, 6].map((idx) => (
+                        <div key={idx} className={styles.skeletonSlotCard}>
+                          <div className={styles.skeletonTimeBar} />
+                          <div className={styles.skeletonLabelBar} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : slots.length === 0 ? (
                     <div className={styles.noSlotsBox}>
                       <Clock size={16} />
                       <span>All slots for today have concluded. Select tomorrow!</span>

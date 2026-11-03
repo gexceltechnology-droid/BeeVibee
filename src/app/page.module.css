@@ -233,6 +233,9 @@
   .desktopNav { display: none; }
   .headerCallBtn { display: none; }
   .hamburger { display: flex; }
+  /* Unify sticky header on mobile viewports: eliminate stacked ticker bar (DEF-07) */
+  .tickerBar { display: none; }
+  .headerContainer { padding: 8px 0; }
 }
 
 .hamburgerActive .hamburgerLine:nth-child(1) {

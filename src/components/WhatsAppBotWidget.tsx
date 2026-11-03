@@ -168,15 +168,15 @@ export default function WhatsAppBotWidget({ offsetForBottomBar = false }: WhatsA
             </button>
           </form>
 
-          {/* Native WhatsApp Direct Link Footer */}
+          {/* Native WhatsApp Direct Link Footer (DEF-13) */}
           <div className={styles.nativeWaFooter}>
             <a
-              href="https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20want%20to%20chat%20with%20your%20WhatsApp%20Bot."
+              href="https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite"
               target="_blank"
               rel="noopener noreferrer"
               className={styles.nativeWaLink}
             >
-              💬 Open in Native WhatsApp (+919900106474) <ExternalLink size={12} />
+              💬 Open in Native WhatsApp (+91 99001 06474) <ExternalLink size={12} />
             </a>
           </div>
         </div>

@@ -2697,3 +2697,43 @@
   color: var(--navy);
 }
 
+/* ─── Step 1 Validation Notice Banner (DEF-04) ─── */
+.stepValidationNotice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #BE123C;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Mobile iOS Safari Auto-Zoom Prevention (DEF-09) ─── */
+@media (max-width: 768px) {
+  .dateField,
+  .inputField,
+  .addonTextInput,
+  .addonSelectInput,
+  .customSlotSelect,
+  .couponField,
+  .couponInput,
+  .specialInput,
+  .modalCard input,
+  .modalCard select,
+  .modalCard textarea {
+    font-size: 16px !important;
+  }
+}
+
+
+

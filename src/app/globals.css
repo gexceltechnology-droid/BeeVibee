@@ -275,3 +275,21 @@ select optgroup {
   background-color: #ffffff !important;
   font-weight: 700;
 }
+
+/* ─── Mobile iOS Safari Auto-Zoom Prevention (DEF-09) ───
+   iOS Safari automatically zooms into the viewport when an input has font-size < 16px.
+   Enforcing a minimum font size of 16px on mobile viewports disables this behavior. */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea,
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  input[type="search"] {
+    font-size: 16px !important;
+  }
+}
+

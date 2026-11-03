@@ -102,7 +102,7 @@ export default function Home() {
     return room.occasion === activeOccasionFilter;
   });
 
-  // Handle Search from Hero Booking Finder
+  // Handle Search from Hero Booking Finder (DEF-10: Smoothly pre-populate modal with room and details)
   const handleFinderSearch = (params: {
     date: string;
     occasion: OccasionType;
@@ -113,12 +113,27 @@ export default function Home() {
     setSelectedDate(params.date);
     setActiveOccasionFilter(params.occasion);
     setPreselectedOccasion(params.occasion);
-    setPreselectedRoomId('');
     setGuestCount(params.guestCount);
     setPreferredTime(params.preferredTime);
     if (params.phone) {
       setPreselectedPhone(params.phone);
     }
+    if (params.preferredTime && params.preferredTime !== 'any') {
+      setPreselectedSlot(params.preferredTime);
+    }
+
+    // Map occasion and guestCount to canonical suite so user lands ready on Step 2
+    let matchedRoom = 'angel-wings';
+    if (params.occasion === 'gaming') {
+      matchedRoom = 'ps5-gaming';
+    } else if (params.guestCount > 6 || params.occasion === 'vip') {
+      matchedRoom = 'royal-butterfly';
+    } else if (params.occasion === 'anniversary') {
+      matchedRoom = 'red-velvet';
+    } else {
+      matchedRoom = 'angel-wings';
+    }
+    setPreselectedRoomId(matchedRoom);
     setIsBookingModalOpen(true);
   };
 
@@ -158,20 +173,20 @@ export default function Home() {
     return true;
   });
 
-  // Authentic Gallery Data
+  // Authentic Gallery Data (WebP optimized for mobile LCP - DEF-12)
   const galleryItems = [
-    { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage', image: '/gallery/theme-pink.jpg' },
-    { id: 2, category: 'birthday', title: 'Giant Glowing Angel Wings & Stage', image: '/gallery/theme-pink-wings.jpg' },
-    { id: 3, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.jpg' },
-    { id: 4, category: 'romantic', title: 'Will You Marry Me? Floral Heart Stage', image: '/gallery/theme-red-heart.jpg' },
-    { id: 5, category: 'romantic', title: 'Plush Red Velvet Lounge & Cake Table', image: '/gallery/theme-red-couch.jpg' },
-    { id: 6, category: 'vip', title: 'Royal Butterfly Grandeur VIP', image: '/gallery/theme-purple.jpg' },
-    { id: 7, category: 'vip', title: 'Royal Butterfly Illuminated Stage', image: '/gallery/theme-purple-stage.jpg' },
-    { id: 8, category: 'vip', title: 'VIP Velvet Sectional Lounge', image: '/gallery/theme-purple-couch.jpg' },
-    { id: 9, category: 'birthday', title: '180" 4K Laser Cinema in Pink Suite', image: '/gallery/theme-pink-screen.jpg' },
-    { id: 10, category: 'romantic', title: '180" 4K Laser Cinema in Red Suite', image: '/gallery/theme-red-screen.jpg' },
-    { id: 11, category: 'vip', title: '180" 4K Laser Cinema in Purple Suite', image: '/gallery/theme-purple-movie.jpg' },
-    { id: 12, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.jpg' },
+    { id: 1, category: 'birthday', title: 'Angel Wings & Birthday Stage', image: '/gallery/theme-pink.webp' },
+    { id: 2, category: 'birthday', title: 'Giant Glowing Angel Wings & Stage', image: '/gallery/theme-pink-wings.webp' },
+    { id: 3, category: 'romantic', title: 'Red Velvet Heart Romance Suite', image: '/gallery/theme-red.webp' },
+    { id: 4, category: 'romantic', title: 'Will You Marry Me? Floral Heart Stage', image: '/gallery/theme-red-heart.webp' },
+    { id: 5, category: 'romantic', title: 'Plush Red Velvet Lounge & Cake Table', image: '/gallery/theme-red-couch.webp' },
+    { id: 6, category: 'vip', title: 'Royal Butterfly Grandeur VIP', image: '/gallery/theme-purple.webp' },
+    { id: 7, category: 'vip', title: 'Royal Butterfly Illuminated Stage', image: '/gallery/theme-purple-stage.webp' },
+    { id: 8, category: 'vip', title: 'VIP Velvet Sectional Lounge', image: '/gallery/theme-purple-couch.webp' },
+    { id: 9, category: 'birthday', title: '180" 4K Laser Cinema in Pink Suite', image: '/gallery/theme-pink-screen.webp' },
+    { id: 10, category: 'romantic', title: '180" 4K Laser Cinema in Red Suite', image: '/gallery/theme-red-screen.webp' },
+    { id: 11, category: 'vip', title: '180" 4K Laser Cinema in Purple Suite', image: '/gallery/theme-purple-movie.webp' },
+    { id: 12, category: 'gaming', title: 'PS5 4K Gaming Arena with DualSense', image: '/gallery/ps5-gaming.webp' },
   ];
 
   const filteredGallery = galleryItems.filter((item) => {
@@ -470,7 +485,7 @@ export default function Home() {
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image} alt={item.title} className={styles.galleryImg} loading="lazy" />
+                <img src={item.image} alt={item.title} className={styles.galleryImg} loading="lazy" decoding="async" />
                 <div className={styles.galleryOverlay}>
                   <span className={styles.galleryCaption}>{item.title}</span>
                 </div>
@@ -906,7 +921,7 @@ export default function Home() {
                   <MapPin size={15} /> Open in Google Maps
                 </a>
                 <a
-                  href="https://wa.me/919900106474"
+                  href="https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary"
@@ -1073,7 +1088,7 @@ export default function Home() {
                 ⏰ 10:00 AM – 12:00 AM Daily
               </p>
               <a
-                href="https://wa.me/919900106474"
+                href="https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-secondary"

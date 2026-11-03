@@ -132,7 +132,7 @@ export const metadata: Metadata = {
 
 const localBusinessSchema = {
   "@context": "https://schema.org",
-  "@type": ["EventVenue", "MovieTheater", "LocalBusiness"],
+  "@type": ["EntertainmentBusiness", "EventVenue", "MovieTheater", "LocalBusiness"],
   "@id": `${siteUrl}/#venue`,
   "name": "Bee Vibe Party Hall & Private Celebration Theater",
   "alternateName": [
@@ -150,7 +150,7 @@ const localBusinessSchema = {
   "description": "Bee Vibe Party Hall is a luxury private party hall and celebration venue in Jayanagar 9th Block, Bangalore. Perfect for intimate birthday parties, anniversary surprises, romantic date nights, and private movie or gaming screenings.",
   "url": siteUrl,
   "telephone": "+919900106474",
-  "priceRange": "$$",
+  "priceRange": "₹₹",
   "currenciesAccepted": "INR",
   "paymentAccepted": "UPI, Credit Card, Debit Card, Net Banking, Cash",
   "logo": `${siteUrl}/bee-vibe-logo.png`,
@@ -194,7 +194,7 @@ const localBusinessSchema = {
         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
       ],
       "opens": "10:00",
-      "closes": "23:30"
+      "closes": "00:00"
     }
   ],
   "hasMap": "https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8",

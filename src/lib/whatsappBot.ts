@@ -188,9 +188,9 @@ Reply *2* to Check Available Time Slots!`,
         `✉️ *Email*: support@beevibe.org\n` +
         `⏰ *Support Hours*: 10:00 AM - 11:30 PM (7 Days a Week)\n\n` +
         `💬 Tap to chat directly with admin:\n` +
-        `https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20need%20assistance%20with%20a%20booking.`,
+        `https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite`,
       options: [{ id: '0', text: 'Main Menu' }],
-      actionLink: 'https://wa.me/919900106474?text=Hi%20Bee%20Vibe!%20I%20need%20assistance%20with%20a%20booking.',
+      actionLink: 'https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite',
     };
   }
 

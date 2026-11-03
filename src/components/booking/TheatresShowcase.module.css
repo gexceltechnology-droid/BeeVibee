@@ -435,6 +435,85 @@
   border-color: rgba(239, 68, 68, 0.25);
 }
 
+.slotsLoading {
+  background: rgba(232, 191, 105, 0.15);
+  color: #B45309;
+  border-color: rgba(232, 191, 105, 0.4);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.slotLoadingDot {
+  width: 6px;
+  height: 6px;
+  background-color: #E8BF69;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulseLoading 1.2s ease-in-out infinite;
+}
+
+@keyframes pulseLoading {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.skeletonSlotsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.skeletonSlotCard {
+  background: #F8F5F1;
+  border: 1px solid #EFE8E0;
+  border-radius: 8px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+}
+
+.skeletonSlotCard::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeletonTimeBar {
+  height: 14px;
+  width: 75%;
+  background: #E8DFC8;
+  border-radius: 4px;
+}
+
+.skeletonLabelBar {
+  height: 10px;
+  width: 50%;
+  background: #F0E8D8;
+  border-radius: 3px;
+}
+
 /* Features List */
 .featuresList {
   padding: 0 20px 14px 20px;

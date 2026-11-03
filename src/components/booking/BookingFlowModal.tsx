@@ -182,9 +182,9 @@ export default function BookingFlowModal({
   const [submitError, setSubmitError] = useState('');
   const [confirmedBookingId, setConfirmedBookingId] = useState('');
 
-  // Coupon State
+  // Coupon State - Default to BEEVIBE999 celebration promo offer
   const [couponInput, setCouponInput] = useState<string>('');
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>('BEEVIBE999');
   const [couponError, setCouponError] = useState<string>('');
 
   // Live Slots
@@ -194,26 +194,113 @@ export default function BookingFlowModal({
   // Mobile Bill Drawer state
   const [isMobileBillOpen, setIsMobileBillOpen] = useState(false);
 
-  // Update selection if props change when opening
+  // Body scroll-lock while modal is open (DEF-08)
   useEffect(() => {
     if (isOpen) {
-      setSelectedRoomId(initialRoomId || '');
-      setSelectedOccasion(initialOccasion || '');
-      if (initialDate) setSelectedDate(initialDate);
-      if (initialSlot) setSelectedSlot(initialSlot);
-      if (initialGuests) {
-        const room = activeRooms.find((r) => r.id === initialRoomId);
-        setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
-      }
-      if (initialSlot && initialRoomId) {
-        setCurrentStep(initialRoomId === 'ps5-gaming' ? 4 : 3);
-      } else if (initialRoomId) {
-        setCurrentStep(2);
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isOpen]);
+
+  // Update selection if props change when opening, or restore draft from sessionStorage (DEF-01)
+  useEffect(() => {
+    if (isOpen) {
+      // Check if there is a saved draft in sessionStorage
+      let savedDraft: any = null;
+      try {
+        const raw = sessionStorage.getItem('bee_vibe_booking_draft');
+        if (raw) savedDraft = JSON.parse(raw);
+      } catch {}
+
+      if (initialRoomId) {
+        setSelectedRoomId(initialRoomId);
+        if (initialOccasion) setSelectedOccasion(initialOccasion);
+        if (initialDate) setSelectedDate(initialDate);
+        if (initialSlot) setSelectedSlot(initialSlot);
+        if (initialGuests) {
+          const room = activeRooms.find((r) => r.id === initialRoomId);
+          setGuestCount(room ? Math.min(initialGuests, room.maxGuests) : initialGuests);
+        }
+        if (initialSlot) {
+          setCurrentStep(initialRoomId === 'ps5-gaming' ? 4 : 3);
+        } else {
+          setCurrentStep(2);
+        }
+      } else if (savedDraft) {
+        // Restore from sessionStorage draft
+        if (savedDraft.selectedRoomId) setSelectedRoomId(savedDraft.selectedRoomId);
+        if (savedDraft.selectedOccasion) setSelectedOccasion(savedDraft.selectedOccasion);
+        if (savedDraft.selectedDate) setSelectedDate(savedDraft.selectedDate);
+        if (savedDraft.selectedSlot) setSelectedSlot(savedDraft.selectedSlot);
+        if (savedDraft.isCustomSlot !== undefined) setIsCustomSlot(savedDraft.isCustomSlot);
+        if (savedDraft.customStartTime) setCustomStartTime(savedDraft.customStartTime);
+        if (savedDraft.guestCount) setGuestCount(savedDraft.guestCount);
+        if (Array.isArray(savedDraft.selectedAddOns)) setSelectedAddOns(savedDraft.selectedAddOns);
+        if (savedDraft.cakeFlavor) setCakeFlavor(savedDraft.cakeFlavor);
+        if (savedDraft.ledNameText) setLedNameText(savedDraft.ledNameText);
+        if (savedDraft.customerName) setCustomerName(savedDraft.customerName);
+        if (savedDraft.customerPhone) setCustomerPhone(savedDraft.customerPhone);
+        if (savedDraft.customerEmail) setCustomerEmail(savedDraft.customerEmail);
+        if (savedDraft.specialRequests) setSpecialRequests(savedDraft.specialRequests);
+        if (savedDraft.appliedCoupon !== undefined) setAppliedCoupon(savedDraft.appliedCoupon);
+        if (savedDraft.currentStep && savedDraft.currentStep >= 1 && savedDraft.currentStep <= 5) {
+          setCurrentStep(savedDraft.currentStep);
+        }
       } else {
+        setSelectedRoomId('');
+        setSelectedOccasion('');
         setCurrentStep(1);
       }
     }
   }, [isOpen, initialRoomId, initialOccasion, initialDate, initialGuests, initialSlot, activeRooms]);
+
+  // Persist draft to sessionStorage whenever user makes selections (DEF-01)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (selectedRoomId || selectedOccasion || customerPhone || selectedSlot) {
+      try {
+        const draft = {
+          selectedOccasion,
+          selectedRoomId,
+          selectedDate,
+          selectedSlot,
+          isCustomSlot,
+          customStartTime,
+          guestCount,
+          selectedAddOns,
+          cakeFlavor,
+          ledNameText,
+          customerName,
+          customerPhone,
+          customerEmail,
+          specialRequests,
+          currentStep: currentStep === 6 ? 1 : currentStep,
+          appliedCoupon,
+        };
+        sessionStorage.setItem('bee_vibe_booking_draft', JSON.stringify(draft));
+      } catch {}
+    }
+  }, [
+    selectedOccasion,
+    selectedRoomId,
+    selectedDate,
+    selectedSlot,
+    isCustomSlot,
+    customStartTime,
+    guestCount,
+    selectedAddOns,
+    cakeFlavor,
+    ledNameText,
+    customerName,
+    customerPhone,
+    customerEmail,
+    specialRequests,
+    currentStep,
+    appliedCoupon,
+  ]);
 
   // Find active room object (null if no room selected yet)
   const activeRoom = useMemo(() => {
@@ -673,6 +760,9 @@ export default function BookingFlowModal({
 
       const newId = data.booking?.id || data.bookingId || data.id || `BV-${Math.floor(100000 + Math.random() * 900000)}`;
       setConfirmedBookingId(newId);
+      try {
+        sessionStorage.removeItem('bee_vibe_booking_draft');
+      } catch {}
       setCurrentStep(6); // Step 6: Confirmation Pass
     } catch (err: any) {
       setSubmitError(err.message || 'An error occurred while confirming booking. Please retry.');
@@ -681,8 +771,8 @@ export default function BookingFlowModal({
     }
   };
 
-  // Step Validation Helpers
-  const canGoToStep2 = !!activeRoom;
+  // Step Validation Helpers - Require both Room and Occasion before advancing to Step 2 (DEF-04)
+  const canGoToStep2 = Boolean(activeRoom && selectedOccasion);
   const canGoToStep3 = !!selectedSlot;
   const canGoToStep4 = true;
   const canGoToStep5 = !!(
@@ -694,7 +784,9 @@ export default function BookingFlowModal({
   if (!isOpen) return null;
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
+    /* Static Backdrop (DEF-01): Outside backdrop clicks are disabled to retain state and prevent accidental loss.
+       The modal is dismissed only when the user explicitly clicks the close button. */
+    <div className={styles.backdrop}>
       <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
         {/* Header Bar */}
         <div className={styles.modalHeader}>
@@ -816,7 +908,11 @@ export default function BookingFlowModal({
                             <div key={id} className={styles.mobileBillRowItem}>
                               <span>{item.icon} {item.name}</span>
                               <strong className={isWaived ? styles.billFreeTag : ''}>
-                                {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
+                                {isWaived ? (
+                                  <span><s style={{ opacity: 0.65, marginRight: 4 }}>₹{item.price}</s>₹0 (Free)</span>
+                                ) : (
+                                  `+₹${item.price}`
+                                )}
                               </strong>
                             </div>
                           );
@@ -980,16 +1076,41 @@ export default function BookingFlowModal({
                   </div>
                 </div>
 
+                {/* Step 1 Inline Validation Notice (DEF-04) */}
+                {!canGoToStep2 && (
+                  <div className={styles.stepValidationNotice}>
+                    <AlertCircle size={15} />
+                    <span>
+                      {!selectedOccasion && !selectedRoomId
+                        ? 'Please select your celebration occasion and a private suite above to proceed.'
+                        : !selectedOccasion
+                        ? 'Please pick a celebration occasion above (e.g., Birthday, Anniversary, Romantic Date).'
+                        : 'Please select a private suite card above to proceed.'}
+                    </span>
+                  </div>
+                )}
+
                 {/* Step 1 Actions */}
                 <div className={styles.navRow}>
                   <div />
                   <button
                     type="button"
                     className="btn btn-primary"
-                    disabled={!activeRoom}
-                    onClick={() => setCurrentStep(2)}
+                    disabled={!canGoToStep2}
+                    onClick={() => {
+                      if (!canGoToStep2) return;
+                      setCurrentStep(2);
+                    }}
                   >
-                    <span>{activeRoom ? 'NEXT: DATE & TIME' : 'PLEASE SELECT A SUITE TO CONTINUE'}</span>
+                    <span>
+                      {!selectedOccasion && !selectedRoomId
+                        ? 'SELECT OCCASION & SUITE'
+                        : !selectedOccasion
+                        ? 'SELECT CELEBRATION OCCASION'
+                        : !selectedRoomId
+                        ? 'SELECT A SUITE TO CONTINUE'
+                        : 'NEXT: DATE & TIME'}
+                    </span>
                     <ArrowRight size={16} />
                   </button>
                 </div>
@@ -1302,7 +1423,10 @@ export default function BookingFlowModal({
                           <div className={styles.addonCardTitleRow}>
                             <strong>{addon.name}</strong>
                             {isWaivedByCoupon ? (
-                              <span className={styles.addonCardFreeTag}>FREE with Coupon (Was ₹{addon.price})</span>
+                              <span className={styles.addonCardFreeTag}>
+                                <s style={{ opacity: 0.65, marginRight: 6 }}>₹{addon.price}</s>
+                                <strong>₹0 (Complimentary)</strong>
+                              </span>
                             ) : (
                               <span className={styles.addonCardPrice}>+₹{addon.price}</span>
                             )}
@@ -1693,7 +1817,11 @@ export default function BookingFlowModal({
                             {id === 'addon-led' && ledNameText ? ` ("${ledNameText}")` : ''}
                           </span>
                           <strong className={isWaived ? styles.billFreeTag : ''}>
-                            {isWaived ? `FREE (-₹${item.price})` : `+₹${item.price}`}
+                            {isWaived ? (
+                              <span><s style={{ opacity: 0.65, marginRight: 4 }}>₹{item.price}</s>₹0 (Free)</span>
+                            ) : (
+                              `+₹${item.price}`
+                            )}
                           </strong>
                         </div>
                       );
@@ -2082,7 +2210,10 @@ export default function BookingFlowModal({
                       <div key={id} className={styles.breakdownRow}>
                         <span>{item.icon} {item.name}</span>
                         {isWaived ? (
-                          <strong style={{ color: '#10B981' }}>FREE (-₹${item.price})</strong>
+                          <strong style={{ color: '#10B981' }}>
+                            <s style={{ opacity: 0.65, marginRight: 5, color: '#9E918E' }}>₹{item.price}</s>
+                            ₹0 (Complimentary)
+                          </strong>
                         ) : (
                           <strong>+₹{item.price}</strong>
                         )}

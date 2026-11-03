@@ -13,9 +13,15 @@ export const LATE_NIGHT_THRESHOLD_MINUTES = 23 * 60; // 1380 minutes (11:00 PM)
  */
 export function isLateNightSlot(timeSlotStr?: string): boolean {
   if (!timeSlotStr) return false;
+  // If slot text explicitly mentions Late Night, Midnight, or surcharge
+  if (/late\s*night|midnight|\+₹?500/i.test(timeSlotStr)) return true;
   try {
     const { startMinutes, endMinutes } = parseTimeRange(timeSlotStr);
-    return endMinutes > LATE_NIGHT_THRESHOLD_MINUTES || startMinutes >= LATE_NIGHT_THRESHOLD_MINUTES;
+    // In Bee Vibe operating hours (10:00 AM - 01:30 AM), slots starting before VENUE_OPEN_MINUTES (e.g. 12:00 AM, 01:00 AM)
+    // are late-night sessions that have crossed midnight from the previous evening (+1440 min)
+    const effectiveStart = startMinutes < VENUE_OPEN_MINUTES ? startMinutes + 1440 : startMinutes;
+    const effectiveEnd = endMinutes < VENUE_OPEN_MINUTES ? endMinutes + 1440 : endMinutes;
+    return effectiveEnd > LATE_NIGHT_THRESHOLD_MINUTES || effectiveStart >= LATE_NIGHT_THRESHOLD_MINUTES;
   } catch {
     return false;
   }
@@ -71,13 +77,13 @@ export function validateSlotOperatingHours(startMinutes: number, endMinutes: num
 }
 
 /**
- * Parses a time string (e.g. 10:00 AM, 12:30 PM, 10:30 PM, 12:00 AM, 14:30)
+ * Parses a time string (e.g. 10:00 AM, 12:30 PM, 10:30 PM, 12:00 AM, 10 PM, 12 AM, 14:30)
  * into minutes from the start of the day (0 to 1439).
  */
 export function parseTimeToMinutes(timeStr: string): number {
   const cleanStr = timeStr.trim().toUpperCase();
 
-  // Format check for AM/PM (e.g. 10:00 AM, 02:30 PM, or with annotations)
+  // Format check for AM/PM with minutes (e.g. 10:00 AM, 02:30 PM, or with annotations)
   const ampmMatch = cleanStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
   if (ampmMatch) {
     let hours = parseInt(ampmMatch[1], 10);
@@ -90,6 +96,20 @@ export function parseTimeToMinutes(timeStr: string): number {
       hours = 0;
     }
     return hours * 60 + minutes;
+  }
+
+  // Format check for AM/PM without minutes (e.g. 10 PM, 11 PM, 12 AM, 1 AM)
+  const ampmHourOnlyMatch = cleanStr.match(/(\d{1,2})\s*(AM|PM)/i);
+  if (ampmHourOnlyMatch) {
+    let hours = parseInt(ampmHourOnlyMatch[1], 10);
+    const ampm = ampmHourOnlyMatch[2].toUpperCase();
+
+    if (ampm === 'PM' && hours !== 12) {
+      hours += 12;
+    } else if (ampm === 'AM' && hours === 12) {
+      hours = 0;
+    }
+    return hours * 60;
   }
 
   // Format check for 24h military time (e.g. 14:30)

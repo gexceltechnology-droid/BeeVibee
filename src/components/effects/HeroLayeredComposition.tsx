@@ -61,15 +61,16 @@ export default function HeroLayeredComposition({ onInspectPhoto }: HeroLayeredCo
             ? undefined
             : `translate3d(${l1X}px, ${l1Y}px, 0px) rotate(${mouseOffset.x * 3}deg)`,
         }}
-        onClick={() => onInspectPhoto?.('/gallery/beevibe-royal-butterfly-vip.jpg')}
+        onClick={() => onInspectPhoto?.('/gallery/beevibe-royal-butterfly-vip.webp')}
       >
         <div className={styles.cardInner}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/gallery/beevibe-royal-butterfly-vip.jpg"
+            src="/gallery/beevibe-royal-butterfly-vip.webp"
             alt="Royal Butterfly VIP Suite"
             className={styles.cardPhoto}
             loading="eager"
+            decoding="async"
           />
           <div className={styles.cardPillBadge}>
             <Sparkles size={11} /> Royal Butterfly VIP
@@ -85,15 +86,16 @@ export default function HeroLayeredComposition({ onInspectPhoto }: HeroLayeredCo
             ? undefined
             : `translate3d(${l2X}px, ${l2Y}px, 0px) rotate(${mouseOffset.x * -2}deg)`,
         }}
-        onClick={() => onInspectPhoto?.('/gallery/beevibe-pink-angel-wings.jpg')}
+        onClick={() => onInspectPhoto?.('/gallery/beevibe-pink-angel-wings.webp')}
       >
         <div className={styles.cardInner}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/gallery/beevibe-pink-angel-wings.jpg"
+            src="/gallery/beevibe-pink-angel-wings.webp"
             alt="Pink Angel Wings Birthday Suite"
             className={styles.cardPhoto}
             loading="eager"
+            decoding="async"
           />
           <div className={styles.cardPillBadge}>
             <Sparkles size={11} /> Angel Wings Birthday
@@ -109,15 +111,16 @@ export default function HeroLayeredComposition({ onInspectPhoto }: HeroLayeredCo
             ? undefined
             : `translate3d(${l3X}px, ${l3Y}px, 0px) rotate(${mouseOffset.x * 4}deg) scale(1.02)`,
         }}
-        onClick={() => onInspectPhoto?.('/gallery/beevibe-red-velvet-heart.jpg')}
+        onClick={() => onInspectPhoto?.('/gallery/beevibe-red-velvet-heart.webp')}
       >
         <div className={styles.cardInner}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/gallery/beevibe-red-velvet-heart.jpg"
+            src="/gallery/beevibe-red-velvet-heart.webp"
             alt="Red Velvet Heart Romance Suite"
             className={styles.cardPhoto}
             loading="eager"
+            decoding="async"
           />
           <div className={`${styles.cardPillBadge} ${styles.badgeGold}`}>
             <Sparkles size={11} /> Red Velvet Romance
