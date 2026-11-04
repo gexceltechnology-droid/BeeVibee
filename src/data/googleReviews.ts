@@ -22,9 +22,10 @@ export const GOOGLE_BUSINESS_STATS = {
   stars: 5,
   reviewCountDisplay: '100+',
   reviewCountExact: 128,
-  googleMapsUrl: 'https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8',
-  writeReviewUrl: 'https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8',
-  verifiedBusinessName: 'BeeVibe Private Celebration Theatre',
+  googleMapsUrl: 'https://www.google.com/maps/place/beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237?sa=X&ved=1t:242&ictx=111',
+  writeReviewUrl: 'https://www.google.com/maps/place/beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237?sa=X&ved=1t:242&ictx=111',
+  directionsUrl: 'https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237',
+  verifiedBusinessName: 'BeeVibe Party Hall & Private Celebration Theatre',
   location: 'Jayanagar 9th Block, Bengaluru',
 };
 

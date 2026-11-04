@@ -108,7 +108,7 @@ function ReceiptContent() {
   const balanceDue = typeof booking.balanceDue === 'number' ? booking.balanceDue : Math.max(0, booking.totalPrice - advancePaid);
 
   const notesSnippet = booking.specialRequests ? `\n📝 Special Request: "${booking.specialRequests}"` : '';
-  const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}${notesSnippet}\n\nVenue Location: https://maps.google.com/?q=BeeVibe+Jayanagar`;
+  const shareText = `Hi ${booking.customerName}! Here is your official Advance Payment Receipt for BeeVibe Private Celebration Theater.\n\n🎟️ Receipt No: ${booking.id}\n📅 Date: ${booking.date}\n⏰ Slot: ${booking.timeSlot}\n🟢 Advance Paid: ₹${advancePaid}\n⏳ Balance Due at Venue: ₹${balanceDue}${notesSnippet}\n\nVenue Location & Directions: https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237`;
   const whatsappShareUrl = `https://wa.me/${cleanPhoneNumber(booking.phone)}?text=${encodeURIComponent(shareText)}`;
 
   return (

@@ -156,15 +156,15 @@ Reply *2* to Check Available Time Slots!`,
         `1340, 2nd Floor, 41st Cross Road,\n` +
         `4th Gate, Opposite Jain University,\n` +
         `Jayanagar 9th Block, Bengaluru, Karnataka 560041.\n\n` +
-        `🗺️ *Google Maps Link*:\n` +
-        `https://maps.google.com/?q=BeeVibe+Jayanagar\n\n` +
+        `🗺️ *Google Maps Directions*:\n` +
+        `https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237\n\n` +
         `🚗 Free parking available near venue!\n\n` +
         `Reply *0* for Main Menu`,
       options: [
         { id: '2', text: 'Book Slot Now' },
         { id: '5', text: 'Call Owner' },
       ],
-      actionLink: 'https://maps.google.com/?q=BeeVibe+Jayanagar',
+      actionLink: 'https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237',
     };
   }
 

@@ -197,7 +197,7 @@ const localBusinessSchema = {
       "closes": "00:00"
     }
   ],
-  "hasMap": "https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8",
+  "hasMap": "https://www.google.com/maps/place/beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237?sa=X&ved=1t:242&ictx=111",
   "sameAs": [
     "https://www.instagram.com/beevibe_partyhall/"
   ],

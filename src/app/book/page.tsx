@@ -149,7 +149,7 @@ export default function BookPage() {
           </div>
           <div className={styles.contactItem}>
             <MapPin size={16} className={styles.contactIcon} />
-            <a href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
+            <a href="https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237"
               target="_blank" rel="noopener noreferrer">
               1340, 2nd floor, 41st Cross road, 4th gate, opposite to Jain University, Jayanagara 9th Block, Bengaluru, Karnataka 560041
             </a>

@@ -397,11 +397,11 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
 
                   <div className={styles.quickActionButtons}>
                     <a
-                      href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
+                      href="https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237"
                       target="_blank"
                       rel="noopener noreferrer"
                       className={styles.quickIconBtn}
-                      title="View Location on Google Maps"
+                      title="Get Directions to BeeVibe on Google Maps"
                     >
                       <MapPin size={14} />
                       <span>MAPS</span>

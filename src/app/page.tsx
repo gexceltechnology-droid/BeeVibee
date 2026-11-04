@@ -888,8 +888,8 @@ export default function Home() {
           <div className={styles.locationCard}>
             <div className={styles.locationMapWrap}>
               <iframe
-                title="Bee Vibe Location Map"
-                src="https://maps.google.com/maps?q=1340%2C+2nd+floor%2C+41st+Cross+road%2C+4th+gate%2C+opposite+to+Jain+University%2C+Jayanagara+9th+Block%2C+Bengaluru%2C+Karnataka+560041&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                title="Bee Vibe Party Hall Location Map"
+                src="https://maps.google.com/maps?q=beevibe+party+hall+bengaluru&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -905,7 +905,7 @@ export default function Home() {
               </div>
 
               <p className={styles.locationAddress}>
-                <strong>BeeVibe Private Celebration Theatre</strong>
+                <strong>BeeVibe Party Hall &amp; Private Celebration Theatre</strong>
                 1340, 2nd Floor, 41st Cross Road, 4th Gate,<br />
                 Opposite Jain University, Jayanagar 9th Block,<br />
                 Bengaluru, Karnataka 560041
@@ -913,12 +913,12 @@ export default function Home() {
 
               <div className={styles.locationButtons}>
                 <a
-                  href="https://maps.app.goo.gl/c4TBh9zeaUDJEh7X8"
+                  href="https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary"
                 >
-                  <MapPin size={15} /> Open in Google Maps
+                  <MapPin size={15} /> Open in Google Maps (Get Directions)
                 </a>
                 <a
                   href="https://wa.me/919900106474?text=Hi%20BeeVibe,%20I%20want%20to%20inquire%20about%20booking%20a%20suite"
