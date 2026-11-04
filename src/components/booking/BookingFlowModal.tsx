@@ -81,14 +81,13 @@ function parseSlotStartMinutes(slotTimeStr: string): number {
 }
 
 const DEFAULT_SLOTS: TimeSlotOption[] = [
-  { id: 'slot-1', time: '10:00 AM - 11:30 AM', label: 'Morning Show', basePrice: 999 },
-  { id: 'slot-2', time: '12:00 PM - 01:30 PM', label: 'Matinee Show', basePrice: 999 },
-  { id: 'slot-3', time: '02:00 PM - 03:30 PM', label: 'Afternoon Vibe', basePrice: 999 },
-  { id: 'slot-4', time: '04:00 PM - 05:30 PM', label: 'Sunset Vibe', basePrice: 999 },
-  { id: 'slot-5', time: '06:00 PM - 07:30 PM', label: 'Evening Show', basePrice: 999 },
-  { id: 'slot-6', time: '08:00 PM - 09:30 PM', label: 'Prime Night Vibe', basePrice: 999 },
-  { id: 'slot-7', time: '10:00 PM - 11:30 PM', label: 'Midnight Vibe', basePrice: 999, isLateNight: true, lateNightFee: 500 },
-  { id: 'slot-8', time: '12:00 AM - 01:30 AM', label: 'Late Night Bash', basePrice: 999, isLateNight: true, lateNightFee: 500 },
+  { id: 'slot-1', time: '10:00 AM - 12:00 PM', label: 'Morning Show', basePrice: 999 },
+  { id: 'slot-2', time: '12:30 PM - 02:30 PM', label: 'Matinee Show', basePrice: 999 },
+  { id: 'slot-3', time: '03:00 PM - 05:00 PM', label: 'Afternoon Vibe', basePrice: 999 },
+  { id: 'slot-4', time: '05:30 PM - 07:30 PM', label: 'Sunset Vibe', basePrice: 999 },
+  { id: 'slot-5', time: '08:00 PM - 10:00 PM', label: 'Prime Night Vibe', basePrice: 999 },
+  { id: 'slot-6', time: '10:00 PM - 12:00 AM', label: 'Midnight Vibe', basePrice: 999, isLateNight: true, lateNightFee: 500 },
+  { id: 'slot-7', time: '11:30 PM - 01:30 AM', label: 'Late Night Bash', basePrice: 999, isLateNight: true, lateNightFee: 500 },
 ];
 
 const GAMING_SLOTS: TimeSlotOption[] = [
@@ -109,8 +108,7 @@ const GAMING_SLOTS: TimeSlotOption[] = [
 ];
 
 const CELEBRATION_DURATIONS = [
-  { hours: 1.5, label: '1 Hr 30 Mins (Standard)' },
-  { hours: 2, label: '2 Hours' },
+  { hours: 2, label: '2 Hours (Standard Session)' },
   { hours: 2.5, label: '2 Hrs 30 Mins' },
   { hours: 3, label: '3 Hours (Full Movie & Party)' },
   { hours: 3.5, label: '3 Hrs 30 Mins' },
@@ -148,7 +146,7 @@ export default function BookingFlowModal({
   const [selectedSlot, setSelectedSlot] = useState<string>(initialSlot || '');
   const [isCustomSlot, setIsCustomSlot] = useState(false);
   const [customStartTime, setCustomStartTime] = useState('04:30 PM');
-  const [customDurationHours, setCustomDurationHours] = useState<number>(1.5);
+  const [customDurationHours, setCustomDurationHours] = useState<number>(2);
   const [activeBookings, setActiveBookings] = useState<{ id?: string; date: string; timeSlot: string }[]>([]);
   const [guestCount, setGuestCount] = useState<number>(() => {
     const room = initialRoomId ? ROOMS.find((r) => r.id === initialRoomId) : null;
@@ -410,7 +408,7 @@ export default function BookingFlowModal({
 
   // List of available 30-min start times within operating hours (10:00 AM to 01:30 AM Late Night)
   const availableCustomStartTimes = useMemo(() => {
-    const durationH = isCustomSlot ? customDurationHours : (activeRoom?.durationHours || 1.5);
+    const durationH = isCustomSlot ? customDurationHours : (activeRoom?.durationHours || 2);
     const maxStartMins = VENUE_CLOSE_MINUTES - durationH * 60;
 
     const times: { label: string; mins: number }[] = [];
@@ -537,7 +535,7 @@ export default function BookingFlowModal({
 
     const activeDuration = isCustomSlot
       ? customDurationHours
-      : (activeRoom.durationHours || (isGaming ? 1 : 1.5));
+      : (activeRoom.durationHours || (isGaming ? 1 : 2));
 
     let baseRoomPrice = activeRoom.price;
     let effectiveRoomPrice = activeRoom.price;
@@ -548,10 +546,10 @@ export default function BookingFlowModal({
       effectiveRoomPrice = baseRoomPrice;
       roomDiscount = 0;
     } else {
-      // Celebration suites: standard package base is for 1.5 hours
-      baseRoomPrice = Math.round((activeRoom.price / 1.5) * activeDuration);
+      // Celebration suites: standard package base is for 2 hours
+      baseRoomPrice = Math.round((activeRoom.price / 2) * activeDuration);
       if (isCouponValid) {
-        effectiveRoomPrice = Math.round((999 / 1.5) * activeDuration);
+        effectiveRoomPrice = Math.round((999 / 2) * activeDuration);
         roomDiscount = Math.max(0, baseRoomPrice - effectiveRoomPrice);
       } else {
         effectiveRoomPrice = baseRoomPrice;
@@ -795,7 +793,7 @@ export default function BookingFlowModal({
           date: selectedDate,
           eventDate: selectedDate,
           timeSlot: selectedSlot || availableSlots[0]?.time || '10:00 AM - 12:00 PM',
-          durationHours: isCustomSlot ? customDurationHours : (activeRoom.durationHours || 1.5),
+          durationHours: isCustomSlot ? customDurationHours : (activeRoom.durationHours || 2),
           packageName: `${activeRoom.name} (${activeRoom.occasionLabel})`,
           roomId: activeRoom.id,
           theme: activeRoom.id,
@@ -1869,7 +1867,7 @@ export default function BookingFlowModal({
                     <img src={activeRoom?.image || ''} alt={activeRoom?.name || 'Private Suite'} className={styles.billRoomThumb} />
                     <div className={styles.billRoomMeta}>
                       <strong>{activeRoom?.name || 'Private Suite'}</strong>
-                      <span className={styles.billRoomSession}>{activeRoom?.duration || '1 Hr 30 Mins'} Session • Up to {activeRoom?.maxGuests || 6} Guests • 180&quot; 4K Cinema</span>
+                      <span className={styles.billRoomSession}>{activeRoom?.duration || '2 Hours'} Session • Up to {activeRoom?.maxGuests || 6} Guests • 180&quot; 4K Cinema</span>
                       <span className={styles.billRoomDateSlot}>📅 {selectedDate} • ⏰ {selectedSlot || 'Selected Slot'}</span>
                     </div>
                     <div className={styles.billRoomBase}>
@@ -2109,7 +2107,7 @@ export default function BookingFlowModal({
                     </div>
                     <div className={styles.ticketItem}>
                       <span className={styles.ticketLabel}>DURATION</span>
-                      <strong className={styles.ticketVal}>{isCustomSlot ? `${customDurationHours} Hours` : (activeRoom?.duration || '1.5 Hours')}</strong>
+                      <strong className={styles.ticketVal}>{isCustomSlot ? `${customDurationHours} Hours` : (activeRoom?.duration || '2 Hours')}</strong>
                     </div>
                     <div className={styles.ticketItem}>
                       <span className={styles.ticketLabel}>GUESTS</span>

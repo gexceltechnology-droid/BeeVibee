@@ -3,49 +3,43 @@
   "timeSlots": [
     {
       "id": "slot-1",
-      "time": "10:00 AM - 11:30 AM",
+      "time": "10:00 AM - 12:00 PM",
       "label": "Morning Show",
       "basePrice": 999
     },
     {
       "id": "slot-2",
-      "time": "12:00 PM - 01:30 PM",
+      "time": "12:30 PM - 02:30 PM",
       "label": "Matinee Show",
       "basePrice": 999
     },
     {
       "id": "slot-3",
-      "time": "02:00 PM - 03:30 PM",
+      "time": "03:00 PM - 05:00 PM",
       "label": "Afternoon Vibe",
       "basePrice": 999
     },
     {
       "id": "slot-4",
-      "time": "04:00 PM - 05:30 PM",
+      "time": "05:30 PM - 07:30 PM",
       "label": "Sunset Vibe",
       "basePrice": 999
     },
     {
       "id": "slot-5",
-      "time": "06:00 PM - 07:30 PM",
-      "label": "Evening Show",
-      "basePrice": 999
-    },
-    {
-      "id": "slot-6",
-      "time": "08:00 PM - 09:30 PM",
+      "time": "08:00 PM - 10:00 PM",
       "label": "Prime Night Vibe",
       "basePrice": 999
     },
     {
-      "id": "slot-7",
-      "time": "10:00 PM - 11:30 PM",
+      "id": "slot-6",
+      "time": "10:00 PM - 12:00 AM",
       "label": "Midnight Vibe",
       "basePrice": 999
     },
     {
-      "id": "slot-8",
-      "time": "12:00 AM - 01:30 AM",
+      "id": "slot-7",
+      "time": "11:30 PM - 01:30 AM",
       "label": "Late Night Bash",
       "basePrice": 999
     }
@@ -159,8 +153,8 @@
       "occasion": "birthday",
       "occasionLabel": "Birthday Celebration",
       "price": 1299,
-      "duration": "1 Hr 30 Mins",
-      "durationHours": 1.5,
+      "duration": "2 Hours",
+      "durationHours": 2,
       "capacity": "Up to 6 Guests",
       "maxGuests": 6,
       "includedGuests": 2,
@@ -191,8 +185,8 @@
       "occasion": "anniversary",
       "occasionLabel": "Date / Anniversary",
       "price": 1099,
-      "duration": "1 Hr 30 Mins",
-      "durationHours": 1.5,
+      "duration": "2 Hours",
+      "durationHours": 2,
       "capacity": "Up to 3 - 4 Guests",
       "maxGuests": 4,
       "includedGuests": 2,
@@ -223,8 +217,8 @@
       "occasion": "vip",
       "occasionLabel": "VIP Celebration",
       "price": 1499,
-      "duration": "1 Hr 30 Mins",
-      "durationHours": 1.5,
+      "duration": "2 Hours",
+      "durationHours": 2,
       "capacity": "Up to 10 Guests",
       "maxGuests": 10,
       "includedGuests": 2,

@@ -579,7 +579,7 @@ export default function BookingPortal({
 
         // Base price is driven entirely by the selected package
         const durationHours = durationMinutes / 60;
-        const basePrice = Math.round((selectedPackage.price / 1.5) * durationHours);
+        const basePrice = Math.round((selectedPackage.price / 2) * durationHours);
 
         setSelectedSlot({
           id: 'slot-custom',
@@ -608,12 +608,12 @@ export default function BookingPortal({
   ]);
 
   const getSlotDurationHours = () => {
-    if (!selectedSlot) return 1.5;
+    if (!selectedSlot) return 2;
     try {
       const { startMinutes, endMinutes } = parseTimeRange(selectedSlot.time);
       return (endMinutes - startMinutes) / 60;
     } catch {
-      return 1.5;
+      return 2;
     }
   };
 
@@ -622,16 +622,16 @@ export default function BookingPortal({
   // Standard package base without discounts
   const getStandardPackagePrice = () => {
     const durationHours = getSlotDurationHours();
-    return selectedPackage ? Math.round((selectedPackage.price / 1.5) * durationHours) : 0;
+    return selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
   };
 
-  // Base theme package price (flat ₹999 for 1.5 hrs when coupon is applied)
+  // Base theme package price (flat ₹999 for 2 hrs when coupon is applied)
   const getEffectivePackagePrice = () => {
     const durationHours = getSlotDurationHours();
     if (isCouponApplied) {
-      return Math.round((999 / 1.5) * durationHours);
+      return Math.round((999 / 2) * durationHours);
     }
-    return selectedPackage ? Math.round((selectedPackage.price / 1.5) * durationHours) : 0;
+    return selectedPackage ? Math.round((selectedPackage.price / 2) * durationHours) : 0;
   };
 
   // Effective Fog Entry Price (Complimentary 1 pot included with coupon)
@@ -1948,7 +1948,7 @@ export default function BookingPortal({
                     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
                       <h4 className={styles.packageName} style={{ color: pkg.color, fontSize: '1.1rem', marginBottom: '6px' }}>{pkg.name}</h4>
                       <div className={styles.packagePrice} style={{ color: '#ffffff', fontSize: '1.35rem', fontWeight: 800, marginBottom: '6px' }}>
-                        ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 1 Hr 30 Mins (Base 2 Guests)</span>
+                        ₹{pkg.price} <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 400 }}>/ 2 Hours (Base 2 Guests)</span>
                       </div>
                       <div style={{
                         background: 'rgba(242, 169, 0, 0.12)',
@@ -2062,7 +2062,7 @@ export default function BookingPortal({
                 <>
                   <h3 style={{ margin: '16px 0 8px 0', fontFamily: 'var(--font-title)' }}>Available Time Slots</h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                    Select a 1 hr 30 min celebration slot. Price depends on your selected theme package in the next step.
+                    Select a 2-hour celebration slot. Price depends on your selected theme package in the next step.
                   </p>
 
                   {loading ? (
@@ -2205,8 +2205,8 @@ export default function BookingPortal({
                   <div className={styles.quickDurationSection}>
                     <span className={styles.quickDurationTitle}>⚡ Quick Duration Presets (Auto-calculates End Time):</span>
                     <div className={styles.quickDurationPills}>
-                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(1.5)}>
-                        +1.5 Hours (Standard)
+                      <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(2)}>
+                        +2 Hours (Standard)
                       </button>
                       <button type="button" className={styles.quickDurationBtn} onClick={() => applyQuickDuration(2.5)}>
                         +2.5 Hours

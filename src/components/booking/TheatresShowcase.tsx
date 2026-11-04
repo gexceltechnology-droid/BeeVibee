@@ -511,7 +511,7 @@ export default function TheatresShowcase({ onBookSlot, onInspectRoom }: Theatres
                     <div className={styles.priceRow}>
                       <span className={styles.priceOriginal}>₹{theatre.originalPrice}</span>
                       <span className={styles.priceCurrent}>₹{theatre.promoPrice}</span>
-                      <span className={styles.priceUnit}>/ 1 hr 30 min</span>
+                      <span className={styles.priceUnit}>/ 2 Hours</span>
                     </div>
                     <span className={styles.pricePromoNote}>{theatre.priceNote}</span>
                   </div>

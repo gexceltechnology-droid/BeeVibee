@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const targetRoomId: RoomId = normalizeRoomId(roomParam || (isGaming ? 'ps5-gaming' : 'angel-wings'));
 
     const [theaterSlotsFromDb, allBookings] = await Promise.all([getTimeSlots(), getAllBookings()]);
-    const theaterSlots = (theaterSlotsFromDb && theaterSlotsFromDb.length >= 8) ? theaterSlotsFromDb : DEFAULT_TIME_SLOTS;
+    const theaterSlots = (theaterSlotsFromDb && theaterSlotsFromDb.length >= 7) ? theaterSlotsFromDb : DEFAULT_TIME_SLOTS;
 
     const baseSlots = (targetRoomId === 'ps5-gaming' || isGaming) ? GAMING_1HR_SLOTS : theaterSlots;
 

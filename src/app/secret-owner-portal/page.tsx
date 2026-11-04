@@ -453,7 +453,7 @@ export default function AdminDashboard() {
         price: t.price,
         extraGuestPrice: t.extraGuestPrice ?? 100,
         description: t.description || '',
-        duration: t.duration || '1 Hr 30 Mins',
+        duration: t.duration || '2 Hours',
       };
     }
     setEditingThemeImages(prev => ({ ...initialMap, ...prev }));
@@ -841,7 +841,7 @@ export default function AdminDashboard() {
     let base = foundTheme ? foundTheme.price : 1299;
     if (roomId === 'ps5-gaming') base = 399;
 
-    let durationHours = 1.5;
+    let durationHours = 2;
     try {
       const { startMinutes, endMinutes } = parseTimeRange(slot);
       const diff = endMinutes - startMinutes;
@@ -850,9 +850,9 @@ export default function AdminDashboard() {
       }
     } catch {}
 
-    // Scale base price proportionally for custom durations (e.g. 2 hours, 3 hours)
-    if (durationHours > 0 && !isGaming && durationHours !== 1.5) {
-      base = Math.round((base / 1.5) * durationHours);
+    // Scale base price proportionally for custom durations (e.g. 2.5 hours, 3 hours)
+    if (durationHours > 0 && !isGaming && durationHours !== 2) {
+      base = Math.round((base / 2) * durationHours);
     }
 
     const extraRate = foundTheme ? (foundTheme.extraGuestPrice ?? 100) : 100;
@@ -3227,7 +3227,7 @@ export default function AdminDashboard() {
                 </span>
               </div>
               <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '750px', lineHeight: 1.5 }}>
-                Directly manage cover photos, gallery images, base booking prices (1 Hr 30 Mins standard slots), and extra guest charges. Saved changes update live on the website and booking calculations.
+                Directly manage cover photos, gallery images, base booking prices (2 Hours standard slots), and extra guest charges. Saved changes update live on the website and booking calculations.
               </p>
             </div>
 
@@ -3253,7 +3253,7 @@ export default function AdminDashboard() {
                 price: theme.price,
                 extraGuestPrice: theme.extraGuestPrice ?? 100,
                 description: theme.description,
-                duration: theme.duration || '1 Hr 30 Mins',
+                duration: theme.duration || '2 Hours',
               };
 
               const isSaving = savingThemeId === theme.id;
@@ -3343,7 +3343,7 @@ export default function AdminDashboard() {
                           />
                         </div>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
-                          For {theme.duration || '1 Hr 30 Mins'} (2 guests)
+                          For {theme.duration || '2 Hours'} (2 guests)
                         </span>
                       </div>
 
@@ -4347,8 +4347,8 @@ export default function AdminDashboard() {
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                           {[
                             { label: '+1 Hr', duration: 1 },
-                            { label: '+1.5 Hrs (Standard)', duration: 1.5 },
-                            { label: '+2 Hrs', duration: 2 },
+                            { label: '+1.5 Hrs', duration: 1.5 },
+                            { label: '+2 Hrs (Standard)', duration: 2 },
                             { label: '+2.5 Hrs', duration: 2.5 },
                             { label: '+3 Hrs (Movie & Party)', duration: 3 },
                             { label: '+4 Hrs (Mega Bash)', duration: 4 },

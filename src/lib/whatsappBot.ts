@@ -48,17 +48,17 @@ export function processWhatsAppBotMessage(incomingMessage: string, _phone: strin
       replyText:
         `🎟️ *BEE VIBE PRIVATE THEATER THEMES* 🎟️
 ----------------------------------------
-❤️ *Red Velvet Heart* — ₹1099 / 1 Hr 30 Mins
+❤️ *Red Velvet Heart* — ₹1099 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
 • Floral Heart & "Happy Anniversary" Neon Backdrop
 • 180" 4K Screen & 7.1 Dolby Surround Sound
 
-🩷 *Angel Wings & Birthday Stage* — ₹1299 / 1 Hr 30 Mins
+🩷 *Angel Wings & Birthday Stage* — ₹1299 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
 • Giant Glowing Angel Wings & Birthday Stage Arch
 • Hot Pink Plush Seating & 180" 4K Screen
 
-💜 *Royal Butterfly* — ₹1499 / 1 Hr 30 Mins
+💜 *Royal Butterfly* — ₹1499 / 2 Hours
 • Base 2 Guests (Extra Guest: ₹100/head)
 • Grand Triple Arched Decor, Butterfly Wings & Marquee Letters
 • 180" 4K Screen, Dolby Sound & VIP Privacy
@@ -87,16 +87,15 @@ Reply *2* to Check Available Time Slots!`,
       replyText:
         `📅 *SLOT AVAILABILITY & RESERVATIONS* 📅\n` +
         `----------------------------------------\n` +
-        `We operate 1 Hr 30 Min slots daily from 10:00 AM to 01:30 AM (Late Night)!\n\n` +
+        `We operate 2-Hour slots daily from 10:00 AM to 01:30 AM (Late Night)!\n\n` +
         `⏰ *Popular Slots*:\n` +
-        `• Morning: 10:00 AM - 11:30 AM\n` +
-        `• Matinee: 12:00 PM - 01:30 PM\n` +
-        `• Afternoon: 02:00 PM - 03:30 PM\n` +
-        `• Sunset: 04:00 PM - 05:30 PM\n` +
-        `• Evening: 06:00 PM - 07:30 PM\n` +
-        `• Prime Night: 08:00 PM - 09:30 PM\n` +
-        `• Midnight: 10:00 PM - 11:30 PM (+₹500 Late Night)\n` +
-        `• Late Night Bash: 12:00 AM - 01:30 AM (+₹500 Late Night)\n\n` +
+        `• Morning: 10:00 AM - 12:00 PM\n` +
+        `• Matinee: 12:30 PM - 02:30 PM\n` +
+        `• Afternoon: 03:00 PM - 05:00 PM\n` +
+        `• Sunset: 05:30 PM - 07:30 PM\n` +
+        `• Prime Night: 08:00 PM - 10:00 PM\n` +
+        `• Midnight: 10:00 PM - 12:00 AM (+₹500 Late Night)\n` +
+        `• Late Night Bash: 11:30 PM - 01:30 AM (+₹500 Late Night)\n\n` +
         `🔗 Click below to pick your date, theme & book in 60 seconds:\n` +
         `https://www.beevibe.org/#booking\n\n` +
         `Reply *0* for Main Menu`,
