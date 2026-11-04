@@ -18,10 +18,11 @@ export interface GoogleReview {
 }
 
 export const GOOGLE_BUSINESS_STATS = {
-  rating: 4.9,
+  rating: 5.0,
+  ratingDisplay: '5.0',
   stars: 5,
   reviewCountDisplay: '100+',
-  reviewCountExact: 128,
+  reviewCountExact: 136,
   googleMapsUrl: 'https://www.google.com/maps/place/beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237?sa=X&ved=1t:242&ictx=111',
   writeReviewUrl: 'https://www.google.com/maps/place/beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237?sa=X&ved=1t:242&ictx=111',
   directionsUrl: 'https://www.google.com/maps/dir//beevibe+party+hall/data=!4m2!3m1!1s0x3bae1555d61a8763:0xaadbc3b0e4ebc237',

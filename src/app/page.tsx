@@ -372,7 +372,7 @@ export default function Home() {
                 </div>
                 <div className={styles.statDivider} />
                 <div className={styles.statItem}>
-                  <span className={styles.statNumber}>4.9★</span>
+                  <span className={styles.statNumber}>5.0★</span>
                   <span className={styles.statLabel}>Avg. Rating</span>
                 </div>
                 <div className={styles.statDivider} />
@@ -773,11 +773,11 @@ export default function Home() {
         <div className="container">
           <div className={styles.sectionHeader}>
             <div className={styles.sectionBadge}>
-              <GoogleIcon size={14} /> 4.9★ ON GOOGLE MAPS
+              <GoogleIcon size={14} /> 5.0★ ON GOOGLE MAPS
             </div>
             <h2 className={styles.sectionTitle}>Loved by 100+ Guests Across Bengaluru</h2>
             <p className={styles.sectionSubtitle}>
-              Authentic Google reviews from couples, birthday celebrants, and gamers who experienced BeeVibe.
+              Authentic 5.0-star Google reviews from couples, birthday celebrants, and gamers who experienced BeeVibe.
             </p>
           </div>
 
@@ -789,11 +789,11 @@ export default function Home() {
               </div>
               <div className={styles.googleScoreWrap}>
                 <div className={styles.googleScoreRow}>
-                  <span className={styles.googleScoreNum}>{GOOGLE_BUSINESS_STATS.rating}</span>
+                  <span className={styles.googleScoreNum}>{GOOGLE_BUSINESS_STATS.ratingDisplay}</span>
                   <div className={styles.googleScoreStars}>★★★★★</div>
                 </div>
                 <div className={styles.googleScoreLabel}>
-                  {GOOGLE_BUSINESS_STATS.reviewCountDisplay} Verified Google Reviews
+                  {GOOGLE_BUSINESS_STATS.reviewCountExact} Reviews • {GOOGLE_BUSINESS_STATS.reviewCountDisplay} Verified 5-Star Reviews
                 </div>
                 <div className={styles.googleScoreSub}>
                   {GOOGLE_BUSINESS_STATS.verifiedBusinessName} • {GOOGLE_BUSINESS_STATS.location}
