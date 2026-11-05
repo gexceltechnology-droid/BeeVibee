@@ -17,14 +17,13 @@ import {
 } from '@/lib/time';
 
 const STANDARD_MANUAL_SLOTS = [
-  '10:00 AM - 11:30 AM',
-  '12:00 PM - 01:30 PM',
-  '02:00 PM - 03:30 PM',
-  '04:00 PM - 05:30 PM',
-  '06:00 PM - 07:30 PM',
-  '08:00 PM - 09:30 PM',
-  '10:00 PM - 11:30 PM',
-  '12:00 AM - 01:30 AM',
+  '10:00 AM - 12:00 PM',
+  '12:30 PM - 02:30 PM',
+  '03:00 PM - 05:00 PM',
+  '05:30 PM - 07:30 PM',
+  '08:00 PM - 10:00 PM',
+  '10:00 PM - 12:00 AM',
+  '11:30 PM - 01:30 AM',
 ];
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
@@ -158,14 +157,14 @@ export default function AdminDashboard() {
   const [manualDate, setManualDate] = useState<string>(() => {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   });
-  const [manualTimeSlot, setManualTimeSlot] = useState<string>('10:00 AM - 11:30 AM');
+  const [manualTimeSlot, setManualTimeSlot] = useState<string>('10:00 AM - 12:00 PM');
   const [manualSlotMode, setManualSlotMode] = useState<'standard' | 'custom'>('standard');
   const [manualCustomStartHour, setManualCustomStartHour] = useState<string>('10');
   const [manualCustomStartMin, setManualCustomStartMin] = useState<string>('00');
   const [manualCustomStartAmPm, setManualCustomStartAmPm] = useState<'AM' | 'PM'>('AM');
-  const [manualCustomEndHour, setManualCustomEndHour] = useState<string>('11');
-  const [manualCustomEndMin, setManualCustomEndMin] = useState<string>('30');
-  const [manualCustomEndAmPm, setManualCustomEndAmPm] = useState<'AM' | 'PM'>('AM');
+  const [manualCustomEndHour, setManualCustomEndHour] = useState<string>('12');
+  const [manualCustomEndMin, setManualCustomEndMin] = useState<string>('00');
+  const [manualCustomEndAmPm, setManualCustomEndAmPm] = useState<'AM' | 'PM'>('PM');
   const [manualGuests, setManualGuests] = useState<number>(2);
   const [manualAddOns, setManualAddOns] = useState<string[]>([]);
   const [manualTotalPrice, setManualTotalPrice] = useState<number>(1299);
@@ -913,7 +912,7 @@ export default function AdminDashboard() {
     const targetRoom = presetRoom || 'angel-wings';
     const targetDate = presetDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
     const isGaming = targetRoom === 'ps5-gaming';
-    const defaultStandardSlot = isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
+    const defaultStandardSlot = isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
     const targetSlot = presetSlot || defaultStandardSlot;
 
     const isStandard = STANDARD_MANUAL_SLOTS.includes(targetSlot);
@@ -981,7 +980,7 @@ export default function AdminDashboard() {
     try {
       parseTimeRange(manualTimeSlot);
     } catch {
-      setManualError('Please provide a valid time slot format, e.g. "10:00 AM - 11:30 AM" or "02:15 PM - 03:45 PM".');
+      setManualError('Please provide a valid time slot format, e.g. "10:00 AM - 12:00 PM" or "02:15 PM - 04:15 PM".');
       return;
     }
 
@@ -2710,16 +2709,7 @@ export default function AdminDashboard() {
                 '09:00 PM - 10:00 PM',
                 '10:00 PM - 11:00 PM',
                 '11:00 PM - 12:00 AM',
-              ] : [
-                '10:00 AM - 11:30 AM',
-                '12:00 PM - 01:30 PM',
-                '02:00 PM - 03:30 PM',
-                '04:00 PM - 05:30 PM',
-                '06:00 PM - 07:30 PM',
-                '08:00 PM - 09:30 PM',
-                '10:00 PM - 11:30 PM',
-                '12:00 AM - 01:30 AM',
-              ];
+              ] : STANDARD_MANUAL_SLOTS;
 
               const roomBookings = bookings.filter(b => {
                 if (b.status === 'cancelled') return false;
@@ -4088,7 +4078,7 @@ export default function AdminDashboard() {
                       const newRoom = e.target.value;
                       setManualRoomId(newRoom);
                       const isG = newRoom === 'ps5-gaming';
-                      const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
+                      const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
                       setManualTimeSlot(defaultSlot);
                       const validAddOns = manualAddOns.filter(name => {
                         const item = ADD_ONS.find(a => a.name === name || a.id === name);
@@ -4128,7 +4118,7 @@ export default function AdminDashboard() {
                             type="button"
                             onClick={() => {
                               setManualSlotMode('standard');
-                              const fallbackSlot = manualRoomId === 'ps5-gaming' ? '10:00 AM - 11:00 AM' : '10:00 AM - 11:30 AM';
+                              const fallbackSlot = manualRoomId === 'ps5-gaming' ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
                               const slotToUse = STANDARD_MANUAL_SLOTS.includes(manualTimeSlot) ? manualTimeSlot : fallbackSlot;
                               setManualTimeSlot(slotToUse);
                               const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, slotToUse);
