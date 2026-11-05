@@ -189,6 +189,25 @@ export function getRelativeDateStr(dateStr: string, offsetDays: number): string 
 }
 
 /**
+ * Safely compares two date strings for equality regardless of ISO timestamps or formatting.
+ */
+export function matchesDate(bookingDate?: string, targetDate?: string): boolean {
+  if (!bookingDate || !targetDate) return false;
+  const b = String(bookingDate).trim();
+  const t = String(targetDate).trim();
+  if (b === t) return true;
+  if (b.startsWith(t)) return true;
+  const bClean = b.split('T')[0];
+  const tClean = t.split('T')[0];
+  if (bClean === tClean) return true;
+  const parts = bClean.split(/[-/]/);
+  if (parts.length === 3 && parts[0].length === 2 && parts[2].length === 4) {
+    return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}` === tClean;
+  }
+  return false;
+}
+
+/**
  * Translate a booking's time slot into start and end minutes relative to the targetDate.
  */
 export function getIntervalRelativeToDay(
@@ -197,9 +216,24 @@ export function getIntervalRelativeToDay(
   targetDateStr: string
 ): { start: number; end: number } | null {
   try {
-    const bookingTime = new Date(bookingDateStr).getTime();
-    const targetTime = new Date(targetDateStr).getTime();
-    const diffDays = Math.round((bookingTime - targetTime) / (1000 * 60 * 60 * 24));
+    if (!bookingDateStr || !timeSlotStr || !targetDateStr) return null;
+    const bDate = String(bookingDateStr).trim().split('T')[0];
+    const tDate = String(targetDateStr).trim().split('T')[0];
+
+    const [by, bm, bd] = bDate.split('-').map(Number);
+    const [ty, tm, td] = tDate.split('-').map(Number);
+
+    let diffDays = 0;
+    if (by && bm && bd && ty && tm && td) {
+      const bUtc = Date.UTC(by, bm - 1, bd);
+      const tUtc = Date.UTC(ty, tm - 1, td);
+      diffDays = Math.round((bUtc - tUtc) / 86400000);
+    } else {
+      const bookingTime = new Date(bDate).getTime();
+      const targetTime = new Date(tDate).getTime();
+      if (isNaN(bookingTime) || isNaN(targetTime)) return null;
+      diffDays = Math.round((bookingTime - targetTime) / (1000 * 60 * 60 * 24));
+    }
 
     if (Math.abs(diffDays) > 1) {
       return null;

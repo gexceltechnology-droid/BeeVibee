@@ -21,6 +21,7 @@ export default function OperationsHub({ bookings = [], onOpenManualBooking }: Op
     { id: 'royal-butterfly', name: 'Royal Butterfly Suite', state: 'READY', lastSanitized: '30 mins ago' },
     { id: 'angel-wings', name: 'Angel Wings Suite', state: 'PREPARING', lastSanitized: '1 hour ago' },
     { id: 'red-velvet', name: 'Red Velvet Heart Room', state: 'READY', lastSanitized: '15 mins ago' },
+    { id: 'ps5-gaming', name: 'PS5 Gaming Lounge', state: 'READY', lastSanitized: '20 mins ago' },
   ]);
 
   const [checklists, setChecklists] = useState<{ [bookingId: string]: { [taskId: string]: boolean } }>({});

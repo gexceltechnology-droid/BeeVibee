@@ -112,6 +112,18 @@ export default function SewayaOverview({
       demandBg: '#fef3c7',
       image: '/themes/theme-red-heart.jpg',
     },
+    {
+      id: 'ps5-gaming',
+      name: 'PS5 Gaming Lounge',
+      code: 'RM-1004-G',
+      type: '4K PS5 Gaming & Private Lounge',
+      price: '₹399',
+      unit: '/ 1 hr',
+      demand: 'High Demand',
+      demandColor: '#0284c7',
+      demandBg: '#e0f2fe',
+      image: '/gallery/ps5-gaming.webp',
+    },
   ];
 
   // Real bookings: prioritized by selected date when available, fallback to recent

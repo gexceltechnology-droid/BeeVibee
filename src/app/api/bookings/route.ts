@@ -18,6 +18,9 @@ import { checkRateLimit, getClientIp } from '@/lib/rateLimit';
 import { cleanPhoneNumber } from '@/lib/whatsappUtils';
 import { verifyCustomerPhone } from '@/lib/phoneVerification';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET all bookings (Admin endpoint)
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +29,16 @@ export async function GET(request: NextRequest) {
     }
 
     const bookings = await getAllBookings();
-    return NextResponse.json({ bookings });
+    return NextResponse.json(
+      { bookings },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Error fetching bookings:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

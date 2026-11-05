@@ -14,6 +14,8 @@ import {
   convertMinutesTo12Hour,
   formatCustomTimeRange,
   getRelativeDateStr,
+  matchesDate,
+  getIntervalRelativeToDay,
 } from '@/lib/time';
 
 const STANDARD_MANUAL_SLOTS = [
@@ -24,6 +26,23 @@ const STANDARD_MANUAL_SLOTS = [
   '08:00 PM - 10:00 PM',
   '10:00 PM - 12:00 AM',
   '11:30 PM - 01:30 AM',
+];
+
+const GAMING_MANUAL_SLOTS = [
+  '10:00 AM - 11:00 AM',
+  '11:00 AM - 12:00 PM',
+  '12:00 PM - 01:00 PM',
+  '01:00 PM - 02:00 PM',
+  '02:00 PM - 03:00 PM',
+  '03:00 PM - 04:00 PM',
+  '04:00 PM - 05:00 PM',
+  '05:00 PM - 06:00 PM',
+  '06:00 PM - 07:00 PM',
+  '07:00 PM - 08:00 PM',
+  '08:00 PM - 09:00 PM',
+  '09:00 PM - 10:00 PM',
+  '10:00 PM - 11:00 PM',
+  '11:00 PM - 12:00 AM',
 ];
 import { CrmEngine, AggregatedCustomerProfile } from '@/lib/saas/crmEngine';
 import { CAMPAIGN_TEMPLATES, MarketingEngine } from '@/lib/saas/marketingEngine';
@@ -311,8 +330,13 @@ export default function AdminDashboard() {
     if (!activePasscode) return;
 
     try {
-      const res = await fetch('/api/bookings', {
-        headers: { 'X-Admin-Passcode': activePasscode },
+      const res = await fetch(`/api/bookings?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'X-Admin-Passcode': activePasscode,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
       });
 
       if (res.status === 401) {
@@ -333,7 +357,7 @@ export default function AdminDashboard() {
           if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
             try {
               new Notification('🎬 New Bee Vibe Booking!', {
-                body: `${newItems[0].customerName} booked ${newItems[0].packageName} for ${newItems[0].date}`,
+                body: `${newItems[0].customerName || 'Guest'} booked ${newItems[0].packageName || 'Suite'} for ${newItems[0].date}`,
                 icon: '/logo.png',
               });
             } catch {
@@ -352,12 +376,20 @@ export default function AdminDashboard() {
               c &&
               b.id === c.id &&
               b.status === c.status &&
+              b.date === c.date &&
+              b.timeSlot === c.timeSlot &&
+              b.roomId === c.roomId &&
+              b.packageName === c.packageName &&
+              b.customerName === c.customerName &&
+              b.phone === c.phone &&
+              b.email === c.email &&
               b.sbiVerified === c.sbiVerified &&
               b.balanceCollected === c.balanceCollected &&
               b.paymentStatus === c.paymentStatus &&
               b.totalPrice === c.totalPrice &&
               b.advancePaid === c.advancePaid &&
-              b.balanceDue === c.balanceDue
+              b.balanceDue === c.balanceDue &&
+              b.adminNotes === c.adminNotes
             );
           })
         ) {
@@ -378,8 +410,13 @@ export default function AdminDashboard() {
     if (!activePasscode) return;
 
     try {
-      const res = await fetch('/api/orders', {
-        headers: { 'X-Admin-Passcode': activePasscode },
+      const res = await fetch(`/api/orders?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'X-Admin-Passcode': activePasscode,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
       });
       if (res.ok) {
         const data = await res.json();
@@ -915,7 +952,7 @@ export default function AdminDashboard() {
     const defaultStandardSlot = isGaming ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
     const targetSlot = presetSlot || defaultStandardSlot;
 
-    const isStandard = STANDARD_MANUAL_SLOTS.includes(targetSlot);
+    const isStandard = isGaming ? GAMING_MANUAL_SLOTS.includes(targetSlot) : STANDARD_MANUAL_SLOTS.includes(targetSlot);
     setManualSlotMode(isStandard ? 'standard' : (presetSlot ? 'custom' : 'standard'));
 
     try {
@@ -932,9 +969,9 @@ export default function AdminDashboard() {
       setManualCustomStartHour('10');
       setManualCustomStartMin('00');
       setManualCustomStartAmPm('AM');
-      setManualCustomEndHour('11');
-      setManualCustomEndMin('30');
-      setManualCustomEndAmPm('AM');
+      setManualCustomEndHour(isGaming ? '11' : '12');
+      setManualCustomEndMin('00');
+      setManualCustomEndAmPm(isGaming ? 'AM' : 'PM');
     }
 
     const autoPrice = calculatePriceForManualBooking(targetRoom, 2, [], targetSlot);
@@ -1483,12 +1520,18 @@ export default function AdminDashboard() {
   const sbiPendingCount = bookings.filter(b => !b.sbiVerified && b.status !== 'cancelled').length;
 
   const theaterRevenue = bookings
-    .filter(b => b.status === 'confirmed' && b.bookingType !== 'gaming' && !b.packageName.includes('Gaming') && !b.packageName.includes('Dark'))
-    .reduce((sum, b) => sum + b.totalPrice, 0);
+    .filter(b => {
+      const pkg = b.packageName || '';
+      return b.status === 'confirmed' && b.bookingType !== 'gaming' && !pkg.includes('Gaming') && !pkg.includes('Dark');
+    })
+    .reduce((sum, b) => sum + (Number(b.totalPrice) || 0), 0);
 
   const gamingRevenue = bookings
-    .filter(b => b.status === 'confirmed' && (b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark')))
-    .reduce((sum, b) => sum + b.totalPrice, 0);
+    .filter(b => {
+      const pkg = b.packageName || '';
+      return b.status === 'confirmed' && (b.bookingType === 'gaming' || pkg.includes('Gaming') || pkg.includes('Dark'));
+    })
+    .reduce((sum, b) => sum + (Number(b.totalPrice) || 0), 0);
 
   const activeOrdersCount = orders.filter(o => o.status === 'pending' || o.status === 'preparing').length;
   const servedOrdersCount = orders.filter(o => o.status === 'served').length;
@@ -1502,18 +1545,30 @@ export default function AdminDashboard() {
 
   // Filter Bookings for Bookings Tab
   const filteredBookings = bookings.filter(b => {
-    const isGaming = b.bookingType === 'gaming' || b.packageName.includes('Gaming') || b.packageName.includes('Dark');
+    const pkg = b.packageName || '';
+    const isGaming = b.bookingType === 'gaming' || pkg.includes('Gaming') || pkg.includes('Dark');
     const matchesCategory = bookingCategoryFilter === 'all' ? true : bookingCategoryFilter === 'gaming' ? isGaming : !isGaming;
-    const matchesSearch = b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.phone.includes(searchTerm) || b.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDate = dateFilter ? b.date === dateFilter : true;
+    const term = searchTerm.toLowerCase().trim();
+    const matchesSearch = !term ||
+      (b.customerName || '').toLowerCase().includes(term) ||
+      (b.id || '').toLowerCase().includes(term) ||
+      (b.phone || '').includes(term) ||
+      (b.email ? b.email.toLowerCase().includes(term) : false) ||
+      pkg.toLowerCase().includes(term);
+    const matchesDateFilter = dateFilter ? matchesDate(b.date, dateFilter) : true;
     const matchesSource = sourceFilter === 'all' ? true : (b.source || 'Website') === sourceFilter;
-    return matchesCategory && matchesSearch && matchesDate && matchesSource;
+    return matchesCategory && matchesSearch && matchesDateFilter && matchesSource;
   });
 
   // Filter Bookings for Payment Portal Ledger
   const filteredPaymentBookings = bookings.filter(b => {
-    const matchesSearch = b.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase()) || b.phone.includes(searchTerm) || (b.utrNumber && b.utrNumber.includes(searchTerm));
-    const matchesDate = dateFilter ? b.date === dateFilter : true;
+    const term = searchTerm.toLowerCase().trim();
+    const matchesSearch = !term ||
+      (b.customerName || '').toLowerCase().includes(term) ||
+      (b.id || '').toLowerCase().includes(term) ||
+      (b.phone || '').includes(term) ||
+      (b.utrNumber ? b.utrNumber.toLowerCase().includes(term) : false);
+    const matchesDateFilter = dateFilter ? matchesDate(b.date, dateFilter) : true;
 
     let matchesPaymentStatus = true;
     if (paymentFilter === 'verified') matchesPaymentStatus = !!b.sbiVerified;
@@ -1521,7 +1576,7 @@ export default function AdminDashboard() {
     else if (paymentFilter === 'balance_due') matchesPaymentStatus = !b.balanceCollected && b.status === 'confirmed';
     else if (paymentFilter === 'settled') matchesPaymentStatus = !!b.balanceCollected && !!b.sbiVerified;
 
-    return matchesSearch && matchesDate && matchesPaymentStatus;
+    return matchesSearch && matchesDateFilter && matchesPaymentStatus;
   });
 
   // Filter CRM Customers
@@ -2524,10 +2579,10 @@ export default function AdminDashboard() {
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{b.timeSlot}</div>
                       </td>
                       <td>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', background: b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)', color: b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? '#00f0ff' : '#ff0055' }}>
-                          {b.bookingType === 'gaming' || b.packageName.includes('Gaming') ? '🎮 GAMING' : '🎬 THEATER'}
+                        <span style={{ fontSize: '0.7rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', background: b.bookingType === 'gaming' || (b.packageName || '').includes('Gaming') || (b.packageName || '').includes('Dark') || b.roomId === 'ps5-gaming' ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 0, 85, 0.15)', color: b.bookingType === 'gaming' || (b.packageName || '').includes('Gaming') || (b.packageName || '').includes('Dark') || b.roomId === 'ps5-gaming' ? '#00f0ff' : '#ff0055' }}>
+                          {b.bookingType === 'gaming' || (b.packageName || '').includes('Gaming') || (b.packageName || '').includes('Dark') || b.roomId === 'ps5-gaming' ? '🎮 GAMING' : '🎬 THEATER'}
                         </span>
-                        <div style={{ fontWeight: 500, marginTop: '4px' }}>{b.packageName}</div>
+                        <div style={{ fontWeight: 500, marginTop: '4px' }}>{b.packageName || b.roomId || 'Celebration Suite'}</div>
                         {b.addOns && b.addOns.length > 0 && (
                           <div style={{ fontSize: '0.72rem', color: '#a1a1aa', marginTop: '2px' }}>
                             +{b.addOns.join(', ')}
@@ -2694,29 +2749,20 @@ export default function AdminDashboard() {
           <div className={styles.calendarGrid}>
             {ROOMS.map((room) => {
               const isGaming = room.id === 'ps5-gaming';
-              const slots = isGaming ? [
-                '10:00 AM - 11:00 AM',
-                '11:00 AM - 12:00 PM',
-                '12:00 PM - 01:00 PM',
-                '01:00 PM - 02:00 PM',
-                '02:00 PM - 03:00 PM',
-                '03:00 PM - 04:00 PM',
-                '04:00 PM - 05:00 PM',
-                '05:00 PM - 06:00 PM',
-                '06:00 PM - 07:00 PM',
-                '07:00 PM - 08:00 PM',
-                '08:00 PM - 09:00 PM',
-                '09:00 PM - 10:00 PM',
-                '10:00 PM - 11:00 PM',
-                '11:00 PM - 12:00 AM',
-              ] : STANDARD_MANUAL_SLOTS;
+              const slots = isGaming ? GAMING_MANUAL_SLOTS : STANDARD_MANUAL_SLOTS;
 
+              const cleanCalDate = (calendarViewDate || '').trim().split('T')[0];
               const roomBookings = bookings.filter(b => {
                 if (b.status === 'cancelled') return false;
-                if (b.date !== calendarViewDate) return false;
-                return normalizeRoomId(b) === room.id;
+                if (normalizeRoomId(b) !== room.id) return false;
+                const bDate = (b.date || '').trim().split('T')[0];
+                if (!bDate || !cleanCalDate) return false;
+                if (bDate === cleanCalDate) return true;
+                const bInterval = getIntervalRelativeToDay(bDate, b.timeSlot, cleanCalDate);
+                return bInterval !== null;
               });
 
+              const bookedCountOnDate = roomBookings.filter(b => matchesDate(b.date, calendarViewDate)).length;
               const themeColor = room.id === 'angel-wings' ? '#ec4899' : room.id === 'red-velvet' ? '#ef4444' : room.id === 'royal-butterfly' ? '#a855f7' : '#06b6d4';
 
               return (
@@ -2727,7 +2773,7 @@ export default function AdminDashboard() {
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{room.occasionLabel} · {room.duration}</div>
                     </div>
                     <span style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.06)', padding: '2px 8px', borderRadius: '12px' }}>
-                      {roomBookings.length} Booked
+                      {bookedCountOnDate} Booked
                     </span>
                   </div>
 
@@ -4078,14 +4124,16 @@ export default function AdminDashboard() {
                       const newRoom = e.target.value;
                       setManualRoomId(newRoom);
                       const isG = newRoom === 'ps5-gaming';
+                      const availableSlots = isG ? GAMING_MANUAL_SLOTS : STANDARD_MANUAL_SLOTS;
                       const defaultSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
-                      setManualTimeSlot(defaultSlot);
+                      const nextSlot = availableSlots.includes(manualTimeSlot) ? manualTimeSlot : defaultSlot;
+                      setManualTimeSlot(nextSlot);
                       const validAddOns = manualAddOns.filter(name => {
                         const item = ADD_ONS.find(a => a.name === name || a.id === name);
                         return !item?.allowedRoomId || item.allowedRoomId === newRoom;
                       });
                       setManualAddOns(validAddOns);
-                      const newPrice = calculatePriceForManualBooking(newRoom, manualGuests, validAddOns, defaultSlot);
+                      const newPrice = calculatePriceForManualBooking(newRoom, manualGuests, validAddOns, nextSlot);
                       setManualTotalPrice(newPrice);
                     }}
                   >
@@ -4118,8 +4166,10 @@ export default function AdminDashboard() {
                             type="button"
                             onClick={() => {
                               setManualSlotMode('standard');
-                              const fallbackSlot = manualRoomId === 'ps5-gaming' ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
-                              const slotToUse = STANDARD_MANUAL_SLOTS.includes(manualTimeSlot) ? manualTimeSlot : fallbackSlot;
+                              const isG = manualRoomId === 'ps5-gaming';
+                              const fallbackSlot = isG ? '10:00 AM - 11:00 AM' : '10:00 AM - 12:00 PM';
+                              const availableSlots = isG ? GAMING_MANUAL_SLOTS : STANDARD_MANUAL_SLOTS;
+                              const slotToUse = availableSlots.includes(manualTimeSlot) ? manualTimeSlot : fallbackSlot;
                               setManualTimeSlot(slotToUse);
                               const newPrice = calculatePriceForManualBooking(manualRoomId, manualGuests, manualAddOns, slotToUse);
                               setManualTotalPrice(newPrice);
@@ -4182,22 +4232,7 @@ export default function AdminDashboard() {
                             setManualTotalPrice(newPrice);
                           }}
                         >
-                          {(manualRoomId === 'ps5-gaming' ? [
-                            '10:00 AM - 11:00 AM',
-                            '11:00 AM - 12:00 PM',
-                            '12:00 PM - 01:00 PM',
-                            '01:00 PM - 02:00 PM',
-                            '02:00 PM - 03:00 PM',
-                            '03:00 PM - 04:00 PM',
-                            '04:00 PM - 05:00 PM',
-                            '05:00 PM - 06:00 PM',
-                            '06:00 PM - 07:00 PM',
-                            '07:00 PM - 08:00 PM',
-                            '08:00 PM - 09:00 PM',
-                            '09:00 PM - 10:00 PM',
-                            '10:00 PM - 11:00 PM',
-                            '11:00 PM - 12:00 AM',
-                          ] : STANDARD_MANUAL_SLOTS).map(slot => (
+                          {(manualRoomId === 'ps5-gaming' ? GAMING_MANUAL_SLOTS : STANDARD_MANUAL_SLOTS).map(slot => (
                             <option key={slot} value={slot} style={{ color: '#111827', backgroundColor: '#ffffff' }}>{slot}</option>
                           ))}
                         </select>

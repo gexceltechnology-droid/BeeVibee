@@ -354,7 +354,9 @@ export default function BookingFlowModal({
       try {
         const isGaming = activeRoom.occasion === 'gaming';
         const typeParam = isGaming ? 'gaming' : 'theater';
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=${typeParam}&roomId=${encodeURIComponent(activeRoom.id)}`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=${typeParam}&roomId=${encodeURIComponent(activeRoom.id)}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (res.ok) {
           const data = await res.json();
           if (!isCancelled && data.slots && Array.isArray(data.slots)) {

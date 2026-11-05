@@ -184,7 +184,9 @@ export default function BookingPortal({
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=theater&roomId=${encodeURIComponent(selectedPackage.id)}`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=theater&roomId=${encodeURIComponent(selectedPackage.id)}&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!active) return;
 
         if (!res.ok) {

@@ -19,6 +19,9 @@ const GAMING_1HR_SLOTS = [
   { id: 'gslot-14', time: '11:00 PM - 12:00 AM', label: 'Midnight Slot', basePrice: 399 },
 ];
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -100,8 +103,8 @@ export async function GET(request: NextRequest) {
     // Return active bookings for client-side overlap checks
     const activeBookings = roomBookings.map((b) => ({ id: b.id, date: b.date, timeSlot: b.timeSlot }));
 
-    // Also build a full map of availability for celebration suites so any UI can read other rooms
-    const ALL_ROOM_IDS: RoomId[] = ['angel-wings', 'red-velvet', 'royal-butterfly'];
+    // Also build a full map of availability for celebration suites and gaming so any UI can read all rooms
+    const ALL_ROOM_IDS: RoomId[] = ['angel-wings', 'red-velvet', 'royal-butterfly', 'ps5-gaming'];
     const roomsAvailability: Record<string, { slots: typeof slotsWithAvailability; activeBookings: typeof activeBookings }> = {};
     for (const rid of ALL_ROOM_IDS) {
       const isRidGaming = rid === 'ps5-gaming';
@@ -127,12 +130,21 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    return NextResponse.json({
-      roomId: targetRoomId,
-      slots: slotsWithAvailability,
-      activeBookings,
-      roomsAvailability,
-    });
+    return NextResponse.json(
+      {
+        roomId: targetRoomId,
+        slots: slotsWithAvailability,
+        activeBookings,
+        roomsAvailability,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('Error fetching slots:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });

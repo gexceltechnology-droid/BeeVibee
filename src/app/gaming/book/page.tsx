@@ -161,7 +161,9 @@ export default function GamingBookPage() {
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch(`/api/slots?date=${selectedDate}&type=gaming&roomId=ps5-gaming`);
+        const res = await fetch(`/api/slots?date=${selectedDate}&type=gaming&roomId=ps5-gaming&t=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (res.ok) {
           const data = await res.json();
           const bList = data.activeBookings || [];
